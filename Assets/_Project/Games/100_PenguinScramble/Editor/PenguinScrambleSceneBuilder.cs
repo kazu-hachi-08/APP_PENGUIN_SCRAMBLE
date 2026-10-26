@@ -1,0 +1,130 @@
+using System.Linq;
+using PenguinScramble.Common.Editor;
+using PenguinScramble.Common.Scene;
+using PenguinScramble.Game;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
+
+namespace PenguinScramble.Editor
+{
+    /// <summary>
+    /// ペンギンスクランブルのシーンをコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する。
+    /// </summary>
+    public static class PenguinScrambleSceneBuilder
+    {
+        private const string ScenePath = "Assets/_Project/Games/100_PenguinScramble/Scenes/" + SceneNames.PenguinScramble + ".unity";
+
+        // 横画面の基準解像度。共通基盤のダイアログと同じ値にそろえる
+        private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
+        private static readonly Color BackgroundColor = new Color(0.80f, 0.90f, 0.95f);
+        private static readonly Color TextColor = new Color(0.15f, 0.20f, 0.30f);
+        private const int TitleFontSize = 120;
+        private const int VersionFontSize = 32;
+        private static readonly Vector2 VersionMargin = new Vector2(-24f, 16f);
+        private static readonly Vector2 VersionSize = new Vector2(400f, 60f);
+
+        [MenuItem("Tools/PenguinScramble/Rebuild")]
+        public static void Rebuild()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return;
+            }
+
+            BuildScene();
+        }
+
+        /// <summary>バッチモード（-executeMethod）からも呼べるよう、保存の確認をしない入口を分けている</summary>
+        public static void BuildScene()
+        {
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            CreateCamera();
+            CreateEventSystem();
+            var canvas = CreateCanvas();
+            CreateTitle(canvas.transform);
+            CreateVersionLabel(canvas.transform);
+
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            AddToBuildSettings();
+            Debug.Log($"[PenguinScrambleSceneBuilder] {ScenePath} を生成しました");
+        }
+
+        private static void CreateCamera()
+        {
+            var cameraObj = new GameObject("Main Camera");
+            cameraObj.tag = "MainCamera";
+            var camera = cameraObj.AddComponent<Camera>();
+            camera.orthographic = true;
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = BackgroundColor;
+            cameraObj.AddComponent<AudioListener>();
+        }
+
+        private static void CreateEventSystem()
+        {
+            // Input System のみの設定なので、旧 StandaloneInputModule ではなくこちらを使う
+            new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+        }
+
+        private static Canvas CreateCanvas()
+        {
+            var canvasObj = new GameObject("Canvas");
+            var canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = canvasObj.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = ReferenceResolution;
+            // 比率が違う画面でも基準の 1920x1080 が必ず全部見えるよう、足りない側を広げる
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+            canvasObj.AddComponent<GraphicRaycaster>();
+            return canvas;
+        }
+
+        private static void CreateTitle(Transform canvas)
+        {
+            var obj = UIDialogBuilder.CreateUIObject("Title", canvas);
+            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
+            var text = AddText(obj, "ペンギンスクランブル", TitleFontSize);
+            text.alignment = TextAnchor.MiddleCenter;
+        }
+
+        private static void CreateVersionLabel(Transform canvas)
+        {
+            var obj = UIDialogBuilder.CreateUIObject("Version", canvas);
+            var rect = obj.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 0f);
+            rect.anchoredPosition = VersionMargin;
+            rect.sizeDelta = VersionSize;
+            var text = AddText(obj, string.Empty, VersionFontSize);
+            text.alignment = TextAnchor.LowerRight;
+            obj.AddComponent<VersionLabel>();
+        }
+
+        private static Text AddText(GameObject obj, string value, int fontSize)
+        {
+            var text = obj.AddComponent<Text>();
+            // 実行時に GameFontApplier が同梱の日本語フォントへ差し替える
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.text = value;
+            text.fontSize = fontSize;
+            text.color = TextColor;
+            return text;
+        }
+
+        private static void AddToBuildSettings()
+        {
+            var scenes = EditorBuildSettings.scenes.ToList();
+            if (scenes.Any(s => s.path == ScenePath))
+            {
+                return;
+            }
+
+            scenes.Insert(0, new EditorBuildSettingsScene(ScenePath, true));
+            EditorBuildSettings.scenes = scenes.ToArray();
+        }
+    }
+}

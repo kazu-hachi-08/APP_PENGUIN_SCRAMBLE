@@ -1,0 +1,23 @@
+{
+    "name": "PenguinScramble.Game.Editor",
+    "rootNamespace": "PenguinScramble.Editor",
+    "references": [
+        "PenguinScramble.Core",
+        "PenguinScramble.Common",
+        "PenguinScramble.Common.Editor",
+        "PenguinScramble.Game",
+        "Unity.InputSystem",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

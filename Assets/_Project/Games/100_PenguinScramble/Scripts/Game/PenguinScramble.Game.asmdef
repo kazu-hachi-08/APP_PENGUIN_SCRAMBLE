@@ -1,0 +1,20 @@
+{
+    "name": "PenguinScramble.Game",
+    "rootNamespace": "PenguinScramble.Game",
+    "references": [
+        "PenguinScramble.Core",
+        "PenguinScramble.Common",
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
