@@ -56,9 +56,13 @@ namespace PenmonScramble.Editor
             var session = new GameObject("OnlineSession").AddComponent<OnlineSession>();
             // タイトルはステージの HUD より手前に出す（後に作った方が手前）
             var title = CreateTitlePanel(canvas.transform, session);
+            // ガチャ・一覧はタイトルの上に開く
+            var gacha = CreateGachaScreen(canvas.transform);
+            var penguins = CreatePenguinListScreen(canvas.transform);
+            var titleMenu = CreateTitleMenu(title, gacha, penguins);
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);
-            CreateStage(hud, session, title, shake, stageCamera, cutIn);
+            CreateStage(hud, session, title, titleMenu, shake, stageCamera, cutIn);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings();
@@ -128,7 +132,7 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        private static void CreateStage(StageHud hud, OnlineSession session, ModeSelectPanel title, CameraShake shake, StageCamera stageCamera, SpecialCutIn cutIn)
+        private static void CreateStage(StageHud hud, OnlineSession session, ModeSelectPanel title, TitleMenu titleMenu, CameraShake shake, StageCamera stageCamera, SpecialCutIn cutIn)
         {
             var stageObj = new GameObject("Stage");
             var view = stageObj.AddComponent<StageView>();
@@ -143,6 +147,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_hud").objectReferenceValue = hud;
             so.FindProperty("_session").objectReferenceValue = session;
             so.FindProperty("_modeSelect").objectReferenceValue = title;
+            so.FindProperty("_titleMenu").objectReferenceValue = titleMenu;
             so.ApplyModifiedProperties();
         }
 

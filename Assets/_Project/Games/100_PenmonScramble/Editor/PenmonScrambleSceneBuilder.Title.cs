@@ -8,7 +8,8 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// タイトル: 「ひとりで遊ぶ」「部屋を作る」「コードで参加」。
-    /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る（§2。仮の見た目）
+    /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る（§2。仮の見た目）。
+    /// コイン・ステージの選択・ガチャ・ペンギン一覧は PenmonScrambleSceneBuilder.Menu.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
@@ -31,7 +32,7 @@ namespace PenmonScramble.Editor
         private static readonly Color CancelColor = new Color(0.45f, 0.50f, 0.60f);
         private static readonly Color PlaceholderColor = new Color(0.55f, 0.55f, 0.60f);
 
-        private static readonly Vector2 GameTitlePosition = new Vector2(0f, 330f);
+        private static readonly Vector2 GameTitlePosition = new Vector2(0f, 370f);
         private static readonly Vector2 GameTitleSize = new Vector2(1700f, 200f);
         private static readonly Vector2 CardSize = new Vector2(640f, 220f);
         private static readonly Vector2 SoloPosition = new Vector2(-420f, 40f);

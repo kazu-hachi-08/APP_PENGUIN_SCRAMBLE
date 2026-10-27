@@ -20,6 +20,8 @@ namespace PenmonScramble.Core
         private readonly int _playerCount = 1;
         private float _waveDelay;
 
+        /// <summary>ステージの番号。テスト用の場は 0</summary>
+        public int StageNo => _stage?.No ?? 0;
         public int AreaIndex { get; private set; }
         public int AreaCount => _stage?.Areas.Count ?? 1;
         public int WaveIndex { get; private set; }

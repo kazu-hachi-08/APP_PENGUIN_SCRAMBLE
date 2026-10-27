@@ -32,12 +32,15 @@ namespace PenmonScramble.Core
 
     public sealed class StageDef
     {
-        public StageDef(string name, params AreaDef[] areas)
+        public StageDef(int no, string name, params AreaDef[] areas)
         {
+            No = no;
             Name = name;
             Areas = areas;
         }
 
+        /// <summary>1から数えたステージの番号。記録（クリア済み）と通信でこの番号を使うので、一度配ったら変えない</summary>
+        public int No { get; }
         public string Name { get; }
         public IReadOnlyList<AreaDef> Areas { get; }
     }

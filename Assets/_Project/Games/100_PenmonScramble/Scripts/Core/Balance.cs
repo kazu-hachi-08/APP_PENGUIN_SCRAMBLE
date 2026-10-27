@@ -5,7 +5,7 @@ namespace PenmonScramble.Core
     /// <summary>
     /// ゲームの調整値。数値はここにまとめ、ルールのコードには直接書かない。
     /// </summary>
-    public static class Balance
+    public static partial class Balance
     {
         /// <summary>
         /// 1回の更新で進める時間（秒）。オンラインでホストとゲストの結果をそろえるため、描画のフレームとは切り離して固定にする
@@ -43,7 +43,7 @@ namespace PenmonScramble.Core
         /// <summary>ペンギンの体の半径（マス）。種類で変えると交代した瞬間に重なりが動いて見えるので、全員同じにする</summary>
         public const float PenguinRadius = 0.45f;
 
-        /// <summary>ガチャ（フェーズ6）ができるまで、連れていくペンギンのパワー（§7 のワールド1の真ん中）</summary>
+        /// <summary>テストと、編成が届かなかった仲間の代わりに連れていくペンギンのパワー（§7 のワールド1の真ん中）</summary>
         public const int TrialPower = 100;
 
         /// <summary>連れていくペンギンの数（§4.1）</summary>

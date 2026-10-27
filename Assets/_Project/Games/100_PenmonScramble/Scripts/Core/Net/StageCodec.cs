@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えて変な画面になるより無視する方がよい
         /// </summary>
-        public const byte FormatVersion = 4;
+        public const byte FormatVersion = 5;
 
         private const byte Skill1Flag = 1;
         private const byte Skill2Flag = 2;
@@ -25,6 +25,7 @@ namespace PenmonScramble.Core
             using var writer = new BinaryWriter(stream);
             writer.Write(FormatVersion);
             writer.Write(snapshot.Round);
+            writer.Write((byte)snapshot.StageNo);
             writer.Write(snapshot.Tick);
             writer.Write((byte)snapshot.Result);
             Write(writer, snapshot.AreaMin);
@@ -116,6 +117,7 @@ namespace PenmonScramble.Core
                 var snapshot = new StageSnapshot
                 {
                     Round = reader.ReadInt32(),
+                    StageNo = reader.ReadByte(),
                     Tick = reader.ReadInt32(),
                     Result = (StageResult)reader.ReadByte(),
                     AreaMin = ReadVec2(reader),

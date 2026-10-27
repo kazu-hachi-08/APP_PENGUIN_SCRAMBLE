@@ -44,6 +44,7 @@ namespace PenmonScramble.Core
             var snapshot = new StageSnapshot
             {
                 Round = _round,
+                StageNo = _world.StageNo,
                 Tick = _world.TickCount,
                 Result = _world.Result,
                 AreaMin = _world.AreaMin,

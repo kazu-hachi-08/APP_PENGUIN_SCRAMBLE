@@ -1,8 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 編成画面とステージ選び（フェーズ6）ができるまでの挑戦の作り方: 1ステージ目に、プレイヤー1人につき3体。
-    /// 連れていく3体は挑戦ごとに順に替わる
+    /// 1回の挑戦の作り方: 選んだステージに、プレイヤー1人につき編成の3体を置く
     /// </summary>
     public static class TrialStage
     {
@@ -13,27 +12,38 @@ namespace PenmonScramble.Core
         private const float PlayerSpawnSpacing = 1.5f;
 
         /// <summary>
-        /// seats の席ごとにプレイヤーを1人ずつ置き、席の順に Unit を返す。敵の種類と位置は seed で決まり、HP は人数で増える。
-        /// 連れていく3体は round で順に替わる（編成ができるまで、「もう一度」で20種類を全部試せるようにするため）
+        /// seats の席ごとにプレイヤーを1人ずつ置き、席の順に Unit を返す。parties は席の順の編成。
+        /// 敵の種類と位置は seed で決まり、HP は人数で増える
         /// </summary>
-        public static Unit[] Create(int seed, int[] seats, int round, out StageWorld world)
+        public static Unit[] Create(StageDef stage, int seed, int[] seats, UnitStats[][] parties, out StageWorld world)
         {
-            world = new StageWorld(StageTable.Stage1, seats.Length, seed);
+            world = new StageWorld(stage, seats.Length, seed);
             var x = Balance.AreaWidth * 0.5f * PlayerSpawnXRatio;
             var players = new Unit[seats.Length];
             for (var i = 0; i < seats.Length; i++)
             {
                 var y = (i - (seats.Length - 1) * 0.5f) * PlayerSpawnSpacing;
-                var party = PartyStats(RotatingParty(round, i, seats.Length));
-                players[i] = world.AddUnit(Team.Player, party, new Vec2(x, y), seats[i]);
+                players[i] = world.AddUnit(Team.Player, parties[i], new Vec2(x, y), seats[i]);
             }
 
             return players;
         }
 
+        /// <summary>テスト用: 1ステージ目に、round で順に替わる3体（RotatingParty）を連れていく</summary>
+        public static Unit[] Create(int seed, int[] seats, int round, out StageWorld world)
+        {
+            var parties = new UnitStats[seats.Length][];
+            for (var i = 0; i < seats.Length; i++)
+            {
+                parties[i] = PartyStats(RotatingParty(round, i, seats.Length));
+            }
+
+            return Create(StageTable.Stage1, seed, seats, parties, out world);
+        }
+
         /// <summary>
-        /// round 回目の i 人目が連れていく3体。全員・全回で番号を3つずつ進めるので、
-        /// ソロなら7回で20種類がひと回りする
+        /// round 回目の i 人目が連れていく3体。全員・全回で番号を3つずつ進めるので、ソロなら7回で20種類がひと回りする。
+        /// 編成が届かなかった仲間の代わりにも使う
         /// </summary>
         public static SpeciesDef[] RotatingParty(int round, int playerIndex, int playerCount)
         {
@@ -48,7 +58,7 @@ namespace PenmonScramble.Core
             return party;
         }
 
-        private static UnitStats[] PartyStats(SpeciesDef[] party)
+        public static UnitStats[] PartyStats(SpeciesDef[] party)
         {
             var stats = new UnitStats[party.Length];
             for (var i = 0; i < party.Length; i++)

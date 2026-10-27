@@ -11,7 +11,7 @@ namespace PenmonScramble.Tests
 
         private static StageWorld CreateStage(params AreaDef[] areas)
         {
-            return new StageWorld(new StageDef("test", areas), playerCount: 1, seed: 1);
+            return new StageWorld(new StageDef(1, "test", areas), playerCount: 1, seed: 1);
         }
 
         private static Unit AddPlayer(StageWorld world, Vec2 position, int seat = 0)

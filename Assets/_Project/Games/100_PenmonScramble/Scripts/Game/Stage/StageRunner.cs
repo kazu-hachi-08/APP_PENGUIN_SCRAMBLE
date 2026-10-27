@@ -9,7 +9,8 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// タイトル（ひとりで / 部屋を作る / コードで参加）からステージを始め、入力・HUD・結果をつなぐ。
-    /// 計算はソロとホストが StageHost、ゲストは StageGuest で、どちらもスナップショットを StageView に渡して描く
+    /// 計算はソロとホストが StageHost、ゲストは StageGuest で、どちらもスナップショットを StageView に渡して描く。
+    /// ステージはホストがタイトルで選んだもの、連れていくのは各自の記録の編成（§8）。報酬は各自の記録に書く
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に読む
     [DefaultExecutionOrder(100)]
@@ -23,6 +24,7 @@ namespace PenmonScramble.Game
         [SerializeField] private StageHud _hud;
         [SerializeField] private OnlineSession _session;
         [SerializeField] private ModeSelectPanel _modeSelect;
+        [SerializeField] private TitleMenu _titleMenu;
 
         private readonly LocalInputSampler _input = new LocalInputSampler();
         private StageLink _link;
@@ -73,19 +75,22 @@ namespace PenmonScramble.Game
             {
                 _session.OnMemberLeft += OnMemberLeft;
                 _link.InputReceived += OnRemoteInput;
+                _link.PartyReceived += OnRemoteParty;
                 StartHost(playerCount, _link);
                 return;
             }
 
             SetLocalSeat(seat);
             _guest = new StageGuest(_view, _link);
+            _link.SendParty(StageCodec.EncodeParty(GameSave.Record.PartyPenguins()));
         }
 
+        /// <summary>最初の挑戦は、ゲストの編成がそろってから StageHost が始める</summary>
         private void StartHost(int playerCount, StageLink link)
         {
             SetLocalSeat(StageHost.LocalSeat);
-            _host = new StageHost(_view, link, playerCount);
-            _host.StartRound();
+            var stage = StageTable.Get(_titleMenu.SelectedStageNo) ?? StageTable.Stage1;
+            _host = new StageHost(_view, link, playerCount, stage, GameSave.Record.PartyStats());
         }
 
         private void SetLocalSeat(int seat)
@@ -99,6 +104,14 @@ namespace PenmonScramble.Game
             if (_session.TryGetSeat(clientId, out var seat) && StageCodec.TryDecodeInput(data, out var input))
             {
                 _host.ReceiveInput(seat, input);
+            }
+        }
+
+        private void OnRemoteParty(ulong clientId, byte[] data)
+        {
+            if (_session.TryGetSeat(clientId, out var seat) && StageCodec.TryDecodeParty(data, out var party))
+            {
+                _host.ReceiveParty(seat, party);
             }
         }
 
@@ -164,7 +177,9 @@ namespace PenmonScramble.Game
             if (_resultShownAt < 0f)
             {
                 _resultShownAt = Time.time;
-                _hud.ShowResult(snapshot.Result == StageResult.Cleared, canRetry: _host != null, snapshot.EnemiesDefeated);
+                var cleared = snapshot.Result == StageResult.Cleared;
+                var coins = RecordResult(snapshot, cleared);
+                _hud.ShowResult(cleared, canRetry: _host != null, snapshot.EnemiesDefeated, coins);
                 return;
             }
 
@@ -172,6 +187,14 @@ namespace PenmonScramble.Game
             {
                 Retry();
             }
+        }
+
+        /// <summary>結果を自分の記録に書いて保存する。協力ではホストのクリアが全員の記録に付く（§6.3）</summary>
+        private static int RecordResult(StageSnapshot snapshot, bool cleared)
+        {
+            var coins = GameSave.Record.RecordStage(snapshot.StageNo, cleared, snapshot.EnemiesDefeated);
+            GameSave.Save();
+            return coins;
         }
 
         private void Retry()

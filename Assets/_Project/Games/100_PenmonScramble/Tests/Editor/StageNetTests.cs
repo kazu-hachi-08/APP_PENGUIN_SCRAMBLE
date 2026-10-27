@@ -11,6 +11,7 @@ namespace PenmonScramble.Tests
             var snapshot = new StageSnapshot
             {
                 Round = 3,
+                StageNo = 2,
                 Tick = 120,
                 Result = StageResult.Cleared,
                 AreaMin = new Vec2(-8f, -4.5f),
@@ -47,6 +48,7 @@ namespace PenmonScramble.Tests
 
             Assert.That(decoded, Is.Not.Null);
             Assert.That(decoded.Round, Is.EqualTo(3));
+            Assert.That(decoded.StageNo, Is.EqualTo(2));
             Assert.That(decoded.Tick, Is.EqualTo(120));
             Assert.That(decoded.Result, Is.EqualTo(StageResult.Cleared));
             Assert.That(decoded.AreaMax, Is.EqualTo(new Vec2(8f, 4.5f)));
@@ -199,6 +201,7 @@ namespace PenmonScramble.Tests
             Assert.That(first.SkillsUsed.Count, Is.EqualTo(1));
             Assert.That(second.SkillsUsed.Count, Is.EqualTo(0));
             Assert.That(first.Round, Is.EqualTo(1));
+            Assert.That(first.StageNo, Is.EqualTo(StageTable.Stage1.No));
             Assert.That(first.Tick, Is.EqualTo(1));
             Assert.That(first.TryGetPlayer(0, out var player), Is.True);
             Assert.That(player.Id, Is.EqualTo(players[0].Id));
@@ -218,6 +221,40 @@ namespace PenmonScramble.Tests
             world.RemoveUnit(players[0].Id);
 
             Assert.That(recorder.Capture().Result, Is.EqualTo(StageResult.Failed));
+        }
+
+        [Test]
+        public void Party_RoundTripsThroughCodec()
+        {
+            var party = new[] { new OwnedPenguin(10, 5, 150), new OwnedPenguin(11, 8, 240), new OwnedPenguin(12, 1, 90) };
+
+            Assert.That(StageCodec.TryDecodeParty(StageCodec.EncodeParty(party), out var stats), Is.True);
+
+            Assert.That(stats.Length, Is.EqualTo(3));
+            Assert.That(stats[1].SpeciesNo, Is.EqualTo(8));
+            Assert.That(stats[1].MaxHp, Is.EqualTo(SpeciesTable.PlayerStats(SpeciesTable.Get(8), 240).MaxHp));
+        }
+
+        [Test]
+        public void Party_UnknownSpeciesOrBrokenData_IsRejected()
+        {
+            var unknown = StageCodec.EncodeParty(new[] { new OwnedPenguin(1, 99, 100) });
+
+            Assert.That(StageCodec.TryDecodeParty(unknown, out _), Is.False);
+            Assert.That(StageCodec.TryDecodeParty(new byte[] { StageCodec.FormatVersion, 3, 1 }, out _), Is.False);
+        }
+
+        [Test]
+        public void TrialStage_UsesGivenStageAndParties()
+        {
+            var party = new[] { SpeciesTable.PlayerStats(SpeciesTable.Get(20), 300) };
+
+            var players = TrialStage.Create(StageTable.Stage1, 1, new[] { 0, 1 }, new[] { party, party }, out var world);
+
+            Assert.That(world.StageNo, Is.EqualTo(1));
+            Assert.That(players.Length, Is.EqualTo(2));
+            Assert.That(players[1].SpeciesNo, Is.EqualTo(20));
+            Assert.That(players[1].MaxHp, Is.EqualTo(party[0].MaxHp));
         }
 
         [Test]

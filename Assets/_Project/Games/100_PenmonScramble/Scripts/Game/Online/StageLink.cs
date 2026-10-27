@@ -6,13 +6,14 @@ using Unity.Netcode;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージ中の通信路: ホスト → 全員にスナップショット、ゲスト → ホストに入力。
+    /// ステージ中の通信路: ホスト → 全員にスナップショット、ゲスト → ホストに入力と編成。
     /// 接続は共通基盤の OnlineSession に任せ、ここはバイト列の受け渡しだけを持つ（中身は Core の StageCodec）
     /// </summary>
     public sealed class StageLink
     {
         private const string SnapshotMessage = "scramble.snapshot";
         private const string InputMessage = "scramble.input";
+        private const string PartyMessage = "scramble.party";
         private const int InitialMessageSize = 1024;
         // 敵や弾が多い瞬間でも数KB。MTU を超える分は分割して送る
         private const int MaxMessageSize = 64 * 1024;
@@ -25,6 +26,9 @@ namespace PenmonScramble.Game
         /// <summary>ホストのみ: ゲストから入力が届いた。引数は送り主の clientId</summary>
         public event Action<ulong, byte[]> InputReceived;
 
+        /// <summary>ホストのみ: ゲストから編成が届いた。引数は送り主の clientId</summary>
+        public event Action<ulong, byte[]> PartyReceived;
+
         private static NetworkManager Network => NetworkManager.Singleton;
         private static CustomMessagingManager Messaging => Network != null ? Network.CustomMessagingManager : null;
 
@@ -34,6 +38,7 @@ namespace PenmonScramble.Game
             var messaging = Messaging;
             messaging?.RegisterNamedMessageHandler(SnapshotMessage, (_, reader) => SnapshotReceived?.Invoke(ReadBytes(reader)));
             messaging?.RegisterNamedMessageHandler(InputMessage, (sender, reader) => InputReceived?.Invoke(sender, ReadBytes(reader)));
+            messaging?.RegisterNamedMessageHandler(PartyMessage, (sender, reader) => PartyReceived?.Invoke(sender, ReadBytes(reader)));
         }
 
         public void Close()
@@ -41,6 +46,7 @@ namespace PenmonScramble.Game
             var messaging = Messaging;
             messaging?.UnregisterNamedMessageHandler(SnapshotMessage);
             messaging?.UnregisterNamedMessageHandler(InputMessage);
+            messaging?.UnregisterNamedMessageHandler(PartyMessage);
         }
 
         public void SendSnapshot(byte[] data)
@@ -73,6 +79,16 @@ namespace PenmonScramble.Game
 
         public void SendInput(byte[] data)
         {
+            SendToHost(InputMessage, data);
+        }
+
+        public void SendParty(byte[] data)
+        {
+            SendToHost(PartyMessage, data);
+        }
+
+        private static void SendToHost(string message, byte[] data)
+        {
             var messaging = Messaging;
             if (messaging == null)
             {
@@ -80,7 +96,7 @@ namespace PenmonScramble.Game
             }
 
             using var writer = Write(data);
-            messaging.SendNamedMessage(InputMessage, NetworkManager.ServerClientId, writer, NetworkDelivery.ReliableSequenced);
+            messaging.SendNamedMessage(message, NetworkManager.ServerClientId, writer, NetworkDelivery.ReliableSequenced);
         }
 
         private static FastBufferWriter Write(byte[] data)

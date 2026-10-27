@@ -112,10 +112,10 @@ namespace PenmonScramble.Game
         }
 
         /// <param name="canRetry">「もう一度」を押せるのはホストだけ（ゲストはホストが始め直すのを待つ）</param>
-        public void ShowResult(bool cleared, bool canRetry, int enemiesDefeated)
+        public void ShowResult(bool cleared, bool canRetry, int enemiesDefeated, int coins)
         {
             var title = cleared ? "クリア！" : "やられた…";
-            title = $"{title}\n<size=56>倒した数 {enemiesDefeated} 体</size>";
+            title = $"{title}\n<size=56>倒した数 {enemiesDefeated} 体　コイン +{coins}</size>";
             _resultText.text = canRetry ? title : $"{title}\n<size=48>ホストが「もう一度」を押すと始まります</size>";
             _retryButton.gameObject.SetActive(canRetry);
             _resultPanel.SetActive(true);

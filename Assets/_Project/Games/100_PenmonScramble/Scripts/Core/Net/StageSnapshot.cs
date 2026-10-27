@@ -131,6 +131,9 @@ namespace PenmonScramble.Core
     {
         /// <summary>何回目の挑戦か。「もう一度」で増える。ゲストはこれが変わったら画面を作り直す</summary>
         public int Round { get; set; }
+
+        /// <summary>遊んでいるステージの番号。ゲストはクリアしたときにこの番号を自分の記録に書く（§8）</summary>
+        public int StageNo { get; set; }
         public int Tick { get; set; }
         public StageResult Result { get; set; }
         /// <summary>いま動ける範囲。出入口が開いている間は次のエリアまで広がる</summary>
