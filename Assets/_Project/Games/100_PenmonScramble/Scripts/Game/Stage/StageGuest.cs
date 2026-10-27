@@ -66,7 +66,7 @@ namespace PenmonScramble.Game
 
         private static bool IsSame(PlayerInput a, PlayerInput b)
         {
-            return a.Move.Equals(b.Move) && a.Skill1 == b.Skill1 && a.Skill2 == b.Skill2;
+            return a.Move.Equals(b.Move) && a.Skill1 == b.Skill1 && a.Skill2 == b.Skill2 && a.Special == b.Special && a.Switch == b.Switch;
         }
 
         private void OnSnapshot(byte[] data)

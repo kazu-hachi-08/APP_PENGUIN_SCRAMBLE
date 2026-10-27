@@ -16,12 +16,20 @@ namespace PenmonScramble.Tests
                 AreaMin = new Vec2(-8f, -4.5f),
                 AreaMax = new Vec2(8f, 4.5f),
             };
-            snapshot.Units.Add(new UnitState(1, Team.Player, 2, new Vec2(1.5f, -2f), new Vec2(0f, 1f), 80, 120, 0.45f));
-            snapshot.Units.Add(new UnitState(7, Team.Enemy, Unit.NoSeat, new Vec2(3f, 4f), new Vec2(-1f, 0f), 5, 30, 0.45f));
-            snapshot.Projectiles.Add(new ProjectileState(9, new Vec2(0.25f, 0.5f), 0.2f));
+            snapshot.Units.Add(new UnitState(1, Team.Player, 2, 5, new Vec2(1.5f, -2f), new Vec2(0f, 1f), 80, 120, 0.45f, UnitFlags.Dashing | UnitFlags.Invincible));
+            snapshot.Units.Add(new UnitState(7, Team.Enemy, Unit.NoSeat, 20, new Vec2(3f, 4f), new Vec2(-1f, 0f), 5, 30, 0.45f, UnitFlags.Frozen));
+            snapshot.Projectiles.Add(new ProjectileState(9, Team.Enemy, Element.Water, new Vec2(0.25f, 0.5f), 0.2f));
             snapshot.Hits.Add(new HitEvent(1, 7, 14, new Vec2(3f, 4f)));
             snapshot.Defeats.Add(new DefeatedEvent(8, Team.Enemy, new Vec2(-1f, 2f)));
             snapshot.SkillsUsed.Add(new SkillUsedEvent(1, 1, SkillShape.Projectile));
+            snapshot.Effects.Add(new EffectState(11, AreaEffectKind.Drop, Element.Thunder, new Vec2(-2f, 1f), 1.4f));
+            var player = new PlayerState { Seat = 2, ActiveIndex = 1, SpecialGauge = 0.75f, SwitchCooldown = 1.5f };
+            player.Members.Add(new MemberState(1, 0, 120));
+            player.Members.Add(new MemberState(5, 80, 170));
+            player.Members.Add(new MemberState(9, 135, 135));
+            snapshot.Players.Add(player);
+            snapshot.SpecialsUsed.Add(new SpecialUsedEvent(1, 5, Element.Ice));
+            snapshot.Bursts.Add(new BurstEvent(BurstShape.Ring, Element.Wind, new Vec2(1f, 1f), 5f, true));
             return snapshot;
         }
 
@@ -50,6 +58,40 @@ namespace PenmonScramble.Tests
             Assert.That(decoded.Hits[0].Damage, Is.EqualTo(14));
             Assert.That(decoded.Defeats[0].UnitId, Is.EqualTo(8));
             Assert.That(decoded.SkillsUsed[0].Shape, Is.EqualTo(SkillShape.Projectile));
+        }
+
+        [Test]
+        public void Snapshot_RoundTripsPhase3Fields()
+        {
+            var decoded = StageCodec.DecodeSnapshot(StageCodec.EncodeSnapshot(SampleSnapshot()));
+
+            Assert.That(decoded.Units[0].SpeciesNo, Is.EqualTo(5));
+            Assert.That(decoded.Units[0].Has(UnitFlags.Dashing), Is.True);
+            Assert.That(decoded.Units[0].Has(UnitFlags.Frozen), Is.False);
+            Assert.That(decoded.Units[1].Has(UnitFlags.Frozen), Is.True);
+            Assert.That(decoded.Projectiles[0].Team, Is.EqualTo(Team.Enemy));
+            Assert.That(decoded.Projectiles[0].Element, Is.EqualTo(Element.Water));
+
+            var effect = decoded.Effects[0];
+            Assert.That(effect.Kind, Is.EqualTo(AreaEffectKind.Drop));
+            Assert.That(effect.Element, Is.EqualTo(Element.Thunder));
+            Assert.That(effect.Radius, Is.EqualTo(1.4f));
+
+            var player = decoded.FindPlayerState(2);
+            Assert.That(player, Is.Not.Null);
+            Assert.That(player.ActiveIndex, Is.EqualTo(1));
+            Assert.That(player.SpecialGauge, Is.EqualTo(0.75f));
+            Assert.That(player.SwitchCooldown, Is.EqualTo(1.5f));
+            Assert.That(player.Members.Count, Is.EqualTo(3));
+            Assert.That(player.Members[1].SpeciesNo, Is.EqualTo(5));
+            Assert.That(player.Members[1].Hp, Is.EqualTo(80));
+            Assert.That(player.Members[1].MaxHp, Is.EqualTo(170));
+
+            Assert.That(decoded.SpecialsUsed[0].SpeciesNo, Is.EqualTo(5));
+            Assert.That(decoded.SpecialsUsed[0].Element, Is.EqualTo(Element.Ice));
+            Assert.That(decoded.Bursts[0].Shape, Is.EqualTo(BurstShape.Ring));
+            Assert.That(decoded.Bursts[0].Radius, Is.EqualTo(5f));
+            Assert.That(decoded.Bursts[0].IsSpecial, Is.True);
         }
 
         [Test]
@@ -82,6 +124,28 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
+        public void Input_RoundTripsSpecialAndSwitch()
+        {
+            var input = new PlayerInput(Vec2.Zero, skill1: true, skill2: false, special: true, swap: true);
+
+            Assert.That(StageCodec.TryDecodeInput(StageCodec.EncodeInput(input), out var decoded), Is.True);
+            Assert.That(decoded.Skill1, Is.True);
+            Assert.That(decoded.Special, Is.True);
+            Assert.That(decoded.Switch, Is.True);
+        }
+
+        [Test]
+        public void InputLatch_KeepsSwitchTapUntilConsumed()
+        {
+            var latch = new InputLatch();
+            latch.Receive(new PlayerInput(Vec2.Zero, false, false, special: false, swap: true));
+            latch.Receive(new PlayerInput(Vec2.Zero, false, false));
+
+            Assert.That(latch.Consume().Switch, Is.True);
+            Assert.That(latch.Consume().Switch, Is.False);
+        }
+
+        [Test]
         public void PrependEvents_PutsOlderEventsFirst()
         {
             var older = new StageSnapshot();
@@ -99,7 +163,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Recorder_CapturesEventsOnce()
         {
-            var players = TrialStage.Create(seed: 5, new[] { 0 }, out var world);
+            var players = TrialStage.Create(seed: 5, new[] { 0 }, round: 1, out var world);
             var recorder = new StageRecorder(world, round: 1);
             world.SetInput(players[0].Id, new PlayerInput(Vec2.Zero, skill1: true, skill2: false));
             world.Tick();
@@ -115,12 +179,13 @@ namespace PenmonScramble.Tests
             Assert.That(player.Id, Is.EqualTo(players[0].Id));
             Assert.That(first.CountAlive(Team.Enemy), Is.EqualTo(TrialStage.EnemyCount));
             Assert.That(first.Result, Is.EqualTo(StageResult.Playing));
+            Assert.That(first.FindPlayerState(0).Members.Count, Is.EqualTo(Balance.PartySize));
         }
 
         [Test]
         public void Recorder_ReportsFailedWhenNoPlayersLeft()
         {
-            var players = TrialStage.Create(seed: 5, new[] { 0 }, out var world);
+            var players = TrialStage.Create(seed: 5, new[] { 0 }, round: 1, out var world);
             var recorder = new StageRecorder(world, round: 1);
 
             world.RemoveUnit(players[0].Id);

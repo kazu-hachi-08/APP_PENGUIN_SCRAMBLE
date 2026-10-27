@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace PenmonScramble.Core
@@ -9,43 +10,107 @@ namespace PenmonScramble.Core
         Failed,
     }
 
-    /// <summary>描くのに要るユニット1体分の値</summary>
+    /// <summary>見た目を変える状態。描く側が、技の定義を引かずに分かるようにする</summary>
+    [Flags]
+    public enum UnitFlags : byte
+    {
+        None = 0,
+        Dashing = 1,
+        Frozen = 2,
+        Invincible = 4,
+    }
+
+    /// <summary>描くのに要るユニット1体分の値（場に出ている子の値）</summary>
     public readonly struct UnitState
     {
         public readonly int Id;
         public readonly Team Team;
         public readonly int Seat;
+        public readonly int SpeciesNo;
         public readonly Vec2 Position;
         public readonly Vec2 Facing;
         public readonly int Hp;
         public readonly int MaxHp;
         public readonly float Radius;
+        public readonly UnitFlags Flags;
 
-        public UnitState(int id, Team team, int seat, Vec2 position, Vec2 facing, int hp, int maxHp, float radius)
+        public UnitState(int id, Team team, int seat, int speciesNo, Vec2 position, Vec2 facing, int hp, int maxHp, float radius, UnitFlags flags)
         {
             Id = id;
             Team = team;
             Seat = seat;
+            SpeciesNo = speciesNo;
             Position = position;
             Facing = facing;
             Hp = hp;
             MaxHp = maxHp;
             Radius = radius;
+            Flags = flags;
         }
+
+        public bool Has(UnitFlags flag) => (Flags & flag) != 0;
     }
 
     public readonly struct ProjectileState
     {
         public readonly int Id;
+        public readonly Team Team;
+        public readonly Element Element;
         public readonly Vec2 Position;
         public readonly float Radius;
 
-        public ProjectileState(int id, Vec2 position, float radius)
+        public ProjectileState(int id, Team team, Element element, Vec2 position, float radius)
         {
             Id = id;
+            Team = team;
+            Element = element;
             Position = position;
             Radius = radius;
         }
+    }
+
+    /// <summary>地面に置かれた範囲（設置・落下の予告）</summary>
+    public readonly struct EffectState
+    {
+        public readonly int Id;
+        public readonly AreaEffectKind Kind;
+        public readonly Element Element;
+        public readonly Vec2 Position;
+        public readonly float Radius;
+
+        public EffectState(int id, AreaEffectKind kind, Element element, Vec2 position, float radius)
+        {
+            Id = id;
+            Kind = kind;
+            Element = element;
+            Position = position;
+            Radius = radius;
+        }
+    }
+
+    /// <summary>連れている1体分（HUD の控えの表示に使う）</summary>
+    public readonly struct MemberState
+    {
+        public readonly int SpeciesNo;
+        public readonly int Hp;
+        public readonly int MaxHp;
+
+        public MemberState(int speciesNo, int hp, int maxHp)
+        {
+            SpeciesNo = speciesNo;
+            Hp = hp;
+            MaxHp = maxHp;
+        }
+    }
+
+    /// <summary>プレイヤー1人分の、場に出ている子以外の値（3体・ゲージ・交代の待ち）</summary>
+    public sealed class PlayerState
+    {
+        public int Seat { get; set; }
+        public int ActiveIndex { get; set; }
+        public float SpecialGauge { get; set; }
+        public float SwitchCooldown { get; set; }
+        public List<MemberState> Members { get; } = new List<MemberState>();
     }
 
     /// <summary>
@@ -63,9 +128,13 @@ namespace PenmonScramble.Core
 
         public List<UnitState> Units { get; } = new List<UnitState>();
         public List<ProjectileState> Projectiles { get; } = new List<ProjectileState>();
+        public List<EffectState> Effects { get; } = new List<EffectState>();
+        public List<PlayerState> Players { get; } = new List<PlayerState>();
         public List<HitEvent> Hits { get; } = new List<HitEvent>();
         public List<DefeatedEvent> Defeats { get; } = new List<DefeatedEvent>();
         public List<SkillUsedEvent> SkillsUsed { get; } = new List<SkillUsedEvent>();
+        public List<SpecialUsedEvent> SpecialsUsed { get; } = new List<SpecialUsedEvent>();
+        public List<BurstEvent> Bursts { get; } = new List<BurstEvent>();
 
         public bool TryGetPlayer(int seat, out UnitState state)
         {
@@ -80,6 +149,20 @@ namespace PenmonScramble.Core
 
             state = default;
             return false;
+        }
+
+        /// <summary>倒れて場から消えた人は見つからない</summary>
+        public PlayerState FindPlayerState(int seat)
+        {
+            foreach (var player in Players)
+            {
+                if (player.Seat == seat)
+                {
+                    return player;
+                }
+            }
+
+            return null;
         }
 
         public int CountAlive(Team team)
@@ -105,6 +188,8 @@ namespace PenmonScramble.Core
             Hits.InsertRange(0, older.Hits);
             Defeats.InsertRange(0, older.Defeats);
             SkillsUsed.InsertRange(0, older.SkillsUsed);
+            SpecialsUsed.InsertRange(0, older.SpecialsUsed);
+            Bursts.InsertRange(0, older.Bursts);
         }
     }
 }

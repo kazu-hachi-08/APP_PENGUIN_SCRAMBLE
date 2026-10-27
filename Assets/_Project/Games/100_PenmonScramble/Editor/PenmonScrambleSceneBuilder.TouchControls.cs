@@ -21,25 +21,40 @@ namespace PenmonScramble.Editor
         private const float Skill1Size = 240f;
         private static readonly Vector2 Skill2Position = new Vector2(-500f, 170f);
         private const float Skill2Size = 170f;
+        // §3: 必殺技は右上、交代は右下の小ボタン
+        private static readonly Vector2 SpecialPosition = new Vector2(-260f, 500f);
+        private const float SpecialSize = 160f;
+        private static readonly Vector2 SwitchPosition = new Vector2(-70f, 70f);
+        private const float SwitchSize = 110f;
         private const int SkillFontSize = 44;
+        private const int SmallButtonFontSize = 32;
 
         private static readonly Color JoystickBackColor = new Color(1f, 1f, 1f, 0.25f);
         private static readonly Color JoystickHandleColor = new Color(1f, 1f, 1f, 0.6f);
         private static readonly Color Skill1Color = new Color(1f, 0.55f, 0.35f, 0.7f);
         private static readonly Color Skill2Color = new Color(0.35f, 0.75f, 1f, 0.7f);
+        // 必殺技ボタンの透明度は StageHud がゲージに合わせて変える
+        private static readonly Color SpecialColor = new Color(1f, 0.85f, 0.2f, 0.35f);
+        private static readonly Color SwitchColor = new Color(0.8f, 0.8f, 0.85f, 0.6f);
 
         private readonly struct TouchControls
         {
             public readonly VirtualJoystick Joystick;
             public readonly VirtualButton Skill1;
             public readonly VirtualButton Skill2;
+            public readonly VirtualButton Special;
+            public readonly VirtualButton Switch;
 
-            public TouchControls(VirtualJoystick joystick, VirtualButton skill1, VirtualButton skill2)
+            public TouchControls(VirtualJoystick joystick, VirtualButton skill1, VirtualButton skill2, VirtualButton special, VirtualButton swap)
             {
                 Joystick = joystick;
                 Skill1 = skill1;
                 Skill2 = skill2;
+                Special = special;
+                Switch = swap;
             }
+
+            public Image SpecialImage => Special.GetComponent<Image>();
         }
 
         private static TouchControls CreateTouchControls(Transform canvas)
@@ -52,7 +67,10 @@ namespace PenmonScramble.Editor
             var joystick = CreateJoystick(root.transform, knob);
             var skill1 = CreateSkillButton(root.transform, knob, "Skill1", "技1", Skill1Position, Skill1Size, Skill1Color);
             var skill2 = CreateSkillButton(root.transform, knob, "Skill2", "技2", Skill2Position, Skill2Size, Skill2Color);
-            return new TouchControls(joystick, skill1, skill2);
+            var special = CreateSkillButton(root.transform, knob, "Special", "必殺", SpecialPosition, SpecialSize, SpecialColor);
+            var swap = CreateSkillButton(root.transform, knob, "Switch", "交代", SwitchPosition, SwitchSize, SwitchColor);
+            swap.GetComponentInChildren<Text>().fontSize = SmallButtonFontSize;
+            return new TouchControls(joystick, skill1, skill2, special, swap);
         }
 
         private static VirtualJoystick CreateJoystick(Transform parent, Sprite knob)

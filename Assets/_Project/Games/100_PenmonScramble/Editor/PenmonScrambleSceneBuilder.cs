@@ -47,24 +47,25 @@ namespace PenmonScramble.Editor
         public static void BuildScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            CreateCamera();
+            var shake = CreateCamera();
             CreateEventSystem();
             var canvas = CreateCanvas();
-            var hud = CreateHud(canvas.transform);
             var touch = CreateTouchControls(canvas.transform);
+            var hud = CreateHud(canvas.transform, touch.SpecialImage);
+            var cutIn = CreateCutIn(canvas.transform);
             var session = new GameObject("OnlineSession").AddComponent<OnlineSession>();
             // タイトルはステージの HUD より手前に出す（後に作った方が手前）
             var title = CreateTitlePanel(canvas.transform, session);
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);
-            CreateStage(hud, session, title);
+            CreateStage(hud, session, title, shake, cutIn);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings();
             Debug.Log($"[PenmonScrambleSceneBuilder] {ScenePath} を生成しました");
         }
 
-        private static void CreateCamera()
+        private static CameraShake CreateCamera()
         {
             var cameraObj = new GameObject("Main Camera");
             cameraObj.tag = "MainCamera";
@@ -75,6 +76,7 @@ namespace PenmonScramble.Editor
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = BackgroundColor;
             cameraObj.AddComponent<AudioListener>();
+            return cameraObj.AddComponent<CameraShake>();
         }
 
         private static void CreateEventSystem()
@@ -116,15 +118,21 @@ namespace PenmonScramble.Editor
             so.FindProperty("_virtualJoystick").objectReferenceValue = touch.Joystick;
             so.FindProperty("_virtualAction1Button").objectReferenceValue = touch.Skill1;
             so.FindProperty("_virtualAction2Button").objectReferenceValue = touch.Skill2;
+            so.FindProperty("_virtualAction3Button").objectReferenceValue = touch.Special;
+            so.FindProperty("_virtualAction4Button").objectReferenceValue = touch.Switch;
             // 仮想ボタンはこのシーンの物なので、シーンをまたいで残すと参照が切れる
             so.FindProperty("_dontDestroyOnLoad").boolValue = false;
             so.ApplyModifiedProperties();
         }
 
-        private static void CreateStage(StageHud hud, OnlineSession session, ModeSelectPanel title)
+        private static void CreateStage(StageHud hud, OnlineSession session, ModeSelectPanel title, CameraShake shake, SpecialCutIn cutIn)
         {
             var stageObj = new GameObject("Stage");
             var view = stageObj.AddComponent<StageView>();
+            var viewSo = new SerializedObject(view);
+            viewSo.FindProperty("_cameraShake").objectReferenceValue = shake;
+            viewSo.FindProperty("_cutIn").objectReferenceValue = cutIn;
+            viewSo.ApplyModifiedProperties();
             var runner = stageObj.AddComponent<StageRunner>();
             var so = new SerializedObject(runner);
             so.FindProperty("_view").objectReferenceValue = view;

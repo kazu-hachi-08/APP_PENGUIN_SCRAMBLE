@@ -1,10 +1,13 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// ユニットを作るときの値。フェーズ3でペンギンの種類とパワーから計算するようになる
+    /// ユニット（の1体分）を作るときの値。ペンギンは SpeciesTable で種類とパワーから作る
     /// </summary>
     public sealed class UnitStats
     {
+        /// <summary>種類の番号（1〜20）。0 は種類の無い仮のユニット（テスト用）</summary>
+        public int SpeciesNo { get; set; }
+        public Element Element { get; set; }
         public float Radius { get; set; }
         public float MoveSpeed { get; set; }
         public int MaxHp { get; set; }
@@ -14,5 +17,8 @@ namespace PenmonScramble.Core
 
         /// <summary>技1・技2（敵は技1だけ）</summary>
         public SkillDef[] Skills { get; set; }
+
+        /// <summary>技の待ち時間に掛ける倍率。敵は同じ技でも間をあけて使う（§4.7）</summary>
+        public float CooldownScale { get; set; } = 1f;
     }
 }

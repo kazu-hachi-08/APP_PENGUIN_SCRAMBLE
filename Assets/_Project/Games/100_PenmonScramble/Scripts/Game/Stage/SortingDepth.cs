@@ -12,6 +12,8 @@ namespace PenmonScramble.Game
         private const int LayersPerObject = 4;
 
         public const int Background = -100000;
+        /// <summary>地面に置く範囲（設置・落下の予告）。どのペンギンよりも後ろ</summary>
+        public const int Ground = Background + 1;
         public const int Popup = 100000;
 
         public static int ForY(float y) => -UnityEngine.Mathf.RoundToInt(y * Scale) * LayersPerObject;

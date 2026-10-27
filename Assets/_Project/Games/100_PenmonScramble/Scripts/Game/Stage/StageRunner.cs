@@ -29,7 +29,7 @@ namespace PenmonScramble.Game
         private StageHost _host;
         private StageGuest _guest;
         private int _localSeat;
-        private int _lastMaxHp;
+        private PlayerState _lastPlayerState;
         private float _resultShownAt = -1f;
         private bool _leaving;
 
@@ -132,15 +132,18 @@ namespace PenmonScramble.Game
 
         private void UpdateHud(StageSnapshot snapshot)
         {
-            // 倒れた後はスナップショットにいないので、最後に見た最大 HP で 0 を出す
-            var hp = 0;
-            if (snapshot.TryGetPlayer(_localSeat, out var player))
+            // 3体とも倒れた後はスナップショットにいないので、最後に見た3体を HP 0 で出す
+            var state = snapshot.FindPlayerState(_localSeat);
+            if (state != null)
             {
-                hp = player.Hp;
-                _lastMaxHp = player.MaxHp;
+                _lastPlayerState = state;
             }
 
-            _hud.SetPlayerHp(hp, _lastMaxHp);
+            if (_lastPlayerState != null)
+            {
+                _hud.SetParty(_lastPlayerState, fallen: state == null);
+            }
+
             _hud.SetEnemiesLeft(snapshot.CountAlive(Team.Enemy));
         }
 
@@ -173,6 +176,7 @@ namespace PenmonScramble.Game
 
         private void Retry()
         {
+            _lastPlayerState = null;
             _host?.StartRound();
         }
 

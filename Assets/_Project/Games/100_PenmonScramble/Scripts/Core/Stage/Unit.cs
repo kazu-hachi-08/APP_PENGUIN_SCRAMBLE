@@ -1,25 +1,29 @@
+using System.Collections.Generic;
+
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 場にいるペンギン（味方・敵の両方）。位置などは StageWorld だけが書き換える
+    /// 場にいるペンギン（味方・敵の両方）。位置などは StageWorld だけが書き換える。
+    /// プレイヤーは3体を連れていて、場に出ている1体（Active）の値がこのユニットの値になる。敵は1体だけ
     /// </summary>
     public sealed class Unit
     {
         /// <summary>敵など、プレイヤーの席に属さないユニットの Seat</summary>
         public const int NoSeat = -1;
 
-        internal Unit(int id, Team team, UnitStats stats, Vec2 position, int seat)
+        private readonly PartyMember[] _members;
+
+        internal Unit(int id, Team team, IReadOnlyList<UnitStats> party, Vec2 position, int seat)
         {
             Id = id;
             Team = team;
             Seat = seat;
-            Radius = stats.Radius;
-            MoveSpeed = stats.MoveSpeed;
-            MaxHp = stats.MaxHp;
-            Hp = stats.MaxHp;
-            Attack = stats.Attack;
-            Skills = stats.Skills;
-            Cooldowns = new float[stats.Skills.Length];
+            _members = new PartyMember[party.Count];
+            for (var i = 0; i < party.Count; i++)
+            {
+                _members[i] = new PartyMember(party[i]);
+            }
+
             Position = position;
             Facing = team == Team.Player ? Vec2.Right : -Vec2.Right;
         }
@@ -29,13 +33,26 @@ namespace PenmonScramble.Core
 
         /// <summary>操作しているプレイヤーの席（ホスト=0）。オンラインで誰のペンギンかを見分けるため</summary>
         public int Seat { get; }
-        public float Radius { get; }
-        public float MoveSpeed { get; }
-        public int MaxHp { get; }
-        public float Attack { get; }
-        public SkillDef[] Skills { get; }
 
-        public int Hp { get; internal set; }
+        public IReadOnlyList<PartyMember> Members => _members;
+        public int ActiveIndex { get; private set; }
+        public PartyMember Active => _members[ActiveIndex];
+
+        public int SpeciesNo => Active.Stats.SpeciesNo;
+        public Element Element => Active.Stats.Element;
+        public float Radius => Active.Stats.Radius;
+        public float MoveSpeed => Active.Stats.MoveSpeed;
+        public int MaxHp => Active.MaxHp;
+        public float Attack => Active.Stats.Attack;
+        public SkillDef[] Skills => Active.Stats.Skills;
+        internal float CooldownScale => Active.Stats.CooldownScale;
+
+        public int Hp
+        {
+            get => Active.Hp;
+            internal set => Active.Hp = value;
+        }
+
         public Vec2 Position { get; internal set; }
 
         /// <summary>向き（長さ1）。技はこの方向へ出す</summary>
@@ -44,14 +61,68 @@ namespace PenmonScramble.Core
         /// <summary>吹っ飛びの速さ。減速しながら0に戻る</summary>
         public Vec2 KnockbackVelocity { get; internal set; }
 
-        internal float[] Cooldowns { get; }
+        /// <summary>必殺技のゲージ（0〜1）。プレイヤーごとに1本で、交代しても引き継ぐ（§4.3）</summary>
+        public float SpecialGauge { get; internal set; }
+
+        /// <summary>次に交代できるまでの秒数</summary>
+        public float SwitchCooldown { get; internal set; }
+
+        public float FrozenSeconds { get; internal set; }
+        public float InvincibleSeconds { get; internal set; }
+
+        internal DashState Dash { get; set; }
+        internal float[] Cooldowns => Active.Cooldowns;
         internal PlayerInput Input { get; set; }
 
+        // 交代は押した瞬間だけ。押しっぱなしで2秒ごとに替わり続けないようにする
+        private bool _wasSwitchHeld;
+
+        /// <summary>場に出ている子が元気か。倒れても控えがいれば、その更新の終わりに次の子が出る</summary>
         public bool IsAlive => Hp > 0;
+        public bool HasAliveMember => FindNextAlive() >= 0 || IsAlive;
 
         /// <summary>強く飛ばされている間は、歩くことも技を出すこともできない</summary>
         public bool IsStunned => KnockbackVelocity.Length > Balance.StunSpeed;
+        public bool IsDashing => Dash != null;
+        public bool IsFrozen => FrozenSeconds > 0f;
+        public bool IsInvincible => InvincibleSeconds > 0f;
+        public bool IsSpecialReady => SpecialGauge >= 1f;
 
         public float GetCooldown(int slot) => Cooldowns[slot];
+
+        /// <summary>1→2→3→1 の順で、倒れた子を飛ばして次の子を出す。いなければ false</summary>
+        internal bool SwitchToNextAlive()
+        {
+            var next = FindNextAlive();
+            if (next < 0)
+            {
+                return false;
+            }
+
+            ActiveIndex = next;
+            Dash = null;
+            return true;
+        }
+
+        private int FindNextAlive()
+        {
+            for (var i = 1; i < _members.Length; i++)
+            {
+                var index = (ActiveIndex + i) % _members.Length;
+                if (_members[index].IsAlive)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        internal bool ConsumeSwitchPress()
+        {
+            var pressed = Input.Switch && !_wasSwitchHeld;
+            _wasSwitchHeld = Input.Switch;
+            return pressed;
+        }
     }
 }

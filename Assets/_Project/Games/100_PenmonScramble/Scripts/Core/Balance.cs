@@ -40,6 +40,39 @@ namespace PenmonScramble.Core
         /// </summary>
         public const int SnapshotIntervalTicks = 2;
 
+        /// <summary>ペンギンの体の半径（マス）。種類で変えると交代した瞬間に重なりが動いて見えるので、全員同じにする</summary>
+        public const float PenguinRadius = 0.45f;
+
+        /// <summary>ガチャ（フェーズ6）ができるまで、連れていくペンギンのパワー（§7 のワールド1の真ん中）</summary>
+        public const int TrialPower = 100;
+
+        /// <summary>連れていくペンギンの数（§4.1）</summary>
+        public const int PartySize = 3;
+
+        /// <summary>交代した後、次に交代できるまで（秒）。交代を連打して技の待ち時間をごまかせないようにする</summary>
+        public const float SwitchCooldownSeconds = 2f;
+
+        // 野生の敵（§4.7）。プレイヤーより弱く・遅くして、たくさん出しても囲まれて負けないようにする
+        /// <summary>敵の HP ＝ 種類の HP の倍率 × これ × 人数の倍率</summary>
+        public const int EnemyPower = 25;
+        /// <summary>敵の攻撃 ＝ 種類の攻撃の倍率 × これ</summary>
+        public const float EnemyAttackScale = 0.5f;
+        public const float EnemySpeedScale = 0.45f;
+        /// <summary>敵は同じ技でも、プレイヤーのこの倍の間をあけて使う</summary>
+        public const float EnemyCooldownScale = 5f;
+
+        /// <summary>落下の技で、届く所に敵がいないときに落とす前方の距離（マス）</summary>
+        public const float DropFallbackDistance = 2f;
+
+        /// <summary>敵1体分の HP を削ったときにたまる必殺技のゲージ（満タン=1）。5体分で満タン</summary>
+        public const float SpecialGainPerEnemy = 0.2f;
+
+        /// <summary>必殺技のカットインの長さ（更新の回数）。0.6秒（§4.3）。この間は全体が止まる</summary>
+        public const int SpecialCutInTicks = 18;
+
+        /// <summary>必殺技を出した本人が無敵でいる時間（秒）。カットインと効き目が終わるまで</summary>
+        public const float SpecialInvincibleSeconds = 3f;
+
         // 協力の人数ごとの敵の HP の倍率（§4.7）。添字は人数-1
         private static readonly float[] EnemyHpScales = { 1.0f, 1.6f, 2.2f, 2.8f };
 

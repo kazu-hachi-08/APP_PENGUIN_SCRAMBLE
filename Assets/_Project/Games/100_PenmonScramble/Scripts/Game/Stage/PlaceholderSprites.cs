@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 絵ができるまでの仮の形（丸・三角・四角）を実行時に作る。どれも1マスの大きさ。
+    /// 絵ができるまでの仮の形（丸・輪・三角・四角）を実行時に作る。どれも1マスの大きさ。
     /// アセットにしないのは、絵に差し替えたら丸ごと消すため
     /// </summary>
     public static class PlaceholderSprites
@@ -12,11 +12,16 @@ namespace PenmonScramble.Game
         // 縁を1ピクセルぼかして、拡大してもギザギザに見えないようにする
         private const float EdgeSoftness = 1.5f;
 
+        // 輪の太さ（半径に対する割合）
+        private const float RingThickness = 0.12f;
+
         private static Sprite _circle;
+        private static Sprite _ring;
         private static Sprite _triangle;
         private static Sprite _square;
 
         public static Sprite Circle => _circle != null ? _circle : _circle = Create(CircleAlpha);
+        public static Sprite Ring => _ring != null ? _ring : _ring = Create(RingAlpha);
         public static Sprite Triangle => _triangle != null ? _triangle : _triangle = Create(TriangleAlpha);
         public static Sprite Square => _square != null ? _square : _square = Create((x, y) => 1f);
 
@@ -25,6 +30,15 @@ namespace PenmonScramble.Game
             var radius = Size * 0.5f;
             var distance = new Vector2(x - radius, y - radius).magnitude;
             return Mathf.Clamp01((radius - distance) / EdgeSoftness);
+        }
+
+        private static float RingAlpha(float x, float y)
+        {
+            var radius = Size * 0.5f;
+            var distance = new Vector2(x - radius, y - radius).magnitude;
+            var halfWidth = radius * RingThickness * 0.5f;
+            var center = radius - halfWidth - EdgeSoftness;
+            return Mathf.Clamp01((halfWidth - Mathf.Abs(distance - center)) / EdgeSoftness);
         }
 
         /// <summary>右向きの三角（向きの矢印）。左端の辺から右の頂点へ細くなる</summary>

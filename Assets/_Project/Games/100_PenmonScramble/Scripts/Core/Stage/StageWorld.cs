@@ -11,6 +11,7 @@ namespace PenmonScramble.Core
     {
         private readonly List<Unit> _units = new List<Unit>();
         private readonly List<Projectile> _projectiles = new List<Projectile>();
+        private readonly List<AreaEffect> _areaEffects = new List<AreaEffect>();
         private readonly Random _random;
         private int _nextId = 1;
 
@@ -24,11 +25,14 @@ namespace PenmonScramble.Core
         public event Action<HitEvent> Hit;
         public event Action<DefeatedEvent> Defeated;
         public event Action<SkillUsedEvent> SkillUsed;
+        public event Action<SpecialUsedEvent> SpecialUsed;
+        public event Action<BurstEvent> Burst;
 
         public Vec2 AreaMin { get; }
         public Vec2 AreaMax { get; }
         public IReadOnlyList<Unit> Units => _units;
         public IReadOnlyList<Projectile> Projectiles => _projectiles;
+        public IReadOnlyList<AreaEffect> AreaEffects => _areaEffects;
         public int TickCount { get; private set; }
 
         public bool IsCleared => !HasAlive(Team.Enemy);
@@ -36,11 +40,17 @@ namespace PenmonScramble.Core
 
         public Unit AddUnit(Team team, UnitStats stats, Vec2 position, int seat = Unit.NoSeat)
         {
-            var unit = new Unit(_nextId++, team, stats, position, seat);
+            return AddUnit(team, new[] { stats }, position, seat);
+        }
+
+        /// <summary>party の先頭の子から場に出る（§4.1）</summary>
+        public Unit AddUnit(Team team, IReadOnlyList<UnitStats> party, Vec2 position, int seat = Unit.NoSeat)
+        {
+            var unit = new Unit(_nextId++, team, party, position, seat);
             if (team == Team.Enemy)
             {
                 // 敵が全員そろって同時に殴ってこないよう、最初の待ち時間をばらけさせる
-                unit.Cooldowns[0] = (float)_random.NextDouble() * stats.Skills[0].Cooldown;
+                unit.Cooldowns[0] = (float)_random.NextDouble() * unit.Skills[0].Cooldown * unit.CooldownScale;
             }
 
             _units.Add(unit);
@@ -84,41 +94,73 @@ namespace PenmonScramble.Core
 
         public void Tick()
         {
+            TickCount++;
+            // 必殺技のカットインの間は全体を止める（ヒットストップ）。全員の画面で同じだけ止まるよう、計算の側で止める
+            if (_hitStopTicks > 0)
+            {
+                _hitStopTicks--;
+                return;
+            }
+
             const float dt = Balance.TickSeconds;
-            UpdateCooldowns(dt);
+            FirePendingSpecials();
+            UpdateTimers(dt);
             UpdateActions(dt);
             ApplyKnockback(dt);
             ResolveOverlaps();
             KeepInsideArea();
             UpdateProjectiles(dt);
-            RemoveDefeated();
-            TickCount++;
+            UpdateAreaEffects(dt);
+            ReplaceOrRemoveFallen();
         }
 
-        private void UpdateCooldowns(float dt)
+        private void UpdateTimers(float dt)
         {
             foreach (var unit in _units)
             {
-                for (var i = 0; i < unit.Cooldowns.Length; i++)
+                // 控えの子の待ち時間も進める。交代した直後に技が出せないと、交代する意味が薄れるため
+                foreach (var member in unit.Members)
                 {
-                    unit.Cooldowns[i] = MathF.Max(0f, unit.Cooldowns[i] - dt);
+                    for (var i = 0; i < member.Cooldowns.Length; i++)
+                    {
+                        member.Cooldowns[i] = MathF.Max(0f, member.Cooldowns[i] - dt);
+                    }
                 }
+
+                unit.SwitchCooldown = MathF.Max(0f, unit.SwitchCooldown - dt);
+                unit.FrozenSeconds = MathF.Max(0f, unit.FrozenSeconds - dt);
+                unit.InvincibleSeconds = MathF.Max(0f, unit.InvincibleSeconds - dt);
             }
         }
 
         private void UpdateActions(float dt)
         {
-            // 技で弾が増えることはあっても、ユニットはこのループの中で増減しない（消すのは RemoveDefeated）
+            // 技で弾が増えることはあっても、ユニットはこのループの中で増減しない（消すのは ReplaceOrRemoveFallen）
             foreach (var unit in _units)
             {
-                if (!unit.IsAlive || unit.IsStunned)
+                // 動けない間に押した交代が、動けるようになった瞬間に出ないよう、押した瞬間の判定は毎回進める
+                var switchPressed = unit.Team == Team.Player && unit.ConsumeSwitchPress();
+                if (!unit.IsAlive || unit.IsFrozen)
                 {
+                    continue;
+                }
+
+                if (unit.IsStunned)
+                {
+                    // 突進中に飛ばされたら、突進は止まる
+                    unit.Dash = null;
+                    continue;
+                }
+
+                if (unit.IsDashing)
+                {
+                    UpdateDash(unit, dt);
                     continue;
                 }
 
                 if (unit.Team == Team.Player)
                 {
-                    UpdatePlayer(unit, dt);
+                    UpdatePlayer(unit, switchPressed, dt);
                 }
                 else
                 {
@@ -127,26 +169,41 @@ namespace PenmonScramble.Core
             }
         }
 
-        private void UpdatePlayer(Unit unit, float dt)
+        private void UpdatePlayer(Unit unit, bool switchPressed, float dt)
         {
+            if (switchPressed)
+            {
+                TrySwitch(unit);
+            }
+
+            if (unit.Input.Special && TryUseSpecial(unit))
+            {
+                return;
+            }
+
             var move = unit.Input.Move.ClampLength(1f);
             MoveBy(unit, move, dt);
 
             for (var slot = 0; slot < unit.Skills.Length; slot++)
             {
-                if (unit.Input.IsSkillHeld(slot))
+                // 突進が始まったら、同じ更新でもう1つの技は出さない
+                if (unit.Input.IsSkillHeld(slot) && !unit.IsDashing)
                 {
                     TryUseSkill(unit, slot, faceNearestWhenIdle: move.IsNearlyZero);
                 }
             }
         }
 
-        private void RemoveDefeated()
+        /// <summary>
+        /// 場に出ている子が倒れたら、控えがいれば次の子を出す（§4.1）。控えもいなければ場から消す。
+        /// 3体とも倒れたときの「ダウン」はフェーズ4で足す
+        /// </summary>
+        private void ReplaceOrRemoveFallen()
         {
             for (var i = _units.Count - 1; i >= 0; i--)
             {
                 var unit = _units[i];
-                if (unit.IsAlive)
+                if (unit.IsAlive || unit.SwitchToNextAlive())
                 {
                     continue;
                 }
@@ -195,5 +252,7 @@ namespace PenmonScramble.Core
 
             return nearest;
         }
+
+        private bool IsOpponent(Unit user, Unit target) => target.Team != user.Team && target.IsAlive;
     }
 }

@@ -1,77 +1,26 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// お試しエリア: 仮のペンギン（1人1体）と、近接で殴ってくる敵の群れ。
-    /// フェーズ3で種類・技の定義表、フェーズ4でステージ定義に置き換える
+    /// お試しエリア: プレイヤー1人につき3体と、野生のペンギンの群れ。
+    /// フェーズ4でステージ定義、フェーズ6で編成（自分で選んだ3体）に置き換える
     /// </summary>
     public static class TrialStage
     {
-        public const int EnemyCount = 8;
+        public const int EnemyCount = 10;
 
         // 敵はエリアの右側に出す。最初からプレイヤーに重ならないようにするため
         private const float EnemySpawnMinXRatio = 0.1f;
         private const float EnemySpawnMarginRatio = 0.1f;
         private const float PlayerSpawnXRatio = -0.7f;
 
-        public static readonly SkillDef PlayerPunch = new SkillDef
-        {
-            Shape = SkillShape.Melee,
-            Power = 10f,
-            Cooldown = 0.25f,
-            Range = 1.0f,
-            HalfAngleDegrees = 60f,
-            Knockback = 6f,
-        };
-
-        public static readonly SkillDef PlayerShot = new SkillDef
-        {
-            Shape = SkillShape.Projectile,
-            Power = 14f,
-            Cooldown = 0.8f,
-            Range = 8f,
-            Knockback = 9f,
-            ProjectileSpeed = 12f,
-            ProjectileRadius = 0.25f,
-            Pierce = true,
-        };
-
-        public static readonly SkillDef EnemyPunch = new SkillDef
-        {
-            Shape = SkillShape.Melee,
-            Power = 6f,
-            Cooldown = 1.5f,
-            Range = 0.7f,
-            HalfAngleDegrees = 45f,
-            Knockback = 4f,
-        };
-
-        public static UnitStats PlayerStats() => new UnitStats
-        {
-            Radius = 0.45f,
-            MoveSpeed = 4.5f,
-            MaxHp = 120,
-            Attack = 1f,
-            Skills = new[] { PlayerPunch, PlayerShot },
-        };
-
-        public const int EnemyBaseHp = 30;
-
         // 協力のときにプレイヤーを縦に並べる間隔（マス）。体の直径より広くして、最初から重ならないようにする
         private const float PlayerSpawnSpacing = 1.5f;
 
-        public static UnitStats EnemyStats(int playerCount) => new UnitStats
-        {
-            Radius = 0.45f,
-            MoveSpeed = 2f,
-            MaxHp = (int)System.MathF.Round(EnemyBaseHp * Balance.EnemyHpScale(playerCount)),
-            Attack = 1f,
-            Skills = new[] { EnemyPunch },
-        };
-
         /// <summary>
-        /// seats の席ごとにプレイヤーを1体ずつ置き、席の順に Unit を返す。敵の位置は seed で決まり、HP は人数で増える
+        /// seats の席ごとにプレイヤーを1人ずつ置き、席の順に Unit を返す。敵の種類と位置は seed で決まり、HP は人数で増える。
+        /// 連れていく3体は round で順に替わる（編成ができるまで、「もう一度」で20種類を全部試せるようにするため）
         /// </summary>
-        public static Unit[] Create(int seed, int[] seats, out StageWorld world)
+        public static Unit[] Create(int seed, int[] seats, int round, out StageWorld world)
         {
             var half = new Vec2(Balance.AreaWidth * 0.5f, Balance.AreaHeight * 0.5f);
             world = new StageWorld(-half, half, seed);
@@ -79,11 +28,40 @@ namespace PenmonScramble.Core
             for (var i = 0; i < seats.Length; i++)
             {
                 var y = (i - (seats.Length - 1) * 0.5f) * PlayerSpawnSpacing;
-                players[i] = world.AddUnit(Team.Player, PlayerStats(), new Vec2(half.X * PlayerSpawnXRatio, y), seats[i]);
+                var party = PartyStats(RotatingParty(round, i, seats.Length));
+                players[i] = world.AddUnit(Team.Player, party, new Vec2(half.X * PlayerSpawnXRatio, y), seats[i]);
             }
 
             AddEnemies(world, seed, half, seats.Length);
             return players;
+        }
+
+        /// <summary>
+        /// round 回目の i 人目が連れていく3体。全員・全回で番号を3つずつ進めるので、
+        /// ソロなら7回で20種類がひと回りする
+        /// </summary>
+        public static SpeciesDef[] RotatingParty(int round, int playerIndex, int playerCount)
+        {
+            var start = ((round - 1) * playerCount + playerIndex) * Balance.PartySize;
+            var party = new SpeciesDef[Balance.PartySize];
+            for (var i = 0; i < party.Length; i++)
+            {
+                var index = ((start + i) % SpeciesTable.Count + SpeciesTable.Count) % SpeciesTable.Count;
+                party[i] = SpeciesTable.Species[index];
+            }
+
+            return party;
+        }
+
+        private static UnitStats[] PartyStats(SpeciesDef[] party)
+        {
+            var stats = new UnitStats[party.Length];
+            for (var i = 0; i < party.Length; i++)
+            {
+                stats[i] = SpeciesTable.PlayerStats(party[i], Balance.TrialPower);
+            }
+
+            return stats;
         }
 
         private static void AddEnemies(StageWorld world, int seed, Vec2 half, int playerCount)
@@ -96,7 +74,8 @@ namespace PenmonScramble.Core
             {
                 var x = minX + (float)random.NextDouble() * (maxX - minX);
                 var y = -maxY + (float)random.NextDouble() * maxY * 2f;
-                world.AddUnit(Team.Enemy, EnemyStats(playerCount), new Vec2(x, y));
+                var species = SpeciesTable.Species[random.Next(SpeciesTable.Count)];
+                world.AddUnit(Team.Enemy, SpeciesTable.EnemyStats(species, playerCount), new Vec2(x, y));
             }
         }
     }

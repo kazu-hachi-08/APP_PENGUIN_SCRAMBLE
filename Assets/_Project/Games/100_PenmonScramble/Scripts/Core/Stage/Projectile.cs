@@ -12,6 +12,7 @@ namespace PenmonScramble.Core
             Id = id;
             OwnerId = owner.Id;
             Team = owner.Team;
+            Element = owner.Element;
             Skill = skill;
             Damage = StageWorld.CalcDamage(owner, skill);
             Position = position;
@@ -22,6 +23,7 @@ namespace PenmonScramble.Core
         public int Id { get; }
         public int OwnerId { get; }
         public Team Team { get; }
+        public Element Element { get; }
         public SkillDef Skill { get; }
         public float Radius => Skill.ProjectileRadius;
 

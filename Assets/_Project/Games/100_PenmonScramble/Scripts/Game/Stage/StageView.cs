@@ -5,10 +5,10 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// スナップショットを絵にする。ユニット・弾と同じ ID で見た目を作り、消えたら消す。
+    /// スナップショットを絵にする。ユニット・弾・範囲と同じ ID で見た目を作り、消えたら消す。
     /// ホストもゲストも同じスナップショットから描くので、どちらの画面も同じに見える
     /// </summary>
-    public class StageView : MonoBehaviour
+    public partial class StageView : MonoBehaviour
     {
         // 席ごとの色（P1〜P4）。協力のときに自分のペンギンを見分けるため
         [SerializeField] private Color[] _seatColors =
@@ -18,14 +18,15 @@ namespace PenmonScramble.Game
             new Color(0.40f, 0.85f, 0.45f),
             new Color(1f, 0.80f, 0.25f),
         };
-        [SerializeField] private Color _enemyColor = new Color(0.35f, 0.32f, 0.40f);
-        [SerializeField] private Color _projectileColor = new Color(0.55f, 0.90f, 1f);
         [SerializeField] private Color _areaColor = new Color(0.90f, 0.95f, 0.98f);
         [SerializeField] private Color _damageToEnemyColor = new Color(1f, 0.85f, 0.2f);
         [SerializeField] private Color _damageToPlayerColor = new Color(1f, 0.3f, 0.3f);
+        [SerializeField] private CameraShake _cameraShake;
+        [SerializeField] private SpecialCutIn _cutIn;
 
         private readonly Dictionary<int, UnitView> _units = new Dictionary<int, UnitView>();
         private readonly Dictionary<int, ProjectileView> _projectiles = new Dictionary<int, ProjectileView>();
+        private readonly Dictionary<int, EffectView> _effects = new Dictionary<int, EffectView>();
         private readonly HashSet<int> _aliveIds = new HashSet<int>();
         private readonly List<int> _removeIds = new List<int>();
         private int _round;
@@ -53,11 +54,8 @@ namespace PenmonScramble.Game
 
             SyncUnits(snapshot);
             SyncProjectiles(snapshot);
-
-            foreach (var used in snapshot.SkillsUsed)
-            {
-                OnSkillUsed(used);
-            }
+            SyncEffects(snapshot);
+            PlayEvents(snapshot);
         }
 
         public void Render(float alpha)
@@ -84,6 +82,7 @@ namespace PenmonScramble.Game
 
             _units.Clear();
             _projectiles.Clear();
+            _effects.Clear();
             CreateArea(snapshot);
         }
 
@@ -122,7 +121,7 @@ namespace PenmonScramble.Game
         {
             if (unit.Team == Team.Enemy)
             {
-                return UnitView.Create(transform, unit, _enemyColor, null);
+                return UnitView.Create(transform, unit, null, null);
             }
 
             return UnitView.Create(transform, unit, SeatColor(unit.Seat), SeatLabel(unit.Seat));
@@ -142,12 +141,28 @@ namespace PenmonScramble.Game
                 }
                 else
                 {
-                    _projectiles.Add(projectile.Id, ProjectileView.Create(transform, projectile, _projectileColor));
+                    _projectiles.Add(projectile.Id, ProjectileView.Create(transform, projectile, projectile.Team == Team.Enemy));
                 }
             }
 
             // 弾には消えたイベントが無いので、スナップショットに無くなったものを消す
             RemoveMissing(_projectiles, view => Destroy(view.gameObject));
+        }
+
+        /// <summary>範囲は置いた場所から動かないので、出たら作って、無くなったら消すだけ（落ちた演出は BurstEvent で出る）</summary>
+        private void SyncEffects(StageSnapshot snapshot)
+        {
+            _aliveIds.Clear();
+            foreach (var effect in snapshot.Effects)
+            {
+                _aliveIds.Add(effect.Id);
+                if (!_effects.ContainsKey(effect.Id))
+                {
+                    _effects.Add(effect.Id, EffectView.Create(transform, effect));
+                }
+            }
+
+            RemoveMissing(_effects, view => Destroy(view.gameObject));
         }
 
         /// <summary>_aliveIds に無いものを消す</summary>
@@ -187,14 +202,6 @@ namespace PenmonScramble.Game
             {
                 _units.Remove(e.UnitId);
                 view.PlayDefeat();
-            }
-        }
-
-        private void OnSkillUsed(SkillUsedEvent e)
-        {
-            if (_units.TryGetValue(e.UnitId, out var view))
-            {
-                view.Squash();
             }
         }
     }

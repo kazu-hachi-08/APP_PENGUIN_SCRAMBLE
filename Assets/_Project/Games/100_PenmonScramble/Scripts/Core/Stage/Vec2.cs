@@ -42,6 +42,14 @@ namespace PenmonScramble.Core
             return length > max ? this * (max / length) : this;
         }
 
+        /// <summary>左回りに radians だけ回す</summary>
+        public Vec2 Rotated(float radians)
+        {
+            var cos = MathF.Cos(radians);
+            var sin = MathF.Sin(radians);
+            return new Vec2(X * cos - Y * sin, X * sin + Y * cos);
+        }
+
         public static float Dot(Vec2 a, Vec2 b) => a.X * b.X + a.Y * b.Y;
         public static float Distance(Vec2 a, Vec2 b) => (a - b).Length;
 

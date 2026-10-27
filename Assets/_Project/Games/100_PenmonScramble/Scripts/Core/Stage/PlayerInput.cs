@@ -12,11 +12,19 @@ namespace PenmonScramble.Core
         public readonly bool Skill1;
         public readonly bool Skill2;
 
-        public PlayerInput(Vec2 move, bool skill1, bool skill2)
+        /// <summary>ゲージが満タンなら必殺技を出す</summary>
+        public readonly bool Special;
+
+        /// <summary>押した瞬間だけ、次の控えと交代する</summary>
+        public readonly bool Switch;
+
+        public PlayerInput(Vec2 move, bool skill1, bool skill2, bool special = false, bool swap = false)
         {
             Move = move;
             Skill1 = skill1;
             Skill2 = skill2;
+            Special = special;
+            Switch = swap;
         }
 
         public bool IsSkillHeld(int slot) => slot == 0 ? Skill1 : Skill2;

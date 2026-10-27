@@ -50,7 +50,7 @@ namespace PenmonScramble.Game
         {
             _recorder?.Detach();
             _round++;
-            _players = TrialStage.Create(System.Environment.TickCount, _seats.ToArray(), out _world);
+            _players = TrialStage.Create(System.Environment.TickCount, _seats.ToArray(), _round, out _world);
             _recorder = new StageRecorder(_world, _round);
             _accumulator = 0f;
             _unsent = null;

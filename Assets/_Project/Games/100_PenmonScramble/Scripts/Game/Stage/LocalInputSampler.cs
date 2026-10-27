@@ -9,31 +9,34 @@ namespace PenmonScramble.Game
     /// </summary>
     public sealed class LocalInputSampler
     {
-        // InputManager の Action1〜4 のうち、技1・技2 に使う番号
+        // InputManager の Action1〜4 = 技1・技2・必殺技・交代（§3。J/K/L/Space、南/東/北/LB）
         private const int Skill1Action = 0;
         private const int Skill2Action = 1;
+        private const int SpecialAction = 2;
+        private const int SwitchAction = 3;
+        private const int ActionCount = 4;
 
+        private readonly bool[] _held = new bool[ActionCount];
+        private readonly bool[] _pressed = new bool[ActionCount];
         private UnityEngine.Vector2 _move;
-        private bool _skill1Held;
-        private bool _skill2Held;
-        private bool _skill1Pressed;
-        private bool _skill2Pressed;
 
         public void Sample(InputManager input)
         {
             _move = input.MoveVector;
-            _skill1Held = input.IsActionHeld(Skill1Action);
-            _skill2Held = input.IsActionHeld(Skill2Action);
-            _skill1Pressed |= input.IsActionDown(Skill1Action);
-            _skill2Pressed |= input.IsActionDown(Skill2Action);
+            for (var i = 0; i < ActionCount; i++)
+            {
+                _held[i] = input.IsActionHeld(i);
+                _pressed[i] |= input.IsActionDown(i);
+            }
         }
 
         public PlayerInput Consume()
         {
-            var result = new PlayerInput(_move.ToVec2(), _skill1Held || _skill1Pressed, _skill2Held || _skill2Pressed);
-            _skill1Pressed = false;
-            _skill2Pressed = false;
+            var result = new PlayerInput(_move.ToVec2(), Get(Skill1Action), Get(Skill2Action), Get(SpecialAction), Get(SwitchAction));
+            System.Array.Clear(_pressed, 0, ActionCount);
             return result;
         }
+
+        private bool Get(int action) => _held[action] || _pressed[action];
     }
 }

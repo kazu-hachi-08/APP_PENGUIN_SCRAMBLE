@@ -27,20 +27,38 @@ namespace PenmonScramble.Core
             }
 
             var skill = unit.Skills[slot];
-            unit.Cooldowns[slot] = skill.Cooldown;
+            unit.Cooldowns[slot] = skill.Cooldown * unit.CooldownScale;
             SkillUsed?.Invoke(new SkillUsedEvent(unit.Id, slot, skill.Shape));
+            UseShape(unit, skill);
+            return true;
+        }
 
+        private void UseShape(Unit user, SkillDef skill)
+        {
             switch (skill.Shape)
             {
                 case SkillShape.Melee:
-                    UseMelee(unit, skill);
+                    UseMelee(user, skill);
                     break;
                 case SkillShape.Projectile:
-                    SpawnProjectile(unit, skill);
+                    SpawnProjectile(user, skill, user.Position + user.Facing * user.Radius, user.Facing);
+                    break;
+                case SkillShape.Spread:
+                    UseSpread(user, skill);
+                    break;
+                case SkillShape.Dash:
+                    user.Dash = new DashState(skill, user.Facing, CalcDamage(user, skill));
+                    break;
+                case SkillShape.Nova:
+                    UseNova(user, skill);
+                    break;
+                case SkillShape.Zone:
+                    _areaEffects.Add(new AreaEffect(_nextId++, user, skill, AreaEffectKind.Zone, user.Position + user.Facing * skill.Range, 0f));
+                    break;
+                case SkillShape.Drop:
+                    UseDrop(user, skill);
                     break;
             }
-
-            return true;
         }
 
         /// <summary>止まったまま技を出したとき、狙いをつけなくても敵へ向くようにする（§3）</summary>
@@ -64,12 +82,14 @@ namespace PenmonScramble.Core
             var damage = CalcDamage(user, skill);
             foreach (var target in _units)
             {
-                if (target.Team != user.Team && target.IsAlive && IsInMeleeArc(user, target, skill))
+                if (IsOpponent(user, target) && IsInMeleeArc(user, target, skill))
                 {
-                    var direction = (target.Position - user.Position).Normalized;
-                    ApplyHit(user.Id, target, damage, skill.Knockback, direction.IsNearlyZero ? user.Facing : direction);
+                    ApplyHit(user.Id, target, damage, skill.Knockback, AwayFrom(user.Position, target, user.Facing), skill);
                 }
             }
+
+            var swingCenter = user.Position + user.Facing * (skill.Range * 0.5f);
+            Burst?.Invoke(new BurstEvent(BurstShape.Swing, user.Element, swingCenter, skill.Range * 0.5f + user.Radius * 0.5f, skill.IsSpecial));
         }
 
         private static bool IsInMeleeArc(Unit user, Unit target, SkillDef skill)
@@ -91,60 +111,47 @@ namespace PenmonScramble.Core
             return cos >= MathF.Cos(skill.HalfAngleDegrees * DegToRad);
         }
 
-        private void SpawnProjectile(Unit user, SkillDef skill)
+        /// <summary>自分の周りの円に入った敵へ、外向きに当てる（周囲。必殺技の大竜巻も同じ）</summary>
+        private void UseNova(Unit user, SkillDef skill)
         {
-            // 自分の体の縁から出す。中心から出すと、くっついている敵の後ろへ抜けて見えるため
-            var position = user.Position + user.Facing * user.Radius;
-            _projectiles.Add(new Projectile(_nextId++, user, skill, position, user.Facing));
-        }
-
-        private void UpdateProjectiles(float dt)
-        {
-            foreach (var projectile in _projectiles)
-            {
-                var step = projectile.Velocity * dt;
-                projectile.Position += step;
-                projectile.RemainingDistance -= step.Length;
-                HitUnitsWith(projectile);
-
-                if (projectile.RemainingDistance <= 0f || !IsInsideArea(projectile.Position))
-                {
-                    projectile.IsDead = true;
-                }
-            }
-        }
-
-        private void HitUnitsWith(Projectile projectile)
-        {
+            var damage = CalcDamage(user, skill);
             foreach (var target in _units)
             {
-                if (projectile.IsDead)
+                if (IsOpponent(user, target) && IsWithin(target, user.Position, skill.Range))
                 {
-                    return;
+                    ApplyHit(user.Id, target, damage, skill.Knockback, AwayFrom(user.Position, target, user.Facing), skill);
                 }
-
-                if (target.Team == projectile.Team || !target.IsAlive || projectile.HitUnitIds.Contains(target.Id))
-                {
-                    continue;
-                }
-
-                var reach = projectile.Radius + target.Radius;
-                if ((target.Position - projectile.Position).LengthSquared > reach * reach)
-                {
-                    continue;
-                }
-
-                projectile.HitUnitIds.Add(target.Id);
-                ApplyHit(projectile.OwnerId, target, projectile.Damage, projectile.Skill.Knockback, projectile.Velocity.Normalized);
-                projectile.IsDead = !projectile.Skill.Pierce;
             }
+
+            Burst?.Invoke(new BurstEvent(BurstShape.Ring, user.Element, user.Position, skill.Range, skill.IsSpecial));
         }
 
-        private void ApplyHit(int attackerId, Unit target, int damage, float knockback, Vec2 direction)
+        /// <summary>中心から target への向き。重なっているときは fallback（向きが決まらないため）</summary>
+        private static Vec2 AwayFrom(Vec2 center, Unit target, Vec2 fallback)
         {
+            var direction = (target.Position - center).Normalized;
+            return direction.IsNearlyZero ? fallback : direction;
+        }
+
+        /// <summary>円が範囲に少しでもかかっていれば当てる</summary>
+        private static bool IsWithin(Unit target, Vec2 center, float radius)
+        {
+            var reach = radius + target.Radius;
+            return (target.Position - center).LengthSquared <= reach * reach;
+        }
+
+        private void ApplyHit(int attackerId, Unit target, int damage, float knockback, Vec2 direction, SkillDef skill)
+        {
+            // 必殺技のあいだ、出した本人は無敵（§4.3）
+            if (target.IsInvincible)
+            {
+                return;
+            }
+
             target.Hp = Math.Max(0, target.Hp - damage);
             // 足すと連打で飛びすぎるので、新しい吹っ飛びで置き換える
             target.KnockbackVelocity = direction * knockback;
+            ChargeSpecialGauge(attackerId, target, damage, skill);
             Hit?.Invoke(new HitEvent(attackerId, target.Id, damage, target.Position));
         }
 

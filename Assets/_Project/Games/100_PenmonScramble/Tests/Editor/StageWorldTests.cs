@@ -311,7 +311,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void TrialStage_StartsWithPlayerAndEnemies()
         {
-            var players = TrialStage.Create(seed: 42, new[] { 0 }, out var world);
+            var players = TrialStage.Create(seed: 42, new[] { 0 }, round: 1, out var world);
             world.Tick();
 
             Assert.That(world.Units.Count, Is.EqualTo(1 + TrialStage.EnemyCount));
@@ -323,7 +323,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void TrialStage_PlacesOnePlayerPerSeatWithoutOverlap()
         {
-            var players = TrialStage.Create(seed: 42, new[] { 0, 2, 3 }, out var world);
+            var players = TrialStage.Create(seed: 42, new[] { 0, 2, 3 }, round: 1, out var world);
             var startPositions = new[] { players[0].Position, players[1].Position, players[2].Position };
             world.Tick();
 
@@ -339,10 +339,11 @@ namespace PenmonScramble.Tests
         [Test]
         public void TrialStage_EnemyHpScalesWithPlayers()
         {
-            TrialStage.Create(seed: 1, new[] { 0, 1, 2, 3 }, out var world);
+            TrialStage.Create(seed: 1, new[] { 0, 1, 2, 3 }, round: 1, out var world);
 
             var enemy = FirstEnemy(world);
-            Assert.That(enemy.MaxHp, Is.EqualTo((int)System.MathF.Round(TrialStage.EnemyBaseHp * 2.8f)));
+            var species = SpeciesTable.Get(enemy.SpeciesNo);
+            Assert.That(enemy.MaxHp, Is.EqualTo((int)System.MathF.Round(species.HpRate * Balance.EnemyPower * 2.8f)));
         }
 
         [Test]
