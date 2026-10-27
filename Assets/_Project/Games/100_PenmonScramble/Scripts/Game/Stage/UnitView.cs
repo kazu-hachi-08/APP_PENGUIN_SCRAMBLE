@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ユニット1体の仮の見た目（種類の色の丸＋向きの三角。プレイヤーは席の色の輪と、頭の上に「P1」など）。
+    /// ユニット1体の仮の見た目（種類の色の丸＋向きの三角。プレイヤーは席の色の輪と、頭の上に「P1」など。ボスは「BOSS」）。
     /// 位置は更新（1/30秒）ごとに受け取り、その間を補間して描く（オンラインのゲストも同じ描き方にするため）
     /// </summary>
     public class UnitView : MonoBehaviour
@@ -31,10 +31,21 @@ namespace PenmonScramble.Game
         private const float AfterimageAlpha = 0.45f;
         private const float SwitchPoofSeconds = 0.3f;
 
+        // ダウン中は灰色でつぶれて見せ、足元に復活の範囲と進み具合を出す（§4.5）
+        private static readonly Color DownTint = new Color(0.55f, 0.55f, 0.6f);
+        private const float DownTintAmount = 0.6f;
+        private static readonly Vector2 DownScale = new Vector2(1.3f, 0.55f);
+        private const float ReviveRingAlpha = 0.6f;
+        private const float ReviveFillAlpha = 0.35f;
+        private static readonly Color BossLabelColor = new Color(0.9f, 0.15f, 0.15f);
+
         private SpriteRenderer _body;
         private SpriteRenderer _facing;
         private SpriteRenderer _seatRing;
         private GameObject _label;
+        private SpriteRenderer _reviveRing;
+        private SpriteRenderer _reviveFill;
+        private float _revive;
         private Color _color;
         private float _radius;
         private Vector2 _from;
@@ -48,6 +59,8 @@ namespace PenmonScramble.Game
 
         public Team Team { get; private set; }
         public int SpeciesNo { get; private set; }
+        public bool IsBoss => (_flags & UnitFlags.Boss) != 0;
+        private bool IsDown => (_flags & UnitFlags.Down) != 0;
 
         /// <param name="seatColor">プレイヤーの席の色。null なら輪と文字を出さない（敵）</param>
         public static UnitView Create(Transform parent, UnitState unit, Color? seatColor, string label)
@@ -58,6 +71,11 @@ namespace PenmonScramble.Game
             if (seatColor.HasValue)
             {
                 view.CreateLabel(label, seatColor.Value);
+                view.CreateReviveParts(seatColor.Value);
+            }
+            else if (view.IsBoss)
+            {
+                view.CreateLabel("BOSS", BossLabelColor);
             }
 
             return view;
@@ -83,6 +101,7 @@ namespace PenmonScramble.Game
             _from = _to = unit.Position.ToVector2();
             _facingDirection = unit.Facing.ToVector2();
             _flags = unit.Flags;
+            _revive = unit.Revive;
             Render(1f);
         }
 
@@ -108,6 +127,18 @@ namespace PenmonScramble.Game
             renderer.sortingOrder = SortingDepth.Popup - 1;
         }
 
+        /// <summary>復活の範囲（輪）と、たまった分だけ広がる円。ダウンの間だけ出す</summary>
+        private void CreateReviveParts(Color seatColor)
+        {
+            _reviveRing = CreatePart("ReviveRing", PlaceholderSprites.Ring, new Color(seatColor.r, seatColor.g, seatColor.b, ReviveRingAlpha));
+            _reviveRing.transform.localScale = Vector3.one * (Balance.ReviveRadius * 2f);
+            _reviveRing.sortingOrder = SortingDepth.Ground;
+            _reviveFill = CreatePart("ReviveFill", PlaceholderSprites.Circle, new Color(seatColor.r, seatColor.g, seatColor.b, ReviveFillAlpha));
+            _reviveFill.sortingOrder = SortingDepth.Ground;
+            _reviveRing.enabled = false;
+            _reviveFill.enabled = false;
+        }
+
         private SpriteRenderer CreatePart(string partName, Sprite sprite, Color color)
         {
             var obj = new GameObject(partName);
@@ -123,10 +154,17 @@ namespace PenmonScramble.Game
             _from = _to;
             _to = unit.Position.ToVector2();
             _facingDirection = unit.Facing.ToVector2();
+            var wasDown = IsDown;
             _flags = unit.Flags;
+            _revive = unit.Revive;
             if (unit.SpeciesNo != SpeciesNo)
             {
                 ChangeSpecies(unit);
+            }
+            else if (wasDown != IsDown)
+            {
+                // ダウンした・起き上がった瞬間を見せる（起き上がりは先頭の子なので、種類が変わればそちらの演出で出る）
+                Poof();
             }
         }
 
@@ -136,6 +174,11 @@ namespace PenmonScramble.Game
             SpeciesNo = unit.SpeciesNo;
             _color = PenguinPalette.BodyColor(unit);
             _facing.color = Color.Lerp(_color, Color.black, 0.5f);
+            Poof();
+        }
+
+        private void Poof()
+        {
             BurstFx.Spawn(transform.parent, PlaceholderSprites.Ring, Color.white, _to, _radius, _radius * 2f, SwitchPoofSeconds, SortingDepth.Popup - 2);
             Squash();
         }
@@ -158,8 +201,22 @@ namespace PenmonScramble.Game
 
             _body.sortingOrder = order + 1;
             _facing.sortingOrder = order + 2;
+            _facing.enabled = !IsDown;
+            RenderRevive();
             _facing.transform.localPosition = _facingDirection * (_radius * FacingDistanceRatio);
             _facing.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(_facingDirection.y, _facingDirection.x) * Mathf.Rad2Deg);
+        }
+
+        private void RenderRevive()
+        {
+            if (_reviveRing == null)
+            {
+                return;
+            }
+
+            _reviveRing.enabled = IsDown;
+            _reviveFill.enabled = IsDown && _revive > 0f;
+            _reviveFill.transform.localScale = Vector3.one * (Balance.ReviveRadius * 2f * _revive);
         }
 
         public void Flash() => _flashTimer = FlashSeconds;
@@ -174,6 +231,12 @@ namespace PenmonScramble.Game
             if (_seatRing != null)
             {
                 _seatRing.enabled = false;
+            }
+
+            if (_reviveRing != null)
+            {
+                _reviveRing.enabled = false;
+                _reviveFill.enabled = false;
             }
 
             if (_label != null)
@@ -198,6 +261,11 @@ namespace PenmonScramble.Game
                 return Color.white;
             }
 
+            if (IsDown)
+            {
+                return Color.Lerp(_color, DownTint, DownTintAmount);
+            }
+
             var color = (_flags & UnitFlags.Frozen) != 0 ? Color.Lerp(_color, FrozenTint, FrozenTintAmount) : _color;
             // 無敵の間は点滅させて、攻撃が効かないことを分かるようにする
             if ((_flags & UnitFlags.Invincible) != 0 && Mathf.Repeat(Time.time * InvincibleBlinkPerSecond, 1f) < 0.5f)
@@ -212,7 +280,8 @@ namespace PenmonScramble.Game
         {
             _squashTimer -= Time.deltaTime;
             var amount = _squashTimer > 0f ? SquashAmount * (_squashTimer / SquashSeconds) : 0f;
-            _body.transform.localScale = new Vector3(1f + amount, 1f - amount, 1f) * (_radius * 2f);
+            var scale = IsDown ? DownScale : Vector2.one;
+            _body.transform.localScale = new Vector3(scale.x + amount, scale.y - amount, 1f) * (_radius * 2f);
         }
 
         /// <summary>突進中は残像を残して、すべっているのが分かるようにする</summary>

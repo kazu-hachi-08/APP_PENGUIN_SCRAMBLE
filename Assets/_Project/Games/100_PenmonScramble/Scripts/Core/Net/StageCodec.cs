@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace PenmonScramble.Core
@@ -11,7 +12,7 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えて変な画面になるより無視する方がよい
         /// </summary>
-        public const byte FormatVersion = 2;
+        public const byte FormatVersion = 3;
 
         private const byte Skill1Flag = 1;
         private const byte Skill2Flag = 2;
@@ -28,6 +29,10 @@ namespace PenmonScramble.Core
             writer.Write((byte)snapshot.Result);
             Write(writer, snapshot.AreaMin);
             Write(writer, snapshot.AreaMax);
+            writer.Write((byte)snapshot.AreaIndex);
+            writer.Write((byte)snapshot.AreaCount);
+            writer.Write(snapshot.IsGateOpen);
+            writer.Write(snapshot.EnemiesDefeated);
             WriteUnits(writer, snapshot);
             WriteObjects(writer, snapshot);
             WritePlayers(writer, snapshot);
@@ -50,6 +55,8 @@ namespace PenmonScramble.Core
                 writer.Write(unit.MaxHp);
                 writer.Write(unit.Radius);
                 writer.Write((byte)unit.Flags);
+                // 進み具合は見た目にしか使わないので、1バイトに縮める
+                writer.Write((byte)Math.Round(Math.Clamp(unit.Revive, 0f, 1f) * byte.MaxValue));
             }
         }
 
@@ -113,6 +120,10 @@ namespace PenmonScramble.Core
                     Result = (StageResult)reader.ReadByte(),
                     AreaMin = ReadVec2(reader),
                     AreaMax = ReadVec2(reader),
+                    AreaIndex = reader.ReadByte(),
+                    AreaCount = reader.ReadByte(),
+                    IsGateOpen = reader.ReadBoolean(),
+                    EnemiesDefeated = reader.ReadInt32(),
                 };
                 ReadUnits(reader, snapshot);
                 ReadObjects(reader, snapshot);
@@ -141,7 +152,8 @@ namespace PenmonScramble.Core
                 var maxHp = reader.ReadInt32();
                 var radius = reader.ReadSingle();
                 var flags = (UnitFlags)reader.ReadByte();
-                snapshot.Units.Add(new UnitState(id, team, seat, species, position, facing, hp, maxHp, radius, flags));
+                var revive = reader.ReadByte() / (float)byte.MaxValue;
+                snapshot.Units.Add(new UnitState(id, team, seat, species, position, facing, hp, maxHp, radius, flags, revive));
             }
         }
 

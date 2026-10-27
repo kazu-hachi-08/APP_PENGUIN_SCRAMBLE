@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 1エリアの戦闘を固定の時間刻みで進める。オンラインではホストだけがこれを動かし、結果を全員へ送る（§8）。
+    /// ステージの戦闘を固定の時間刻みで進める。オンラインではホストだけがこれを動かし、結果を全員へ送る（§8）。
     /// 表示・音はここで行わず、イベントを外へ出す
     /// </summary>
     public sealed partial class StageWorld
@@ -22,21 +22,37 @@ namespace PenmonScramble.Core
             _random = new Random(seed);
         }
 
+        /// <summary>ステージ定義どおりにエリアを順に進める。敵は波ごとに出し、HP は人数で増やす（§4.7・§6.1）</summary>
+        public StageWorld(StageDef stage, int playerCount, int seed)
+            : this(StageLayout.AreaMin(0), StageLayout.AreaMax(0), seed)
+        {
+            _stage = stage;
+            _playerCount = playerCount;
+            StartArea(0);
+        }
+
         public event Action<HitEvent> Hit;
         public event Action<DefeatedEvent> Defeated;
         public event Action<SkillUsedEvent> SkillUsed;
         public event Action<SpecialUsedEvent> SpecialUsed;
         public event Action<BurstEvent> Burst;
 
-        public Vec2 AreaMin { get; }
-        public Vec2 AreaMax { get; }
+        /// <summary>いま動ける範囲。出入口が開いている間は、次のエリアまで広がる</summary>
+        public Vec2 AreaMin { get; private set; }
+        public Vec2 AreaMax { get; private set; }
         public IReadOnlyList<Unit> Units => _units;
         public IReadOnlyList<Projectile> Projectiles => _projectiles;
         public IReadOnlyList<AreaEffect> AreaEffects => _areaEffects;
         public int TickCount { get; private set; }
 
-        public bool IsCleared => !HasAlive(Team.Enemy);
+        /// <summary>倒した敵の数（結果画面に出す）</summary>
+        public int EnemiesDefeated { get; private set; }
+
+        /// <summary>全員がダウンした（ソロならダウンした）</summary>
         public bool IsFailed => !HasAlive(Team.Player);
+
+        /// <summary>最後の敵と最後のプレイヤーが同時に倒れたら、クリアにする（がんばった方を取る）</summary>
+        public StageResult Result => IsCleared ? StageResult.Cleared : IsFailed ? StageResult.Failed : StageResult.Playing;
 
         public Unit AddUnit(Team team, UnitStats stats, Vec2 position, int seat = Unit.NoSeat)
         {
@@ -50,7 +66,10 @@ namespace PenmonScramble.Core
             if (team == Team.Enemy)
             {
                 // 敵が全員そろって同時に殴ってこないよう、最初の待ち時間をばらけさせる
-                unit.Cooldowns[0] = (float)_random.NextDouble() * unit.Skills[0].Cooldown * unit.CooldownScale;
+                for (var i = 0; i < unit.Cooldowns.Length; i++)
+                {
+                    unit.Cooldowns[i] = (float)_random.NextDouble() * unit.Skills[i].Cooldown * unit.CooldownScale;
+                }
             }
 
             _units.Add(unit);
@@ -112,6 +131,8 @@ namespace PenmonScramble.Core
             UpdateProjectiles(dt);
             UpdateAreaEffects(dt);
             ReplaceOrRemoveFallen();
+            UpdateRevives(dt);
+            UpdateStage(dt);
         }
 
         private void UpdateTimers(float dt)
@@ -195,20 +216,21 @@ namespace PenmonScramble.Core
         }
 
         /// <summary>
-        /// 場に出ている子が倒れたら、控えがいれば次の子を出す（§4.1）。控えもいなければ場から消す。
-        /// 3体とも倒れたときの「ダウン」はフェーズ4で足す
+        /// 場に出ている子が倒れたら、控えがいれば次の子を出す（§4.1）。
+        /// プレイヤーは3体とも倒れたらその場でダウンして残り（§4.5）、敵は場から消す
         /// </summary>
         private void ReplaceOrRemoveFallen()
         {
             for (var i = _units.Count - 1; i >= 0; i--)
             {
                 var unit = _units[i];
-                if (unit.IsAlive || unit.SwitchToNextAlive())
+                if (unit.IsAlive || unit.SwitchToNextAlive() || unit.Team == Team.Player)
                 {
                     continue;
                 }
 
                 _units.RemoveAt(i);
+                EnemiesDefeated++;
                 Defeated?.Invoke(new DefeatedEvent(unit.Id, unit.Team, unit.Position));
             }
 

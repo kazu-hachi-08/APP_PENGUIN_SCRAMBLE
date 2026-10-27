@@ -6,12 +6,12 @@ using UnityEngine.UI;
 
 namespace PenmonScramble.Editor
 {
-    /// <summary>ステージ中の HUD（HP・3体・必殺技のゲージ・残りの敵・結果）と必殺技のカットイン</summary>
+    /// <summary>ステージ中の HUD（HP・3体・必殺技のゲージ・エリアの進み具合・ボスの HP・結果）と必殺技のカットイン</summary>
     public static partial class PenmonScrambleSceneBuilder
     {
         private static readonly Vector2 HudMargin = new Vector2(40f, -32f);
         private static readonly Vector2 HpBarSize = new Vector2(560f, 56f);
-        private static readonly Vector2 EnemiesTextSize = new Vector2(480f, 64f);
+        private static readonly Vector2 ProgressTextSize = new Vector2(720f, 64f);
         private const int HudFontSize = 40;
         private static readonly Color HpBarBackColor = new Color(0.15f, 0.18f, 0.25f, 0.8f);
         private static readonly Color HpBarFillColor = new Color(0.35f, 0.85f, 0.45f);
@@ -22,6 +22,14 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 GaugeBarSize = new Vector2(560f, 36f);
         private const int GaugeFontSize = 28;
         private static readonly Color GaugeFillColor = new Color(1f, 0.6f, 0.2f);
+
+        // HP のバーと右上の文字の間（上の真ん中）。下の段は3体の文字とぶつかるため
+        private static readonly Vector2 BossBarSize = new Vector2(520f, 56f);
+        private static readonly Color BossBarFillColor = new Color(0.9f, 0.25f, 0.25f);
+        private const int BossFontSize = 30;
+        private const float BannerY = 200f;
+        private static readonly Vector2 BannerSize = new Vector2(1400f, 160f);
+        private const int BannerFontSize = 104;
 
         private const float CutInHeight = 320f;
         private const float CutInFaceSize = 240f;
@@ -46,7 +54,9 @@ namespace PenmonScramble.Editor
             var (fill, hpText) = CreateBar(hudObj.transform, "HpBar", HudMargin, HpBarSize, HpBarFillColor, HudFontSize);
             var partyText = CreatePartyText(hudObj.transform);
             var (gaugeFill, gaugeText) = CreateBar(hudObj.transform, "GaugeBar", new Vector2(HudMargin.x, GaugeBarY), GaugeBarSize, GaugeFillColor, GaugeFontSize);
-            var enemiesText = CreateEnemiesText(hudObj.transform);
+            var progressText = CreateProgressText(hudObj.transform);
+            var (bossBar, bossFill, bossText) = CreateBossBar(hudObj.transform);
+            var bannerText = CreateBanner(hudObj.transform);
             var (panel, resultText, retry, toTitle) = CreateResultPanel(hudObj.transform);
 
             var so = new SerializedObject(hud);
@@ -58,7 +68,11 @@ namespace PenmonScramble.Editor
             so.FindProperty("_gaugeFillImage").objectReferenceValue = gaugeFill.GetComponent<Image>();
             so.FindProperty("_gaugeText").objectReferenceValue = gaugeText;
             so.FindProperty("_specialButtonImage").objectReferenceValue = specialButton;
-            so.FindProperty("_enemiesText").objectReferenceValue = enemiesText;
+            so.FindProperty("_progressText").objectReferenceValue = progressText;
+            so.FindProperty("_bossBar").objectReferenceValue = bossBar;
+            so.FindProperty("_bossFill").objectReferenceValue = bossFill;
+            so.FindProperty("_bossText").objectReferenceValue = bossText;
+            so.FindProperty("_bannerText").objectReferenceValue = bannerText;
             so.FindProperty("_resultPanel").objectReferenceValue = panel;
             so.FindProperty("_resultText").objectReferenceValue = resultText;
             so.FindProperty("_retryButton").objectReferenceValue = retry;
@@ -148,13 +162,40 @@ namespace PenmonScramble.Editor
             return cutIn;
         }
 
-        private static Text CreateEnemiesText(Transform parent)
+        /// <summary>上の真ん中に出すボスの HP。ボスがいる間だけ出す</summary>
+        private static (GameObject bar, RectTransform fill, Text text) CreateBossBar(Transform parent)
         {
-            var obj = UIDialogBuilder.CreateUIObject("EnemiesLeft", parent);
+            var (fill, text) = CreateBar(parent, "BossBar", Vector2.zero, BossBarSize, BossBarFillColor, BossFontSize);
+            var bar = fill.parent.gameObject;
+            var rect = bar.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, HudMargin.y);
+            bar.SetActive(false);
+            return (bar, fill, text);
+        }
+
+        /// <summary>「エリア 2」「すすめ →」などを真ん中の少し上に大きく出す。下のボタンを押せなくしない</summary>
+        private static Text CreateBanner(Transform parent)
+        {
+            var obj = UIDialogBuilder.CreateUIObject("Banner", parent);
+            var rect = obj.GetComponent<RectTransform>();
+            rect.anchoredPosition = new Vector2(0f, BannerY);
+            rect.sizeDelta = BannerSize;
+            var text = AddText(obj, string.Empty, BannerFontSize);
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = new Color(1f, 1f, 1f, 0f);
+            text.raycastTarget = false;
+            obj.AddComponent<Outline>().effectColor = HpBarBackColor;
+            return text;
+        }
+
+        private static Text CreateProgressText(Transform parent)
+        {
+            var obj = UIDialogBuilder.CreateUIObject("Progress", parent);
             var rect = obj.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 1f);
             rect.anchoredPosition = new Vector2(-HudMargin.x, HudMargin.y);
-            rect.sizeDelta = EnemiesTextSize;
+            rect.sizeDelta = ProgressTextSize;
             var text = AddText(obj, string.Empty, HudFontSize);
             text.alignment = TextAnchor.MiddleRight;
             text.color = Color.white;

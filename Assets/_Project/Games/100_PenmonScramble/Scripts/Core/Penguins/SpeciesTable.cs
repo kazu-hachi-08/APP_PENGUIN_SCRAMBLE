@@ -125,6 +125,20 @@ namespace PenmonScramble.Core
             };
         }
 
+        /// <summary>ステージのボス（§6.1）。野生の敵を大きく・強くして、技2も使う</summary>
+        public static UnitStats BossStats(SpeciesDef species, int playerCount)
+        {
+            var stats = EnemyStats(species, playerCount);
+            stats.IsBoss = true;
+            stats.Radius *= Balance.BossRadiusScale;
+            stats.MaxHp = Math.Max(1, (int)MathF.Round(stats.MaxHp * Balance.BossHpScale));
+            stats.Attack *= Balance.BossAttackScale;
+            stats.Skills = new[] { species.Skill1, species.Skill2 };
+            stats.CooldownScale = Balance.BossCooldownScale;
+            stats.KnockbackScale = Balance.BossKnockbackScale;
+            return stats;
+        }
+
         public static int EnemyMaxHp(SpeciesDef species, int playerCount)
         {
             return Math.Max(1, (int)MathF.Round(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(playerCount)));

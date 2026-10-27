@@ -47,7 +47,7 @@ namespace PenmonScramble.Editor
         public static void BuildScene()
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            var shake = CreateCamera();
+            var (shake, stageCamera) = CreateCamera();
             CreateEventSystem();
             var canvas = CreateCanvas();
             var touch = CreateTouchControls(canvas.transform);
@@ -58,25 +58,28 @@ namespace PenmonScramble.Editor
             var title = CreateTitlePanel(canvas.transform, session);
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);
-            CreateStage(hud, session, title, shake, cutIn);
+            CreateStage(hud, session, title, shake, stageCamera, cutIn);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings();
             Debug.Log($"[PenmonScrambleSceneBuilder] {ScenePath} を生成しました");
         }
 
-        private static CameraShake CreateCamera()
+        /// <summary>エリアへ動く土台（StageCamera）の子にカメラを置き、揺れはカメラ側で出す（2つの動きがぶつからないように）</summary>
+        private static (CameraShake shake, StageCamera stageCamera) CreateCamera()
         {
+            var rig = new GameObject("CameraRig").AddComponent<StageCamera>();
             var cameraObj = new GameObject("Main Camera");
             cameraObj.tag = "MainCamera";
-            cameraObj.transform.position = new Vector3(0f, 0f, -10f);
+            cameraObj.transform.SetParent(rig.transform, false);
+            cameraObj.transform.localPosition = new Vector3(0f, 0f, -10f);
             var camera = cameraObj.AddComponent<Camera>();
             camera.orthographic = true;
             camera.orthographicSize = Balance.AreaHeight * 0.5f + CameraVerticalMargin;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = BackgroundColor;
             cameraObj.AddComponent<AudioListener>();
-            return cameraObj.AddComponent<CameraShake>();
+            return (cameraObj.AddComponent<CameraShake>(), rig);
         }
 
         private static void CreateEventSystem()
@@ -125,12 +128,13 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        private static void CreateStage(StageHud hud, OnlineSession session, ModeSelectPanel title, CameraShake shake, SpecialCutIn cutIn)
+        private static void CreateStage(StageHud hud, OnlineSession session, ModeSelectPanel title, CameraShake shake, StageCamera stageCamera, SpecialCutIn cutIn)
         {
             var stageObj = new GameObject("Stage");
             var view = stageObj.AddComponent<StageView>();
             var viewSo = new SerializedObject(view);
             viewSo.FindProperty("_cameraShake").objectReferenceValue = shake;
+            viewSo.FindProperty("_stageCamera").objectReferenceValue = stageCamera;
             viewSo.FindProperty("_cutIn").objectReferenceValue = cutIn;
             viewSo.ApplyModifiedProperties();
             var runner = stageObj.AddComponent<StageRunner>();

@@ -20,5 +20,11 @@ namespace PenmonScramble.Core
 
         /// <summary>技の待ち時間に掛ける倍率。敵は同じ技でも間をあけて使う（§4.7）</summary>
         public float CooldownScale { get; set; } = 1f;
+
+        /// <summary>ステージのボス。大きく描き、HUD に HP を出す</summary>
+        public bool IsBoss { get; set; }
+
+        /// <summary>飛ばされる強さに掛ける倍率。ボスは飛ばされにくい</summary>
+        public float KnockbackScale { get; set; } = 1f;
     }
 }

@@ -150,7 +150,7 @@ namespace PenmonScramble.Core
 
             target.Hp = Math.Max(0, target.Hp - damage);
             // 足すと連打で飛びすぎるので、新しい吹っ飛びで置き換える
-            target.KnockbackVelocity = direction * knockback;
+            target.KnockbackVelocity = direction * (knockback * target.KnockbackScale);
             ChargeSpecialGauge(attackerId, target, damage, skill);
             Hit?.Invoke(new HitEvent(attackerId, target.Id, damage, target.Position));
         }

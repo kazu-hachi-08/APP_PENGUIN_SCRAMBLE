@@ -42,14 +42,19 @@ namespace PenmonScramble.Core
             {
                 Round = _round,
                 Tick = _world.TickCount,
-                Result = ResultOf(_world),
+                Result = _world.Result,
                 AreaMin = _world.AreaMin,
                 AreaMax = _world.AreaMax,
+                AreaIndex = _world.AreaIndex,
+                AreaCount = _world.AreaCount,
+                IsGateOpen = _world.IsGateOpen,
+                EnemiesDefeated = _world.EnemiesDefeated,
             };
 
             foreach (var unit in _world.Units)
             {
-                snapshot.Units.Add(new UnitState(unit.Id, unit.Team, unit.Seat, unit.SpeciesNo, unit.Position, unit.Facing, unit.Hp, unit.MaxHp, unit.Radius, FlagsOf(unit)));
+                snapshot.Units.Add(new UnitState(unit.Id, unit.Team, unit.Seat, unit.SpeciesNo, unit.Position, unit.Facing, unit.Hp, unit.MaxHp, unit.Radius, FlagsOf(unit),
+                    unit.ReviveSeconds / Balance.ReviveSeconds));
                 if (unit.Team == Team.Player)
                 {
                     snapshot.Players.Add(PlayerStateOf(unit));
@@ -102,6 +107,16 @@ namespace PenmonScramble.Core
                 flags |= UnitFlags.Invincible;
             }
 
+            if (unit.IsDown)
+            {
+                flags |= UnitFlags.Down;
+            }
+
+            if (unit.IsBoss)
+            {
+                flags |= UnitFlags.Boss;
+            }
+
             return flags;
         }
 
@@ -120,17 +135,6 @@ namespace PenmonScramble.Core
             }
 
             return state;
-        }
-
-        /// <summary>最後の敵と最後のプレイヤーが同時に倒れたら、クリアにする（がんばった方を取る）</summary>
-        private static StageResult ResultOf(StageWorld world)
-        {
-            if (world.IsCleared)
-            {
-                return StageResult.Cleared;
-            }
-
-            return world.IsFailed ? StageResult.Failed : StageResult.Playing;
         }
     }
 }

@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 敵の動き: 一番近いプレイヤーへ近づいて、技1で殴るだけ（§4.7）
+    /// 敵の動き: 一番近いプレイヤーへ近づいて、技1で殴るだけ（§4.7）。ボスは技2も使う
     /// </summary>
     public sealed partial class StageWorld
     {
@@ -25,7 +25,9 @@ namespace PenmonScramble.Core
             }
 
             unit.Facing = toTarget.IsNearlyZero ? unit.Facing : toTarget.Normalized;
-            TryUseSkill(unit, EnemySkillSlot, faceNearestWhenIdle: false);
+            // 技2を持っている（ボス）なら、待ち時間が明けたときは派手な技2を先に出す
+            var slot = unit.Skills.Length > 1 && unit.Cooldowns[1] <= 0f ? 1 : EnemySkillSlot;
+            TryUseSkill(unit, slot, faceNearestWhenIdle: false);
         }
     }
 }

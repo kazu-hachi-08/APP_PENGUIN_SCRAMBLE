@@ -1,16 +1,12 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// お試しエリア: プレイヤー1人につき3体と、野生のペンギンの群れ。
-    /// フェーズ4でステージ定義、フェーズ6で編成（自分で選んだ3体）に置き換える
+    /// 編成画面とステージ選び（フェーズ6）ができるまでの挑戦の作り方: 1ステージ目に、プレイヤー1人につき3体。
+    /// 連れていく3体は挑戦ごとに順に替わる
     /// </summary>
     public static class TrialStage
     {
-        public const int EnemyCount = 10;
-
-        // 敵はエリアの右側に出す。最初からプレイヤーに重ならないようにするため
-        private const float EnemySpawnMinXRatio = 0.1f;
-        private const float EnemySpawnMarginRatio = 0.1f;
+        // プレイヤーはエリア0の左寄りから始める（敵は右寄りに出る）
         private const float PlayerSpawnXRatio = -0.7f;
 
         // 協力のときにプレイヤーを縦に並べる間隔（マス）。体の直径より広くして、最初から重ならないようにする
@@ -22,17 +18,16 @@ namespace PenmonScramble.Core
         /// </summary>
         public static Unit[] Create(int seed, int[] seats, int round, out StageWorld world)
         {
-            var half = new Vec2(Balance.AreaWidth * 0.5f, Balance.AreaHeight * 0.5f);
-            world = new StageWorld(-half, half, seed);
+            world = new StageWorld(StageTable.Stage1, seats.Length, seed);
+            var x = Balance.AreaWidth * 0.5f * PlayerSpawnXRatio;
             var players = new Unit[seats.Length];
             for (var i = 0; i < seats.Length; i++)
             {
                 var y = (i - (seats.Length - 1) * 0.5f) * PlayerSpawnSpacing;
                 var party = PartyStats(RotatingParty(round, i, seats.Length));
-                players[i] = world.AddUnit(Team.Player, party, new Vec2(half.X * PlayerSpawnXRatio, y), seats[i]);
+                players[i] = world.AddUnit(Team.Player, party, new Vec2(x, y), seats[i]);
             }
 
-            AddEnemies(world, seed, half, seats.Length);
             return players;
         }
 
@@ -62,21 +57,6 @@ namespace PenmonScramble.Core
             }
 
             return stats;
-        }
-
-        private static void AddEnemies(StageWorld world, int seed, Vec2 half, int playerCount)
-        {
-            var random = new System.Random(seed);
-            var minX = half.X * EnemySpawnMinXRatio;
-            var maxX = half.X * (1f - EnemySpawnMarginRatio);
-            var maxY = half.Y * (1f - EnemySpawnMarginRatio);
-            for (var i = 0; i < EnemyCount; i++)
-            {
-                var x = minX + (float)random.NextDouble() * (maxX - minX);
-                var y = -maxY + (float)random.NextDouble() * maxY * 2f;
-                var species = SpeciesTable.Species[random.Next(SpeciesTable.Count)];
-                world.AddUnit(Team.Enemy, SpeciesTable.EnemyStats(species, playerCount), new Vec2(x, y));
-            }
         }
     }
 }

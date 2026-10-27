@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace PenmonScramble.Core
@@ -46,6 +47,8 @@ namespace PenmonScramble.Core
         public float Attack => Active.Stats.Attack;
         public SkillDef[] Skills => Active.Stats.Skills;
         internal float CooldownScale => Active.Stats.CooldownScale;
+        internal float KnockbackScale => Active.Stats.KnockbackScale;
+        public bool IsBoss => Active.Stats.IsBoss;
 
         public int Hp
         {
@@ -70,6 +73,9 @@ namespace PenmonScramble.Core
         public float FrozenSeconds { get; internal set; }
         public float InvincibleSeconds { get; internal set; }
 
+        /// <summary>ダウン中に、近くに仲間がいた時間の合計（秒）。離れてもためた分は残る（§4.5）</summary>
+        public float ReviveSeconds { get; internal set; }
+
         internal DashState Dash { get; set; }
         internal float[] Cooldowns => Active.Cooldowns;
         internal PlayerInput Input { get; set; }
@@ -80,6 +86,9 @@ namespace PenmonScramble.Core
         /// <summary>場に出ている子が元気か。倒れても控えがいれば、その更新の終わりに次の子が出る</summary>
         public bool IsAlive => Hp > 0;
         public bool HasAliveMember => FindNextAlive() >= 0 || IsAlive;
+
+        /// <summary>3体とも倒れて、その場で仲間の助けを待っている（§4.5）。敵は倒れたら場から消えるので、プレイヤーだけ</summary>
+        public bool IsDown => Team == Team.Player && !HasAliveMember;
 
         /// <summary>強く飛ばされている間は、歩くことも技を出すこともできない</summary>
         public bool IsStunned => KnockbackVelocity.Length > Balance.StunSpeed;
@@ -102,6 +111,15 @@ namespace PenmonScramble.Core
             ActiveIndex = next;
             Dash = null;
             return true;
+        }
+
+        /// <summary>ダウンから起き上がる。先頭の子を、最大 HP の hpRatio で出す（§4.5）</summary>
+        internal void ReviveFirstMember(float hpRatio)
+        {
+            ActiveIndex = 0;
+            var first = _members[0];
+            first.Hp = Math.Max(1, (int)MathF.Round(first.MaxHp * hpRatio));
+            Dash = null;
         }
 
         private int FindNextAlive()

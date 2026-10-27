@@ -124,7 +124,7 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
-        public void AllMembersFallen_RemovesPlayer()
+        public void AllMembersFallen_PlayerIsDown_AndSoloFails()
         {
             var world = Create();
             var player = AddParty(world, Member(1), Member(1), Member(1));
@@ -132,7 +132,9 @@ namespace PenmonScramble.Tests
 
             TickFor(world, Seconds(8f));
 
-            Assert.That(world.FindUnit(player.Id), Is.Null);
+            // ダウンしてもその場に残る（§4.5）
+            Assert.That(world.FindUnit(player.Id), Is.Not.Null);
+            Assert.That(player.IsDown, Is.True);
             Assert.That(world.IsFailed, Is.True);
         }
 

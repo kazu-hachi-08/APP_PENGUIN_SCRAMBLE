@@ -15,9 +15,15 @@ namespace PenmonScramble.Tests
                 Result = StageResult.Cleared,
                 AreaMin = new Vec2(-8f, -4.5f),
                 AreaMax = new Vec2(8f, 4.5f),
+                AreaIndex = 2,
+                AreaCount = 6,
+                IsGateOpen = true,
+                EnemiesDefeated = 37,
             };
             snapshot.Units.Add(new UnitState(1, Team.Player, 2, 5, new Vec2(1.5f, -2f), new Vec2(0f, 1f), 80, 120, 0.45f, UnitFlags.Dashing | UnitFlags.Invincible));
             snapshot.Units.Add(new UnitState(7, Team.Enemy, Unit.NoSeat, 20, new Vec2(3f, 4f), new Vec2(-1f, 0f), 5, 30, 0.45f, UnitFlags.Frozen));
+            snapshot.Units.Add(new UnitState(12, Team.Player, 1, 3, Vec2.Zero, Vec2.Right, 0, 100, 0.45f, UnitFlags.Down, revive: 0.5f));
+            snapshot.Units.Add(new UnitState(13, Team.Enemy, Unit.NoSeat, 4, Vec2.Zero, Vec2.Right, 300, 500, 0.9f, UnitFlags.Boss));
             snapshot.Projectiles.Add(new ProjectileState(9, Team.Enemy, Element.Water, new Vec2(0.25f, 0.5f), 0.2f));
             snapshot.Hits.Add(new HitEvent(1, 7, 14, new Vec2(3f, 4f)));
             snapshot.Defeats.Add(new DefeatedEvent(8, Team.Enemy, new Vec2(-1f, 2f)));
@@ -44,7 +50,7 @@ namespace PenmonScramble.Tests
             Assert.That(decoded.Result, Is.EqualTo(StageResult.Cleared));
             Assert.That(decoded.AreaMax, Is.EqualTo(new Vec2(8f, 4.5f)));
 
-            Assert.That(decoded.Units.Count, Is.EqualTo(2));
+            Assert.That(decoded.Units.Count, Is.EqualTo(4));
             var player = decoded.Units[0];
             Assert.That(player.Id, Is.EqualTo(1));
             Assert.That(player.Seat, Is.EqualTo(2));
@@ -92,6 +98,21 @@ namespace PenmonScramble.Tests
             Assert.That(decoded.Bursts[0].Shape, Is.EqualTo(BurstShape.Ring));
             Assert.That(decoded.Bursts[0].Radius, Is.EqualTo(5f));
             Assert.That(decoded.Bursts[0].IsSpecial, Is.True);
+        }
+
+        [Test]
+        public void Snapshot_RoundTripsPhase4Fields()
+        {
+            var decoded = StageCodec.DecodeSnapshot(StageCodec.EncodeSnapshot(SampleSnapshot()));
+
+            Assert.That(decoded.AreaIndex, Is.EqualTo(2));
+            Assert.That(decoded.AreaCount, Is.EqualTo(6));
+            Assert.That(decoded.IsGateOpen, Is.True);
+            Assert.That(decoded.EnemiesDefeated, Is.EqualTo(37));
+            Assert.That(decoded.Units[2].Has(UnitFlags.Down), Is.True);
+            Assert.That(decoded.Units[2].Revive, Is.EqualTo(0.5f).Within(1f / byte.MaxValue));
+            Assert.That(decoded.TryGetBoss(out var boss), Is.True);
+            Assert.That(boss.Id, Is.EqualTo(13));
         }
 
         [Test]
@@ -177,7 +198,9 @@ namespace PenmonScramble.Tests
             Assert.That(first.Tick, Is.EqualTo(1));
             Assert.That(first.TryGetPlayer(0, out var player), Is.True);
             Assert.That(player.Id, Is.EqualTo(players[0].Id));
-            Assert.That(first.CountAlive(Team.Enemy), Is.EqualTo(TrialStage.EnemyCount));
+            // 最初の波は少し待ってから出る
+            Assert.That(first.CountAlive(Team.Enemy), Is.EqualTo(0));
+            Assert.That(first.AreaCount, Is.EqualTo(StageTable.Stage1.Areas.Count));
             Assert.That(first.Result, Is.EqualTo(StageResult.Playing));
             Assert.That(first.FindPlayerState(0).Members.Count, Is.EqualTo(Balance.PartySize));
         }

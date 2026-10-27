@@ -18,6 +18,12 @@ namespace PenmonScramble.Core
         Dashing = 1,
         Frozen = 2,
         Invincible = 4,
+
+        /// <summary>3体とも倒れて、仲間の助けを待っている（§4.5）</summary>
+        Down = 8,
+
+        /// <summary>ステージのボス（大きく描き、HUD に HP を出す）</summary>
+        Boss = 16,
     }
 
     /// <summary>描くのに要るユニット1体分の値（場に出ている子の値）</summary>
@@ -34,7 +40,10 @@ namespace PenmonScramble.Core
         public readonly float Radius;
         public readonly UnitFlags Flags;
 
-        public UnitState(int id, Team team, int seat, int speciesNo, Vec2 position, Vec2 facing, int hp, int maxHp, float radius, UnitFlags flags)
+        /// <summary>ダウン中の復活の進み具合（0〜1）</summary>
+        public readonly float Revive;
+
+        public UnitState(int id, Team team, int seat, int speciesNo, Vec2 position, Vec2 facing, int hp, int maxHp, float radius, UnitFlags flags, float revive = 0f)
         {
             Id = id;
             Team = team;
@@ -46,6 +55,7 @@ namespace PenmonScramble.Core
             MaxHp = maxHp;
             Radius = radius;
             Flags = flags;
+            Revive = revive;
         }
 
         public bool Has(UnitFlags flag) => (Flags & flag) != 0;
@@ -123,8 +133,13 @@ namespace PenmonScramble.Core
         public int Round { get; set; }
         public int Tick { get; set; }
         public StageResult Result { get; set; }
+        /// <summary>いま動ける範囲。出入口が開いている間は次のエリアまで広がる</summary>
         public Vec2 AreaMin { get; set; }
         public Vec2 AreaMax { get; set; }
+        public int AreaIndex { get; set; }
+        public int AreaCount { get; set; } = 1;
+        public bool IsGateOpen { get; set; }
+        public int EnemiesDefeated { get; set; }
 
         public List<UnitState> Units { get; } = new List<UnitState>();
         public List<ProjectileState> Projectiles { get; } = new List<ProjectileState>();
@@ -163,6 +178,21 @@ namespace PenmonScramble.Core
             }
 
             return null;
+        }
+
+        public bool TryGetBoss(out UnitState state)
+        {
+            foreach (var unit in Units)
+            {
+                if (unit.Has(UnitFlags.Boss))
+                {
+                    state = unit;
+                    return true;
+                }
+            }
+
+            state = default;
+            return false;
         }
 
         public int CountAlive(Team team)

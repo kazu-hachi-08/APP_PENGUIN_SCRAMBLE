@@ -132,7 +132,7 @@ namespace PenmonScramble.Game
 
         private void UpdateHud(StageSnapshot snapshot)
         {
-            // 3体とも倒れた後はスナップショットにいないので、最後に見た3体を HP 0 で出す
+            // 抜けた後などでスナップショットにいなければ、最後に見た3体を HP 0 で出す
             var state = snapshot.FindPlayerState(_localSeat);
             if (state != null)
             {
@@ -144,7 +144,7 @@ namespace PenmonScramble.Game
                 _hud.SetParty(_lastPlayerState, fallen: state == null);
             }
 
-            _hud.SetEnemiesLeft(snapshot.CountAlive(Team.Enemy));
+            _hud.SetProgress(snapshot);
         }
 
         private void UpdateResult(StageSnapshot snapshot, InputManager input)
@@ -164,7 +164,7 @@ namespace PenmonScramble.Game
             if (_resultShownAt < 0f)
             {
                 _resultShownAt = Time.time;
-                _hud.ShowResult(snapshot.Result == StageResult.Cleared, canRetry: _host != null);
+                _hud.ShowResult(snapshot.Result == StageResult.Cleared, canRetry: _host != null, snapshot.EnemiesDefeated);
                 return;
             }
 

@@ -309,12 +309,15 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
-        public void TrialStage_StartsWithPlayerAndEnemies()
+        public void TrialStage_StartsWithPlayer_ThenFirstWaveAppears()
         {
             var players = TrialStage.Create(seed: 42, new[] { 0 }, round: 1, out var world);
             world.Tick();
+            Assert.That(world.Units.Count, Is.EqualTo(1));
 
-            Assert.That(world.Units.Count, Is.EqualTo(1 + TrialStage.EnemyCount));
+            TickFor(world, TestWorld.Seconds(Balance.FirstWaveDelaySeconds));
+
+            Assert.That(world.Units.Count, Is.EqualTo(1 + StageTable.Stage1.Areas[0].Waves[0].Count));
             Assert.That(players[0].Team, Is.EqualTo(Team.Player));
             Assert.That(players[0].Seat, Is.EqualTo(0));
             Assert.That(players[0].Hp, Is.EqualTo(players[0].MaxHp));
@@ -340,6 +343,7 @@ namespace PenmonScramble.Tests
         public void TrialStage_EnemyHpScalesWithPlayers()
         {
             TrialStage.Create(seed: 1, new[] { 0, 1, 2, 3 }, round: 1, out var world);
+            TickFor(world, TestWorld.Seconds(Balance.FirstWaveDelaySeconds));
 
             var enemy = FirstEnemy(world);
             var species = SpeciesTable.Get(enemy.SpeciesNo);

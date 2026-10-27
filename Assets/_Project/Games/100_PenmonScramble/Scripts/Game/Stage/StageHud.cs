@@ -7,9 +7,10 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージ中の画面表示: 場に出ている子の HP・3体の様子・必殺技のゲージ・残りの敵・結果
+    /// ステージ中の画面表示: 場に出ている子の HP・3体の様子・必殺技のゲージ・結果。
+    /// エリアの進み具合・ボスの HP は StageHud.Progress.cs
     /// </summary>
-    public class StageHud : MonoBehaviour
+    public partial class StageHud : MonoBehaviour
     {
         // ゲージ満タンのときに光らせる速さ（§3「ゲージ満タンで光る」）
         private const float ReadyPulsePerSecond = 3f;
@@ -25,7 +26,6 @@ namespace PenmonScramble.Game
         [SerializeField] private Color _gaugeColor = new Color(1f, 0.6f, 0.2f);
         [SerializeField] private Color _gaugeReadyColor = new Color(1f, 0.95f, 0.4f);
         [SerializeField] private Image _specialButtonImage;
-        [SerializeField] private Text _enemiesText;
         [SerializeField] private GameObject _resultPanel;
         [SerializeField] private Text _resultText;
         [SerializeField] private Button _retryButton;
@@ -58,7 +58,10 @@ namespace PenmonScramble.Game
             var hp = fallen ? 0 : active.Hp;
             var ratio = active.MaxHp > 0 ? (float)hp / active.MaxHp : 0f;
             _hpFill.anchorMax = new Vector2(ratio, 1f);
-            _hpText.text = $"{_playerLabel}  {PenguinPalette.SpeciesName(active.SpeciesNo)}  HP {hp} / {active.MaxHp}";
+            // 3体とも倒れた（ダウン）ときは、何をすれば戻れるかを出す（§4.5）
+            _hpText.text = hp > 0
+                ? $"{_playerLabel}  {PenguinPalette.SpeciesName(active.SpeciesNo)}  HP {hp} / {active.MaxHp}"
+                : $"{_playerLabel}  ダウン… 仲間が近くにいると復活";
             _partyText.text = PartyLine(state, fallen);
             SetGauge(fallen ? 0f : state.SpecialGauge);
         }
@@ -97,6 +100,7 @@ namespace PenmonScramble.Game
 
         private void Update()
         {
+            UpdateBanner();
             var pulse = _specialReady ? 0.5f + 0.5f * Mathf.Sin(Time.time * ReadyPulsePerSecond * Mathf.PI * 2f) : 0f;
             _gaugeFillImage.color = _specialReady ? Color.Lerp(_gaugeReadyColor, Color.white, pulse) : _gaugeColor;
             if (_specialButtonImage != null)
@@ -107,15 +111,11 @@ namespace PenmonScramble.Game
             }
         }
 
-        public void SetEnemiesLeft(int count)
-        {
-            _enemiesText.text = $"のこり {count} 体";
-        }
-
         /// <param name="canRetry">「もう一度」を押せるのはホストだけ（ゲストはホストが始め直すのを待つ）</param>
-        public void ShowResult(bool cleared, bool canRetry)
+        public void ShowResult(bool cleared, bool canRetry, int enemiesDefeated)
         {
             var title = cleared ? "クリア！" : "やられた…";
+            title = $"{title}\n<size=56>倒した数 {enemiesDefeated} 体</size>";
             _resultText.text = canRetry ? title : $"{title}\n<size=48>ホストが「もう一度」を押すと始まります</size>";
             _retryButton.gameObject.SetActive(canRetry);
             _resultPanel.SetActive(true);

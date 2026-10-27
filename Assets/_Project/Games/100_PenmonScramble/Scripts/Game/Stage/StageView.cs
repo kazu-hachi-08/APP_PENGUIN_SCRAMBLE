@@ -24,6 +24,11 @@ namespace PenmonScramble.Game
         [SerializeField] private CameraShake _cameraShake;
         [SerializeField] private SpecialCutIn _cutIn;
 
+        // ボスが倒れたときの揺れ（マス・秒）
+        private const float BossDefeatShake = 0.3f;
+        private const float BossDefeatShakeSeconds = 0.5f;
+        private const float SpawnPoofSeconds = 0.3f;
+
         private readonly Dictionary<int, UnitView> _units = new Dictionary<int, UnitView>();
         private readonly Dictionary<int, ProjectileView> _projectiles = new Dictionary<int, ProjectileView>();
         private readonly Dictionary<int, EffectView> _effects = new Dictionary<int, EffectView>();
@@ -36,7 +41,8 @@ namespace PenmonScramble.Game
         /// <summary>新しいスナップショットを受け取る。出来事の演出を出し、新しく出たものを作り、位置を受け取る</summary>
         public void Apply(StageSnapshot snapshot)
         {
-            if (snapshot.Round != _round)
+            var isNewRound = snapshot.Round != _round;
+            if (isNewRound)
             {
                 Rebuild(snapshot);
             }
@@ -52,10 +58,12 @@ namespace PenmonScramble.Game
                 OnDefeated(defeat);
             }
 
-            SyncUnits(snapshot);
+            SyncUnits(snapshot, showSpawn: !isNewRound);
             SyncProjectiles(snapshot);
             SyncEffects(snapshot);
             PlayEvents(snapshot);
+            UpdateGates(snapshot);
+            FollowCamera(snapshot, snap: isNewRound);
         }
 
         public void Render(float alpha)
@@ -83,22 +91,11 @@ namespace PenmonScramble.Game
             _units.Clear();
             _projectiles.Clear();
             _effects.Clear();
-            CreateArea(snapshot);
+            CreateGround(snapshot);
         }
 
-        private void CreateArea(StageSnapshot snapshot)
-        {
-            var area = new GameObject("Area").AddComponent<SpriteRenderer>();
-            area.transform.SetParent(transform, false);
-            area.sprite = PlaceholderSprites.Square;
-            area.color = _areaColor;
-            area.sortingOrder = SortingDepth.Background;
-            area.transform.position = ((snapshot.AreaMin + snapshot.AreaMax) * 0.5f).ToVector2();
-            var size = (snapshot.AreaMax - snapshot.AreaMin).ToVector2();
-            area.transform.localScale = new Vector3(size.x, size.y, 1f);
-        }
-
-        private void SyncUnits(StageSnapshot snapshot)
+        /// <param name="showSpawn">挑戦の途中で出てきた敵（次の波）は、ぽんと出てきたように見せる</param>
+        private void SyncUnits(StageSnapshot snapshot, bool showSpawn)
         {
             _aliveIds.Clear();
             foreach (var unit in snapshot.Units)
@@ -111,6 +108,11 @@ namespace PenmonScramble.Game
                 }
 
                 _units.Add(unit.Id, CreateUnitView(unit));
+                if (showSpawn)
+                {
+                    var position = unit.Position.ToVector2();
+                    BurstFx.Spawn(transform, PlaceholderSprites.Ring, Color.white, position, unit.Radius, unit.Radius * 2.5f, SpawnPoofSeconds, SortingDepth.Popup - 2);
+                }
             }
 
             // 倒されずに消えた（ゲストが抜けた）ものは、演出なしで消す
@@ -202,6 +204,10 @@ namespace PenmonScramble.Game
             {
                 _units.Remove(e.UnitId);
                 view.PlayDefeat();
+                if (view.IsBoss)
+                {
+                    _cameraShake.Shake(BossDefeatShake, BossDefeatShakeSeconds);
+                }
             }
         }
     }

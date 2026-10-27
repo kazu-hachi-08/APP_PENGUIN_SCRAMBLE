@@ -73,6 +73,36 @@ namespace PenmonScramble.Core
         /// <summary>必殺技を出した本人が無敵でいる時間（秒）。カットインと効き目が終わるまで</summary>
         public const float SpecialInvincibleSeconds = 3f;
 
+        // ステージの進み方（§6.1）
+        /// <summary>エリアに入ってから最初の敵が出るまで（秒）。出入口が閉じたのを見せてから出すため</summary>
+        public const float FirstWaveDelaySeconds = 1f;
+        /// <summary>敵がこの数まで減ったら次の波を出す。全滅まで待つと間が空いて退屈になるため</summary>
+        public const int NextWaveEnemiesLeft = 2;
+        /// <summary>開いた出入口から次のエリアへこれだけ入ると、次のエリアが始まる（マス）。出入口の上を行き来しただけでは始めない</summary>
+        public const float AreaEnterDepth = 2f;
+        /// <summary>敵はプレイヤーからこれだけ離れた所に出す（マス）。出た瞬間に殴られないように</summary>
+        public const float SpawnMinDistance = 4f;
+        /// <summary>敵を出す場所の、壁からの余白（マス）</summary>
+        public const float SpawnWallMargin = 1f;
+
+        // ステージのボス（§6.1）。同じ種類の雑魚を、大きく・硬く・強くする
+        public const float BossHpScale = 15f;
+        public const float BossAttackScale = 2f;
+        public const float BossRadiusScale = 2f;
+        /// <summary>雑魚（EnemyCooldownScale）より短い間で技を使う</summary>
+        public const float BossCooldownScale = 2f;
+        /// <summary>ボスが飛ばされる強さの割合。雑魚と同じだけ飛ぶと、強い敵に見えないため</summary>
+        public const float BossKnockbackScale = 0.25f;
+
+        // ダウンと復活（§4.5）
+        /// <summary>仲間の体がこの範囲にかかっていると、復活の時間がたまる（マス）</summary>
+        public const float ReviveRadius = 1.5f;
+        public const float ReviveSeconds = 3f;
+        /// <summary>復活した先頭の子の HP の割合</summary>
+        public const float ReviveHpRatio = 0.3f;
+        /// <summary>復活した直後の無敵（秒）。囲まれたまま起きて、すぐまた倒れる、を防ぐ</summary>
+        public const float ReviveInvincibleSeconds = 2f;
+
         // 協力の人数ごとの敵の HP の倍率（§4.7）。添字は人数-1
         private static readonly float[] EnemyHpScales = { 1.0f, 1.6f, 2.2f, 2.8f };
 
