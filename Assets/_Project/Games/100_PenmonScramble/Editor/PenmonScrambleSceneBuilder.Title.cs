@@ -8,14 +8,14 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// タイトル: 「ひとりで遊ぶ」「部屋を作る」「コードで参加」。
-    /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る（§2。仮の見た目）。
+    /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る（§2）。
+    /// 上半分は背景の絵とロゴを見せ、ボタンは下の帯にまとめる。絵とロゴは PenmonScrambleSceneBuilder.TitleArt.cs、
     /// コイン・ステージの選択・ガチャ・ペンギン一覧は PenmonScrambleSceneBuilder.Menu.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private const string GameTitle = "乱戦！ペンモンスクランブル";
         private const string SoloLabel = "ひとりで遊ぶ";
-        private const string HostLabel = "部屋を作る\n<size=36>最大4人で協力</size>";
+        private const string HostLabel = "部屋を作る\n<size=32>最大4人で協力</size>";
         private const string JoinLabel = "参加する";
         private const string CodePlaceholder = "参加コード";
         private const string CopyLabel = "コードをコピー";
@@ -32,25 +32,23 @@ namespace PenmonScramble.Editor
         private static readonly Color CancelColor = new Color(0.45f, 0.50f, 0.60f);
         private static readonly Color PlaceholderColor = new Color(0.55f, 0.55f, 0.60f);
 
-        private static readonly Vector2 GameTitlePosition = new Vector2(0f, 370f);
-        private static readonly Vector2 GameTitleSize = new Vector2(1700f, 200f);
-        private static readonly Vector2 CardSize = new Vector2(640f, 220f);
-        private static readonly Vector2 SoloPosition = new Vector2(-420f, 40f);
-        private static readonly Vector2 HostPosition = new Vector2(420f, 40f);
-        private static readonly Vector2 CodeInputPosition = new Vector2(320f, -180f);
-        private static readonly Vector2 CodeInputSize = new Vector2(440f, 110f);
-        private static readonly Vector2 JoinPosition = new Vector2(660f, -180f);
-        private static readonly Vector2 JoinSize = new Vector2(220f, 110f);
-        private static readonly Vector2 StatusPosition = new Vector2(0f, 60f);
-        private static readonly Vector2 StatusSize = new Vector2(1400f, 440f);
-        private const float WaitButtonsY = -320f;
+        private static readonly Vector2 CardSize = new Vector2(520f, 160f);
+        private static readonly Vector2 SoloPosition = new Vector2(-600f, -350f);
+        private static readonly Vector2 HostPosition = new Vector2(-40f, -350f);
+        private static readonly Vector2 CodeInputPosition = new Vector2(430f, -350f);
+        private static readonly Vector2 CodeInputSize = new Vector2(340f, 110f);
+        private static readonly Vector2 JoinPosition = new Vector2(730f, -350f);
+        private static readonly Vector2 JoinSize = new Vector2(200f, 110f);
+        // 接続待ちの文面はロゴと重ならないよう、下の帯の中に出す
+        private static readonly Vector2 StatusPosition = new Vector2(0f, -230f);
+        private static readonly Vector2 StatusSize = new Vector2(1400f, 260f);
+        private const float WaitButtonsY = -440f;
         private const float WaitButtonsSpacing = 460f;
         private static readonly Vector2 WaitButtonSize = new Vector2(400f, 120f);
 
-        private const int GameTitleFontSize = 110;
-        private const int CardFontSize = 64;
+        private const int CardFontSize = 56;
         private const int CodeFontSize = 52;
-        private const int StatusFontSize = 52;
+        private const int StatusFontSize = 44;
         private const int WaitButtonFontSize = 48;
         private const float CodeInputPadding = 16f;
 
@@ -60,9 +58,9 @@ namespace PenmonScramble.Editor
             UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
             // 後ろの HUD やボタンを押せないよう、画面全体をふさぐ
             root.AddComponent<Image>().color = TitleBackColor;
-
-            var title = CreateLabel(root.transform, "GameTitle", GameTitle, GameTitleFontSize, GameTitlePosition, GameTitleSize);
-            title.fontStyle = FontStyle.Bold;
+            CreateTitleBackground(root.transform);
+            CreateTitleBand(root.transform);
+            CreateTitleLogo(root.transform);
 
             var menu = CreateTitleMenu(root.transform, out var solo, out var host, out var join, out var codeInput);
             var waiting = CreateTitleWaiting(root.transform, out var status, out var copy, out var start, out var cancel);
@@ -152,7 +150,13 @@ namespace PenmonScramble.Editor
         {
             var obj = UIDialogBuilder.CreateButton(parent, name, label, size.x, size.y, color);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
-            obj.GetComponentInChildren<Text>().fontSize = fontSize;
+            var text = obj.GetComponentInChildren<Text>();
+            text.fontSize = fontSize;
+            text.fontStyle = FontStyle.Bold;
+            // 下に影を落として、色の板ではなく押せる物に見せる
+            var shadow = obj.AddComponent<Shadow>();
+            shadow.effectColor = ButtonShadowColor;
+            shadow.effectDistance = ButtonShadowDistance;
             return obj.GetComponent<Button>();
         }
 
@@ -163,6 +167,10 @@ namespace PenmonScramble.Editor
             var text = AddText(obj, value, fontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
+            // 背景の絵の上でも読めるよう、白い文字を濃い色で縁取る
+            var outline = obj.AddComponent<Outline>();
+            outline.effectColor = LabelOutlineColor;
+            outline.effectDistance = LabelOutlineDistance;
             // 文字は飾りなので、下のボタンを押す邪魔をしない
             text.raycastTarget = false;
             return text;

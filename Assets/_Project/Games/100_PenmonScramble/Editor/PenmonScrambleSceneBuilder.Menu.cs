@@ -26,13 +26,14 @@ namespace PenmonScramble.Editor
         // タイトル（ModeSelectPanel の Menu の中。接続待ちの間は一緒に隠れる）
         private static readonly Vector2 CoinPosition = new Vector2(680f, 480f);
         private static readonly Vector2 CoinSize = new Vector2(480f, 70f);
-        private const float StageRowY = 200f;
+        // ステージの選択は下の帯の上の段、ガチャ・ペンギンは左上（ロゴと遊ぶボタンの邪魔をしない所）
+        private const float StageRowY = -190f;
         private const float StageArrowX = 440f;
         private static readonly Vector2 StageArrowSize = new Vector2(110f, 90f);
         private static readonly Vector2 StageTextSize = new Vector2(760f, 90f);
-        private static readonly Vector2 GachaButtonPosition = new Vector2(-580f, -180f);
-        private static readonly Vector2 PenguinsButtonPosition = new Vector2(-260f, -180f);
-        private static readonly Vector2 MenuButtonSize = new Vector2(300f, 110f);
+        private static readonly Vector2 GachaButtonPosition = new Vector2(-790f, 470f);
+        private static readonly Vector2 PenguinsButtonPosition = new Vector2(-510f, 470f);
+        private static readonly Vector2 MenuButtonSize = new Vector2(260f, 100f);
 
         // ガチャ画面
         private static readonly Vector2 ScreenTitlePosition = new Vector2(0f, 460f);
