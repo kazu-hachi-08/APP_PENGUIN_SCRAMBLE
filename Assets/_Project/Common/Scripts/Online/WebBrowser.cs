@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PenguinScramble.Common.Online
+namespace PenmonScramble.Common.Online
 {
     /// <summary>
     /// 部屋コードのコピーを、ブラウザ版ではブラウザの機能で行う。
@@ -10,9 +10,9 @@ namespace PenguinScramble.Common.Online
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
         [System.Runtime.InteropServices.DllImport("__Internal")]
-        private static extern void PenguinScramble_CopyText(string text);
+        private static extern void PenmonScramble_CopyText(string text);
 
-        public static void CopyText(string text) => PenguinScramble_CopyText(text);
+        public static void CopyText(string text) => PenmonScramble_CopyText(text);
 #else
         public static void CopyText(string text) => GUIUtility.systemCopyBuffer = text;
 #endif

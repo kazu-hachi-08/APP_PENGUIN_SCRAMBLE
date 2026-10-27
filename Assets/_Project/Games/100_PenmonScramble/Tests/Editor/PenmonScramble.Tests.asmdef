@@ -1,10 +1,10 @@
 {
-    "name": "PenguinScramble.Tests",
-    "rootNamespace": "PenguinScramble.Tests",
+    "name": "PenmonScramble.Tests",
+    "rootNamespace": "PenmonScramble.Tests",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "PenguinScramble.Core"
+        "PenmonScramble.Core"
     ],
     "includePlatforms": [
         "Editor"

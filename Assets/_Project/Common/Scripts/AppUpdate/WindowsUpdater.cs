@@ -5,7 +5,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace PenguinScramble.Common.AppUpdate
+namespace PenmonScramble.Common.AppUpdate
 {
     /// <summary>
     /// Windows 版の自動更新。exe の横の version.txt（公開した版の名前）と GitHub Releases の最新のタグを比べる。
@@ -17,7 +17,7 @@ namespace PenguinScramble.Common.AppUpdate
         private const string ScriptFileName = "update.ps1";
         private const int TimeoutSeconds = 10;
         // ヘッダーには ASCII しか入らないので、日本語の productNameは使えない
-        private const string UserAgent = "PenguinScramble";
+        private const string UserAgent = "PenmonScramble";
 
         [Serializable]
         private class Release

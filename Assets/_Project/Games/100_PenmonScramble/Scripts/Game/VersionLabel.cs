@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PenguinScramble.Game
+namespace PenmonScramble.Game
 {
     /// <summary>
     /// バージョンを画面の隅に出す。配った版と手元の版の食い違いを、遊んでいる人の画面だけで確かめられるようにする

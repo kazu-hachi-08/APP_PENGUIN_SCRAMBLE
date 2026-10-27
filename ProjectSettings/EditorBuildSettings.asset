@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/_Project/Games/100_PenguinScramble/Scenes/PenguinScrambleScene.unity
+    path: Assets/_Project/Games/100_PenmonScramble/Scenes/PenmonScrambleScene.unity
     guid: adbd1c3e481d23d41838bf33d68022ef
   m_configObjects: {}

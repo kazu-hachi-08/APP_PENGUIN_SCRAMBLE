@@ -1,4 +1,4 @@
-namespace PenguinScramble.Common.Profile
+namespace PenmonScramble.Common.Profile
 {
     /// <summary>
     /// ブラウザ版の名前入力。Unity の InputField はブラウザ版だと日本語IMEで変換できないため、
@@ -8,12 +8,12 @@ namespace PenguinScramble.Common.Profile
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
         [System.Runtime.InteropServices.DllImport("__Internal")]
-        private static extern string PenguinScramble_PromptText(string message, string defaultText);
+        private static extern string PenmonScramble_PromptText(string message, string defaultText);
 
         public static bool IsAvailable => true;
 
         /// <summary>キャンセルされたら null</summary>
-        public static string Prompt(string message, string defaultText) => PenguinScramble_PromptText(message, defaultText);
+        public static string Prompt(string message, string defaultText) => PenmonScramble_PromptText(message, defaultText);
 #else
         public static bool IsAvailable => false;
 

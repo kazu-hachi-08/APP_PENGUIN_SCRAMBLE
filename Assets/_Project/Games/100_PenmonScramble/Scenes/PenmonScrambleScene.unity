@@ -247,7 +247,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ab40999847c789444bc289282779242d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: PenguinScramble.Game::PenguinScramble.Game.VersionLabel
+  m_EditorClassIdentifier: PenmonScramble.Game::PenmonScramble.Game.VersionLabel
 --- !u!114 &952327722
 MonoBehaviour:
   m_ObjectHideFlags: 0

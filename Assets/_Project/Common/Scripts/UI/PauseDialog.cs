@@ -1,9 +1,9 @@
 using System;
-using PenguinScramble.Common.Audio;
+using PenmonScramble.Common.Audio;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PenguinScramble.Common.UI
+namespace PenmonScramble.Common.UI
 {
     /// <summary>
     /// 一時停止（ポーズ）メニューダイアログ

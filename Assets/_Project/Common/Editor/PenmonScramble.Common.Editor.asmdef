@@ -1,12 +1,8 @@
 {
-    "name": "PenguinScramble.Game.Editor",
-    "rootNamespace": "PenguinScramble.Editor",
+    "name": "PenmonScramble.Common.Editor",
+    "rootNamespace": "PenmonScramble.Common.Editor",
     "references": [
-        "PenguinScramble.Core",
-        "PenguinScramble.Common",
-        "PenguinScramble.Common.Editor",
-        "PenguinScramble.Game",
-        "Unity.InputSystem",
+        "PenmonScramble.Common",
         "UnityEngine.UI"
     ],
     "includePlatforms": [

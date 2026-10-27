@@ -1,8 +1,8 @@
-using PenguinScramble.Common.Core;
+using PenmonScramble.Common.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace PenguinScramble.Common.Input
+namespace PenmonScramble.Common.Input
 {
     /// <summary>
     /// キーボード入力と仮想UI入力を統合し、統一された入力を提供するマネージャー

@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityScene = UnityEngine.SceneManagement.Scene;
 
-namespace PenguinScramble.Common.UI
+namespace PenmonScramble.Common.UI
 {
     /// <summary>
     /// Unity標準フォントの Text を、同梱の丸ゴシック（M PLUS Rounded 1c）に差し替える。

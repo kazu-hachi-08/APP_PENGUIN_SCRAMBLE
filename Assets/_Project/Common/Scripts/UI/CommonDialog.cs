@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PenguinScramble.Common.UI
+namespace PenmonScramble.Common.UI
 {
     /// <summary>
     /// 汎用OK/Cancel確認ダイアログ

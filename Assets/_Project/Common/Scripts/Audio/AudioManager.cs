@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
-using PenguinScramble.Common.Core;
+using PenmonScramble.Common.Core;
 using UnityEngine;
 
-namespace PenguinScramble.Common.Audio
+namespace PenmonScramble.Common.Audio
 {
     /// <summary>
     /// BGM・SEの再生、音量管理、永続化を行う統合オーディオマネージャー

@@ -1,4 +1,4 @@
-namespace PenguinScramble.Common.Profile
+namespace PenmonScramble.Common.Profile
 {
     /// <summary>
     /// 「席N の表示名」表。各ゲームは席番号から名前を引くだけにして、ローカル/オンラインの違いはここで吸収する。

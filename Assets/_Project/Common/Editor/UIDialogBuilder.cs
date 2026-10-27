@@ -1,9 +1,9 @@
-using PenguinScramble.Common.UI;
+using PenmonScramble.Common.UI;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PenguinScramble.Common.Editor
+namespace PenmonScramble.Common.Editor
 {
     /// <summary>
     /// 共通ダイアログ（確認・ポーズ・リザルト）のUIをシーンへ生成するエディタユーティリティ

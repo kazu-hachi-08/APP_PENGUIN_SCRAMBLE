@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PenguinScramble.Common.Profile
+namespace PenmonScramble.Common.Profile
 {
     /// <summary>
     /// 端末に保存するユーザー名。一度決めたら変更できない仕様なので、保存は TrySave の1か所だけにしている。

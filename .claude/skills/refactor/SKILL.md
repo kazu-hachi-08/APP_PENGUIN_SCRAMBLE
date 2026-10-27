@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: ペンギンスクランブルのコード・仕様書をリファクタリングする。ユーザーが「リファクタリングして」「コード整理して」「古いコメント消して」「使ってない関数を消して」「仕様書が古いので直して」「重複を共通化して」のように、コードや Docs の掃除・整理を頼んだときは必ずこのスキルを使う。観点を1つ選ばせ、方針を質問で固めてから、haiku のサブエージェントをフォルダ単位で並列に走らせて解析し、承認された項目だけ haiku に修正させる。メインはオーケストレーション（分担・質問・承認・検証）に徹する。
+description: 乱戦！ペンモンスクランブルのコード・仕様書をリファクタリングする。ユーザーが「リファクタリングして」「コード整理して」「古いコメント消して」「使ってない関数を消して」「仕様書が古いので直して」「重複を共通化して」のように、コードや Docs の掃除・整理を頼んだときは必ずこのスキルを使う。観点を1つ選ばせ、方針を質問で固めてから、haiku のサブエージェントをフォルダ単位で並列に走らせて解析し、承認された項目だけ haiku に修正させる。メインはオーケストレーション（分担・質問・承認・検証）に徹する。
 ---
 
 # リファクタリング (refactor)
@@ -49,7 +49,7 @@ python .claude/skills/refactor/scripts/plan_chunks.py --mode docs   # 仕様書�
 ```
 
 JSON で「担当名・行数・ファイル一覧」が出る。1担当あたり約3000行（docs は約300行）になるようフォルダ単位で分かれている。
-対象は `Common/Scripts`・`Common/Editor`・`Games/100_PenguinScramble/Scripts`・`Games/100_PenguinScramble/Editor`。`Tests/` は修正対象外だが、「使われているか」の確認には読ませる。
+対象は `Common/Scripts`・`Common/Editor`・`Games/100_PenmonScramble/Scripts`・`Games/100_PenmonScramble/Editor`。`Tests/` は修正対象外だが、「使われているか」の確認には読ませる。
 
 ### 4. haiku で解析（並列）
 
@@ -94,7 +94,7 @@ JSON で「担当名・行数・ファイル一覧」が出る。1担当あた�
 python .claude/skills/refactor/scripts/build_check.py
 ```
 
-`Assembly-CSharp-Editor.csproj` と `PenguinScramble.Logic.Tests.csproj` を `dotnet build` し、エラーだけを出す（意図して消したファイルの CS2001 は除外済み）。
+`Assembly-CSharp-Editor.csproj` と `PenmonScramble.Logic.Tests.csproj` を `dotnet build` し、エラーだけを出す（意図して消したファイルの CS2001 は除外済み）。
 エラーが出たら、該当ファイルを担当した haiku に（`SendMessage` で続きを）エラー文を渡して直させる。2回直して残るなら、その変更を `git checkout -- <file>` で戻し、報告に書く。
 
 csproj は Unity が生成したもので、ファイルを足した・消したときは Unity を開くまで古い一覧のまま。新規ファイルを作った場合はコンパイル確認から漏れるので、報告でその旨を伝える。

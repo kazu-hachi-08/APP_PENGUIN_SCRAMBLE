@@ -1,6 +1,6 @@
 {
-    "name": "PenguinScramble.Core",
-    "rootNamespace": "PenguinScramble.Core",
+    "name": "PenmonScramble.Core",
+    "rootNamespace": "PenmonScramble.Core",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

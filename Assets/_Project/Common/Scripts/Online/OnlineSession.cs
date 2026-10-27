@@ -8,10 +8,10 @@ using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Multiplayer;
-using PenguinScramble.Common.Profile;
+using PenmonScramble.Common.Profile;
 using UnityEngine;
 
-namespace PenguinScramble.Common.Online
+namespace PenmonScramble.Common.Online
 {
     /// <summary>
     /// オンライン対戦の接続だけを担当する（部屋を作る／参加コードで入る／抜ける）。

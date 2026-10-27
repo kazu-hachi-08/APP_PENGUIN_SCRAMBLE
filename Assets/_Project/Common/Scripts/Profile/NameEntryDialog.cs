@@ -1,10 +1,10 @@
 using System;
-using PenguinScramble.Common.Audio;
-using PenguinScramble.Common.UI;
+using PenmonScramble.Common.Audio;
+using PenmonScramble.Common.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PenguinScramble.Common.Profile
+namespace PenmonScramble.Common.Profile
 {
     /// <summary>
     /// 初回起動時のユーザー名入力ダイアログ。

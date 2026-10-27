@@ -9,11 +9,11 @@
 - 作業ディレクトリは C:\MyApp\APP_PENGUIN_SCRAMBLE。パスはここからの相対で書く。
 - セーブデータを壊さない。次に関わる変更は提案も修正もしない（見つけたら「対象外」と書くだけ）:
   - 保存用のデータクラス（JSON にして PlayerPrefs に置くもの）と、その中のクラスの項目名・型・クラス名
-  - PlayerPrefs のキー文字列（"PenguinScramble." で始まるもの）
+  - PlayerPrefs のキー文字列（"PenmonScramble." で始まるもの）
   - 記録に名前（文字列 ID）で入るものの名前（未使用に見えても消さない・名前を変えない）
   - セーブデータのバージョン番号
-- 生成されたアセット（Assets/_Project/Games/100_PenguinScramble/Data 以下の .asset、Scenes 以下の .unity）は編集しない。数値やシーンはコード（定義表・SceneBuilder）から作られている。
-- フォルダ名 Games/100_PenguinScramble と名前空間 PenguinScramble.* は変えない。
+- 生成されたアセット（Assets/_Project/Games/100_PenmonScramble/Data 以下の .asset、Scenes 以下の .unity）は編集しない。数値やシーンはコード（定義表・SceneBuilder）から作られている。
+- フォルダ名 Games/100_PenmonScramble と名前空間 PenmonScramble.* は変えない。
 - .cs ファイルを消すときは、同じ名前の .meta も一緒に消す。
 - Tests/ 以下は編集しない（読むのは自由）。
 - public な型・メソッドの名前は変えない（SceneBuilder やテストが文字列や参照で使っている可能性がある）。

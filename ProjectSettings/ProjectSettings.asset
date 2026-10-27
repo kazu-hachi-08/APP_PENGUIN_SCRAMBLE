@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: kazuhachi08
-  productName: "ペンギンスクランブル"
+  productName: "乱戦！ペンモンスクランブル"
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -170,9 +170,9 @@ PlayerSettings:
   androidMaxAspectRatio: 2.4
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.kazuhachi08.penguinscramble
-    Standalone: com.kazuhachi08.penguinscramble
-    iPhone: com.kazuhachi08.penguinscramble
+    Android: com.kazuhachi08.penmonscramble
+    Standalone: com.kazuhachi08.penmonscramble
+    iPhone: com.kazuhachi08.penmonscramble
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -816,7 +816,7 @@ PlayerSettings:
   webGLDebugSymbols: 0
   webGLEmscriptenArgs: 
   webGLModulesDirectory: 
-  webGLTemplate: PROJECT:PenguinScramble
+  webGLTemplate: PROJECT:PenmonScramble
   webGLAnalyzeBuildSize: 0
   webGLUseEmbeddedResources: 0
   webGLCompressionFormat: 0
@@ -860,14 +860,14 @@ PlayerSettings:
   editorAssembliesCompatibilityLevel: 1
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: PenguinScramble
+  metroPackageName: PenmonScramble
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: PenguinScramble
+  metroApplicationDescription: PenmonScramble
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0

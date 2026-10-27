@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using PenguinScramble.Core;
+using PenmonScramble.Core;
 
-namespace PenguinScramble.Tests
+namespace PenmonScramble.Tests
 {
     public class BalanceTests
     {

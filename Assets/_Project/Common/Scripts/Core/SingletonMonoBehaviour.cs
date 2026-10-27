@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PenguinScramble.Common.Core
+namespace PenmonScramble.Common.Core
 {
     /// <summary>
     /// 型安全なSingleton MonoBehaviour基底クラス

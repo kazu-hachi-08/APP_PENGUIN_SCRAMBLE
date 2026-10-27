@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
-using PenguinScramble.Common.Scene;
+using PenmonScramble.Common.Scene;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PenguinScramble.Common.Online
+namespace PenmonScramble.Common.Online
 {
     /// <summary>
     /// 試合前に「コンピュータと対戦」か「オンライン対戦（部屋を作る／コードで参加）」かを選ばせるパネル。

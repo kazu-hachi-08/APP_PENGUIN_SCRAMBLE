@@ -1,7 +1,7 @@
 using System.Linq;
-using PenguinScramble.Common.Editor;
-using PenguinScramble.Common.Scene;
-using PenguinScramble.Game;
+using PenmonScramble.Common.Editor;
+using PenmonScramble.Common.Scene;
+using PenmonScramble.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -9,14 +9,14 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
-namespace PenguinScramble.Editor
+namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ペンギンスクランブルのシーンをコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する。
+    /// 乱戦！ペンモンスクランブルのシーンをコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する。
     /// </summary>
-    public static class PenguinScrambleSceneBuilder
+    public static class PenmonScrambleSceneBuilder
     {
-        private const string ScenePath = "Assets/_Project/Games/100_PenguinScramble/Scenes/" + SceneNames.PenguinScramble + ".unity";
+        private const string ScenePath = "Assets/_Project/Games/100_PenmonScramble/Scenes/" + SceneNames.PenmonScramble + ".unity";
 
         // 横画面の基準解像度。共通基盤のダイアログと同じ値にそろえる
         private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
@@ -27,7 +27,7 @@ namespace PenguinScramble.Editor
         private static readonly Vector2 VersionMargin = new Vector2(-24f, 16f);
         private static readonly Vector2 VersionSize = new Vector2(400f, 60f);
 
-        [MenuItem("Tools/PenguinScramble/Rebuild")]
+        [MenuItem("Tools/PenmonScramble/Rebuild")]
         public static void Rebuild()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -50,7 +50,7 @@ namespace PenguinScramble.Editor
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings();
-            Debug.Log($"[PenguinScrambleSceneBuilder] {ScenePath} を生成しました");
+            Debug.Log($"[PenmonScrambleSceneBuilder] {ScenePath} を生成しました");
         }
 
         private static void CreateCamera()
@@ -88,7 +88,7 @@ namespace PenguinScramble.Editor
         {
             var obj = UIDialogBuilder.CreateUIObject("Title", canvas);
             UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
-            var text = AddText(obj, "ペンギンスクランブル", TitleFontSize);
+            var text = AddText(obj, "乱戦！ペンモンスクランブル", TitleFontSize);
             text.alignment = TextAnchor.MiddleCenter;
         }
 

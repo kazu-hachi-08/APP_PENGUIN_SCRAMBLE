@@ -1,4 +1,4 @@
-namespace PenguinScramble.Core
+namespace PenmonScramble.Core
 {
     /// <summary>
     /// ゲームの調整値。数値はここにまとめ、ルールのコードには直接書かない。

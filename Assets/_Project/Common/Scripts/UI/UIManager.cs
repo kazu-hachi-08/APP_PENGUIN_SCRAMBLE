@@ -1,8 +1,8 @@
 using System;
-using PenguinScramble.Common.Core;
+using PenmonScramble.Common.Core;
 using UnityEngine;
 
-namespace PenguinScramble.Common.UI
+namespace PenmonScramble.Common.UI
 {
     /// <summary>
     /// 共通UI（ダイアログ、ポーズ、リザルト等）の表示と制御を統括するマネージャー

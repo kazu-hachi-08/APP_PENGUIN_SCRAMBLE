@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace PenguinScramble.Common.Audio
+namespace PenmonScramble.Common.Audio
 {
     /// <summary>
     /// BGM識別子。番号はインスペクタに保存されるので、値を消しても残りの番号は詰めない

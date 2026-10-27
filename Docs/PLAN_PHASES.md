@@ -1,6 +1,6 @@
 # 実装計画: フェーズ分け
 
-> 仕様は `PENGUIN_SCRAMBLE_SPEC.md`。各フェーズの終わりに「遊べる状態」にする。
+> 仕様は `PENMON_SCRAMBLE_SPEC.md`。各フェーズの終わりに「遊べる状態」にする。
 > オンラインは後から足すと作り直しになりやすいので、土台ができたらすぐ（フェーズ2で）入れる。
 
 ## 全体
@@ -20,10 +20,10 @@
 ## フェーズ0: 準備
 
 - [x] Unity 6000.6.2f1 でプロジェクトを作る（`Packages/`・`ProjectSettings/` がまだ無い）。ペンモンと同じパッケージを入れる: Input System / Netcode for GameObjects / Multiplayer Services / URP（2D）
-- [x] Player Settings: Company Name・Product Name・Android のパッケージ名を決める（**後から変えるとセーブの保存先が変わるので、ここで決めて固定する**）→ `kazuhachi08` / `ペンギンスクランブル` / `com.kazuhachi08.penguinscramble`
-- [x] ペンモンの `Common/Scripts/Online/`（`OnlineSession` など）を移植し、名前空間を `PenguinScramble.Common.Online` にする（使っている `Profile/` も一緒に移植。Unity Cloud のプロジェクトは未リンク → エディタの Project Settings > Services で新しく作る）
-- [x] asmdef を作る: `PenguinScramble.Core`（純C#・`noEngineReferences: true`）/ `PenguinScramble.Game`（Unity 側）/ `Tests/Editor`。Game から Common を参照するため、Common にも `PenguinScramble.Common`（＋`.Common.Editor`）を作った
-- [x] 空のシーンを SceneBuilder で作り、Android・Windows・WebGL でビルドできることを確かめる（`Tools/PenguinScramble/Build/*` で `Builds/` へ出力。実機での起動は未確認）
+- [x] Player Settings: Company Name・Product Name・Android のパッケージ名を決める（**後から変えるとセーブの保存先が変わるので、ここで決めて固定する**）→ `kazuhachi08` / `乱戦！ペンモンスクランブル` / `com.kazuhachi08.penmonscramble`
+- [x] ペンモンの `Common/Scripts/Online/`（`OnlineSession` など）を移植し、名前空間を `PenmonScramble.Common.Online` にする（使っている `Profile/` も一緒に移植。Unity Cloud のプロジェクトは未リンク → エディタの Project Settings > Services で新しく作る）
+- [x] asmdef を作る: `PenmonScramble.Core`（純C#・`noEngineReferences: true`）/ `PenmonScramble.Game`（Unity 側）/ `Tests/Editor`。Game から Common を参照するため、Common にも `PenmonScramble.Common`（＋`.Common.Editor`）を作った
+- [x] 空のシーンを SceneBuilder で作り、Android・Windows・WebGL でビルドできることを確かめる（`Tools/PenmonScramble/Build/*` で `Builds/` へ出力。実機での起動は未確認）
 - [ ] Comfy Desktop でペンギンを1枚生成してみる（Intel Arc で動くか、1枚に何分かかるか）。動かなければドット絵に切り替える
 
 **完了の確認**: 3つの環境で空のシーンが起動する。絵の作り方（ComfyUI / ドット絵）が決まっている。
