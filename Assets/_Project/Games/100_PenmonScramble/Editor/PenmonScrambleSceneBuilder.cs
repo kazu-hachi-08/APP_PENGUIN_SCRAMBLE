@@ -1,6 +1,8 @@
 using System.Linq;
 using PenmonScramble.Common.Editor;
+using PenmonScramble.Common.Input;
 using PenmonScramble.Common.Scene;
+using PenmonScramble.Core;
 using PenmonScramble.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -14,18 +16,20 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// 乱戦！ペンモンスクランブルのシーンをコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する。
     /// </summary>
-    public static class PenmonScrambleSceneBuilder
+    public static partial class PenmonScrambleSceneBuilder
     {
         private const string ScenePath = "Assets/_Project/Games/100_PenmonScramble/Scenes/" + SceneNames.PenmonScramble + ".unity";
 
         // 横画面の基準解像度。共通基盤のダイアログと同じ値にそろえる
         private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
-        private static readonly Color BackgroundColor = new Color(0.80f, 0.90f, 0.95f);
+        private static readonly Color BackgroundColor = new Color(0.55f, 0.70f, 0.80f);
         private static readonly Color TextColor = new Color(0.15f, 0.20f, 0.30f);
-        private const int TitleFontSize = 120;
         private const int VersionFontSize = 32;
         private static readonly Vector2 VersionMargin = new Vector2(-24f, 16f);
         private static readonly Vector2 VersionSize = new Vector2(400f, 60f);
+
+        // エリアの上下に HUD 分の余白を足して、エリア全体が画面に収まるようにする
+        private const float CameraVerticalMargin = 0.8f;
 
         [MenuItem("Tools/PenmonScramble/Rebuild")]
         public static void Rebuild()
@@ -45,8 +49,11 @@ namespace PenmonScramble.Editor
             CreateCamera();
             CreateEventSystem();
             var canvas = CreateCanvas();
-            CreateTitle(canvas.transform);
+            var hud = CreateHud(canvas.transform);
+            var touch = CreateTouchControls(canvas.transform);
             CreateVersionLabel(canvas.transform);
+            CreateInputManager(touch);
+            CreateStage(hud);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings();
@@ -57,8 +64,10 @@ namespace PenmonScramble.Editor
         {
             var cameraObj = new GameObject("Main Camera");
             cameraObj.tag = "MainCamera";
+            cameraObj.transform.position = new Vector3(0f, 0f, -10f);
             var camera = cameraObj.AddComponent<Camera>();
             camera.orthographic = true;
+            camera.orthographicSize = Balance.AreaHeight * 0.5f + CameraVerticalMargin;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = BackgroundColor;
             cameraObj.AddComponent<AudioListener>();
@@ -84,14 +93,6 @@ namespace PenmonScramble.Editor
             return canvas;
         }
 
-        private static void CreateTitle(Transform canvas)
-        {
-            var obj = UIDialogBuilder.CreateUIObject("Title", canvas);
-            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
-            var text = AddText(obj, "乱戦！ペンモンスクランブル", TitleFontSize);
-            text.alignment = TextAnchor.MiddleCenter;
-        }
-
         private static void CreateVersionLabel(Transform canvas)
         {
             var obj = UIDialogBuilder.CreateUIObject("Version", canvas);
@@ -102,6 +103,29 @@ namespace PenmonScramble.Editor
             var text = AddText(obj, string.Empty, VersionFontSize);
             text.alignment = TextAnchor.LowerRight;
             obj.AddComponent<VersionLabel>();
+        }
+
+        private static void CreateInputManager(TouchControls touch)
+        {
+            var manager = new GameObject("InputManager").AddComponent<InputManager>();
+            var so = new SerializedObject(manager);
+            so.FindProperty("_virtualJoystick").objectReferenceValue = touch.Joystick;
+            so.FindProperty("_virtualAction1Button").objectReferenceValue = touch.Skill1;
+            so.FindProperty("_virtualAction2Button").objectReferenceValue = touch.Skill2;
+            // 仮想ボタンはこのシーンの物なので、シーンをまたいで残すと参照が切れる
+            so.FindProperty("_dontDestroyOnLoad").boolValue = false;
+            so.ApplyModifiedProperties();
+        }
+
+        private static void CreateStage(StageHud hud)
+        {
+            var stageObj = new GameObject("Stage");
+            var view = stageObj.AddComponent<StageView>();
+            var runner = stageObj.AddComponent<StageRunner>();
+            var so = new SerializedObject(runner);
+            so.FindProperty("_view").objectReferenceValue = view;
+            so.FindProperty("_hud").objectReferenceValue = hud;
+            so.ApplyModifiedProperties();
         }
 
         private static Text AddText(GameObject obj, string value, int fontSize)

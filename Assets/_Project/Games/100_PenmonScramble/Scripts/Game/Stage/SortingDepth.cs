@@ -1,0 +1,19 @@
+namespace PenmonScramble.Game
+{
+    /// <summary>
+    /// 斜め見下ろしなので、奥（画面の上）にいるものほど後ろに描く（§9）
+    /// </summary>
+    public static class SortingDepth
+    {
+        // 0.01マスの差でも前後が入れ替わるようにする
+        private const float Scale = 100f;
+
+        // 1体の中で重ねる部品（体・向きの三角など）の数。前後の別のユニットと混ざらないよう間を空ける
+        private const int LayersPerObject = 4;
+
+        public const int Background = -100000;
+        public const int Popup = 100000;
+
+        public static int ForY(float y) => -UnityEngine.Mathf.RoundToInt(y * Scale) * LayersPerObject;
+    }
+}

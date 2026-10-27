@@ -1,14 +1,20 @@
 using PenmonScramble.Common.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 namespace PenmonScramble.Common.Input
 {
     /// <summary>
-    /// キーボード入力と仮想UI入力を統合し、統一された入力を提供するマネージャー
+    /// キーボード・コントローラー・仮想UI入力を統合し、統一された入力を提供するマネージャー
     /// </summary>
     public class InputManager : SingletonMonoBehaviour<InputManager>
     {
+        public const int ActionCount = 4;
+
+        // スティックの遊び。これより小さい倒し方は無視する（触っていないのに歩き出さないため）
+        private const float GamepadDeadZone = 0.2f;
+
         [Header("Virtual Controls (Optional)")]
         [SerializeField] private VirtualJoystick _virtualJoystick;
         [SerializeField] private VirtualButton _virtualAction1Button;
@@ -16,11 +22,23 @@ namespace PenmonScramble.Common.Input
         [SerializeField] private VirtualButton _virtualAction3Button;
         [SerializeField] private VirtualButton _virtualAction4Button;
 
+        [Header("Action Keys (Action1〜4)")]
+        [SerializeField] private Key[] _actionKeys = { Key.J, Key.K, Key.L, Key.Space };
+
         [Header("Settings")]
         [SerializeField] private bool _inputEnabled = true;
 
+        private readonly bool[] _actionHeld = new bool[ActionCount];
+        private readonly bool[] _actionDown = new bool[ActionCount];
+
         public Vector2 MoveVector { get; private set; }
         public bool IsPauseDown { get; private set; }
+
+        /// <summary>index は 0〜3（Action1〜4）</summary>
+        public bool IsActionHeld(int index) => _actionHeld[index];
+
+        /// <summary>このフレームに押した</summary>
+        public bool IsActionDown(int index) => _actionDown[index];
 
         private void Update()
         {
@@ -34,11 +52,13 @@ namespace PenmonScramble.Common.Input
                 return;
             }
 
-            ProcessMoveInput(keyboard);
-            ProcessSystemInputs(keyboard);
+            var gamepad = Gamepad.current;
+            ProcessMoveInput(keyboard, gamepad);
+            ProcessActionInputs(keyboard, gamepad);
+            ProcessSystemInputs(keyboard, gamepad);
         }
 
-        private void ProcessMoveInput(Keyboard keyboard)
+        private void ProcessMoveInput(Keyboard keyboard, Gamepad gamepad)
         {
             Vector2 keyboardInput = Vector2.zero;
 
@@ -57,14 +77,81 @@ namespace PenmonScramble.Common.Input
 
             Vector2 virtualInput = _virtualJoystick != null ? _virtualJoystick.Direction : Vector2.zero;
 
-            // キーボードまたはバーチャルジョイスティックのいずれか大きい方を採用
+            // キーボード・コントローラー・バーチャルジョイスティックのうち、一番大きく倒しているものを採用
             Vector2 combined = keyboardInput.sqrMagnitude > virtualInput.sqrMagnitude ? keyboardInput : virtualInput;
+            Vector2 gamepadInput = ReadGamepadMove(gamepad);
+            if (gamepadInput.sqrMagnitude > combined.sqrMagnitude)
+            {
+                combined = gamepadInput;
+            }
+
             MoveVector = Vector2.ClampMagnitude(combined, 1f);
         }
 
-        private void ProcessSystemInputs(Keyboard keyboard)
+        private static Vector2 ReadGamepadMove(Gamepad gamepad)
         {
-            IsPauseDown = keyboard != null && (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame);
+            if (gamepad == null)
+            {
+                return Vector2.zero;
+            }
+
+            Vector2 stick = gamepad.leftStick.ReadValue();
+            if (stick.magnitude < GamepadDeadZone)
+            {
+                stick = Vector2.zero;
+            }
+
+            Vector2 dpad = gamepad.dpad.ReadValue();
+            return stick.sqrMagnitude > dpad.sqrMagnitude ? stick : Vector2.ClampMagnitude(dpad, 1f);
+        }
+
+        private void ProcessActionInputs(Keyboard keyboard, Gamepad gamepad)
+        {
+            for (int i = 0; i < ActionCount; i++)
+            {
+                KeyControl key = keyboard != null && i < _actionKeys.Length ? keyboard[_actionKeys[i]] : null;
+                ButtonControl pad = GetGamepadAction(gamepad, i);
+                VirtualButton virtualButton = GetVirtualAction(i);
+
+                _actionHeld[i] = (key != null && key.isPressed) || (pad != null && pad.isPressed) || (virtualButton != null && virtualButton.IsHeld);
+                _actionDown[i] = (key != null && key.wasPressedThisFrame) || (pad != null && pad.wasPressedThisFrame) || (virtualButton != null && virtualButton.IsDown);
+            }
+        }
+
+        /// <summary>Action1〜4 = 南・東・北・LB（多くのゲームで決定・キャンセルに当たる南と東を、よく使う技にする）</summary>
+        private static ButtonControl GetGamepadAction(Gamepad gamepad, int index)
+        {
+            if (gamepad == null)
+            {
+                return null;
+            }
+
+            switch (index)
+            {
+                case 0: return gamepad.buttonSouth;
+                case 1: return gamepad.buttonEast;
+                case 2: return gamepad.buttonNorth;
+                case 3: return gamepad.leftShoulder;
+                default: return null;
+            }
+        }
+
+        private VirtualButton GetVirtualAction(int index)
+        {
+            switch (index)
+            {
+                case 0: return _virtualAction1Button;
+                case 1: return _virtualAction2Button;
+                case 2: return _virtualAction3Button;
+                case 3: return _virtualAction4Button;
+                default: return null;
+            }
+        }
+
+        private void ProcessSystemInputs(Keyboard keyboard, Gamepad gamepad)
+        {
+            IsPauseDown = (keyboard != null && (keyboard.escapeKey.wasPressedThisFrame || keyboard.pKey.wasPressedThisFrame))
+                || (gamepad != null && gamepad.startButton.wasPressedThisFrame);
         }
 
         public void RegisterVirtualControls(
@@ -94,6 +181,8 @@ namespace PenmonScramble.Common.Input
         {
             MoveVector = Vector2.zero;
             IsPauseDown = false;
+            System.Array.Clear(_actionHeld, 0, ActionCount);
+            System.Array.Clear(_actionDown, 0, ActionCount);
 
             if (_virtualJoystick != null) _virtualJoystick.ResetInput();
             if (_virtualAction1Button != null) _virtualAction1Button.ResetButton();
