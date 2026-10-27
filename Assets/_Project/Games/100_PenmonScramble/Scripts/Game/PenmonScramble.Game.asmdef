@@ -6,6 +6,7 @@
         "PenmonScramble.Common",
         "Unity.InputSystem",
         "UnityEngine.UI",
+        "Unity.Collections",
         "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [],

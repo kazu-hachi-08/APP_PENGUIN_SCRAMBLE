@@ -10,7 +10,7 @@ namespace PenmonScramble.Game
         private Vector2 _from;
         private Vector2 _to;
 
-        public static ProjectileView Create(Transform parent, Projectile projectile, Color color)
+        public static ProjectileView Create(Transform parent, ProjectileState projectile, Color color)
         {
             var view = new GameObject($"Projectile{projectile.Id}").AddComponent<ProjectileView>();
             view.transform.SetParent(parent, false);
@@ -23,7 +23,7 @@ namespace PenmonScramble.Game
             return view;
         }
 
-        public void PushState(Projectile projectile)
+        public void PushState(ProjectileState projectile)
         {
             _from = _to;
             _to = projectile.Position.ToVector2();

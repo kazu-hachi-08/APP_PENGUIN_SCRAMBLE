@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ユニット1体の仮の見た目（色つきの丸＋向きの三角）。
+    /// ユニット1体の仮の見た目（色つきの丸＋向きの三角。プレイヤーは頭の上に「P1」など）。
     /// 位置は更新（1/30秒）ごとに受け取り、その間を補間して描く（オンラインのゲストも同じ描き方にするため）
     /// </summary>
     public class UnitView : MonoBehaviour
@@ -17,9 +17,13 @@ namespace PenmonScramble.Game
         private const float DefeatRiseSpeed = 3f;
         private const float FacingDistanceRatio = 0.85f;
         private const float FacingSizeRatio = 0.5f;
+        private const float LabelHeightRatio = 1.6f;
+        private const float LabelCharacterSize = 0.05f;
+        private const int LabelFontSize = 64;
 
         private SpriteRenderer _body;
         private SpriteRenderer _facing;
+        private GameObject _label;
         private Color _color;
         private float _radius;
         private Vector2 _from;
@@ -29,16 +33,25 @@ namespace PenmonScramble.Game
         private float _squashTimer;
         private float _defeatTimer = -1f;
 
-        public static UnitView Create(Transform parent, Unit unit, Color color)
+        public Team Team { get; private set; }
+
+        /// <param name="label">頭の上に出す文字。null なら出さない（敵）</param>
+        public static UnitView Create(Transform parent, UnitState unit, Color color, string label)
         {
             var view = new GameObject($"Unit{unit.Id}_{unit.Team}").AddComponent<UnitView>();
             view.transform.SetParent(parent, false);
             view.Setup(unit, color);
+            if (label != null)
+            {
+                view.CreateLabel(label, color);
+            }
+
             return view;
         }
 
-        private void Setup(Unit unit, Color color)
+        private void Setup(UnitState unit, Color color)
         {
+            Team = unit.Team;
             _color = color;
             _radius = unit.Radius;
             _body = CreatePart("Body", PlaceholderSprites.Circle, color);
@@ -48,6 +61,28 @@ namespace PenmonScramble.Game
             _from = _to = unit.Position.ToVector2();
             _facingDirection = unit.Facing.ToVector2();
             Render(1f);
+        }
+
+        /// <summary>英数字だけなので、ダメージ数字と同じく日本語フォントの要らない TextMesh で描く</summary>
+        private void CreateLabel(string label, Color color)
+        {
+            var obj = new GameObject("Label");
+            _label = obj;
+            obj.transform.SetParent(transform, false);
+            obj.transform.localPosition = Vector3.up * (_radius * LabelHeightRatio);
+            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var text = obj.AddComponent<TextMesh>();
+            text.font = font;
+            text.text = label;
+            text.fontSize = LabelFontSize;
+            text.characterSize = LabelCharacterSize;
+            text.anchor = TextAnchor.MiddleCenter;
+            text.fontStyle = FontStyle.Bold;
+            text.color = color;
+            var renderer = obj.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = font.material;
+            // ほかのペンギンの後ろに隠れて誰か分からなくならないよう、いつも手前に出す
+            renderer.sortingOrder = SortingDepth.Popup - 1;
         }
 
         private SpriteRenderer CreatePart(string partName, Sprite sprite, Color color)
@@ -60,7 +95,7 @@ namespace PenmonScramble.Game
             return renderer;
         }
 
-        public void PushState(Unit unit)
+        public void PushState(UnitState unit)
         {
             _from = _to;
             _to = unit.Position.ToVector2();
@@ -93,6 +128,10 @@ namespace PenmonScramble.Game
         {
             _defeatTimer = 0f;
             _facing.enabled = false;
+            if (_label != null)
+            {
+                _label.SetActive(false);
+            }
         }
 
         private void Update()

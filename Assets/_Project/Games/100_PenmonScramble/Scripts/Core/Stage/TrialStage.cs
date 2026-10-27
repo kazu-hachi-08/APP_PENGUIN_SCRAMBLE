@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// フェーズ1のお試しエリア: 仮のペンギン1体と、近接で殴ってくる敵の群れ。
+    /// お試しエリア: 仮のペンギン（1人1体）と、近接で殴ってくる敵の群れ。
     /// フェーズ3で種類・技の定義表、フェーズ4でステージ定義に置き換える
     /// </summary>
     public static class TrialStage
@@ -54,26 +54,39 @@ namespace PenmonScramble.Core
             Skills = new[] { PlayerPunch, PlayerShot },
         };
 
-        public static UnitStats EnemyStats() => new UnitStats
+        public const int EnemyBaseHp = 30;
+
+        // 協力のときにプレイヤーを縦に並べる間隔（マス）。体の直径より広くして、最初から重ならないようにする
+        private const float PlayerSpawnSpacing = 1.5f;
+
+        public static UnitStats EnemyStats(int playerCount) => new UnitStats
         {
             Radius = 0.45f,
             MoveSpeed = 2f,
-            MaxHp = 30,
+            MaxHp = (int)System.MathF.Round(EnemyBaseHp * Balance.EnemyHpScale(playerCount)),
             Attack = 1f,
             Skills = new[] { EnemyPunch },
         };
 
-        /// <summary>プレイヤーの Unit を返す。敵の位置は seed で決まる</summary>
-        public static Unit Create(int seed, out StageWorld world)
+        /// <summary>
+        /// seats の席ごとにプレイヤーを1体ずつ置き、席の順に Unit を返す。敵の位置は seed で決まり、HP は人数で増える
+        /// </summary>
+        public static Unit[] Create(int seed, int[] seats, out StageWorld world)
         {
             var half = new Vec2(Balance.AreaWidth * 0.5f, Balance.AreaHeight * 0.5f);
             world = new StageWorld(-half, half, seed);
-            var player = world.AddUnit(Team.Player, PlayerStats(), new Vec2(half.X * PlayerSpawnXRatio, 0f));
-            AddEnemies(world, seed, half);
-            return player;
+            var players = new Unit[seats.Length];
+            for (var i = 0; i < seats.Length; i++)
+            {
+                var y = (i - (seats.Length - 1) * 0.5f) * PlayerSpawnSpacing;
+                players[i] = world.AddUnit(Team.Player, PlayerStats(), new Vec2(half.X * PlayerSpawnXRatio, y), seats[i]);
+            }
+
+            AddEnemies(world, seed, half, seats.Length);
+            return players;
         }
 
-        private static void AddEnemies(StageWorld world, int seed, Vec2 half)
+        private static void AddEnemies(StageWorld world, int seed, Vec2 half, int playerCount)
         {
             var random = new System.Random(seed);
             var minX = half.X * EnemySpawnMinXRatio;
@@ -83,7 +96,7 @@ namespace PenmonScramble.Core
             {
                 var x = minX + (float)random.NextDouble() * (maxX - minX);
                 var y = -maxY + (float)random.NextDouble() * maxY * 2f;
-                world.AddUnit(Team.Enemy, EnemyStats(), new Vec2(x, y));
+                world.AddUnit(Team.Enemy, EnemyStats(playerCount), new Vec2(x, y));
             }
         }
     }

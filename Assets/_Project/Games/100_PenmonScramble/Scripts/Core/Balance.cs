@@ -1,3 +1,5 @@
+using System;
+
 namespace PenmonScramble.Core
 {
     /// <summary>
@@ -28,5 +30,23 @@ namespace PenmonScramble.Core
 
         /// <summary>敵は技が届く距離のこの割合まで近づいてから殴る（届くか届かないかの境目で空振りしないため）</summary>
         public const float EnemyAttackRangeRatio = 0.8f;
+
+        /// <summary>協力の最大人数（§1）</summary>
+        public const int MaxPlayers = 4;
+
+        /// <summary>
+        /// ホストが全員へ状態を送る間隔（更新の回数）。2回ごと＝毎秒15回。
+        /// 毎回送ると通信量が倍になる割に、補間して描くので見た目はほとんど変わらない
+        /// </summary>
+        public const int SnapshotIntervalTicks = 2;
+
+        // 協力の人数ごとの敵の HP の倍率（§4.7）。添字は人数-1
+        private static readonly float[] EnemyHpScales = { 1.0f, 1.6f, 2.2f, 2.8f };
+
+        public static float EnemyHpScale(int playerCount)
+        {
+            var index = Math.Clamp(playerCount, 1, MaxPlayers) - 1;
+            return EnemyHpScales[index];
+        }
     }
 }

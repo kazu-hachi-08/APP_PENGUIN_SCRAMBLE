@@ -311,12 +311,68 @@ namespace PenmonScramble.Tests
         [Test]
         public void TrialStage_StartsWithPlayerAndEnemies()
         {
-            var player = TrialStage.Create(seed: 42, out var world);
+            var players = TrialStage.Create(seed: 42, new[] { 0 }, out var world);
             world.Tick();
 
             Assert.That(world.Units.Count, Is.EqualTo(1 + TrialStage.EnemyCount));
-            Assert.That(player.Team, Is.EqualTo(Team.Player));
-            Assert.That(player.Hp, Is.EqualTo(player.MaxHp));
+            Assert.That(players[0].Team, Is.EqualTo(Team.Player));
+            Assert.That(players[0].Seat, Is.EqualTo(0));
+            Assert.That(players[0].Hp, Is.EqualTo(players[0].MaxHp));
+        }
+
+        [Test]
+        public void TrialStage_PlacesOnePlayerPerSeatWithoutOverlap()
+        {
+            var players = TrialStage.Create(seed: 42, new[] { 0, 2, 3 }, out var world);
+            var startPositions = new[] { players[0].Position, players[1].Position, players[2].Position };
+            world.Tick();
+
+            Assert.That(players[1].Seat, Is.EqualTo(2));
+            Assert.That(players[2].Seat, Is.EqualTo(3));
+            for (var i = 0; i < players.Length; i++)
+            {
+                // 重なっていれば押し合いで動く
+                Assert.That(Vec2.Distance(players[i].Position, startPositions[i]), Is.LessThan(Tolerance));
+            }
+        }
+
+        [Test]
+        public void TrialStage_EnemyHpScalesWithPlayers()
+        {
+            TrialStage.Create(seed: 1, new[] { 0, 1, 2, 3 }, out var world);
+
+            var enemy = FirstEnemy(world);
+            Assert.That(enemy.MaxHp, Is.EqualTo((int)System.MathF.Round(TrialStage.EnemyBaseHp * 2.8f)));
+        }
+
+        [Test]
+        public void RemoveUnit_RemovesWithoutDefeatedEvent()
+        {
+            var world = CreateWorld();
+            var player = world.AddUnit(Team.Player, Stats(Melee()), Vec2.Zero, seat: 1);
+            AddDummyEnemy(world, new Vec2(5f, 0f));
+            var defeated = 0;
+            world.Defeated += _ => defeated++;
+
+            world.RemoveUnit(player.Id);
+            world.Tick();
+
+            Assert.That(world.FindUnit(player.Id), Is.Null);
+            Assert.That(defeated, Is.EqualTo(0));
+            Assert.That(world.IsFailed, Is.True);
+        }
+
+        private static Unit FirstEnemy(StageWorld world)
+        {
+            foreach (var unit in world.Units)
+            {
+                if (unit.Team == Team.Enemy)
+                {
+                    return unit;
+                }
+            }
+
+            return null;
         }
     }
 }

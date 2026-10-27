@@ -53,13 +53,16 @@ Unity 側（Game / View）:
 
 ## フェーズ2: オンライン協力（1エリア）
 
-- [ ] タイトルに「協力」→ 部屋を作る / コードで参加（最大4人）。ホストが開始
-- [ ] ゲスト → ホスト: `PlayerInput` を送る
-- [ ] ホスト → 全員: 位置・HP・イベントを毎秒20回送る（NGO の CustomMessagingManager。ペンモンと同じ方式）
-- [ ] ゲストは、届いた位置の間を補間して描く
-- [ ] 人数で敵の HP を変える
-- [ ] 切断: ゲストが抜けたら消す / ホストが抜けたらタイトルへ
-- [ ] ソロも同じ流れで動く（通信しないホスト）ことを確かめる
+- [x] タイトルに「ひとりで遊ぶ」「部屋を作る」「コードで参加」（最大4人）。ホストが開始（共通の `ModeSelectPanel.ShowMultiplayer`。見た目は `SceneBuilder.Title.cs`）
+- [x] ゲスト → ホスト: `PlayerInput` を送る（変わったときだけ。ホストは `InputLatch` で短いタップを取りこぼさない）
+- [x] ホスト → 全員: 位置・HP・イベントを毎秒15回送る（`StageSnapshot` を `StageCodec` でバイト列にして、NGO の CustomMessagingManager で。`Game/Online/StageLink.cs`）
+- [x] ゲストは、届いた位置の間を補間して描く（ホスト・ソロも同じスナップショットから描く。`StageView.Apply`）
+- [x] 人数で敵の HP を変える（`Balance.EnemyHpScale`）
+- [x] 切断: ゲストが抜けたら消す（`OnlineSession.ContinueWhenMemberLeaves` / `OnMemberLeft`）/ ホストが抜けたらタイトルへ
+- [x] ソロも同じ流れで動く（通信しないホスト = `StageHost` の link が null）
+- [x] テスト: スナップショット・入力の変換、イベントの取り出し、人数と敵の HP（`StageNetTests` など）
+- [ ] Unity Cloud のプロジェクトをリンクする（Project Settings > Services。未リンクだと部屋を作れない）
+- [ ] 実機（Windows＋スマホ＋ブラウザ）で協力を試す
 
 **完了の確認**: 2台以上（Windows＋スマホ＋ブラウザ）で同じエリアを遊べる。ゲストの遅れが遊べる程度か判断する（ダメなら、自分の移動を手元で先に動かす処理を足す）。
 

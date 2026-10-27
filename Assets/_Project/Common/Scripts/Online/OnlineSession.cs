@@ -66,10 +66,23 @@ namespace PenmonScramble.Common.Online
         /// <summary>3人以上の部屋のみ：試合開始。引数は自分の席番号（ホスト=0）と総人数</summary>
         public event Action<int, int> OnMatchStarted;
 
+        /// <summary>
+        /// 3人以上の部屋のホストのみ：ContinueWhenMemberLeaves のとき、試合中に参加者が抜けた。引数はその人の席番号
+        /// </summary>
+        public event Action<int> OnMemberLeft;
+
         public bool IsHost { get; private set; }
+
+        /// <summary>
+        /// 3人以上の部屋で、試合中に1人抜けても残りで続けるか。false なら全員の試合を終える（手番制のゲーム向け）
+        /// </summary>
+        public bool ContinueWhenMemberLeaves { get; set; }
 
         /// <summary>ホストから見た参加者（自分以外）。席番号を参加順で配るため順番を保つ</summary>
         private readonly List<ulong> _memberIds = new List<ulong>();
+
+        /// <summary>3人以上の部屋のホストのみ：開始時に配った席番号。途中で抜けた人がいても席を詰めないため別に持つ</summary>
+        private readonly Dictionary<ulong, int> _seats = new Dictionary<ulong, int>();
 
         /// <summary>3人以上の部屋のホストのみ：参加者から届いた名前。開始メッセージで全員に配る</summary>
         private readonly Dictionary<ulong, string> _memberNames = new Dictionary<ulong, string>();
@@ -161,6 +174,7 @@ namespace PenmonScramble.Common.Online
             string[] names = CollectMemberNames();
             for (int i = 0; i < _memberIds.Count; i++)
             {
+                _seats[_memberIds[i]] = i + 1;
                 SendStart(_memberIds[i], i + 1, names);
             }
 
@@ -177,6 +191,7 @@ namespace PenmonScramble.Common.Online
             StopNameWait();
             _memberIds.Clear();
             _memberNames.Clear();
+            _seats.Clear();
             _matchStarted = false;
             _maxPlayers = DefaultMaxPlayers;
 
@@ -208,6 +223,12 @@ namespace PenmonScramble.Common.Online
             Debug.LogWarning($"[OnlineSession] {frozenSeconds:F0}秒止まっていたので Relay に切られたとみなして抜けます");
             Leave();
             OnConnectionLost?.Invoke();
+        }
+
+        /// <summary>3人以上の部屋のホストのみ：届いたメッセージの送り主が何番の席か</summary>
+        public bool TryGetSeat(ulong clientId, out int seat)
+        {
+            return _seats.TryGetValue(clientId, out seat);
         }
 
         /// <summary>1対1なので、ホストから見た相手は唯一の接続クライアント、クライアントから見た相手はホスト</summary>
@@ -352,6 +373,7 @@ namespace PenmonScramble.Common.Online
 
         /// <summary>
         /// 開始前に抜けた人は人数を減らすだけ。試合中に1人でも抜けたら全員の試合を終える（途中離脱の継続・再接続はしない）。
+        /// ただし ContinueWhenMemberLeaves なら、抜けた人の席を知らせて残りで続ける。
         /// ホストが部屋を閉じると残りのクライアントにも切断が届き、それぞれの端末で試合が終わる
         /// </summary>
         private void HandleMemberDisconnected(ulong clientId)
@@ -364,6 +386,13 @@ namespace PenmonScramble.Common.Online
             {
                 _peerConnected = _memberIds.Count > 0;
                 OnMemberCountChanged?.Invoke(_memberIds.Count + 1);
+                return;
+            }
+
+            if (ContinueWhenMemberLeaves && _seats.TryGetValue(clientId, out int seat))
+            {
+                _seats.Remove(clientId);
+                OnMemberLeft?.Invoke(seat);
                 return;
             }
 

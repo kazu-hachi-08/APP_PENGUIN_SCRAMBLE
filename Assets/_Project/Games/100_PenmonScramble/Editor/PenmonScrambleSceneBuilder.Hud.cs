@@ -19,7 +19,9 @@ namespace PenmonScramble.Editor
         private const int ResultFontSize = 120;
         private static readonly Color ResultOverlayColor = new Color(0f, 0f, 0f, 0.55f);
         private static readonly Vector2 RetryButtonSize = new Vector2(420f, 120f);
-        private static readonly Vector2 RetryButtonPosition = new Vector2(0f, -160f);
+        private static readonly Vector2 RetryButtonPosition = new Vector2(-240f, -200f);
+        private static readonly Vector2 TitleButtonPosition = new Vector2(240f, -200f);
+        private static readonly Color TitleButtonColor = new Color(0.45f, 0.5f, 0.6f);
         private const int RetryFontSize = 48;
         private static readonly Color RetryButtonColor = new Color(0.18f, 0.55f, 0.9f);
 
@@ -31,15 +33,17 @@ namespace PenmonScramble.Editor
 
             var (fill, hpText) = CreateHpBar(hudObj.transform);
             var enemiesText = CreateEnemiesText(hudObj.transform);
-            var (panel, resultText, retry) = CreateResultPanel(hudObj.transform);
+            var (panel, resultText, retry, toTitle) = CreateResultPanel(hudObj.transform);
 
             var so = new SerializedObject(hud);
             so.FindProperty("_hpFill").objectReferenceValue = fill;
+            so.FindProperty("_hpFillImage").objectReferenceValue = fill.GetComponent<Image>();
             so.FindProperty("_hpText").objectReferenceValue = hpText;
             so.FindProperty("_enemiesText").objectReferenceValue = enemiesText;
             so.FindProperty("_resultPanel").objectReferenceValue = panel;
             so.FindProperty("_resultText").objectReferenceValue = resultText;
             so.FindProperty("_retryButton").objectReferenceValue = retry;
+            so.FindProperty("_titleButton").objectReferenceValue = toTitle;
             so.ApplyModifiedProperties();
             return hud;
         }
@@ -80,7 +84,7 @@ namespace PenmonScramble.Editor
             return text;
         }
 
-        private static (GameObject panel, Text text, Button retry) CreateResultPanel(Transform parent)
+        private static (GameObject panel, Text text, Button retry, Button toTitle) CreateResultPanel(Transform parent)
         {
             var panel = UIDialogBuilder.CreateUIObject("Result", parent);
             UIDialogBuilder.SetStretchAll(panel.GetComponent<RectTransform>());
@@ -92,12 +96,19 @@ namespace PenmonScramble.Editor
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
 
-            var buttonObj = UIDialogBuilder.CreateButton(panel.transform, "Retry", "もう一度", RetryButtonSize.x, RetryButtonSize.y, RetryButtonColor);
-            buttonObj.GetComponent<RectTransform>().anchoredPosition = RetryButtonPosition;
-            buttonObj.GetComponentInChildren<Text>().fontSize = RetryFontSize;
+            var retry = CreateResultButton(panel.transform, "Retry", "もう一度", RetryButtonPosition, RetryButtonColor);
+            var toTitle = CreateResultButton(panel.transform, "Title", "タイトルへ", TitleButtonPosition, TitleButtonColor);
 
             panel.SetActive(false);
-            return (panel, text, buttonObj.GetComponent<Button>());
+            return (panel, text, retry, toTitle);
+        }
+
+        private static Button CreateResultButton(Transform parent, string name, string label, Vector2 position, Color color)
+        {
+            var buttonObj = UIDialogBuilder.CreateButton(parent, name, label, RetryButtonSize.x, RetryButtonSize.y, color);
+            buttonObj.GetComponent<RectTransform>().anchoredPosition = position;
+            buttonObj.GetComponentInChildren<Text>().fontSize = RetryFontSize;
+            return buttonObj.GetComponent<Button>();
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Linq;
 using PenmonScramble.Common.Editor;
 using PenmonScramble.Common.Input;
+using PenmonScramble.Common.Online;
 using PenmonScramble.Common.Scene;
 using PenmonScramble.Core;
 using PenmonScramble.Game;
@@ -51,9 +52,12 @@ namespace PenmonScramble.Editor
             var canvas = CreateCanvas();
             var hud = CreateHud(canvas.transform);
             var touch = CreateTouchControls(canvas.transform);
+            var session = new GameObject("OnlineSession").AddComponent<OnlineSession>();
+            // タイトルはステージの HUD より手前に出す（後に作った方が手前）
+            var title = CreateTitlePanel(canvas.transform, session);
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);
-            CreateStage(hud);
+            CreateStage(hud, session, title);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings();
@@ -117,7 +121,7 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        private static void CreateStage(StageHud hud)
+        private static void CreateStage(StageHud hud, OnlineSession session, ModeSelectPanel title)
         {
             var stageObj = new GameObject("Stage");
             var view = stageObj.AddComponent<StageView>();
@@ -125,6 +129,8 @@ namespace PenmonScramble.Editor
             var so = new SerializedObject(runner);
             so.FindProperty("_view").objectReferenceValue = view;
             so.FindProperty("_hud").objectReferenceValue = hud;
+            so.FindProperty("_session").objectReferenceValue = session;
+            so.FindProperty("_modeSelect").objectReferenceValue = title;
             so.ApplyModifiedProperties();
         }
 

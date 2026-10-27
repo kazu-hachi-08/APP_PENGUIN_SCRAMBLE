@@ -34,9 +34,9 @@ namespace PenmonScramble.Core
         public bool IsCleared => !HasAlive(Team.Enemy);
         public bool IsFailed => !HasAlive(Team.Player);
 
-        public Unit AddUnit(Team team, UnitStats stats, Vec2 position)
+        public Unit AddUnit(Team team, UnitStats stats, Vec2 position, int seat = Unit.NoSeat)
         {
-            var unit = new Unit(_nextId++, team, stats, position);
+            var unit = new Unit(_nextId++, team, stats, position, seat);
             if (team == Team.Enemy)
             {
                 // 敵が全員そろって同時に殴ってこないよう、最初の待ち時間をばらけさせる
@@ -53,6 +53,19 @@ namespace PenmonScramble.Core
             if (unit != null)
             {
                 unit.Input = input;
+            }
+        }
+
+        /// <summary>
+        /// 倒されたのではなく場から取り除く（オンラインでゲストが抜けたとき）。Defeated は出さない。
+        /// Tick の外から呼ぶこと
+        /// </summary>
+        public void RemoveUnit(int unitId)
+        {
+            var unit = FindUnit(unitId);
+            if (unit != null)
+            {
+                _units.Remove(unit);
             }
         }
 

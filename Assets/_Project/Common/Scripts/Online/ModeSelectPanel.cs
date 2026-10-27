@@ -86,6 +86,16 @@ namespace PenmonScramble.Common.Online
             Open(onNpcSelected, OnlineSession.DefaultMaxPlayers, onTitle);
         }
 
+        /// <summary>3人以上で遊べるゲーム用。ホストが「開始」を押すと、全員に席番号と人数が届く</summary>
+        /// <param name="onNpcSelected">ひとりで遊ぶ（NPC戦）を選んだ</param>
+        /// <param name="onMatchStarted">試合開始（引数は自分の席番号（ホスト=0）と総人数）</param>
+        public void ShowMultiplayer(Action onNpcSelected, Action<int, int> onMatchStarted, int maxPlayers, Action onTitle = null)
+        {
+            _onOnlineReady = null;
+            _onMatchStarted = onMatchStarted;
+            Open(onNpcSelected, maxPlayers, onTitle);
+        }
+
         private void Open(Action onNpcSelected, int maxPlayers, Action onTitle)
         {
             _onNpcSelected = onNpcSelected;

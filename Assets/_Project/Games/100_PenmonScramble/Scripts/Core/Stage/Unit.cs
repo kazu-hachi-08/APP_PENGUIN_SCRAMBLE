@@ -5,10 +5,14 @@ namespace PenmonScramble.Core
     /// </summary>
     public sealed class Unit
     {
-        internal Unit(int id, Team team, UnitStats stats, Vec2 position)
+        /// <summary>敵など、プレイヤーの席に属さないユニットの Seat</summary>
+        public const int NoSeat = -1;
+
+        internal Unit(int id, Team team, UnitStats stats, Vec2 position, int seat)
         {
             Id = id;
             Team = team;
+            Seat = seat;
             Radius = stats.Radius;
             MoveSpeed = stats.MoveSpeed;
             MaxHp = stats.MaxHp;
@@ -22,6 +26,9 @@ namespace PenmonScramble.Core
 
         public int Id { get; }
         public Team Team { get; }
+
+        /// <summary>操作しているプレイヤーの席（ホスト=0）。オンラインで誰のペンギンかを見分けるため</summary>
+        public int Seat { get; }
         public float Radius { get; }
         public float MoveSpeed { get; }
         public int MaxHp { get; }
