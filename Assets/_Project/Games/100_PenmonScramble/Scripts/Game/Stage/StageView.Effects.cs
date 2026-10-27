@@ -23,6 +23,15 @@ namespace PenmonScramble.Game
         // これより大きい落下は、必殺技でなくても少し揺らす
         private const float BigBlastRadius = 1.5f;
 
+        // 合体技（§4.6）。必殺技ほどではないが、ふつうの技より大きく見せる
+        private static readonly Color ComboColor = new Color(1f, 0.9f, 0.35f);
+        private const float ComboRingRadius = 3f;
+        private const float ComboRingSeconds = 0.4f;
+        private const float ComboFlashRadius = 1.6f;
+        private const float ComboFlashSeconds = 0.25f;
+        private const float ComboShake = 0.18f;
+        private const float ComboShakeSeconds = 0.25f;
+
         private void PlayEvents(StageSnapshot snapshot)
         {
             foreach (var used in snapshot.SkillsUsed)
@@ -42,6 +51,20 @@ namespace PenmonScramble.Game
             {
                 OnBurst(burst);
             }
+
+            foreach (var combo in snapshot.Combos)
+            {
+                OnCombo(combo);
+            }
+        }
+
+        /// <summary>「合体！○○」の文字は HUD（StageHud.Progress）で出す</summary>
+        private void OnCombo(ComboEvent e)
+        {
+            var position = e.Position.ToVector2();
+            BurstFx.Spawn(transform, PlaceholderSprites.Circle, WithAlpha(Color.white, BlastAlpha), position, ComboFlashRadius * 0.3f, ComboFlashRadius, ComboFlashSeconds, SortingDepth.Popup - 1);
+            BurstFx.Spawn(transform, PlaceholderSprites.Ring, ComboColor, position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds, SortingDepth.Popup - 1);
+            _cameraShake.Shake(ComboShake, ComboShakeSeconds);
         }
 
         private void OnSpecialUsed(SpecialUsedEvent e)

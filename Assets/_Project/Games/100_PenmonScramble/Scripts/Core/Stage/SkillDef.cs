@@ -68,6 +68,18 @@ namespace PenmonScramble.Core
         /// <summary>突進: すべる速さ（マス/秒）</summary>
         public float DashSpeed { get; set; }
 
+        /// <summary>当たった敵を凍らせる秒数（動けない）。0なら凍らせない</summary>
+        public float FreezeSeconds { get; set; }
+
+        /// <summary>当たった敵の足を遅くする秒数。0なら遅くしない</summary>
+        public float SlowSeconds { get; set; }
+
+        /// <summary>雷雲: 一番近い敵を追いかける速さ（マス/秒）</summary>
+        public float ChaseSpeed { get; set; }
+
+        /// <summary>合体技の一部か。合体技のダメージでは次の合体技を起こさない（連続で起き続けないため）</summary>
+        public bool IsCombo { get; set; }
+
         /// <summary>必殺技の一部か。必殺技のダメージではゲージがたまらない（続けて出せないようにするため）</summary>
         public bool IsSpecial { get; set; }
     }

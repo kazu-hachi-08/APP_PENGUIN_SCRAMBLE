@@ -12,18 +12,22 @@ namespace PenmonScramble.Game
         private const float DropFillAlpha = 0.2f;
         private const float PulseSpeed = 10f;
         private const float PulseAmount = 0.06f;
+        // 動く範囲（雷雲）が、届いた位置へ寄っていく速さ。毎秒15回しか届かないので、そのまま置くとかくかくする
+        private const float FollowSharpness = 12f;
         private static readonly Color DropWarningColor = new Color(1f, 0.25f, 0.2f);
 
         private SpriteRenderer _fill;
         private SpriteRenderer _ring;
         private float _radius;
         private float _age;
+        private Vector2 _target;
 
         public static EffectView Create(Transform parent, EffectState effect)
         {
             var view = new GameObject($"Effect{effect.Id}_{effect.Kind}").AddComponent<EffectView>();
             view.transform.SetParent(parent, false);
             view.transform.position = effect.Position.ToVector2();
+            view._target = effect.Position.ToVector2();
             view._radius = effect.Radius;
 
             var element = PenguinPalette.ElementColor(effect.Element);
@@ -47,9 +51,16 @@ namespace PenmonScramble.Game
             return renderer;
         }
 
+        public void PushState(EffectState effect)
+        {
+            _target = effect.Position.ToVector2();
+        }
+
         private void Update()
         {
             _age += Time.deltaTime;
+            var follow = 1f - Mathf.Exp(-FollowSharpness * Time.deltaTime);
+            transform.position = Vector2.Lerp(transform.position, _target, follow);
             Apply();
         }
 

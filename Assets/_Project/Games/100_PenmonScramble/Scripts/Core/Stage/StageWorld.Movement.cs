@@ -15,7 +15,8 @@ namespace PenmonScramble.Core
                 return;
             }
 
-            unit.Position += move * (unit.MoveSpeed * dt);
+            var speed = unit.IsSlowed ? unit.MoveSpeed * Balance.SlowSpeedRatio : unit.MoveSpeed;
+            unit.Position += move * (speed * dt);
             unit.Facing = move.Normalized;
         }
 

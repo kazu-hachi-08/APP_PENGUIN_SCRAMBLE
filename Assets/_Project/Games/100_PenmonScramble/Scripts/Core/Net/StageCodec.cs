@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えて変な画面になるより無視する方がよい
         /// </summary>
-        public const byte FormatVersion = 3;
+        public const byte FormatVersion = 4;
 
         private const byte Skill1Flag = 1;
         private const byte Skill2Flag = 2;

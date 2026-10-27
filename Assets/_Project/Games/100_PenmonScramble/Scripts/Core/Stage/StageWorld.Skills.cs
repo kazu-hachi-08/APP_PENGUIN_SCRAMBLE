@@ -151,8 +151,26 @@ namespace PenmonScramble.Core
             target.Hp = Math.Max(0, target.Hp - damage);
             // 足すと連打で飛びすぎるので、新しい吹っ飛びで置き換える
             target.KnockbackVelocity = direction * (knockback * target.KnockbackScale);
+            ApplyStatus(target, skill);
             ChargeSpecialGauge(attackerId, target, damage, skill);
+            RecordComboHit(attackerId, target, skill);
             Hit?.Invoke(new HitEvent(attackerId, target.Id, damage, target.Position));
+        }
+
+        /// <summary>凍らせる・足を遅くする（合体技）</summary>
+        private static void ApplyStatus(Unit target, SkillDef skill)
+        {
+            if (skill.FreezeSeconds > 0f)
+            {
+                target.FrozenSeconds = MathF.Max(target.FrozenSeconds, skill.FreezeSeconds);
+                target.KnockbackVelocity = Vec2.Zero;
+                target.Dash = null;
+            }
+
+            if (skill.SlowSeconds > 0f)
+            {
+                target.SlowSeconds = MathF.Max(target.SlowSeconds, skill.SlowSeconds);
+            }
         }
 
         private bool IsInsideArea(Vec2 position)

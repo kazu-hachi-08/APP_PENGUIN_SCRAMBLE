@@ -13,7 +13,7 @@ namespace PenmonScramble.Core
         /// <summary>近くの敵から順に Count か所へ落とす。届く所に敵がいなければ、前に1つ落とす</summary>
         private void UseDrop(Unit user, SkillDef skill)
         {
-            FindNearestOpponents(user, skill.Range, _dropTargets);
+            FindNearestOpponents(user.Team, user.Position, skill.Range, _dropTargets);
             if (_dropTargets.Count == 0)
             {
                 AddDrop(user, skill, user.Position + user.Facing * Balance.DropFallbackDistance, skill.Delay);
@@ -32,32 +32,36 @@ namespace PenmonScramble.Core
             _areaEffects.Add(new AreaEffect(_nextId++, owner, skill, AreaEffectKind.Drop, position, delay));
         }
 
-        /// <summary>range の中の敵を、近い順に results へ入れる</summary>
-        private void FindNearestOpponents(Unit from, float range, List<Unit> results)
+        /// <summary>center から range の中にいる、team の相手を、近い順に results へ入れる</summary>
+        private void FindNearestOpponents(Team team, Vec2 center, float range, List<Unit> results)
         {
             results.Clear();
             foreach (var other in _units)
             {
-                if (IsOpponent(from, other) && IsWithin(other, from.Position, range))
+                if (other.Team != team && other.IsAlive && IsWithin(other, center, range))
                 {
                     results.Add(other);
                 }
             }
 
-            results.Sort((a, b) => (a.Position - from.Position).LengthSquared.CompareTo((b.Position - from.Position).LengthSquared));
+            results.Sort((a, b) => (a.Position - center).LengthSquared.CompareTo((b.Position - center).LengthSquared));
         }
 
         private void UpdateAreaEffects(float dt)
         {
             foreach (var effect in _areaEffects)
             {
-                if (effect.Kind == AreaEffectKind.Zone)
+                switch (effect.Kind)
                 {
-                    UpdateZone(effect, dt);
-                }
-                else
-                {
-                    UpdateDrop(effect, dt);
+                    case AreaEffectKind.Zone:
+                        UpdateZone(effect, dt);
+                        break;
+                    case AreaEffectKind.Drop:
+                        UpdateDrop(effect, dt);
+                        break;
+                    default:
+                        UpdateCloud(effect, dt);
+                        break;
                 }
             }
 

@@ -62,6 +62,19 @@ namespace PenmonScramble.Core
         }
     }
 
+    /// <summary>合体技が起きた（§4.6）。「合体！○○」の文字・大きめのエフェクト・画面の揺れに使う</summary>
+    public readonly struct ComboEvent
+    {
+        public readonly ComboKind Kind;
+        public readonly Vec2 Position;
+
+        public ComboEvent(ComboKind kind, Vec2 position)
+        {
+            Kind = kind;
+            Position = position;
+        }
+    }
+
     public enum BurstShape : byte
     {
         /// <summary>近接の振り</summary>

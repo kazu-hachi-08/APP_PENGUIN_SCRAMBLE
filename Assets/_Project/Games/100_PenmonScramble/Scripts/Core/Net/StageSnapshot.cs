@@ -150,6 +150,7 @@ namespace PenmonScramble.Core
         public List<SkillUsedEvent> SkillsUsed { get; } = new List<SkillUsedEvent>();
         public List<SpecialUsedEvent> SpecialsUsed { get; } = new List<SpecialUsedEvent>();
         public List<BurstEvent> Bursts { get; } = new List<BurstEvent>();
+        public List<ComboEvent> Combos { get; } = new List<ComboEvent>();
 
         public bool TryGetPlayer(int seat, out UnitState state)
         {
@@ -220,6 +221,7 @@ namespace PenmonScramble.Core
             SkillsUsed.InsertRange(0, older.SkillsUsed);
             SpecialsUsed.InsertRange(0, older.SpecialsUsed);
             Bursts.InsertRange(0, older.Bursts);
+            Combos.InsertRange(0, older.Combos);
         }
     }
 }

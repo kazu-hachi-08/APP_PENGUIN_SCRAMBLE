@@ -23,6 +23,7 @@ namespace PenmonScramble.Game
         private int _announcedRound = -1;
         private int _announcedArea = -1;
         private bool _announcedGate;
+        private StageSnapshot _comboSnapshot;
 
         public void SetProgress(StageSnapshot snapshot)
         {
@@ -30,6 +31,7 @@ namespace PenmonScramble.Game
             var area = isBossArea ? "ボスエリア" : $"エリア {snapshot.AreaIndex + 1} / {snapshot.AreaCount}";
             _progressText.text = snapshot.IsGateOpen ? "すすめ →" : $"{area}　のこり {snapshot.CountAlive(Team.Enemy)} 体";
             Announce(snapshot, isBossArea);
+            AnnounceCombos(snapshot);
             SetBoss(snapshot);
         }
 
@@ -51,6 +53,23 @@ namespace PenmonScramble.Game
             {
                 _announcedGate = true;
                 ShowBanner("すすめ →");
+            }
+        }
+
+        /// <summary>同じ回にいくつ起きても、最後の1つだけ出す（文字が重なって読めなくなるため）</summary>
+        private void AnnounceCombos(StageSnapshot snapshot)
+        {
+            // HUD は毎フレーム、同じスナップショットで呼ばれる。出し直して消えなくならないよう、1つのスナップショットで1回だけ
+            if (ReferenceEquals(snapshot, _comboSnapshot))
+            {
+                return;
+            }
+
+            _comboSnapshot = snapshot;
+            if (snapshot.Combos.Count > 0)
+            {
+                var last = snapshot.Combos[snapshot.Combos.Count - 1];
+                ShowBanner($"合体！{ComboMoves.NameOf(last.Kind)}");
             }
         }
 

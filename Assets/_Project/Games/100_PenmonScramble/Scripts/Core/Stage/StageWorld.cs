@@ -36,6 +36,7 @@ namespace PenmonScramble.Core
         public event Action<SkillUsedEvent> SkillUsed;
         public event Action<SpecialUsedEvent> SpecialUsed;
         public event Action<BurstEvent> Burst;
+        public event Action<ComboEvent> Combo;
 
         /// <summary>いま動ける範囲。出入口が開いている間は、次のエリアまで広がる</summary>
         public Vec2 AreaMin { get; private set; }
@@ -126,9 +127,12 @@ namespace PenmonScramble.Core
             UpdateTimers(dt);
             UpdateActions(dt);
             ApplyKnockback(dt);
+            ResolveChains();
             ResolveOverlaps();
             KeepInsideArea();
             UpdateProjectiles(dt);
+            // 弾・範囲の更新の途中では弾や範囲を増やせないので、合体技はここでまとめて出す
+            FirePendingCombos();
             UpdateAreaEffects(dt);
             ReplaceOrRemoveFallen();
             UpdateRevives(dt);
@@ -151,6 +155,9 @@ namespace PenmonScramble.Core
                 unit.SwitchCooldown = MathF.Max(0f, unit.SwitchCooldown - dt);
                 unit.FrozenSeconds = MathF.Max(0f, unit.FrozenSeconds - dt);
                 unit.InvincibleSeconds = MathF.Max(0f, unit.InvincibleSeconds - dt);
+                unit.SlowSeconds = MathF.Max(0f, unit.SlowSeconds - dt);
+                unit.ComboWindowSeconds = MathF.Max(0f, unit.ComboWindowSeconds - dt);
+                unit.ComboCooldownSeconds = MathF.Max(0f, unit.ComboCooldownSeconds - dt);
             }
         }
 
@@ -253,18 +260,21 @@ namespace PenmonScramble.Core
 
         private bool HasAlive(Team team) => CountAlive(team) > 0;
 
-        private Unit FindNearestOpponent(Unit from)
+        private Unit FindNearestOpponent(Unit from) => FindNearestOpponent(from.Team, from.Position);
+
+        /// <param name="team">探す側の陣営。これと違う陣営の、元気なユニットから探す</param>
+        private Unit FindNearestOpponent(Team team, Vec2 position)
         {
             Unit nearest = null;
             var nearestSq = float.MaxValue;
             foreach (var other in _units)
             {
-                if (other.Team == from.Team || !other.IsAlive)
+                if (other.Team == team || !other.IsAlive)
                 {
                     continue;
                 }
 
-                var sq = (other.Position - from.Position).LengthSquared;
+                var sq = (other.Position - position).LengthSquared;
                 if (sq < nearestSq)
                 {
                     nearestSq = sq;

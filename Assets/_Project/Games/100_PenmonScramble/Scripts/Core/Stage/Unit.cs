@@ -76,6 +76,19 @@ namespace PenmonScramble.Core
         /// <summary>ダウン中に、近くに仲間がいた時間の合計（秒）。離れてもためた分は残る（§4.5）</summary>
         public float ReviveSeconds { get; internal set; }
 
+        /// <summary>足が遅くなっている残りの秒数（合体技「吹雪」）</summary>
+        public float SlowSeconds { get; internal set; }
+        public bool IsSlowed => SlowSeconds > 0f;
+
+        // 合体技（§4.6）: この敵に最後に技を当てたプレイヤーと、その属性。窓が開いている間に別の人が当てると起きる
+        internal int ComboAttackerId { get; set; }
+        internal Element ComboElement { get; set; }
+        internal float ComboWindowSeconds { get; set; }
+        internal float ComboCooldownSeconds { get; set; }
+
+        /// <summary>今の吹っ飛びで、もうぶつかった相手。1回飛ぶ間に同じ相手へ何度も当たらないようにする（§4.4）</summary>
+        internal HashSet<int> ChainHitIds { get; } = new HashSet<int>();
+
         internal DashState Dash { get; set; }
         internal float[] Cooldowns => Active.Cooldowns;
         internal PlayerInput Input { get; set; }

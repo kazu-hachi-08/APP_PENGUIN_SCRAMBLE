@@ -103,6 +103,26 @@ namespace PenmonScramble.Core
         /// <summary>復活した直後の無敵（秒）。囲まれたまま起きて、すぐまた倒れる、を防ぐ</summary>
         public const float ReviveInvincibleSeconds = 2f;
 
+        // 吹っ飛びの連鎖（§4.4）
+        /// <summary>この速さ以上で飛んでいる敵だけが、ほかの敵にぶつかってダメージを与える（マス/秒）。弱い技で押しただけでは連鎖させない</summary>
+        public const float ChainMinSpeed = 6f;
+        /// <summary>連鎖のダメージ ＝ ぶつかった速さ × これ</summary>
+        public const float ChainDamagePerSpeed = 1f;
+        /// <summary>ぶつけられた敵が飛ぶ速さの割合</summary>
+        public const float ChainTransferRatio = 0.8f;
+        /// <summary>ぶつかった側に残る速さの割合。ぶつかるたびに弱まって、連鎖がいつまでも続かないようにする</summary>
+        public const float ChainKeepRatio = 0.5f;
+
+        // 合体技（§4.6）
+        /// <summary>別のプレイヤーの技がこの秒数以内に同じ敵へ当たると、合体技が起きる</summary>
+        public const float ComboWindowSeconds = 1f;
+        /// <summary>同じ敵で1回起きたら、この秒数は起きない（連続で起き続けないため）</summary>
+        public const float ComboCooldownSeconds = 2f;
+        /// <summary>合体技が起きたときに全体を止める長さ（更新の回数）。0.1秒だけ止めて「決まった」感じを出す</summary>
+        public const int ComboHitStopTicks = 3;
+        /// <summary>足が遅くなっている間の速さの割合（合体技「吹雪」）</summary>
+        public const float SlowSpeedRatio = 0.5f;
+
         // 協力の人数ごとの敵の HP の倍率（§4.7）。添字は人数-1
         private static readonly float[] EnemyHpScales = { 1.0f, 1.6f, 2.2f, 2.8f };
 

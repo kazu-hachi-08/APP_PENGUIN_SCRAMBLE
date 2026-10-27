@@ -36,6 +36,7 @@ namespace PenmonScramble.Tests
             snapshot.Players.Add(player);
             snapshot.SpecialsUsed.Add(new SpecialUsedEvent(1, 5, Element.Ice));
             snapshot.Bursts.Add(new BurstEvent(BurstShape.Ring, Element.Wind, new Vec2(1f, 1f), 5f, true));
+            snapshot.Combos.Add(new ComboEvent(ComboKind.Shock, new Vec2(-3f, 2f)));
             return snapshot;
         }
 
@@ -98,6 +99,9 @@ namespace PenmonScramble.Tests
             Assert.That(decoded.Bursts[0].Shape, Is.EqualTo(BurstShape.Ring));
             Assert.That(decoded.Bursts[0].Radius, Is.EqualTo(5f));
             Assert.That(decoded.Bursts[0].IsSpecial, Is.True);
+            Assert.That(decoded.Combos.Count, Is.EqualTo(1));
+            Assert.That(decoded.Combos[0].Kind, Is.EqualTo(ComboKind.Shock));
+            Assert.That(decoded.Combos[0].Position, Is.EqualTo(new Vec2(-3f, 2f)));
         }
 
         [Test]

@@ -151,14 +151,18 @@ namespace PenmonScramble.Game
             RemoveMissing(_projectiles, view => Destroy(view.gameObject));
         }
 
-        /// <summary>範囲は置いた場所から動かないので、出たら作って、無くなったら消すだけ（落ちた演出は BurstEvent で出る）</summary>
+        /// <summary>範囲は出たら作って、無くなったら消す（落ちた演出は BurstEvent で出る）。動くのは雷雲だけ</summary>
         private void SyncEffects(StageSnapshot snapshot)
         {
             _aliveIds.Clear();
             foreach (var effect in snapshot.Effects)
             {
                 _aliveIds.Add(effect.Id);
-                if (!_effects.ContainsKey(effect.Id))
+                if (_effects.TryGetValue(effect.Id, out var view))
+                {
+                    view.PushState(effect);
+                }
+                else
                 {
                     _effects.Add(effect.Id, EffectView.Create(transform, effect));
                 }

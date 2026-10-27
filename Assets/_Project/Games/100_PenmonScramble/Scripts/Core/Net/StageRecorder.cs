@@ -14,6 +14,7 @@ namespace PenmonScramble.Core
         private readonly List<SkillUsedEvent> _skillsUsed = new List<SkillUsedEvent>();
         private readonly List<SpecialUsedEvent> _specialsUsed = new List<SpecialUsedEvent>();
         private readonly List<BurstEvent> _bursts = new List<BurstEvent>();
+        private readonly List<ComboEvent> _combos = new List<ComboEvent>();
 
         public StageRecorder(StageWorld world, int round)
         {
@@ -24,6 +25,7 @@ namespace PenmonScramble.Core
             _world.SkillUsed += _skillsUsed.Add;
             _world.SpecialUsed += _specialsUsed.Add;
             _world.Burst += _bursts.Add;
+            _world.Combo += _combos.Add;
         }
 
         public void Detach()
@@ -33,6 +35,7 @@ namespace PenmonScramble.Core
             _world.SkillUsed -= _skillsUsed.Add;
             _world.SpecialUsed -= _specialsUsed.Add;
             _world.Burst -= _bursts.Add;
+            _world.Combo -= _combos.Add;
         }
 
         /// <summary>前回の Capture から後に起きたことを持たせる。貯めていたものは空にする</summary>
@@ -82,11 +85,13 @@ namespace PenmonScramble.Core
             snapshot.SkillsUsed.AddRange(_skillsUsed);
             snapshot.SpecialsUsed.AddRange(_specialsUsed);
             snapshot.Bursts.AddRange(_bursts);
+            snapshot.Combos.AddRange(_combos);
             _hits.Clear();
             _defeats.Clear();
             _skillsUsed.Clear();
             _specialsUsed.Clear();
             _bursts.Clear();
+            _combos.Clear();
         }
 
         private static UnitFlags FlagsOf(Unit unit)

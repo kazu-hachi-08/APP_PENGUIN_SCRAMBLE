@@ -49,6 +49,13 @@ namespace PenmonScramble.Core
                 writer.Write(burst.Radius);
                 writer.Write(burst.IsSpecial);
             }
+
+            writer.Write(snapshot.Combos.Count);
+            foreach (var combo in snapshot.Combos)
+            {
+                writer.Write((byte)combo.Kind);
+                Write(writer, combo.Position);
+            }
         }
 
         private static void ReadEvents(BinaryReader reader, StageSnapshot snapshot)
@@ -94,6 +101,13 @@ namespace PenmonScramble.Core
                 var position = ReadVec2(reader);
                 var radius = reader.ReadSingle();
                 snapshot.Bursts.Add(new BurstEvent(shape, element, position, radius, reader.ReadBoolean()));
+            }
+
+            var combos = reader.ReadInt32();
+            for (var i = 0; i < combos; i++)
+            {
+                var kind = (ComboKind)reader.ReadByte();
+                snapshot.Combos.Add(new ComboEvent(kind, ReadVec2(reader)));
             }
         }
     }
