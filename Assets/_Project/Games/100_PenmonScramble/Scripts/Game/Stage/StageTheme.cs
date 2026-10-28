@@ -25,8 +25,8 @@ namespace PenmonScramble.Game
         public Color Outside { get; }
         public Color Gate { get; }
 
-        // 絵の上に掛ける色。1つおきに少し暗く、ボスエリアは赤っぽく
-        private static readonly StageTheme ArtTint = new StageTheme(Color.white, new Color(0.92f, 0.92f, 0.92f), new Color(1f, 0.85f, 0.85f), Color.black, Color.black);
+        // 絵の上に掛ける色。1つおきに少し暗く、ボスエリアは赤っぽく。エリアの外は暗くして、動ける範囲との境目を見せる
+        private static readonly StageTheme ArtTint = new StageTheme(Color.white, new Color(0.92f, 0.92f, 0.92f), new Color(1f, 0.85f, 0.85f), new Color(0.55f, 0.55f, 0.6f), Color.black);
 
         private static readonly StageTheme[] Worlds =
         {
@@ -52,5 +52,8 @@ namespace PenmonScramble.Game
             var theme = hasArt ? ArtTint : this;
             return isBossArea ? theme.BossArea : index % 2 == 0 ? theme.Area : theme.AreaAlt;
         }
+
+        /// <summary>エリアの外に敷く地面の色。絵があるときは絵を暗くする色</summary>
+        public Color OutsideColor(bool hasArt) => hasArt ? ArtTint.Outside : Outside;
     }
 }

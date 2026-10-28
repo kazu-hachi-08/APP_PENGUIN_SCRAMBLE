@@ -12,6 +12,10 @@ namespace PenmonScramble.Game
         private const float GateWidth = 0.35f;
         // 出入口がいまの範囲の内側にあるか（開いているか）を比べるときの余裕
         private const float GateEpsilon = 0.01f;
+        // エリアの外に敷く地面のはみ出し（マス）。横長のスマホ（21:9 くらい）でも端の外まで埋まるように
+        private const float OutsideWidth = 6f;
+        // カメラの上下の余白と揺れの分
+        private const float OutsideHeight = 2f;
 
         [SerializeField] private StageCamera _stageCamera;
 
@@ -35,13 +39,26 @@ namespace PenmonScramble.Game
                 var max = StageLayout.AreaMax(i).ToVector2();
                 var isBossArea = snapshot.AreaCount > 1 && i == snapshot.AreaCount - 1;
                 var color = theme.AreaColor(i, isBossArea, art != null);
-                CreateRect($"Area{i}", art != null ? art : PlaceholderSprites.Square, (min + max) * 0.5f, max - min, color, SortingDepth.Background);
+                var sprite = art != null ? art : PlaceholderSprites.Square;
+                CreateOutside(i, snapshot.AreaCount, sprite, min, max, theme.OutsideColor(art != null));
+                CreateRect($"Area{i}", sprite, (min + max) * 0.5f, max - min, color, SortingDepth.Background);
                 if (i < snapshot.AreaCount - 1)
                 {
                     var gate = CreateRect($"Gate{i}", PlaceholderSprites.Square, new Vector2(max.x, (min.y + max.y) * 0.5f), new Vector2(GateWidth, max.y - min.y), theme.Gate, SortingDepth.Ground);
                     _gates.Add((max.x, gate.gameObject));
                 }
             }
+        }
+
+        /// <summary>
+        /// エリアより一回り大きい地面を暗くして後ろに敷く。横長の画面ではエリアの外まで映るので、
+        /// カメラの背景色が見えて不自然にならないようにする。重ならないよう、左右へはみ出すのは最初と最後のエリアだけ
+        /// </summary>
+        private void CreateOutside(int index, int areaCount, Sprite sprite, Vector2 min, Vector2 max, Color color)
+        {
+            var outsideMin = new Vector2(index == 0 ? min.x - OutsideWidth : min.x, min.y - OutsideHeight);
+            var outsideMax = new Vector2(index == areaCount - 1 ? max.x + OutsideWidth : max.x, max.y + OutsideHeight);
+            CreateRect($"Outside{index}", sprite, (outsideMin + outsideMax) * 0.5f, outsideMax - outsideMin, color, SortingDepth.Outside);
         }
 
         /// <summary>sprite を size（マス）いっぱいに引き伸ばして置く</summary>
