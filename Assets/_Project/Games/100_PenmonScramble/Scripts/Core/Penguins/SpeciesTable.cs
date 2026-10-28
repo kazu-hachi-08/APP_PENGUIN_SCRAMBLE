@@ -109,8 +109,8 @@ namespace PenmonScramble.Core
             };
         }
 
-        /// <summary>野生の敵（§4.7）。技1だけを、待ち時間を長くして使う。HP は協力の人数で増える</summary>
-        public static UnitStats EnemyStats(SpeciesDef species, int playerCount)
+        /// <summary>野生の敵（§4.7）。技1だけを、待ち時間を長くして使う。HP は協力の人数で、HP と攻撃は先のワールドほど増える</summary>
+        public static UnitStats EnemyStats(SpeciesDef species, int playerCount, int world = 1)
         {
             return new UnitStats
             {
@@ -118,17 +118,17 @@ namespace PenmonScramble.Core
                 Element = species.Element,
                 Radius = Balance.PenguinRadius,
                 MoveSpeed = species.MoveSpeed * Balance.EnemySpeedScale,
-                MaxHp = EnemyMaxHp(species, playerCount),
-                Attack = species.AttackRate * Balance.EnemyAttackScale,
+                MaxHp = EnemyMaxHp(species, playerCount, world),
+                Attack = species.AttackRate * Balance.EnemyAttackScale * Balance.WorldEnemyScale(world),
                 Skills = new[] { species.Skill1 },
                 CooldownScale = Balance.EnemyCooldownScale,
             };
         }
 
         /// <summary>ステージのボス（§6.1）。野生の敵を大きく・強くして、技2も使う</summary>
-        public static UnitStats BossStats(SpeciesDef species, int playerCount)
+        public static UnitStats BossStats(SpeciesDef species, int playerCount, int world = 1)
         {
-            var stats = EnemyStats(species, playerCount);
+            var stats = EnemyStats(species, playerCount, world);
             stats.IsBoss = true;
             stats.Radius *= Balance.BossRadiusScale;
             stats.MaxHp = Math.Max(1, (int)MathF.Round(stats.MaxHp * Balance.BossHpScale));
@@ -139,9 +139,9 @@ namespace PenmonScramble.Core
             return stats;
         }
 
-        public static int EnemyMaxHp(SpeciesDef species, int playerCount)
+        public static int EnemyMaxHp(SpeciesDef species, int playerCount, int world = 1)
         {
-            return Math.Max(1, (int)MathF.Round(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(playerCount)));
+            return Math.Max(1, (int)MathF.Round(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(playerCount) * Balance.WorldEnemyScale(world)));
         }
     }
 }

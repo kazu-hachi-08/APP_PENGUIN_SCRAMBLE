@@ -50,6 +50,12 @@ namespace PenmonScramble.Core
 
         private static void Separate(Unit a, Unit b)
         {
+            // もぐっている大ボスの上は通れる（足元から飛び出すのを待つ間に、押し出されて逃げられなくならないように）
+            if (a.IsSubmerged || b.IsSubmerged)
+            {
+                return;
+            }
+
             var delta = b.Position - a.Position;
             var minDistance = a.Radius + b.Radius;
             var distanceSq = delta.LengthSquared;

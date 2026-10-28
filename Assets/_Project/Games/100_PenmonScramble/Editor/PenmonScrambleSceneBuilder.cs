@@ -62,6 +62,7 @@ namespace PenmonScramble.Editor
             var titleMenu = CreateTitleMenu(title, gacha, penguins);
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);
+            CreateCreatureArt();
             CreateStage(hud, session, title, titleMenu, shake, stageCamera, cutIn);
 
             EditorSceneManager.SaveScene(scene, ScenePath);

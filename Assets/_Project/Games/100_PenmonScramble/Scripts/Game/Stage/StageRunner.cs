@@ -10,7 +10,8 @@ namespace PenmonScramble.Game
     /// <summary>
     /// タイトル（ひとりで / 部屋を作る / コードで参加）からステージを始め、入力・HUD・結果をつなぐ。
     /// 計算はソロとホストが StageHost、ゲストは StageGuest で、どちらもスナップショットを StageView に渡して描く。
-    /// ステージはホストがタイトルで選んだもの、連れていくのは各自の記録の編成（§8）。報酬は各自の記録に書く
+    /// ステージはホストがタイトルで選んだもの、連れていくのは各自の記録の編成（§8）。報酬は各自の記録に書く。
+    /// BGM はタイトル・ステージ・ボスエリアで切り替え、結果で止めてジングルを鳴らす
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に読む
     [DefaultExecutionOrder(100)]
@@ -34,6 +35,7 @@ namespace PenmonScramble.Game
         private PlayerState _lastPlayerState;
         private float _resultShownAt = -1f;
         private bool _leaving;
+        private MusicTrack? _music;
 
         private StageSnapshot Latest => _host != null ? _host.Latest : _guest?.Latest;
 
@@ -44,6 +46,7 @@ namespace PenmonScramble.Game
             // ゲストが1人抜けても、残りで遊び続ける（§8）
             _session.ContinueWhenMemberLeaves = true;
             _modeSelect.ShowMultiplayer(StartSolo, StartOnline, Balance.MaxPlayers);
+            PlayMusic(MusicTrack.Title);
         }
 
         private void OnDestroy()
@@ -141,6 +144,22 @@ namespace PenmonScramble.Game
 
             UpdateHud(latest);
             UpdateResult(latest, input);
+            if (latest.Result == StageResult.Playing)
+            {
+                PlayMusic(latest.IsBossArea ? MusicTrack.Boss : MusicTrack.Stage);
+            }
+        }
+
+        /// <summary>曲が変わるときだけ流す（毎フレーム呼ぶので、同じ曲を登録し直さないように）</summary>
+        private void PlayMusic(MusicTrack track)
+        {
+            if (_music == track)
+            {
+                return;
+            }
+
+            _music = track;
+            GameMusic.Play(track);
         }
 
         private void UpdateHud(StageSnapshot snapshot)
@@ -179,6 +198,9 @@ namespace PenmonScramble.Game
                 _resultShownAt = Time.time;
                 var cleared = snapshot.Result == StageResult.Cleared;
                 var coins = RecordResult(snapshot, cleared);
+                _music = null;
+                GameMusic.Stop();
+                GameSounds.Play(cleared ? GameSound.Clear : GameSound.Fail);
                 _hud.ShowResult(cleared, canRetry: _host != null, snapshot.EnemiesDefeated, coins);
                 return;
             }

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージの地面・エリアの出入口・カメラ（§6.1）
+    /// ステージの地面・エリアの出入口・カメラ（§6.1）。地面はワールドごとの絵か色（§6.2・StageTheme）
     /// </summary>
     public partial class StageView
     {
@@ -13,41 +13,48 @@ namespace PenmonScramble.Game
         // 出入口がいまの範囲の内側にあるか（開いているか）を比べるときの余裕
         private const float GateEpsilon = 0.01f;
 
-        [SerializeField] private Color _areaAltColor = new Color(0.84f, 0.91f, 0.96f);
-        [SerializeField] private Color _bossAreaColor = new Color(0.98f, 0.88f, 0.88f);
-        [SerializeField] private Color _gateColor = new Color(0.40f, 0.32f, 0.28f);
         [SerializeField] private StageCamera _stageCamera;
 
         private readonly List<(float x, GameObject obj)> _gates = new List<(float x, GameObject obj)>();
 
-        /// <summary>エリアを1枚ずつ色を変えて敷き、エリアの境目に出入口を置く。ボスエリアは赤っぽくする</summary>
+        /// <summary>エリアを1枚ずつ敷き、エリアの境目に出入口を置く。1つおきに少し色を変え、ボスエリアは赤っぽくする</summary>
         private void CreateGround(StageSnapshot snapshot)
         {
             _gates.Clear();
+            var world = StageTable.WorldOf(snapshot.StageNo);
+            var theme = StageTheme.ForWorld(world);
+            var art = CreatureArt.Ground(world);
+            if (Camera.main != null)
+            {
+                Camera.main.backgroundColor = theme.Outside;
+            }
+
             for (var i = 0; i < snapshot.AreaCount; i++)
             {
                 var min = StageLayout.AreaMin(i).ToVector2();
                 var max = StageLayout.AreaMax(i).ToVector2();
                 var isBossArea = snapshot.AreaCount > 1 && i == snapshot.AreaCount - 1;
-                var color = isBossArea ? _bossAreaColor : i % 2 == 0 ? _areaColor : _areaAltColor;
-                CreateRect($"Area{i}", (min + max) * 0.5f, max - min, color, SortingDepth.Background);
+                var color = theme.AreaColor(i, isBossArea, art != null);
+                CreateRect($"Area{i}", art != null ? art : PlaceholderSprites.Square, (min + max) * 0.5f, max - min, color, SortingDepth.Background);
                 if (i < snapshot.AreaCount - 1)
                 {
-                    var gate = CreateRect($"Gate{i}", new Vector2(max.x, (min.y + max.y) * 0.5f), new Vector2(GateWidth, max.y - min.y), _gateColor, SortingDepth.Ground);
+                    var gate = CreateRect($"Gate{i}", PlaceholderSprites.Square, new Vector2(max.x, (min.y + max.y) * 0.5f), new Vector2(GateWidth, max.y - min.y), theme.Gate, SortingDepth.Ground);
                     _gates.Add((max.x, gate.gameObject));
                 }
             }
         }
 
-        private SpriteRenderer CreateRect(string objName, Vector2 center, Vector2 size, Color color, int order)
+        /// <summary>sprite を size（マス）いっぱいに引き伸ばして置く</summary>
+        private SpriteRenderer CreateRect(string objName, Sprite sprite, Vector2 center, Vector2 size, Color color, int order)
         {
             var rect = new GameObject(objName).AddComponent<SpriteRenderer>();
             rect.transform.SetParent(transform, false);
-            rect.sprite = PlaceholderSprites.Square;
+            rect.sprite = sprite;
             rect.color = color;
             rect.sortingOrder = order;
             rect.transform.position = center;
-            rect.transform.localScale = new Vector3(size.x, size.y, 1f);
+            var spriteSize = sprite.bounds.size;
+            rect.transform.localScale = new Vector3(size.x / spriteSize.x, size.y / spriteSize.y, 1f);
             return rect;
         }
 

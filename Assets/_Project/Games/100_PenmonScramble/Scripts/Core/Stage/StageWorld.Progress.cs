@@ -22,6 +22,9 @@ namespace PenmonScramble.Core
 
         /// <summary>ステージの番号。テスト用の場は 0</summary>
         public int StageNo => _stage?.No ?? 0;
+
+        /// <summary>何番目のワールドか（1〜）。先のワールドほど敵が強い。テスト用の場は 1</summary>
+        public int World => _stage != null ? StageTable.WorldOf(_stage.No) : 1;
         public int AreaIndex { get; private set; }
         public int AreaCount => _stage?.Areas.Count ?? 1;
         public int WaveIndex { get; private set; }
@@ -106,14 +109,16 @@ namespace PenmonScramble.Core
             for (var i = 0; i < wave.Count; i++)
             {
                 var species = SpeciesTable.Get(wave.SpeciesPool[_random.Next(wave.SpeciesPool.Count)]);
-                AddUnit(Team.Enemy, SpeciesTable.EnemyStats(species, _playerCount), FindSpawnPoint());
+                AddUnit(Team.Enemy, SpeciesTable.EnemyStats(species, _playerCount, World), FindSpawnPoint());
             }
         }
 
         private void SpawnBoss(int speciesNo)
         {
             var position = new Vec2(AreaMax.X - Balance.AreaWidth * BossXFromRightRatio, (AreaMin.Y + AreaMax.Y) * 0.5f);
-            AddUnit(Team.Enemy, SpeciesTable.BossStats(SpeciesTable.Get(speciesNo), _playerCount), position);
+            var bigBoss = BigBossTable.Get(speciesNo);
+            var stats = bigBoss != null ? BigBossTable.Stats(bigBoss, _playerCount, World) : SpeciesTable.BossStats(SpeciesTable.Get(speciesNo), _playerCount, World);
+            AddUnit(Team.Enemy, stats, position);
         }
 
         /// <summary>エリアの右寄りで、プレイヤーから離れた場所</summary>

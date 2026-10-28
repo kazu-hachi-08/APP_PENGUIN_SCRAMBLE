@@ -64,6 +64,11 @@ namespace PenmonScramble.Core
         public Unit AddUnit(Team team, IReadOnlyList<UnitStats> party, Vec2 position, int seat = Unit.NoSeat)
         {
             var unit = new Unit(_nextId++, team, party, position, seat);
+            if (party[0].BigBoss != null)
+            {
+                unit.Brain = new BigBossBrain(party[0].BigBoss);
+            }
+
             if (team == Team.Enemy)
             {
                 // 敵が全員そろって同時に殴ってこないよう、最初の待ち時間をばらけさせる
@@ -237,6 +242,11 @@ namespace PenmonScramble.Core
                 }
 
                 _units.RemoveAt(i);
+                if (unit.Brain != null)
+                {
+                    ClearWarnings(unit.Brain);
+                }
+
                 EnemiesDefeated++;
                 Defeated?.Invoke(new DefeatedEvent(unit.Id, unit.Team, unit.Position));
             }

@@ -24,6 +24,9 @@ namespace PenmonScramble.Core
 
         /// <summary>ステージのボス（大きく描き、HUD に HP を出す）</summary>
         Boss = 16,
+
+        /// <summary>大ボスがもぐっている（攻撃が効かない。影だけ描く）</summary>
+        Submerged = 32,
     }
 
     /// <summary>描くのに要るユニット1体分の値（場に出ている子の値）</summary>
@@ -98,6 +101,27 @@ namespace PenmonScramble.Core
         }
     }
 
+    /// <summary>大ボスの攻撃の前の赤い範囲（BossWarning）</summary>
+    public readonly struct WarningState
+    {
+        public readonly int Id;
+        public readonly Vec2 From;
+        public readonly Vec2 To;
+        public readonly float HalfWidth;
+
+        /// <summary>攻撃が来るまでの進み具合（0〜1）</summary>
+        public readonly float Progress;
+
+        public WarningState(int id, Vec2 from, Vec2 to, float halfWidth, float progress)
+        {
+            Id = id;
+            From = from;
+            To = to;
+            HalfWidth = halfWidth;
+            Progress = progress;
+        }
+    }
+
     /// <summary>連れている1体分（HUD の控えの表示に使う）</summary>
     public readonly struct MemberState
     {
@@ -144,9 +168,13 @@ namespace PenmonScramble.Core
         public bool IsGateOpen { get; set; }
         public int EnemiesDefeated { get; set; }
 
+        /// <summary>ステージの最後（ボスのいる）エリアにいる。テスト用の1エリアだけの場は違う</summary>
+        public bool IsBossArea => AreaCount > 1 && AreaIndex == AreaCount - 1;
+
         public List<UnitState> Units { get; } = new List<UnitState>();
         public List<ProjectileState> Projectiles { get; } = new List<ProjectileState>();
         public List<EffectState> Effects { get; } = new List<EffectState>();
+        public List<WarningState> Warnings { get; } = new List<WarningState>();
         public List<PlayerState> Players { get; } = new List<PlayerState>();
         public List<HitEvent> Hits { get; } = new List<HitEvent>();
         public List<DefeatedEvent> Defeats { get; } = new List<DefeatedEvent>();

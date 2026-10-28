@@ -124,7 +124,7 @@ namespace PenmonScramble.Game
 
             _capsule.gameObject.SetActive(false);
             _penguin.gameObject.SetActive(true);
-            _penguinImage.color = PenguinPalette.SpeciesColor(species.No);
+            CreatureArt.ShowFace(_penguinImage, species.No);
             _nameText.text = $"{PenguinLabels.Title(species)}\nパワー {penguin.power}";
             yield return Pop(_penguin);
 
@@ -150,6 +150,7 @@ namespace PenmonScramble.Game
             for (var i = 1; i <= stars; i++)
             {
                 _starsText.text = PenguinLabels.Stars(i);
+                GameSounds.Play(GameSound.Star);
                 yield return new WaitForSeconds(StarIntervalSeconds);
             }
         }

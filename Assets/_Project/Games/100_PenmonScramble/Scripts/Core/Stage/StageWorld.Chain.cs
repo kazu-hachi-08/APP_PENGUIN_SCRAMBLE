@@ -43,7 +43,7 @@ namespace PenmonScramble.Core
 
         private static bool CanChainInto(Unit flyer, Unit target)
         {
-            if (target == flyer || target.Team != Team.Enemy || !target.IsAlive || flyer.ChainHitIds.Contains(target.Id))
+            if (target == flyer || target.Team != Team.Enemy || !target.IsAlive || target.IsSubmerged || flyer.ChainHitIds.Contains(target.Id))
             {
                 return false;
             }

@@ -15,7 +15,7 @@ namespace PenmonScramble.Core
         public int Count { get; }
         public IReadOnlyList<int> SpeciesPool { get; }
 
-        /// <summary>この波で一緒に出すボスの種類の番号。0 ならボスなし</summary>
+        /// <summary>この波で一緒に出すボスの種類の番号。ペンギン（1〜20）ならステージのボス、101〜 なら大ボス（BigBossTable）。0 ならボスなし</summary>
         public int BossSpeciesNo { get; }
     }
 

@@ -27,15 +27,13 @@ namespace PenmonScramble.Game
 
         public void SetProgress(StageSnapshot snapshot)
         {
-            var isBossArea = IsBossArea(snapshot);
+            var isBossArea = snapshot.IsBossArea;
             var area = isBossArea ? "ボスエリア" : $"エリア {snapshot.AreaIndex + 1} / {snapshot.AreaCount}";
             _progressText.text = snapshot.IsGateOpen ? "すすめ →" : $"{area}　のこり {snapshot.CountAlive(Team.Enemy)} 体";
             Announce(snapshot, isBossArea);
             AnnounceCombos(snapshot);
             SetBoss(snapshot);
         }
-
-        private static bool IsBossArea(StageSnapshot snapshot) => snapshot.AreaCount > 1 && snapshot.AreaIndex == snapshot.AreaCount - 1;
 
         /// <summary>エリアに入ったとき・出入口が開いたときに、画面の真ん中に大きく出す</summary>
         private void Announce(StageSnapshot snapshot, bool isBossArea)

@@ -4,8 +4,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 絵ができるまでの、種類ごとの仮の色。属性の色を少しずつずらして、同じ属性でも見分けられるようにする。
-    /// 絵に差し替えたら、属性の色（技・範囲の色）だけ残す
+    /// 絵が無い種類の仮の色と、種類の名前。属性の色を少しずつずらして、同じ属性でも見分けられるようにする。
+    /// 大ボスは天敵の動物らしい色にする。属性の色（技・範囲の色）は絵があっても使う
     /// </summary>
     public static class PenguinPalette
     {
@@ -31,6 +31,11 @@ namespace PenmonScramble.Game
 
         public static Color SpeciesColor(int speciesNo)
         {
+            if (BigBossTable.Get(speciesNo) != null)
+            {
+                return BigBossColor(speciesNo);
+            }
+
             var species = SpeciesTable.Get(speciesNo);
             if (species == null)
             {
@@ -42,14 +47,35 @@ namespace PenmonScramble.Game
             return Color.HSVToRGB(Mathf.Repeat(h + offset * HueStep, 1f), s, v);
         }
 
-        public static Color BodyColor(UnitState unit)
+        private static Color BigBossColor(int no)
         {
-            var color = SpeciesColor(unit.SpeciesNo);
-            return unit.Team == Team.Enemy ? Color.Lerp(color, Color.black, EnemyDarkness) : color;
+            switch (no)
+            {
+                case BigBossTable.SkuaNo: return new Color(0.55f, 0.42f, 0.30f);
+                case BigBossTable.LeopardSealNo: return new Color(0.55f, 0.58f, 0.66f);
+                default: return new Color(0.12f, 0.13f, 0.18f);
+            }
+        }
+
+        /// <summary>
+        /// 絵が無いときの体の色。絵があるときは絵に掛ける色（敵は暗くするだけ）。
+        /// 大ボスは野生のペンギンではないので暗くしない
+        /// </summary>
+        public static Color BodyColor(UnitState unit, bool hasArt)
+        {
+            var color = hasArt ? Color.white : SpeciesColor(unit.SpeciesNo);
+            var darken = unit.Team == Team.Enemy && BigBossTable.Get(unit.SpeciesNo) == null;
+            return darken ? Color.Lerp(color, Color.black, EnemyDarkness) : color;
         }
 
         public static string SpeciesName(int speciesNo)
         {
+            var bigBoss = BigBossTable.Get(speciesNo);
+            if (bigBoss != null)
+            {
+                return bigBoss.Name;
+            }
+
             var species = SpeciesTable.Get(speciesNo);
             return species != null ? species.Name : "？";
         }

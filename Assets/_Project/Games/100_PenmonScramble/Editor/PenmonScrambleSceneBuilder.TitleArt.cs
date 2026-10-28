@@ -46,7 +46,7 @@ namespace PenmonScramble.Editor
 
         private static void CreateTitleBackground(Transform root)
         {
-            var sprite = LoadTitleArt(TitleBackgroundPath);
+            var sprite = LoadArtSprite(TitleBackgroundPath, TitleArtMaxSize);
             if (sprite == null)
             {
                 return;
@@ -83,7 +83,7 @@ namespace PenmonScramble.Editor
             PlaceCenter(logo.GetComponent<RectTransform>(), LogoPosition, LogoSize);
             logo.AddComponent<TitleLogoMotion>();
 
-            var sprite = LoadTitleArt(TitleLogoPath);
+            var sprite = LoadArtSprite(TitleLogoPath, TitleArtMaxSize);
             if (sprite != null)
             {
                 var image = logo.AddComponent<Image>();
@@ -113,20 +113,21 @@ namespace PenmonScramble.Editor
             return text;
         }
 
-        /// <summary>Art/Title の PNG を UI 用のスプライトとして読む。取り込み設定が違えば直してから読む</summary>
-        private static Sprite LoadTitleArt(string path)
+        /// <summary>Art/ の PNG をスプライトとして読む。無ければ null。取り込み設定が違えば直してから読む（透過はそのまま使う）</summary>
+        private static Sprite LoadArtSprite(string path, int maxSize)
         {
             if (AssetImporter.GetAtPath(path) is not TextureImporter importer)
             {
                 return null;
             }
 
-            if (importer.textureType != TextureImporterType.Sprite || importer.maxTextureSize != TitleArtMaxSize)
+            if (importer.textureType != TextureImporterType.Sprite || importer.maxTextureSize != maxSize || !importer.alphaIsTransparency)
             {
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
                 importer.mipmapEnabled = false;
-                importer.maxTextureSize = TitleArtMaxSize;
+                importer.alphaIsTransparency = true;
+                importer.maxTextureSize = maxSize;
                 importer.SaveAndReimport();
             }
 

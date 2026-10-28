@@ -116,11 +116,14 @@ Unity 側（Game / View）:
 
 ## フェーズ7: 中身をそろえる
 
-- [ ] 9ステージの定義
-- [ ] 大ボス3体（トウゾクカモメ・ヒョウアザラシ・シャチ）と、攻撃の前の赤い範囲
-- [ ] 背景3種類
-- [ ] 絵の差し替え（ペンギン20種類・ボス3体）
-- [ ] BGM・効果音（ペンモンの `GameMusic.Synth` を移植して、楽譜から作る）
+- [x] 9ステージの定義（`StageTable.cs`。先のワールドほど敵の HP・攻撃が上がる `Balance.WorldEnemyScale`）
+- [x] 大ボス3体（トウゾクカモメ・ヒョウアザラシ・シャチ）と、攻撃の前の赤い範囲（`Core/Bosses/`・`StageWorld.BigBoss.cs`。予告は `BossWarning` → `WarningView`。通信の版を 6 に上げた）
+- [x] 背景3種類（ワールドごとの地面の色 `StageTheme`。絵を `Art/Stage/World1〜3.png` に置けば差し替わる）
+- [x] 絵の差し替えの仕組み（`Art/Penguins/`・`Art/Bosses/` に置いて Rebuild すると `CreatureArt` に入る。§9）
+- [ ] 絵を作る（ペンギン20種類・ボス3体・地面3枚。Comfy Desktop）
+- [x] BGM・効果音（`Game/Audio/`。ペンモンの `GameMusic` / `BattleSounds` を移植。曲はタイトル・ステージ・ボスの3つ）
+- [x] テスト: 大ボスの予告と攻撃・もぐり・通信（`BigBossTests`）、9ステージの定義（`StageTableTests`）
+- [ ] 実機でワールド3の大ボスまで通して、大ボスの強さ・予告の長さ・ワールドの倍率を調整する
 
 **完了の確認**: ワールド3の大ボスまで通しでクリアできる。
 

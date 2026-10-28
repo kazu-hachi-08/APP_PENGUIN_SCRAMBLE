@@ -26,5 +26,8 @@ namespace PenmonScramble.Core
 
         /// <summary>飛ばされる強さに掛ける倍率。ボスは飛ばされにくい</summary>
         public float KnockbackScale { get; set; } = 1f;
+
+        /// <summary>大ボス（§6.2）。技の代わりに、予告つきの攻撃を順に出す。それ以外は null</summary>
+        public BigBossDef BigBoss { get; set; }
     }
 }

@@ -4,7 +4,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ユニット1体の仮の見た目（種類の色の丸＋向きの三角。プレイヤーは席の色の輪と、頭の上に「P1」など。ボスは「BOSS」）。
+    /// ユニット1体の見た目。絵（CreatureArt）があれば右向きの絵を向きで左右反転し、歩くと跳ねさせる。
+    /// 絵が無ければ仮の見た目（種類の色の丸＋向きの三角）。プレイヤーは席の色の輪と、頭の上に「P1」など。ボスは「BOSS」。
     /// 位置は更新（1/30秒）ごとに受け取り、その間を補間して描く（オンラインのゲストも同じ描き方にするため）
     /// </summary>
     public class UnitView : MonoBehaviour
@@ -39,6 +40,18 @@ namespace PenmonScramble.Game
         private const float ReviveFillAlpha = 0.35f;
         private static readonly Color BossLabelColor = new Color(0.9f, 0.15f, 0.15f);
 
+        // 絵は当たりの円より少し大きく描く（円いっぱいだと小さく見えるため）
+        private const float ArtSizeRatio = 1.5f;
+        // 絵は白く光らせられないので、被弾は赤っぽくする
+        private static readonly Color ArtFlashTint = new Color(1f, 0.55f, 0.55f);
+        // 歩くと上下に跳ねる（§9）。半径に対する高さと、1秒の跳ねる回数
+        private const float BobHeightRatio = 0.25f;
+        private const float BobPerSecond = 3f;
+        // これより動いていたら歩いているとみなす（1回の更新あたり、マス）
+        private const float WalkingStep = 0.01f;
+        // もぐっている大ボスは、暗い影だけ見せる
+        private static readonly Color SubmergedColor = new Color(0.08f, 0.12f, 0.25f, 0.45f);
+
         private SpriteRenderer _body;
         private SpriteRenderer _facing;
         private SpriteRenderer _seatRing;
@@ -47,6 +60,9 @@ namespace PenmonScramble.Game
         private SpriteRenderer _reviveFill;
         private float _revive;
         private Color _color;
+        private Color _trailColor;
+        private bool _hasArt;
+        private float _bodySize;
         private float _radius;
         private Vector2 _from;
         private Vector2 _to;
@@ -61,6 +77,7 @@ namespace PenmonScramble.Game
         public int SpeciesNo { get; private set; }
         public bool IsBoss => (_flags & UnitFlags.Boss) != 0;
         private bool IsDown => (_flags & UnitFlags.Down) != 0;
+        private bool IsSubmerged => (_flags & UnitFlags.Submerged) != 0;
 
         /// <param name="seatColor">プレイヤーの席の色。null なら輪と文字を出さない（敵）</param>
         public static UnitView Create(Transform parent, UnitState unit, Color? seatColor, string label)
@@ -84,8 +101,6 @@ namespace PenmonScramble.Game
         private void Setup(UnitState unit, Color? seatColor)
         {
             Team = unit.Team;
-            SpeciesNo = unit.SpeciesNo;
-            _color = PenguinPalette.BodyColor(unit);
             _radius = unit.Radius;
             if (seatColor.HasValue)
             {
@@ -94,10 +109,10 @@ namespace PenmonScramble.Game
                 _seatRing.transform.localScale = Vector3.one * (_radius * 2f * SeatRingRatio);
             }
 
-            _body = CreatePart("Body", PlaceholderSprites.Circle, _color);
-            _body.transform.localScale = Vector3.one * (_radius * 2f);
-            _facing = CreatePart("Facing", PlaceholderSprites.Triangle, Color.Lerp(_color, Color.black, 0.5f));
+            _body = CreatePart("Body", PlaceholderSprites.Circle, Color.white);
+            _facing = CreatePart("Facing", PlaceholderSprites.Triangle, Color.white);
             _facing.transform.localScale = Vector3.one * (_radius * FacingSizeRatio);
+            SetSpecies(unit);
             _from = _to = unit.Position.ToVector2();
             _facingDirection = unit.Facing.ToVector2();
             _flags = unit.Flags;
@@ -168,13 +183,25 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>交代した（自分で替えた・倒れて次の子が出た）。色を替えて、ぽんと出てきたように見せる</summary>
+        /// <summary>交代した（自分で替えた・倒れて次の子が出た）。見た目を替えて、ぽんと出てきたように見せる</summary>
         private void ChangeSpecies(UnitState unit)
         {
-            SpeciesNo = unit.SpeciesNo;
-            _color = PenguinPalette.BodyColor(unit);
-            _facing.color = Color.Lerp(_color, Color.black, 0.5f);
+            SetSpecies(unit);
             Poof();
+        }
+
+        /// <summary>絵があれば絵を、無ければ種類の色の丸を出す</summary>
+        private void SetSpecies(UnitState unit)
+        {
+            SpeciesNo = unit.SpeciesNo;
+            var art = CreatureArt.Find(unit.SpeciesNo);
+            _hasArt = art != null;
+            _body.sprite = _hasArt ? art : PlaceholderSprites.Circle;
+            _color = PenguinPalette.BodyColor(unit, _hasArt);
+            _trailColor = PenguinPalette.BodyColor(unit, hasArt: false);
+            var spriteSize = _body.sprite.bounds.size;
+            _bodySize = _hasArt ? _radius * 2f * ArtSizeRatio / Mathf.Max(spriteSize.x, spriteSize.y) : _radius * 2f;
+            _facing.color = Color.Lerp(_trailColor, Color.black, 0.5f);
         }
 
         private void Poof()
@@ -201,7 +228,14 @@ namespace PenmonScramble.Game
 
             _body.sortingOrder = order + 1;
             _facing.sortingOrder = order + 2;
-            _facing.enabled = !IsDown;
+            // 絵は左右の反転で向きを見せるので、三角は仮の見た目のときだけ
+            _facing.enabled = !IsDown && !IsSubmerged && !_hasArt;
+            _body.flipX = _hasArt && _facingDirection.x < 0f;
+            if (_label != null)
+            {
+                _label.SetActive(!IsSubmerged);
+            }
+
             RenderRevive();
             _facing.transform.localPosition = _facingDirection * (_radius * FacingDistanceRatio);
             _facing.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(_facingDirection.y, _facingDirection.x) * Mathf.Rad2Deg);
@@ -256,9 +290,14 @@ namespace PenmonScramble.Game
 
         private Color CurrentBodyColor()
         {
+            if (IsSubmerged)
+            {
+                return SubmergedColor;
+            }
+
             if (_flashTimer > 0f)
             {
-                return Color.white;
+                return _hasArt ? ArtFlashTint : Color.white;
             }
 
             if (IsDown)
@@ -281,7 +320,14 @@ namespace PenmonScramble.Game
             _squashTimer -= Time.deltaTime;
             var amount = _squashTimer > 0f ? SquashAmount * (_squashTimer / SquashSeconds) : 0f;
             var scale = IsDown ? DownScale : Vector2.one;
-            _body.transform.localScale = new Vector3(scale.x + amount, scale.y - amount, 1f) * (_radius * 2f);
+            _body.transform.localScale = new Vector3(scale.x + amount, scale.y - amount, 1f) * _bodySize;
+            _body.transform.localPosition = Vector3.up * BobHeight();
+        }
+
+        private float BobHeight()
+        {
+            var walking = _hasArt && !IsDown && (_to - _from).sqrMagnitude > WalkingStep * WalkingStep;
+            return walking ? Mathf.Abs(Mathf.Sin(Time.time * BobPerSecond * Mathf.PI)) * _radius * BobHeightRatio : 0f;
         }
 
         /// <summary>突進中は残像を残して、すべっているのが分かるようにする</summary>
@@ -299,7 +345,7 @@ namespace PenmonScramble.Game
             }
 
             _afterimageTimer = AfterimageInterval;
-            var color = new Color(_color.r, _color.g, _color.b, AfterimageAlpha);
+            var color = new Color(_trailColor.r, _trailColor.g, _trailColor.b, AfterimageAlpha);
             BurstFx.Spawn(transform.parent, PlaceholderSprites.Circle, color, transform.position, _radius, _radius * 0.7f, AfterimageSeconds, _body.sortingOrder - 1);
         }
 

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace PenmonScramble.Game
 {
-    /// <summary>一覧と編成の枠に並べる1体分のカード。絵ができるまでは種類の色の丸で見せる</summary>
+    /// <summary>一覧と編成の枠に並べる1体分のカード。絵が無い種類は色の丸で見せる</summary>
     public class PenguinCard : MonoBehaviour
     {
         [SerializeField] private Button _button;
@@ -35,7 +35,10 @@ namespace PenmonScramble.Game
         {
             PenguinId = penguin?.id ?? 0;
             _body.enabled = penguin != null;
-            _body.color = penguin != null ? PenguinPalette.SpeciesColor(penguin.speciesNo) : Color.clear;
+            if (penguin != null)
+            {
+                CreatureArt.ShowFace(_body, penguin.speciesNo);
+            }
             _label.text = penguin != null ? PenguinLabels.Card(penguin) : "（空き）";
             if (_partyMark != null)
             {

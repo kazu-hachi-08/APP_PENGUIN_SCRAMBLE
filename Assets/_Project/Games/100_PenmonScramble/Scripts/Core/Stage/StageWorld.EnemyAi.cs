@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 敵の動き: 一番近いプレイヤーへ近づいて、技1で殴るだけ（§4.7）。ボスは技2も使う
+    /// 敵の動き: 一番近いプレイヤーへ近づいて、技1で殴るだけ（§4.7）。ボスは技2も使う。大ボスは StageWorld.BigBoss
     /// </summary>
     public sealed partial class StageWorld
     {
@@ -9,6 +9,12 @@ namespace PenmonScramble.Core
 
         private void UpdateEnemy(Unit unit, float dt)
         {
+            if (unit.Brain != null)
+            {
+                UpdateBigBoss(unit, unit.Brain, dt);
+                return;
+            }
+
             var target = FindNearestOpponent(unit);
             if (target == null)
             {

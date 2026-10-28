@@ -75,6 +75,11 @@ namespace PenmonScramble.Core
                 snapshot.Effects.Add(new EffectState(effect.Id, effect.Kind, effect.Element, effect.Position, effect.Radius));
             }
 
+            foreach (var warning in _world.Warnings)
+            {
+                snapshot.Warnings.Add(new WarningState(warning.Id, warning.From, warning.To, warning.HalfWidth, warning.Progress));
+            }
+
             MoveEvents(snapshot);
             return snapshot;
         }
@@ -121,6 +126,11 @@ namespace PenmonScramble.Core
             if (unit.IsBoss)
             {
                 flags |= UnitFlags.Boss;
+            }
+
+            if (unit.IsSubmerged)
+            {
+                flags |= UnitFlags.Submerged;
             }
 
             return flags;

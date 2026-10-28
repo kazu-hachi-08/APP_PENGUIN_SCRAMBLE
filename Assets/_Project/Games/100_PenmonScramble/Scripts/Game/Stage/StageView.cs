@@ -18,7 +18,6 @@ namespace PenmonScramble.Game
             new Color(0.40f, 0.85f, 0.45f),
             new Color(1f, 0.80f, 0.25f),
         };
-        [SerializeField] private Color _areaColor = new Color(0.90f, 0.95f, 0.98f);
         [SerializeField] private Color _damageToEnemyColor = new Color(1f, 0.85f, 0.2f);
         [SerializeField] private Color _damageToPlayerColor = new Color(1f, 0.3f, 0.3f);
         [SerializeField] private CameraShake _cameraShake;
@@ -32,6 +31,7 @@ namespace PenmonScramble.Game
         private readonly Dictionary<int, UnitView> _units = new Dictionary<int, UnitView>();
         private readonly Dictionary<int, ProjectileView> _projectiles = new Dictionary<int, ProjectileView>();
         private readonly Dictionary<int, EffectView> _effects = new Dictionary<int, EffectView>();
+        private readonly Dictionary<int, WarningView> _warnings = new Dictionary<int, WarningView>();
         private readonly HashSet<int> _aliveIds = new HashSet<int>();
         private readonly List<int> _removeIds = new List<int>();
         private int _round;
@@ -61,6 +61,7 @@ namespace PenmonScramble.Game
             SyncUnits(snapshot, showSpawn: !isNewRound);
             SyncProjectiles(snapshot);
             SyncEffects(snapshot);
+            SyncWarnings(snapshot);
             PlayEvents(snapshot);
             UpdateGates(snapshot);
             FollowCamera(snapshot, snap: isNewRound);
@@ -91,6 +92,7 @@ namespace PenmonScramble.Game
             _units.Clear();
             _projectiles.Clear();
             _effects.Clear();
+            _warnings.Clear();
             CreateGround(snapshot);
         }
 
@@ -171,6 +173,32 @@ namespace PenmonScramble.Game
             RemoveMissing(_effects, view => Destroy(view.gameObject));
         }
 
+        /// <summary>大ボスの攻撃の予告。新しく出たら警報を鳴らす（同時にいくつ出ても1回）</summary>
+        private void SyncWarnings(StageSnapshot snapshot)
+        {
+            _aliveIds.Clear();
+            var appeared = false;
+            foreach (var warning in snapshot.Warnings)
+            {
+                _aliveIds.Add(warning.Id);
+                if (_warnings.TryGetValue(warning.Id, out var view))
+                {
+                    view.PushState(warning);
+                }
+                else
+                {
+                    _warnings.Add(warning.Id, WarningView.Create(transform, warning));
+                    appeared = true;
+                }
+            }
+
+            RemoveMissing(_warnings, view => Destroy(view.gameObject));
+            if (appeared)
+            {
+                GameSounds.Play(GameSound.Warning);
+            }
+        }
+
         /// <summary>_aliveIds に無いものを消す</summary>
         private void RemoveMissing<T>(Dictionary<int, T> views, System.Action<T> destroy)
         {
@@ -211,6 +239,7 @@ namespace PenmonScramble.Game
                 if (view.IsBoss)
                 {
                     _cameraShake.Shake(BossDefeatShake, BossDefeatShakeSeconds);
+                    GameSounds.Play(GameSound.BossDefeat);
                 }
             }
         }

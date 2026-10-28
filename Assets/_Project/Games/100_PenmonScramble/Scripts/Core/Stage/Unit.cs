@@ -90,6 +90,12 @@ namespace PenmonScramble.Core
         internal HashSet<int> ChainHitIds { get; } = new HashSet<int>();
 
         internal DashState Dash { get; set; }
+
+        /// <summary>大ボスの攻撃の進み具合。大ボスでなければ null</summary>
+        internal BigBossBrain Brain { get; set; }
+
+        /// <summary>大ボスがもぐっている（ヒョウアザラシ）。攻撃が効かず、ほかのユニットとも押し合わない</summary>
+        public bool IsSubmerged { get; internal set; }
         internal float[] Cooldowns => Active.Cooldowns;
         internal PlayerInput Input { get; set; }
 
@@ -107,7 +113,7 @@ namespace PenmonScramble.Core
         public bool IsStunned => KnockbackVelocity.Length > Balance.StunSpeed;
         public bool IsDashing => Dash != null;
         public bool IsFrozen => FrozenSeconds > 0f;
-        public bool IsInvincible => InvincibleSeconds > 0f;
+        public bool IsInvincible => InvincibleSeconds > 0f || IsSubmerged;
         public bool IsSpecialReady => SpecialGauge >= 1f;
 
         public float GetCooldown(int slot) => Cooldowns[slot];

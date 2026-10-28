@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えて変な画面になるより無視する方がよい
         /// </summary>
-        public const byte FormatVersion = 5;
+        public const byte FormatVersion = 6;
 
         private const byte Skill1Flag = 1;
         private const byte Skill2Flag = 2;
@@ -57,7 +57,7 @@ namespace PenmonScramble.Core
                 writer.Write(unit.Radius);
                 writer.Write((byte)unit.Flags);
                 // 進み具合は見た目にしか使わないので、1バイトに縮める
-                writer.Write((byte)Math.Round(Math.Clamp(unit.Revive, 0f, 1f) * byte.MaxValue));
+                writer.Write(ToByte(unit.Revive));
             }
         }
 
@@ -81,6 +81,16 @@ namespace PenmonScramble.Core
                 writer.Write((byte)effect.Element);
                 Write(writer, effect.Position);
                 writer.Write(effect.Radius);
+            }
+
+            writer.Write(snapshot.Warnings.Count);
+            foreach (var warning in snapshot.Warnings)
+            {
+                writer.Write(warning.Id);
+                Write(writer, warning.From);
+                Write(writer, warning.To);
+                writer.Write(warning.HalfWidth);
+                writer.Write(ToByte(warning.Progress));
             }
         }
 
@@ -154,7 +164,7 @@ namespace PenmonScramble.Core
                 var maxHp = reader.ReadInt32();
                 var radius = reader.ReadSingle();
                 var flags = (UnitFlags)reader.ReadByte();
-                var revive = reader.ReadByte() / (float)byte.MaxValue;
+                var revive = FromByte(reader.ReadByte());
                 snapshot.Units.Add(new UnitState(id, team, seat, species, position, facing, hp, maxHp, radius, flags, revive));
             }
         }
@@ -179,6 +189,16 @@ namespace PenmonScramble.Core
                 var element = (Element)reader.ReadByte();
                 var position = ReadVec2(reader);
                 snapshot.Effects.Add(new EffectState(id, kind, element, position, reader.ReadSingle()));
+            }
+
+            var warnings = reader.ReadInt32();
+            for (var i = 0; i < warnings; i++)
+            {
+                var id = reader.ReadInt32();
+                var from = ReadVec2(reader);
+                var to = ReadVec2(reader);
+                var halfWidth = reader.ReadSingle();
+                snapshot.Warnings.Add(new WarningState(id, from, to, halfWidth, FromByte(reader.ReadByte())));
             }
         }
 
@@ -241,6 +261,11 @@ namespace PenmonScramble.Core
                 return false;
             }
         }
+
+        /// <summary>0〜1 の値を1バイトに縮める（見た目にしか使わない進み具合）</summary>
+        private static byte ToByte(float ratio) => (byte)Math.Round(Math.Clamp(ratio, 0f, 1f) * byte.MaxValue);
+
+        private static float FromByte(byte value) => value / (float)byte.MaxValue;
 
         private static void Write(BinaryWriter writer, Vec2 value)
         {

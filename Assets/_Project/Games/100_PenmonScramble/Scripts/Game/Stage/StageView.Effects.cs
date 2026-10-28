@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 技・必殺技の演出（範囲がはじける見た目・画面の揺れ・カットイン）
+    /// 技・必殺技の演出（範囲がはじける見た目・画面の揺れ・カットイン・効果音）
     /// </summary>
     public partial class StageView
     {
@@ -56,6 +56,78 @@ namespace PenmonScramble.Game
             {
                 OnCombo(combo);
             }
+
+            PlaySounds(snapshot);
+        }
+
+        /// <summary>
+        /// 乱戦では1回のスナップショットに何十も出来事が入るので、同じ音は1回だけ鳴らす（重なって割れないように）。
+        /// 技の音は味方の分だけ（敵の分まで鳴らすと、ずっと鳴りっぱなしになる）
+        /// </summary>
+        private void PlaySounds(StageSnapshot snapshot)
+        {
+            if (snapshot.SpecialsUsed.Count > 0)
+            {
+                GameSounds.Play(GameSound.Special);
+            }
+
+            if (snapshot.Combos.Count > 0)
+            {
+                GameSounds.Play(GameSound.Combo);
+            }
+
+            if (HasPlayerSkill(snapshot))
+            {
+                GameSounds.Play(GameSound.Skill);
+            }
+
+            var (enemyHit, playerHit) = HitTargets(snapshot);
+            if (playerHit)
+            {
+                GameSounds.Play(GameSound.Hurt);
+            }
+            else if (enemyHit)
+            {
+                GameSounds.Play(GameSound.Hit);
+            }
+
+            if (snapshot.Defeats.Exists(d => d.Team == Team.Enemy))
+            {
+                GameSounds.Play(GameSound.Defeat);
+            }
+        }
+
+        private bool HasPlayerSkill(StageSnapshot snapshot)
+        {
+            foreach (var used in snapshot.SkillsUsed)
+            {
+                if (_units.TryGetValue(used.UnitId, out var view) && view.Team == Team.Player)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>倒れて消えたユニットは見つからないが、消えるのは敵だけなので敵として数える</summary>
+        private (bool enemyHit, bool playerHit) HitTargets(StageSnapshot snapshot)
+        {
+            var enemyHit = false;
+            var playerHit = false;
+            foreach (var hit in snapshot.Hits)
+            {
+                if (_units.TryGetValue(hit.TargetId, out var view) && view.Team == Team.Player)
+                {
+                    playerHit = true;
+                }
+                else
+                {
+                    enemyHit = true;
+                }
+            }
+
+            return (enemyHit, playerHit);
         }
 
         /// <summary>「合体！○○」の文字は HUD（StageHud.Progress）で出す</summary>
