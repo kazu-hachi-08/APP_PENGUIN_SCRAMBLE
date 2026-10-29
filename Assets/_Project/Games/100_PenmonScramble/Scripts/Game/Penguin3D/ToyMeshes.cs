@@ -4,85 +4,156 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンギンの部品に使う形（球・卵形）。縦の輪郭を回して作る。形ごとに1つだけ作って全部の部品で使い回す。
+    /// ペンギンの部品に使う形（球・卵形・しずく・丸い円柱・輪）。縦の輪郭を回して作る。形ごとに1つだけ作って全部の部品で使い回す。
     /// Unity の Primitive を使わないのは、Collider が付くのと、面の数を自分で決めたいため（スマホで重いときに減らせる）
     /// </summary>
     public static class ToyMeshes
     {
         private const int Segments = 24;
         private const int Rings = 16;
+        private const int TubeSegments = 10;
 
         // 卵形の下側の膨らみ。おもちゃのペンギンは下が太い
         private const float EggBulge = 0.18f;
+        // しずくの先の細さ。大きいほど先がとがる
+        private const float DropTaper = 1.5f;
+        // しずくのいちばん太い所が直径1になるように割る値（sinθ・cos(θ/2)^1.5 の最大）
+        private const float DropMaxWidth = 0.70f;
+        // 丸い円柱の角の丸さ。0 に近いほど角ばる（1 で球）
+        private const float PuckRoundness = 0.25f;
+        // 輪の管の太さ（外側の直径1に対する半径）。細くして、胴に巻く帯が浮き輪に見えないようにする
+        private const float TorusTube = 0.05f;
 
         private static Mesh _sphere;
         private static Mesh _egg;
+        private static Mesh _drop;
+        private static Mesh _puck;
+        private static Mesh _torus;
         private static Mesh _quad;
 
         /// <summary>直径1の球</summary>
-        public static Mesh Sphere => _sphere != null ? _sphere : _sphere = Lathe("ToySphere", y => 1f);
+        public static Mesh Sphere => _sphere != null ? _sphere : _sphere = Lathe("ToySphere", SphereProfile(_ => 1f));
 
         /// <summary>高さ1・いちばん太い所の直径が約1の卵形（下が太い）</summary>
-        public static Mesh Egg => _egg != null ? _egg : _egg = Lathe("ToyEgg", y => 1f - EggBulge * y);
+        public static Mesh Egg => _egg != null ? _egg : _egg = Lathe("ToyEgg", SphereProfile(y => 1f - EggBulge * y));
+
+        /// <summary>高さ1・下の太い所の直径が1のしずく形。先は +Y。とげ・羽・炎・水滴に使う</summary>
+        public static Mesh Drop => _drop != null ? _drop : _drop = Lathe("ToyDrop", DropProfile);
+
+        /// <summary>直径1・高さ1の、角の丸い円柱。軸は Y。帽子・太鼓・レンズに使う</summary>
+        public static Mesh Puck => _puck != null ? _puck : _puck = Lathe("ToyPuck", PuckProfile);
+
+        /// <summary>外側の直径1の輪（ドーナツ）。軸は Y。帯・マフラー・メガネに使う</summary>
+        public static Mesh Torus => _torus != null ? _torus : _torus = CreateTorus();
 
         /// <summary>上を向いた1x1の板（床・丸い影）</summary>
         public static Mesh FloorQuad => _quad != null ? _quad : _quad = CreateFloorQuad();
 
+        /// <summary>球の輪郭（y = -0.5〜0.5）の半径に widthScale(y) を掛ける。y は -1（下）〜1（上）</summary>
+        private static Func<float, Vector2> SphereProfile(Func<float, float> widthScale)
+        {
+            return theta =>
+            {
+                var y = -Mathf.Cos(theta);
+                return new Vector2(0.5f * Mathf.Sin(theta) * widthScale(y), 0.5f * y);
+            };
+        }
+
+        private static Vector2 DropProfile(float theta)
+        {
+            var radius = 0.5f * Mathf.Sin(theta) * Mathf.Pow(Mathf.Cos(theta * 0.5f), DropTaper) / DropMaxWidth;
+            return new Vector2(radius, -0.5f * Mathf.Cos(theta));
+        }
+
+        /// <summary>超楕円の輪郭。sin・cos を小さい指数で持ち上げると、平らな面と丸い角になる</summary>
+        private static Vector2 PuckProfile(float theta)
+        {
+            var sin = Mathf.Sin(theta);
+            var cos = Mathf.Cos(theta);
+            var radius = 0.5f * Mathf.Pow(Mathf.Abs(sin), PuckRoundness);
+            var height = -0.5f * Mathf.Sign(cos) * Mathf.Pow(Mathf.Abs(cos), PuckRoundness);
+            return new Vector2(radius, height);
+        }
+
         /// <summary>
-        /// 球の輪郭（y = -0.5〜0.5）の半径に widthScale(y) を掛けて回す。法線は輪郭の傾きから求める
+        /// 輪郭 profile(θ)（θ = 0 が下の端、π が上の端。戻り値は (半径, 高さ)）を Y 軸のまわりに回す。法線は輪郭の傾きから求める
         /// </summary>
-        private static Mesh Lathe(string meshName, Func<float, float> widthScale)
+        private static Mesh Lathe(string meshName, Func<float, Vector2> profile)
         {
             var vertices = new Vector3[(Rings + 1) * (Segments + 1)];
             var normals = new Vector3[vertices.Length];
             var uvs = new Vector2[vertices.Length];
             for (var ring = 0; ring <= Rings; ring++)
             {
-                var (radius, height, radial, up) = Profile(ring, widthScale);
+                var (point, radial, up) = ProfilePoint(ring, profile);
                 for (var seg = 0; seg <= Segments; seg++)
                 {
                     var angle = seg / (float)Segments * Mathf.PI * 2f;
                     var dir = new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle));
                     var i = ring * (Segments + 1) + seg;
-                    vertices[i] = dir * radius + Vector3.up * height;
+                    vertices[i] = dir * point.x + Vector3.up * point.y;
                     normals[i] = (dir * radial + Vector3.up * up).normalized;
                     uvs[i] = new Vector2(seg / (float)Segments, ring / (float)Rings);
                 }
             }
 
-            var mesh = new Mesh { name = meshName, vertices = vertices, normals = normals, uv = uvs, triangles = LatheTriangles() };
+            var mesh = new Mesh { name = meshName, vertices = vertices, normals = normals, uv = uvs, triangles = GridTriangles(Rings, Segments) };
             mesh.RecalculateBounds();
             return mesh;
         }
 
-        /// <summary>ring 段目の半径・高さと、その点での法線の (横, 縦) 成分</summary>
-        private static (float radius, float height, float radial, float up) Profile(int ring, Func<float, float> widthScale)
+        /// <summary>ring 段目の点と、その点での法線の (横, 縦) 成分</summary>
+        private static (Vector2 point, float radial, float up) ProfilePoint(int ring, Func<float, Vector2> profile)
         {
             var theta = ring / (float)Rings * Mathf.PI;
-            var y = -0.5f * Mathf.Cos(theta);
-            var radius = 0.5f * Mathf.Sin(theta) * widthScale(y * 2f);
+            var point = profile(theta);
+            if (ring == 0) return (new Vector2(0f, point.y), 0f, -1f);
+            if (ring == Rings) return (new Vector2(0f, point.y), 0f, 1f);
 
-            // 輪郭の接線 (dr, dy) を直角に回すと法線になる。両端は真上・真下
+            // 輪郭の接線 (dr, dy) を直角に回すと法線になる。角が鋭い形でも向きが崩れないよう前後の差で求める
             const float delta = 0.001f;
-            var y2 = -0.5f * Mathf.Cos(theta + delta);
-            var radius2 = 0.5f * Mathf.Sin(theta + delta) * widthScale(y2 * 2f);
-            var dr = radius2 - radius;
-            var dy = y2 - y;
-            if (ring == 0) return (0f, y, 0f, -1f);
-            if (ring == Rings) return (0f, y, 0f, 1f);
-            return (radius, y, dy, -dr);
+            var tangent = profile(theta + delta) - profile(theta - delta);
+            return (point, tangent.y, -tangent.x);
         }
 
-        private static int[] LatheTriangles()
+        private static Mesh CreateTorus()
         {
-            var triangles = new int[Rings * Segments * 6];
-            var t = 0;
-            for (var ring = 0; ring < Rings; ring++)
+            const float major = 0.5f - TorusTube;
+            var vertices = new Vector3[(TubeSegments + 1) * (Segments + 1)];
+            var normals = new Vector3[vertices.Length];
+            var uvs = new Vector2[vertices.Length];
+            for (var tube = 0; tube <= TubeSegments; tube++)
             {
-                for (var seg = 0; seg < Segments; seg++)
+                // 管の断面を内側の下から回す（Lathe と同じ向きに並べて、三角形の作り方を共通にする）
+                var phi = tube / (float)TubeSegments * Mathf.PI * 2f;
+                var radial = -Mathf.Cos(phi);
+                var up = -Mathf.Sin(phi);
+                for (var seg = 0; seg <= Segments; seg++)
                 {
-                    var a = ring * (Segments + 1) + seg;
-                    var b = a + Segments + 1;
+                    var angle = seg / (float)Segments * Mathf.PI * 2f;
+                    var dir = new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle));
+                    var i = tube * (Segments + 1) + seg;
+                    vertices[i] = dir * (major + TorusTube * radial) + Vector3.up * (TorusTube * up);
+                    normals[i] = (dir * radial + Vector3.up * up).normalized;
+                    uvs[i] = new Vector2(seg / (float)Segments, tube / (float)TubeSegments);
+                }
+            }
+
+            var mesh = new Mesh { name = "ToyTorus", vertices = vertices, normals = normals, uv = uvs, triangles = GridTriangles(TubeSegments, Segments) };
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        private static int[] GridTriangles(int rows, int columns)
+        {
+            var triangles = new int[rows * columns * 6];
+            var t = 0;
+            for (var row = 0; row < rows; row++)
+            {
+                for (var col = 0; col < columns; col++)
+                {
+                    var a = row * (columns + 1) + col;
+                    var b = a + columns + 1;
                     // Unity は外から見て時計回りが表
                     triangles[t++] = a;
                     triangles[t++] = a + 1;

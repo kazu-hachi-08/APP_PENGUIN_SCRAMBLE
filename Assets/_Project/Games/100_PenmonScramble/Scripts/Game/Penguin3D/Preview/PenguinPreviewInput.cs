@@ -5,14 +5,15 @@ using UnityEngine.InputSystem;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 試作の場の操作（Play 中だけ）。1体をキーで動かし、ほかのペンギンは決まった円を歩かせて、歩く姿を色々な向きから見られるようにする
+    /// 試作の場の操作（Play 中だけ）。1体（No.1）をキーで動かし、ほかのペンギンは決まった円を歩かせて、歩く姿を色々な向きから見られるようにする
     /// </summary>
     [RequireComponent(typeof(PenguinPreviewStage))]
     public sealed class PenguinPreviewInput : MonoBehaviour
     {
         private const float PlayerSpeed = 4f;
         private const float WanderSpeed = 1.5f;
-        private const float WanderRadius = 1.2f;
+        // 並んだ隣のペンギンにぶつからない大きさ
+        private const float WanderRadius = 0.7f;
         // ほかのペンギンが技・被弾をくり返す間隔（秒）。全員そろうと見づらいので1体ずつずらす
         private const float ActionInterval = 2.5f;
 

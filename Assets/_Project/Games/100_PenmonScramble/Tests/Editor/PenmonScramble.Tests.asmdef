@@ -4,7 +4,8 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "PenmonScramble.Core"
+        "PenmonScramble.Core",
+        "PenmonScramble.Game"
     ],
     "includePlatforms": [
         "Editor"

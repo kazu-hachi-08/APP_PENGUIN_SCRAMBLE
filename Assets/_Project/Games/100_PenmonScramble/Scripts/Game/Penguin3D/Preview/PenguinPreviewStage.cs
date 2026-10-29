@@ -16,12 +16,10 @@ namespace PenmonScramble.Game
         private const float OutsideSize = 60f;
         private const float OutsideDepth = -0.01f;
 
-        // ほかのペンギンを置く位置（エリアの中心からのマス）。奥・手前・端の見え方を比べられるよう散らす
-        private static readonly Vector2[] OtherSpots =
-        {
-            new Vector2(-6.5f, 3.5f), new Vector2(6.5f, 3.5f), new Vector2(-6.5f, -3.5f), new Vector2(6.5f, -3.5f),
-            new Vector2(-3f, 1.5f), new Vector2(3f, -1.5f), new Vector2(0f, 3.8f),
-        };
+        // 20種類を属性ごとの4列（奥から氷・水・風・雷）× 5体に並べる（エリアの中心からのマス）
+        private const int LineupColumns = 5;
+        private const float LineupSpacingX = 3.2f;
+        private const float LineupSpacingZ = 2.2f;
 
         [SerializeField] private Shader _toonShader;
         [SerializeField] private Shader _blobShadowShader;
@@ -107,10 +105,9 @@ namespace PenmonScramble.Game
             BuildFloor();
 
             var scale = PenguinModelBuilder.ScaleForRadius(Balance.PenguinRadius);
-            AddPenguin("Player", Vector2.zero, scale);
-            foreach (var spot in OtherSpots)
+            for (var no = 1; no <= PenguinLooks.Count; no++)
             {
-                AddPenguin("Other", spot, scale);
+                AddPenguin(no, LineupSpot(no), scale);
             }
 
             _materials.SetOutlineWidth(_outline ? _outlineWidth : 0f);
@@ -133,10 +130,19 @@ namespace PenmonScramble.Game
             floor.AddComponent<MeshRenderer>().sharedMaterial = material;
         }
 
-        private void AddPenguin(string objName, Vector2 spot, float scale)
+        /// <summary>番号 no のペンギンの並ぶ位置。列は属性（5種類ずつ）、奥の列ほど上</summary>
+        private static Vector2 LineupSpot(int no)
         {
-            var model = PenguinModelBuilder.Build(PenguinLook.Default, _materials, _generated.transform);
-            model.name = objName;
+            var column = (no - 1) % LineupColumns;
+            var row = (no - 1) / LineupColumns;
+            var rows = (PenguinLooks.Count + LineupColumns - 1) / LineupColumns;
+            return new Vector2((column - (LineupColumns - 1) * 0.5f) * LineupSpacingX, ((rows - 1) * 0.5f - row) * LineupSpacingZ);
+        }
+
+        private void AddPenguin(int speciesNo, Vector2 spot, float scale)
+        {
+            var model = PenguinModelBuilder.Build(PenguinLooks.Get(speciesNo), _materials, _generated.transform);
+            model.name = $"Penguin{speciesNo:00}";
             model.transform.localPosition = new Vector3(spot.x, 0f, spot.y);
             model.transform.localScale = Vector3.one * scale;
             // 手前（カメラ側）を向かせて顔が見えるようにする
