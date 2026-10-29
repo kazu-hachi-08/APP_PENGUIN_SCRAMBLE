@@ -29,12 +29,17 @@
 
 ## フェーズ0: 1体だけの試作
 
-- [ ] 描画の設定を確かめる。URP の 2D Renderer だと3Dの物体に光が当たらないので、Universal Renderer（Forward）に切り替える。今の2Dの見た目（スプライト・UI）が崩れていないか確かめる
-- [ ] トゥーン調のシェーダーを1つ作る（2〜3段の陰影＋縁の暗い線は任意）。URP の Lit でよければそれでもよい
-- [ ] 試作の場を Editor メニューで作る（`Tools/PenmonScramble/3D Preview`）。床・斜め上からのカメラ・光を置く
-- [ ] ペンギン1体を球・カプセルで組む: 胴・白いお腹・目・くちばし・ヒレ2枚・足2本
-- [ ] 仮の動き: 歩くと左右に揺れて足を交互に出す、技でかがんでから前に出る、被弾でのけぞる
-- [ ] スクショを撮って見た目を決める（体型・色の濃さ・カメラの角度・影の出し方）
+- [x] 描画の設定を確かめる。調べると URP の設定ファイルが無く、実際は Built-in で描かれていた。`Tools/PenmonScramble/Setup URP`（`RenderPipelineSetup`）で URP の Universal Renderer（Forward）の設定を作り、画質 Mobile / PC に割り当てた（`Settings/`）。2Dの見た目（スプライト・UI）は崩れていない
+- [x] トゥーン調のシェーダー `Shaders/Toon.shader`（明るい・影の2段＋小さなつや・縁を少し明るく・縁の暗い線。線は `_OutlineWidth = 0` で消える）。足元の丸い影は `Shaders/BlobShadow.shader`
+- [x] 試作の場 `Tools/PenmonScramble/3D Preview`（`Scenes/Preview3D.unity`。ビルドには入れない）。床・カメラ・光。床とペンギンは開くたびに組み立て、シーンには保存しない
+- [x] ペンギン1体を球・卵形で組む（`PenguinModelBuilder`）: 胴・白いお腹・顔・目・くちばし・ヒレ2枚・足2本・頭の寝ぐせ。形は `ToyMeshes` で1つずつ作って使い回す
+- [x] 仮の動き（`PenguinMotion`）: 歩く（左右に揺れて足を交互に出す）・技（かがんでから前に出る）・被弾（のけぞって震える）。Play 中は WASD で歩く・J 技・K 被弾・T 影・O 線・C カメラ
+- [x] スクショ `Tools/PenmonScramble/3D Preview Capture` → `Screenshots/Preview3D/`（poses.png: 姿勢 × 影と線の組み合わせ、area.png: カメラ4種 × 本物の影 / 丸い影）
+- [x] スクショを見て決めた（2026-10-29）
+  - カメラ: **透視・見下ろし 55°・画角 30°**。エリア全体（奥のペンギンの頭まで）が収まる距離に置き、上下の真ん中にそろえる（`AreaCameraFit`・`PreviewCameraPresets.Chosen`）
+  - 影: **全部の環境で足元の丸い影**。エリア全体で見ると本物の影はぼやけた汚れにしか見えず、丸い影のほうが立ち位置が分かりやすく軽い。URP の本物の影の設定はフェーズ7で切るか決める
+  - 縁の線: **あり**（線が無いと黒い背中が床の模様に埋もれる）
+  - 体型・色: 今の標準の体型・色（`PenguinLook.Default`）でよい
 
 **決めること**:
 - カメラは透視（奥が小さく見えて立体感が出る）か、平行投影（エリアの端まで同じ大きさで見やすい）か。まずは透視で、エリア全体が画面に収まる角度を探す
