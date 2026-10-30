@@ -9,7 +9,7 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// タイトル: 「ひとりで遊ぶ」「部屋を作る」「コードで参加」。
     /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る（§2）。
-    /// 上半分は背景の絵とロゴを見せ、ボタンは下の帯にまとめる。絵とロゴは PenmonScrambleSceneBuilder.TitleArt.cs、
+    /// 上半分は後ろで動く乱戦のジオラマとロゴを見せ、ボタンは下の帯にまとめる。ジオラマとロゴは PenmonScrambleSceneBuilder.TitleArt.cs、
     /// コイン・ステージの選択・ガチャ・ペンギン一覧は PenmonScrambleSceneBuilder.Menu.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -24,7 +24,6 @@ namespace PenmonScramble.Editor
         // Relay の参加コードは英数字で、これより長くはならない
         private const int RoomCodeLimit = 12;
 
-        private static readonly Color TitleBackColor = new Color(0.12f, 0.20f, 0.35f);
         private static readonly Color SoloColor = new Color(1f, 0.55f, 0.30f);
         private static readonly Color OnlineColor = new Color(0.20f, 0.55f, 0.90f);
         private static readonly Color JoinColor = new Color(1f, 0.75f, 0.30f);
@@ -52,13 +51,13 @@ namespace PenmonScramble.Editor
         private const int WaitButtonFontSize = 48;
         private const float CodeInputPadding = 16f;
 
-        private static ModeSelectPanel CreateTitlePanel(Transform canvas, OnlineSession session)
+        private static ModeSelectPanel CreateTitlePanel(Transform canvas, OnlineSession session, Camera stageCamera)
         {
             var root = UIDialogBuilder.CreateUIObject("Title", canvas);
             UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
-            // 後ろの HUD やボタンを押せないよう、画面全体をふさぐ
-            root.AddComponent<Image>().color = TitleBackColor;
-            CreateTitleBackground(root.transform);
+            // 後ろの HUD やボタンを押せないよう、画面全体をふさぐ（透明なので後ろのジオラマは見える）
+            root.AddComponent<Image>().color = Color.clear;
+            CreateTitleDiorama(root, stageCamera);
             CreateTitleBand(root.transform);
             CreateTitleLogo(root.transform);
 

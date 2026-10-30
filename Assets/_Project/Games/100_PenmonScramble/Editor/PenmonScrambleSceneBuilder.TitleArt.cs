@@ -7,16 +7,17 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// タイトルの絵: 背景のキービジュアルとロゴ（§9）。
-    /// 絵は Art/Title に置く。まだ無ければ、背景は単色・ロゴは縁取りした文字で作る（絵を待たずに Rebuild できるように）
+    /// タイトルの見た目: 後ろで動く乱戦のジオラマ（TitleDiorama）とロゴ（§9.6）。
+    /// ロゴの絵は Art/Title に置く。無ければ縁取りした文字で作る（絵を待たずに Rebuild できるように）
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
         private const string TitleArtFolder = "Assets/_Project/Games/100_PenmonScramble/Art/Title/";
-        private const string TitleBackgroundPath = TitleArtFolder + "TitleBackground.png";
         private const string TitleLogoPath = TitleArtFolder + "TitleLogo.png";
         // 1920x1080 の画面に足りる大きさ。これ以上はブラウザ版のダウンロードが重くなるだけ
         private const int TitleArtMaxSize = 2048;
+        // ジオラマより遠くは描かない
+        private const float TitleCameraFarClip = 60f;
 
         private const string LogoSmallLine = "乱戦！";
         private const string LogoMainLine = "ペンモンスクランブル";
@@ -44,23 +45,26 @@ namespace PenmonScramble.Editor
         private static readonly Color ButtonShadowColor = new Color(0f, 0f, 0f, 0.45f);
         private static readonly Vector2 ButtonShadowDistance = new Vector2(0f, -10f);
 
-        private static void CreateTitleBackground(Transform root)
+        /// <summary>
+        /// ジオラマの役者と床は実行時に TitleDiorama が組む（ステージと同じく、シーンには保存しない）。
+        /// ここではそれを映すカメラと、使うシェーダーだけを用意する
+        /// </summary>
+        private static void CreateTitleDiorama(GameObject root, Camera stageCamera)
         {
-            var sprite = LoadArtSprite(TitleBackgroundPath, TitleArtMaxSize);
-            if (sprite == null)
-            {
-                return;
-            }
+            var cameraObj = new GameObject("TitleCamera");
+            var camera = cameraObj.AddComponent<Camera>();
+            camera.farClipPlane = TitleCameraFarClip;
+            // タイトルが開いたときに TitleDiorama が点ける
+            camera.enabled = false;
 
-            var obj = UIDialogBuilder.CreateUIObject("Background", root);
-            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
-            var image = obj.AddComponent<Image>();
-            image.sprite = sprite;
-            image.raycastTarget = false;
-            // 画面の比率が違っても、すき間を作らず画面いっぱいに広げる（はみ出た端は切れる）
-            var fitter = obj.AddComponent<AspectRatioFitter>();
-            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-            fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
+            var diorama = root.AddComponent<TitleDiorama>();
+            var so = new SerializedObject(diorama);
+            so.FindProperty("_camera").objectReferenceValue = camera;
+            so.FindProperty("_stageCamera").objectReferenceValue = stageCamera;
+            so.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
+            so.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
+            so.FindProperty("_fxShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Fx.shader");
+            so.ApplyModifiedProperties();
         }
 
         private static void CreateTitleBand(Transform root)
@@ -103,6 +107,8 @@ namespace PenmonScramble.Editor
             var text = CreateLabel(parent, name, value, fontSize, position, size);
             text.fontStyle = FontStyle.Bold;
             text.color = color;
+            // 枠より少し長くても折り返さない（「ル」だけが次の行に落ちないように）
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
             // CreateLabel の細い縁取りを、ロゴ用の太い縁取りに替える
             var outline = text.GetComponent<Outline>();
             outline.effectColor = LogoOutlineColor;

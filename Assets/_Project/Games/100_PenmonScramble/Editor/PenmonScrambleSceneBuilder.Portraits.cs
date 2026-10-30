@@ -118,7 +118,7 @@ namespace PenmonScramble.Editor
             model.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
             camera.transform.rotation = Quaternion.Euler(pitch, 180f, 0f);
             FramePortrait(camera, model, halfSize);
-            var texture = RenderPortrait(camera);
+            var texture = RenderPortrait(camera, PortraitSize);
             var png = texture.EncodeToPNG();
             Object.DestroyImmediate(texture);
             Object.DestroyImmediate(model.gameObject);
@@ -183,16 +183,16 @@ namespace PenmonScramble.Editor
         /// 透過で撮る。縁は背景の透明な黒と混ざって暗くなるので、色を透明度で割り戻す
         /// （UI は混ざる前の色として重ねるため、割り戻さないと縁に黒いにじみが出る）
         /// </summary>
-        private static Texture2D RenderPortrait(Camera camera)
+        private static Texture2D RenderPortrait(Camera camera, int size)
         {
-            var target = RenderTexture.GetTemporary(PortraitSize, PortraitSize, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, PortraitMsaa);
+            var target = RenderTexture.GetTemporary(size, size, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, PortraitMsaa);
             camera.targetTexture = target;
             camera.Render();
             camera.targetTexture = null;
 
             RenderTexture.active = target;
-            var texture = new Texture2D(PortraitSize, PortraitSize, TextureFormat.RGBA32, false);
-            texture.ReadPixels(new Rect(0, 0, PortraitSize, PortraitSize), 0, 0);
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            texture.ReadPixels(new Rect(0, 0, size, size), 0, 0);
             RenderTexture.active = null;
             RenderTexture.ReleaseTemporary(target);
 

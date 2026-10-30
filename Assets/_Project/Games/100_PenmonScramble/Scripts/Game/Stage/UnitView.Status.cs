@@ -11,7 +11,7 @@ namespace PenmonScramble.Game
     {
         // 野生のペンギンは同じ形を暗い色で出す（大ボスは野生ではないので暗くしない）。
         // トゥーンの影の段でさらに暗くなるので、浅めにして形と色が読めるようにする
-        private const float EnemyDarkness = 0.45f;
+        public const float EnemyDarkness = 0.45f;
 
         private const float FlashSeconds = 0.1f;
         private const float FlashAmount = 0.85f;

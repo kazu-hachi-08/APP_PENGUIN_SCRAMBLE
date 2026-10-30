@@ -54,6 +54,7 @@ namespace PenmonScramble.Editor
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             // 空のシーンで撮る（ほかの物が写り込まないように）
             CapturePortraits();
+            CaptureAppIcons();
             var (shake, stageCamera) = CreateCamera();
             CreateSun();
             CreateEventSystem();
@@ -63,7 +64,7 @@ namespace PenmonScramble.Editor
             var cutIn = CreateCutIn(canvas.transform);
             var session = new GameObject("OnlineSession").AddComponent<OnlineSession>();
             // タイトルはステージの HUD より手前に出す（後に作った方が手前）
-            var title = CreateTitlePanel(canvas.transform, session);
+            var title = CreateTitlePanel(canvas.transform, session, shake.GetComponent<Camera>());
             // ガチャ・一覧はタイトルの上に開く
             var gacha = CreateGachaScreen(canvas.transform);
             var penguins = CreatePenguinListScreen(canvas.transform);
