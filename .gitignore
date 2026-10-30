@@ -93,3 +93,6 @@ desktop.ini
 
 # WebGLビルド時にプロジェクト直下へ出力されるBurstの生成物
 /[Dd]ata/
+
+# 3D の試作の場のスクショ（Tools/PenmonScramble/3D Preview Capture）
+/[Ss]creenshots/

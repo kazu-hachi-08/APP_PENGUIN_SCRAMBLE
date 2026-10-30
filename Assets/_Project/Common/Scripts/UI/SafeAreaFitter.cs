@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PenguinScramble.Common.UI
+namespace PenmonScramble.Common.UI
 {
     /// <summary>
     /// RectTransform を Screen.safeArea に合わせる

@@ -1,4 +1,4 @@
-namespace PenguinScramble.Common.Core
+namespace PenmonScramble.Common.Core
 {
     /// <summary>
     /// ゲーム共通の実行状態

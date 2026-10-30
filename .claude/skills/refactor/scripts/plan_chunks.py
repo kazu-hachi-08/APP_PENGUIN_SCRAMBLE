@@ -14,8 +14,8 @@ from pathlib import Path
 CODE_ROOTS = [
     "Assets/_Project/Common/Scripts",
     "Assets/_Project/Common/Editor",
-    "Assets/_Project/Games/100_PenguinScramble/Scripts",
-    "Assets/_Project/Games/100_PenguinScramble/Editor",
+    "Assets/_Project/Games/100_PenmonScramble/Scripts",
+    "Assets/_Project/Games/100_PenmonScramble/Editor",
 ]
 
 

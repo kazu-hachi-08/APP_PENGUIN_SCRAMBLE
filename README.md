@@ -1,10 +1,10 @@
-# ペンギンスクランブル
+# 乱戦！ペンモンスクランブル
 
 （ゲームの説明はこれから書く）
 
 ## ▶ ブラウザで遊ぶ
 
-**https://kazu-hachi-08.github.io/penguin-scramble-web/**（初回公開後に有効）
+**https://kazu-hachi-08.github.io/penmon-scramble-web/**（初回公開後に有効）
 
 * PCのブラウザ（Chrome / Edge 推奨）で開く。横画面のゲームなので、スマホは横向きで
 
@@ -14,7 +14,7 @@
 
 * zipを展開して exe を起動する
 * 初回に「WindowsによってPCが保護されました」と出たら「詳細情報 → 実行」で起動できる
-* 2回目からはダウンロードし直さなくてよい。新しい版が出るとタイトル画面に「更新する」が出て、押すと自動で入れ替わって開き直す（`PenguinScramble_Start.bat` から起動すると、起動する前に更新する）
+* 2回目からはダウンロードし直さなくてよい。新しい版が出るとタイトル画面に「更新する」が出て、押すと自動で入れ替わって開き直す（`PenmonScramble_Start.bat` から起動すると、起動する前に更新する）
 * 公開手順: `Tools/Release/release-windows.ps1` の先頭コメントを参照
 
 ---
@@ -41,8 +41,8 @@
 ```text
 Assets/_Project/
 ├── Common/                       # 共通基盤（Scene / Input / UI / Audio / AppUpdate）。ペンモンから移植
-└── Games/100_PenguinScramble/    # ゲーム本体（これから作る）
-Assets/WebGLTemplates/PenguinScramble/  # ブラウザ版の index.html
+└── Games/100_PenmonScramble/     # ゲーム本体（これから作る）
+Assets/WebGLTemplates/PenmonScramble/   # ブラウザ版の index.html
 Docs/                             # 仕様書・開発手順
 Tools/Release/                    # Windows版・ブラウザ版のリリーススクリプト
 .claude/skills/                   # Claude Code 用のプロジェクトスキル

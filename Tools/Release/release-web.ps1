@@ -1,11 +1,11 @@
-﻿# Webビルドを GitHub Pages（penguin-scramble-web リポジトリ）に公開する。
+﻿# Webビルドを GitHub Pages（penmon-scramble-web リポジトリ）に公開する。
 #
 # 使い方（リポジトリのルートで実行）:
 #   .\Tools\Release\release-web.ps1
 #   .\Tools\Release\release-web.ps1 -Message "v0.2 を公開"
 #
 # 前提:
-#   - UnityでWeb向けに -PagesDir（既定は <repo>\..\penguin-scramble-web）へ直接ビルド済みであること
+#   - UnityでWeb向けに -PagesDir（既定は <repo>\..\penmon-scramble-web）へ直接ビルド済みであること
 #   - gh CLI がインストール済みで `gh auth login` 済みであること
 #
 # ビルド先と公開用リポジトリの clone を同じフォルダにして、コピーの手間とフォルダの二重管理をなくしている。
@@ -14,7 +14,7 @@
 
 param(
     [string]$PagesDir,
-    [string]$Repo = "kazu-hachi-08/penguin-scramble-web",
+    [string]$Repo = "kazu-hachi-08/penmon-scramble-web",
     [string]$Message = "WebGL版を更新 " + (Get-Date -Format "yyyy-MM-dd HH:mm")
 )
 
@@ -42,7 +42,7 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
 if (-not (Test-Path $PagesDir)) {
     if (-not (Test-Quietly { gh repo view $Repo })) {
         Write-Host "公開用リポジトリを作成: $Repo"
-        gh repo create $Repo --public --description "ペンギンスクランブル ブラウザ版"
+        gh repo create $Repo --public --description "乱戦！ペンモンスクランブル ブラウザ版"
         if ($LASTEXITCODE -ne 0) { Write-Error "リポジトリの作成に失敗しました。" }
     }
     git clone "https://github.com/$Repo.git" $PagesDir

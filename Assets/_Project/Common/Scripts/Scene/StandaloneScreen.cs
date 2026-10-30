@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PenguinScramble.Common.Scene
+namespace PenmonScramble.Common.Scene
 {
     /// <summary>
     /// Windows版のウィンドウ形をシーンの向きに合わせる。

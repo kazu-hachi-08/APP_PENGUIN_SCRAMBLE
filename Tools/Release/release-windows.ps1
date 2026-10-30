@@ -13,7 +13,7 @@
 
 param(
     [string]$Version,
-    [string]$Notes = "zipを展開して exe を起動してください。`n初回に「WindowsによってPCが保護されました」と出たら「詳細情報 → 実行」で起動できます。`n新しい版が出たら、タイトル画面の「更新する」（または PenguinScramble_Start.bat から起動）で自動で入れ替わります。",
+    [string]$Notes = "zipを展開して exe を起動してください。`n初回に「WindowsによってPCが保護されました」と出たら「詳細情報 → 実行」で起動できます。`n新しい版が出たら、タイトル画面の「更新する」（または PenmonScramble_Start.bat から起動）で自動で入れ替わります。",
     [string]$BuildDir = "Builds/Windows",
     [string]$ZipBaseName = "APP_PENGUIN_SCRAMBLE_Windows"
 )

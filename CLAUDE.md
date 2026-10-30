@@ -1,24 +1,22 @@
-# ペンギンスクランブル AI開発ガイドライン
+# 乱戦！ペンモンスクランブル AI開発ガイドライン
 
 > ペンモン（APP_PENGUIN_MONSTER）のガイドラインをもとにしている。ゲーム内容が決まったら、ゲーム固有の項目（仕様書のパス・プラットフォーム・オンラインの有無など）を更新すること。
 
 ## 1. プロジェクトの基本方針（最重要）
-このプロジェクトは「週末の限られた時間で2人で開発する『ペンギンスクランブル』」です。
-以下の哲学を常に優先して提案やコード生成を行ってください。
+このプロジェクトは『乱戦！ペンモンスクランブル』です。実装は AI が行うので、修正の規模が大きくなることは気にせず、ゲームとして最も良くなる方法を選んでください。
 
-- **小さく作る (Keep It Simple):** 過剰な設計（オーバーエンジニアリング）や将来のための複雑な拡張性は不要です。常に最もシンプルで直接的な解決策を提案してください。
-- **Playable Build優先:** 「とりあえず遊べる状態」にすることを最優先します。未完成の複雑な機能よりも、動く最小限の機能を提示してください。
-- **スコープ制御:** 機能要件を勝手に膨らませないでください。ユーザーが提示した要件を満たす最小のコードを提供してください。
-- **仕様書が正:** ルール・数値・画面の流れは `Docs/PENGUIN_SCRAMBLE_SPEC.md` に書く。挙動を変えたら仕様書も合わせて更新してください。
+- **区切りでは遊べる状態にする:** 大きな変更でも、フェーズの区切りではビルドして遊べる状態にしてください。
+- **頼まれていない機能は足さない:** 機能要件を勝手に膨らませないでください。
+- **仕様書が正:** ルール・数値・画面の流れは `Docs/PENMON_SCRAMBLE_SPEC.md` に書く。挙動を変えたら仕様書も合わせて更新してください。
 
 ## 2. 技術スタック & アーキテクチャ
 - **エンジン / 言語:** Unity 6000.6.2f1 / C#
 - **プラットフォーム:** Android / Windows / ブラウザ（WebGL）。**横画面固定**（共通基盤の `ScreenOrientationApplier` が起動時に横へ固定する）
 - **アーキテクチャの境界:**
   - `Assets/_Project/Common/`: 共通基盤（Scene, Input, UI, Audio, AppUpdate など）。ゲーム固有の処理はここに書かないこと。
-  - `Assets/_Project/Games/100_PenguinScramble/`: ゲーム本体。
+  - `Assets/_Project/Games/100_PenmonScramble/`: ゲーム本体。
   - ゲームのルール・計算は、できるだけ **Unity に依存しない純C#**（`noEngineReferences: true` の asmdef）に置く。`UnityEngine` や ScriptableObject を参照せず、乱数は `System.Random`。表示・音・通信はイベントを介して外側（View / Game）で行う。
-- **フォルダ名・名前空間:** 名前空間は `PenguinScramble.*`（共通基盤は `PenguinScramble.Common.*`）。フォルダ名 `Games/100_PenguinScramble` は勝手にリネームしないこと。
+- **フォルダ名・名前空間:** 名前空間は `PenmonScramble.*`（共通基盤は `PenmonScramble.Common.*`）。フォルダ名 `Games/100_PenmonScramble` は勝手にリネームしないこと。
 
 ## 3. Unity & C# 実装ガイドライン
 - **シーンはコードで生成:** ゲームのシーンは Editor スクリプト（SceneBuilder）で生成する。UI やオブジェクトを足すときはシーンを手で編集せず、SceneBuilder に追加してください。共通ダイアログは `Common/Editor/UIDialogBuilder.cs` で作る。
@@ -40,11 +38,11 @@
 - **迷ったら止まる:** 記録が読めなくなるかもしれない変更は、実装する前にユーザーに説明して確認を取る。
 
 ## 4. リリース
-- Windows 版: `Tools/Release/release-windows-test.bat`（テスト版）/ `release-windows.ps1 -Version vX.Y`。配った版は `UpdateNotice` / `PenguinScramble_Start.bat` から自動で更新される。
-- ブラウザ版: `Tools/Release/release-web.bat`（GitHub Pages の `penguin-scramble-web` に公開）。
+- Windows 版: `Tools/Release/release-windows-test.bat`（テスト版）/ `release-windows.ps1 -Version vX.Y`。配った版は `UpdateNotice` / `PenmonScramble_Start.bat` から自動で更新される。
+- ブラウザ版: `Tools/Release/release-web.bat`（GitHub Pages の `penmon-scramble-web` に公開）。
 - 詳しくは各スクリプトの先頭コメントを参照。
 
 ## 5. AIへの指示（回答のスタンス）
 - 質問に対する回答は、挨拶や冗長な説明を省き、すぐに要点に入ってください。
-- 実装を提案する際は、「ステップバイステップの具体的な手順」と「そのままコピーできる最小限のC#コード」をセットで提供してください。
-- 複数のアプローチがある場合は、「この週末で実装し切るのに最も確実で簡単な方法」を第一候補として推奨してください。
+- 実装を頼まれたら、手順やコードを示すだけでなく、実際にファイルを変更してください。
+- 複数のアプローチがある場合は、修正の規模ではなく、見た目・遊び心地・作りの良さで最も良い方法を第一候補として推奨してください。

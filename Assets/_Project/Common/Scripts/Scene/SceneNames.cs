@@ -1,5 +1,5 @@
 
-namespace PenguinScramble.Common.Scene
+namespace PenmonScramble.Common.Scene
 {
     /// <summary>
     /// シーン名を型安全に管理する定数クラス
@@ -7,9 +7,9 @@ namespace PenguinScramble.Common.Scene
     public static class SceneNames
     {
         /// <summary>ゲーム本体（タイトルもこのシーンの中にある）</summary>
-        public const string PenguinScramble = "PenguinScrambleScene";
+        public const string PenmonScramble = "PenmonScrambleScene";
 
         /// <summary>「タイトルへ戻る」の行き先。タイトル専用のシーンは無いので、ゲームのシーンを読み直す</summary>
-        public const string Title = PenguinScramble;
+        public const string Title = PenmonScramble;
     }
 }

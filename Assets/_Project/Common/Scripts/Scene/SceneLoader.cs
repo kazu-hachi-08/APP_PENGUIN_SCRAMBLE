@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
-using PenguinScramble.Common.Core;
+using PenmonScramble.Common.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace PenguinScramble.Common.Scene
+namespace PenmonScramble.Common.Scene
 {
     /// <summary>
     /// シーン非同期ロードおよび画面遷移マネージャー

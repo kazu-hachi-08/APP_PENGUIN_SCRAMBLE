@@ -14,7 +14,7 @@ import re
 import subprocess
 import sys
 
-PROJECTS = ["Assembly-CSharp-Editor.csproj", "PenguinScramble.Logic.Tests.csproj"]
+PROJECTS = ["Assembly-CSharp-Editor.csproj", "PenmonScramble.Tests.csproj"]
 UNUSED_CODES = {"CS0169", "CS0414", "CS8321", "CS0168", "CS0219"}
 LINE = re.compile(r"^(?P<file>.+?)\((?P<line>\d+),\d+\): (?P<kind>error|warning) (?P<code>CS\d+): (?P<msg>.*?)(?: \[.*\])?$")
 

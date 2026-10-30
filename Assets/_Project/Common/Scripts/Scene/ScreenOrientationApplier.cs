@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace PenguinScramble.Common.Scene
+namespace PenmonScramble.Common.Scene
 {
     /// <summary>
     /// 端末の画面向きを横に固定する（このゲームは横画面固定）。

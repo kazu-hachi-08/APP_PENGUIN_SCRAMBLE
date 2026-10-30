@@ -1,7 +1,7 @@
 ﻿# Windows版の自動更新。GitHub Releases の最新版と、手元の version.txt（公開した版の名前）を比べ、
 # 違えば zip を落としてこのフォルダに上書きし、ゲームを起動する。
 # release-windows.ps1 が exe と同じフォルダに入れて配る。呼ばれ方は2つ:
-#   PenguinScramble_Start.bat から: 起動する前に更新を確かめる
+#   PenmonScramble_Start.bat から: 起動する前に更新を確かめる
 #   ゲームの「更新する」から: -WaitPid <ゲームのプロセス番号> 付き。動いている exe は上書きできないので、閉じるのを待つ
 # ゲームの記録はレジストリにあるので、フォルダを上書きしても消えない
 
@@ -21,7 +21,7 @@ function Install-Release($release) {
     $asset = $release.assets | Where-Object name -like "*.zip" | Select-Object -First 1
     if (-not $asset) { return }
     Write-Host "新しい版 $($release.tag_name) をダウンロードしています..."
-    $work = Join-Path $env:TEMP "PenguinScrambleUpdate"
+    $work = Join-Path $env:TEMP "PenmonScrambleUpdate"
     if (Test-Path $work) { Remove-Item $work -Recurse -Force }
     New-Item -ItemType Directory -Path $work | Out-Null
     $zip = Join-Path $work $asset.name
@@ -43,7 +43,7 @@ if ($WaitPid) { Wait-Process -Id $WaitPid -ErrorAction SilentlyContinue }
 
 try {
     Write-Host "更新を確かめています..."
-    $release = Invoke-RestMethod $latestApi -Headers @{ "User-Agent" = "PenguinScramble" }
+    $release = Invoke-RestMethod $latestApi -Headers @{ "User-Agent" = "PenmonScramble" }
     $local = if (Test-Path $versionFile) { (Get-Content $versionFile -Raw).Trim() } else { "" }
     if ($release.tag_name -ne $local) { Install-Release $release }
 } catch {

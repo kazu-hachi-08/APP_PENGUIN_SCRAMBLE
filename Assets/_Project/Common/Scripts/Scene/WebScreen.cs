@@ -1,4 +1,4 @@
-namespace PenguinScramble.Common.Scene
+namespace PenmonScramble.Common.Scene
 {
     /// <summary>
     /// ブラウザ版の表示枠をシーンの向きに合わせる。
@@ -16,9 +16,9 @@ namespace PenguinScramble.Common.Scene
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         [System.Runtime.InteropServices.DllImport("__Internal")]
-        private static extern void PenguinScramble_SetAspect(int width, int height);
+        private static extern void PenmonScramble_SetAspect(int width, int height);
 
-        private static void SetAspect(int width, int height) => PenguinScramble_SetAspect(width, height);
+        private static void SetAspect(int width, int height) => PenmonScramble_SetAspect(width, height);
 #else
         private static void SetAspect(int width, int height) { }
 #endif

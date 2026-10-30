@@ -1,7 +1,7 @@
-using PenguinScramble.Common.UI;
+using PenmonScramble.Common.UI;
 using UnityEngine;
 
-namespace PenguinScramble.Common.AppUpdate
+namespace PenmonScramble.Common.AppUpdate
 {
     /// <summary>
     /// Windows 版でタイトルを開いたとき、新しい版が出ていれば「更新する / あとで」を出す。

@@ -1,0 +1,21 @@
+{
+    "name": "PenmonScramble.Game",
+    "rootNamespace": "PenmonScramble.Game",
+    "references": [
+        "PenmonScramble.Core",
+        "PenmonScramble.Common",
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "Unity.Collections",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace PenguinScramble.Common.Input
+namespace PenmonScramble.Common.Input
 {
     /// <summary>
     /// モバイル・タッチ操作向けのUGUI仮想アクションボタン

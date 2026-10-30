@@ -23,8 +23,8 @@
 2. 作ったフォルダの `Assets/` `Packages/` `ProjectSettings/` をこのリポジトリへ移す（`Assets/` は中身をマージ）
 3. Unity Hub の「Add」でこのリポジトリを開く
 4. Player Settings
-   - Company Name: `kazuhachi08` / Product Name: `ペンギンスクランブル`（**一度配信したら変えない**。保存先が変わる）
-   - Web > Resolution and Presentation > WebGL Template: `PenguinScramble`
+   - Company Name: `kazuhachi08` / Product Name: `乱戦！ペンモンスクランブル`（**一度配信したら変えない**。保存先が変わる）
+   - Web > Resolution and Presentation > WebGL Template: `PenmonScramble`
    - Default Orientation: Landscape
 5. 共通基盤が使うパッケージ: Input System（`VirtualJoystick` 等）、uGUI（Legacy Text）
 
@@ -33,14 +33,14 @@
 ```text
 Assets/
 ├── _Project/
-│   ├── Common/                       # 共通基盤（PenguinScramble.Common.* 名前空間）
+│   ├── Common/                       # 共通基盤（PenmonScramble.Common.* 名前空間）
 │   │   ├── Scripts/                  # AppUpdate / Audio / Core / Input / Scene / UI
 │   │   ├── Editor/                   # 共通ダイアログのシーン生成（UIDialogBuilder）
 │   │   ├── Plugins/WebGL/            # ブラウザ版の表示枠の縦横比（WebScreen.jslib）
 │   │   └── Resources/Fonts/          # M PLUS Rounded 1c（OFL）
 │   └── Games/
-│       └── 100_PenguinScramble/      # ゲーム本体
-└── WebGLTemplates/PenguinScramble/   # ブラウザ版の index.html
+│       └── 100_PenmonScramble/       # ゲーム本体
+└── WebGLTemplates/PenmonScramble/    # ブラウザ版の index.html
 Tools/Release/                        # Windows版・ブラウザ版のリリーススクリプト
 ```
 
@@ -51,15 +51,15 @@ Tools/Release/                        # Windows版・ブラウザ版のリリー
 1. Unity で Windows 向けに `..\APP_PENGUIN_SCRAMBLE_EXE`（リポジトリの隣）へビルド
 2. `Tools/Release/release-windows-test.bat` をダブルクリック（テスト版。`test-日時` タグで公開し、古いテスト版は消す）
    - 正式版は `.\Tools\Release\release-windows.ps1 -Version v0.1 -BuildDir ..\APP_PENGUIN_SCRAMBLE_EXE`
-3. zip には `version.txt`・`update.ps1`・`PenguinScramble_Start.bat` が入る。配った版は次から自動で更新できる
+3. zip には `version.txt`・`update.ps1`・`PenmonScramble_Start.bat` が入る。配った版は次から自動で更新できる
    - ゲーム内: タイトル画面に `UpdateNotice`（Common/Scripts/AppUpdate）を置き、`CommonDialog` を割り当てる
-   - 起動前: `PenguinScramble_Start.bat` から起動すると更新してから起動する
+   - 起動前: `PenmonScramble_Start.bat` から起動すると更新してから起動する
 
 ### ブラウザ版（GitHub Pages）
 
-1. 初回だけ `Tools/Release/release-web.bat` を実行（公開用リポジトリ `penguin-scramble-web` の作成と clone を `..\penguin-scramble-web` に行う）
-2. Unity で Web 向けに `..\penguin-scramble-web` へビルド
-3. もう一度 `release-web.bat` を実行 → https://kazu-hachi-08.github.io/penguin-scramble-web/
+1. 初回だけ `Tools/Release/release-web.bat` を実行（公開用リポジトリ `penmon-scramble-web` の作成と clone を `..\penmon-scramble-web` に行う）
+2. Unity で Web 向けに `..\penmon-scramble-web` へビルド
+3. もう一度 `release-web.bat` を実行 → https://kazu-hachi-08.github.io/penmon-scramble-web/
 
 前提: `gh` CLI をインストールし `gh auth login` 済み。
 
