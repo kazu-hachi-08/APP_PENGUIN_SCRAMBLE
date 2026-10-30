@@ -20,6 +20,9 @@ namespace PenmonScramble.Game
         private static readonly int DstBlendId = Shader.PropertyToID("_DstBlend");
         private static readonly int ZWriteId = Shader.PropertyToID("_ZWrite");
 
+        // Toon.shader の縁の線のパス（LightMode）。線の要らない素材はパスごと切って、描く回数を減らす
+        private const string OutlinePass = "PenmonOutline";
+
         // つやの大きさ（光の向きとの近さの下限）。1 に近いほど小さく鋭い点になる。大きいと灰色の円に見えておもちゃらしくない
         private const float GlossSize = 0.99f;
 
@@ -79,7 +82,7 @@ namespace PenmonScramble.Game
             material.SetTexture(BaseMapId, texture);
             material.SetColor(BaseColorId, color);
             material.SetFloat(GlossId, 0f);
-            material.SetFloat(OutlineWidthId, 0f);
+            DisableOutline(material);
             _floors.Add((texture, color), material);
             return material;
         }
@@ -101,7 +104,7 @@ namespace PenmonScramble.Game
             material.SetColor(BaseColorId, color);
             material.SetFloat(GlossId, gloss);
             material.SetFloat(GlossSizeId, GlossSize);
-            material.SetFloat(OutlineWidthId, 0f);
+            DisableOutline(material);
             material.SetFloat(SrcBlendId, (float)BlendMode.SrcAlpha);
             material.SetFloat(DstBlendId, (float)BlendMode.OneMinusSrcAlpha);
             material.SetFloat(ZWriteId, 0f);
@@ -115,7 +118,14 @@ namespace PenmonScramble.Game
             foreach (var pair in _cache)
             {
                 pair.Value.SetFloat(OutlineWidthId, width);
+                pair.Value.SetShaderPassEnabled(OutlinePass, width > 0f);
             }
+        }
+
+        private static void DisableOutline(Material material)
+        {
+            material.SetFloat(OutlineWidthId, 0f);
+            material.SetShaderPassEnabled(OutlinePass, false);
         }
 
         /// <summary>シーンに保存しない作り物なので、片付けるときにまとめて消す</summary>

@@ -150,10 +150,26 @@
 
 ## フェーズ7: 重さとビルド
 
-- [ ] 一番敵が多いステージで、4人のときの重さを測る（スマホ・ブラウザ・PC）。目標は PC 60fps、スマホ・ブラウザ 30fps 以上
-- [ ] 重いときの対策: 部品を減らす（遠い敵は簡単な形）・面を減らす・同じ素材をまとめて描く（SRP Batcher / GPU インスタンシング）・本物の影を切る
-- [ ] 画質の設定（Mobile / PC）ごとに、影・縁の線のありなしを分ける
-- [ ] Android / Windows / WebGL でビルドして起動する
+- [x] 重さを測る仕組み `StageBenchmark`（`Scripts/Game/Bench/`）: 4人をボット（`StageBot`。スクショの台本と共通）で戦わせ、「1エリアの敵が一番多い所（ステージ9 エリア5、3波で24体）」と「最後の大ボス戦（シャチ）」を 20 秒ずつ測る。平均 fps・遅い方から 1% の fps・一番遅いフレーム（いつ・何体いたか）・GC の回数・SetPass・三角形の数を画面とログに出す。フレームの上限は外して測る（ブラウザは画面の書き換えに合わせるしかないので 60 が上限）
+  - 計測用のビルド: `Tools/PenmonScramble/Build/Benchmark/Windows | Android | Web`（`PENMON_BENCHMARK` を付けたビルド。起動するとすぐ測る。出力は `Builds/Benchmark/`）。Windows は `-benchmark-quit` を付けると測り終えて閉じる（結果は Player.log）
+  - Editor の Play で測る: `Tools/PenmonScramble/Benchmark`（fps は端末の目安にならないので、描画の回数を見る用）
+- [x] 測った結果（2026-10-30、ノートPC: Intel Arc 130T 内蔵 GPU）
+  - Windows（画質 PC、1632×918）: 敵最多 平均 519fps・1% Low 221fps / 大ボス 平均 228fps・1% Low 170fps
+  - ブラウザ（同じPCの Chrome、画質 Mobile、1746×982）: どちらも平均 60fps（上限）・1% Low 58.8fps・一番遅いフレーム 18ms
+  - 三角形は平均 43 万（敵最多）・28 万（大ボス）、SetPass は平均 50 前後
+- [ ] スマホ（Android）で測る（`Builds/Benchmark/Android/PenmonScramble_Benchmark.apk` を入れて起動すると、画面に結果が出る）
+- [x] 重いときの対策
+  - 縁の線のパスを本体と分けた。前は部品ごとに本体 → 線 → 本体 … と交互に描いていて SRP Batcher のまとまりが切れ、SetPass が平均 595（最大 2001）だった。線の LightMode を `PenmonOutline` にして、Renderer の機能（`RenderObjects` の `ToonOutline`）が不透明の後にまとめて描く → 平均 52。fps は 377 → 519
+  - 線の要らない素材（床・氷・残像）は線のパスごと切る（前は描いてから全部捨てていた）。線のシェーダーの `clip` もやめた（スマホの GPU で奥行きの早い判定が効かなくなるため）
+  - 本物の影は全部の環境で切った（足元の丸い影だけ。フェーズ0の決定）。URP の設定で影・追加の光を切ると、使わないシェーダーの組み合わせもビルドに入らない
+  - 部品を減らす・面を減らす（遠い敵は簡単な形など）は、スマホの結果を見てから決める。今の三角形の数（球1つ 768 面）は PC・ブラウザでは問題ない
+- [x] 画質の設定（`RenderPipelineSetup`。Rebuild とビルドの前に毎回そろえる）
+  - Mobile（Android・ブラウザ）: Renderer は `PenmonScramble_Renderer_Mobile`。縁の線あり・影なし・MSAA 2
+  - PC（Windows）: Renderer は `PenmonScramble_Renderer`。縁の線あり・影なし・MSAA 4・垂直同期（上限なしで回すと熱くなるだけ）
+  - スマホは毎秒60回で描く（`Common/Scene/FrameRateApplier`。Unity はスマホだと何もしないと毎秒30回に抑える）。ブラウザは画面の書き換えに合わせる
+  - スマホで重ければ、Mobile の縁の線を切る（`RenderPipelineSetup` の `Mobile` の `outline: false`）か、描く解像度を下げる
+- [x] Android / Windows / WebGL でビルドした（計測用のビルド）。Windows とブラウザ（同じPCの Chrome）は起動して最後まで測れた
+- [ ] Android の実機で起動する（このPCにつながった端末が無かった）
 
 **完了の確認**: 3つの環境で1ステージを通して、カクつかずに遊べる。
 

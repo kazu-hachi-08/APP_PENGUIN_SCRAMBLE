@@ -9,7 +9,7 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// StageCapture の Play 中に、ステージを台本どおりに戦わせて撮る。StageHost と同じく固定の時間刻みで Core を進め、
-    /// スナップショットを StageView に渡す。プレイヤーは近い敵へ歩いて技を出し続け、ゲージがたまれば必殺技を出す。
+    /// スナップショットを StageView に渡す。プレイヤーは StageBot が動かす。
     /// 状態の見た目の場面（PLAN_3D フェーズ4）は、スナップショットの状態を書き換えて、凍る・ダウン・交代を決めた時刻に起こす。
     /// 大ボスの場面（フェーズ5）は大ボスだけのエリアで戦わせ、赤い範囲が出てから少し後（構え）と、消えた直後（攻撃）を撮る。
     /// Editor のコードは MonoBehaviour としてシーンに付けられないので、EditorApplication.update から1フレームに1回呼ぶ
@@ -19,11 +19,6 @@ namespace PenmonScramble.Editor
         private const int Width = 1280;
         private const int Height = 720;
         private const int Seed = 12345;
-        // この距離まで近づいたら止まって技を出す（マス）
-        private const float AttackDistance = 2f;
-        // 技2はときどき押す（ずっと押すと技1が出ない）
-        private const float Skill2Period = 1.5f;
-        private const float Skill2Hold = 0.2f;
 
         // 状態の見た目の場面: P2 はずっとダウン、半分の敵はこの間だけ凍る、P1 はこの時刻に交代する
         private const float FreezeFrom = 0.4f;
@@ -255,18 +250,7 @@ namespace PenmonScramble.Editor
                 return new PlayerInput(Vec2.Zero, false, false, false);
             }
 
-            var move = Vec2.Zero;
-            if (TryNearestEnemy(player.Position, out var enemy))
-            {
-                var toEnemy = enemy - player.Position;
-                if (toEnemy.Length > AttackDistance)
-                {
-                    move = toEnemy.Normalized;
-                }
-            }
-
-            var skill2 = _sceneTime % Skill2Period < Skill2Hold;
-            return new PlayerInput(move, skill1: !skill2, skill2: skill2, special: true);
+            return StageBot.InputFor(_world, player, _sceneTime);
         }
 
         /// <summary>状態の見た目の場面だけ、スナップショットの状態を書き換える（Core は変えない。見た目だけを確かめるため）</summary>
@@ -307,23 +291,6 @@ namespace PenmonScramble.Editor
             }
 
             return snapshot;
-        }
-
-        private bool TryNearestEnemy(Vec2 from, out Vec2 nearest)
-        {
-            nearest = default;
-            var best = float.MaxValue;
-            foreach (var unit in _world.Units)
-            {
-                var distance = (unit.Position - from).LengthSquared;
-                if (unit.Team == Team.Enemy && distance < best)
-                {
-                    best = distance;
-                    nearest = unit.Position;
-                }
-            }
-
-            return best < float.MaxValue;
         }
 
         private void Save(string fileName)

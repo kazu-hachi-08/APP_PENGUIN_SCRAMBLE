@@ -22,14 +22,30 @@ namespace PenmonScramble.Editor
         [MenuItem("Tools/PenmonScramble/Build/Web")]
         public static void BuildWeb() => Build(BuildTarget.WebGL, "Web");
 
-        private static void Build(BuildTarget target, string output)
+        // 重さの計測用（StageBenchmark）。起動するとすぐ4人のボットで戦って測る。配る版と同じ最適化で、計測の処理だけ足す
+        private const string BenchmarkDefine = "PENMON_BENCHMARK";
+        private const string BenchmarkRoot = "Benchmark/";
+
+        [MenuItem("Tools/PenmonScramble/Build/Benchmark/Windows")]
+        public static void BuildBenchmarkWindows() => Build(BuildTarget.StandaloneWindows64, BenchmarkRoot + "Windows/PenmonScramble.exe", BenchmarkDefine);
+
+        [MenuItem("Tools/PenmonScramble/Build/Benchmark/Android")]
+        public static void BuildBenchmarkAndroid() => Build(BuildTarget.Android, BenchmarkRoot + "Android/PenmonScramble_Benchmark.apk", BenchmarkDefine);
+
+        [MenuItem("Tools/PenmonScramble/Build/Benchmark/Web")]
+        public static void BuildBenchmarkWeb() => Build(BuildTarget.WebGL, BenchmarkRoot + "Web", BenchmarkDefine);
+
+        private static void Build(BuildTarget target, string output, params string[] defines)
         {
+            // 画質ごとの描画の設定（縁の線・影など）を、ビルドの前にそろえておく
+            RenderPipelineSetup.Ensure();
             var options = new BuildPlayerOptions
             {
                 scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray(),
                 locationPathName = OutputRoot + output,
                 target = target,
                 options = BuildOptions.None,
+                extraScriptingDefines = defines,
             };
             var report = BuildPipeline.BuildPlayer(options);
             Debug.Log($"[PenmonScrambleBuild] {target}: {report.summary.result} ({report.summary.totalTime})");

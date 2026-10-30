@@ -1,6 +1,7 @@
 // おもちゃのペンギン用のトゥーン調シェーダー（URP）。
 // 陰影は「明るい・影」の2段＋プラスチックのつやの3段。影の色は黒ではなく青みのある色にして、雪の照り返しのように見せる。
-// 縁の線は裏返した殻を少し太らせて描く（_OutlineWidth = 0 で消える。スマホでは切る想定）
+// 縁の線は裏返した殻を少し太らせて描く。本体と交互に描くと SRP Batcher のまとまりが切れるので、LightMode を分けて
+// Renderer の機能（RenderPipelineSetup の ToonOutline）が不透明の後にまとめて描く。線の要らない素材はパスごと切る（ToonMaterials）
 // 氷の塊・突進の残像は同じ陰影のまま半透明で描く（_SrcBlend / _DstBlend / _ZWrite を素材ごとに変え、_BaseColor の a を透明度にする）
 Shader "PenmonScramble/Toon"
 {
@@ -123,8 +124,7 @@ Shader "PenmonScramble/Toon"
         Pass
         {
             Name "Outline"
-            // URP は UniversalForward のあとに SRPDefaultUnlit のパスも描く
-            Tags { "LightMode" = "SRPDefaultUnlit" }
+            Tags { "LightMode" = "PenmonOutline" }
             Cull Front
 
             HLSLPROGRAM
@@ -145,9 +145,9 @@ Shader "PenmonScramble/Toon"
                 return TransformWorldToHClip(positionWS + normalWS * _OutlineWidth);
             }
 
+            // 線の要らない素材はパスごと切るので、ここで捨てない（clip があるとスマホの GPU で奥行きの早い判定が効かなくなる）
             half4 Frag() : SV_Target
             {
-                clip(_OutlineWidth - 0.0001);
                 return _OutlineColor;
             }
             ENDHLSL
