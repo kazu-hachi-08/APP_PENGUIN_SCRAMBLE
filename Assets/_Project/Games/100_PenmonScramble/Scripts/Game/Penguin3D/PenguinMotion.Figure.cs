@@ -29,12 +29,6 @@ namespace PenmonScramble.Game
         private const float KnockWeakHop = 0.15f;
         private const float KnockTilt = 35f;
 
-        // 撃破: 後ろへのけぞりながら回って昇り、後半で小さくなって消える
-        private const float DefeatRise = 2f;
-        private const float DefeatTurns = 2.5f;
-        private const float DefeatTilt = 30f;
-        private const float DefeatShrinkStart = 0.45f;
-
         // 足元の丸い影: 高く上がるほど小さく、倒れると体の長さに合わせて前後に伸ばす
         private const float ShadowFadeHeight = 1.5f;
         private const float ShadowMinScale = 0.4f;
@@ -133,19 +127,7 @@ namespace PenmonScramble.Game
 
         private static float Vanish(PenguinPose pose, ref Vector3 position, ref Quaternion rotation, ref float scale)
         {
-            if (!pose.Defeated)
-            {
-                return 0f;
-            }
-
-            var t = pose.Defeat;
-            var eased = 1f - (1f - t) * (1f - t);
-            var spin = Quaternion.Euler(0f, DefeatTurns * 360f * eased, 0f);
-            var rise = DefeatRise * eased;
-            position = spin * position + Vector3.up * rise;
-            rotation = spin * rotation * Quaternion.Euler(-DefeatTilt * Mathf.Min(1f, t * 3f), 0f, 0f);
-            scale = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(DefeatShrinkStart, 1f, t));
-            return rise;
+            return pose.Defeated ? ToyVanish.Apply(pose.Defeat, ref position, ref rotation, ref scale) : 0f;
         }
 
         private void ApplyShadow(PenguinPose pose, FigurePose figure)

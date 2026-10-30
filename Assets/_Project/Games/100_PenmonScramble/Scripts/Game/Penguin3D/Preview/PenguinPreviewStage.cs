@@ -42,6 +42,12 @@ namespace PenmonScramble.Game
         public bool RealShadows => _realShadows;
         public int CameraPreset => _cameraPreset;
 
+        /// <summary>組み立てに使った素材。スクショで大ボスなどを一時的に組むときにも使う</summary>
+        public ToonMaterials Materials => _materials;
+
+        /// <summary>組み立てた物の置き場所（シーンに保存されない）</summary>
+        public Transform Generated => _generated != null ? _generated.transform : null;
+
         private void OnEnable()
         {
             if (_toonShader == null || _blobShadowShader == null)

@@ -72,7 +72,7 @@ namespace PenmonScramble.Game
         /// <summary>飾りを付けるときの部品の置き場所と、体型の倍率</summary>
         private readonly struct Rig
         {
-            public readonly Parts Parts;
+            public readonly ToyParts Parts;
             public readonly PenguinLook Look;
             /// <summary>体全体（PenguinModel.Figure）。床に立てる杖を付ける。転がる・倒れるときに一緒に動くよう、根元ではなくこちらに付ける</summary>
             public readonly Transform Root;
@@ -81,7 +81,7 @@ namespace PenmonScramble.Game
             public readonly Transform FlipperLeft;
             public readonly Transform FlipperRight;
 
-            public Rig(Parts parts, PenguinLook look, Transform root, Transform body, Transform head, Transform flipperLeft, Transform flipperRight)
+            public Rig(ToyParts parts, PenguinLook look, Transform root, Transform body, Transform head, Transform flipperLeft, Transform flipperRight)
             {
                 Parts = parts;
                 Look = look;

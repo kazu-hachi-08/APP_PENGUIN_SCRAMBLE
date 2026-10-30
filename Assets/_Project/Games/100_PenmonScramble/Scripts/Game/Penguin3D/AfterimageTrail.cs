@@ -4,8 +4,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 突進の残像（§9）。出している間、少しおきにペンギンの今の形を写して置き、薄くしながら消す。
-    /// 写しは体全体（PenguinModel.Figure）を複製したものを使い回し、部品の位置・向き・大きさだけを写す
+    /// 突進の残像（§9）。出している間、少しおきにペンギン・大ボスの今の形を写して置き、薄くしながら消す。
+    /// 写しは体全体（ToyModel.Figure）を複製したものを使い回し、部品の位置・向き・大きさだけを写す
     /// （毎回作ると、突進のたびに部品の数だけ物が増えて重いため）
     /// </summary>
     public sealed class AfterimageTrail : MonoBehaviour
@@ -24,7 +24,7 @@ namespace PenmonScramble.Game
 
         private readonly List<Ghost> _ghosts = new List<Ghost>();
         private MaterialPropertyBlock _block;
-        private PenguinModel _model;
+        private ToyModel _model;
         private Transform[] _sourceNodes;
         private Renderer[] _sourceRenderers;
         private Material _material;
@@ -52,7 +52,7 @@ namespace PenmonScramble.Game
         }
 
         /// <param name="stage">写しを置く場所。ユニットと一緒に動かないよう、ユニットの外に置く</param>
-        public void Bind(PenguinModel model, Material ghostMaterial, Transform stage)
+        public void Bind(ToyModel model, Material ghostMaterial, Transform stage)
         {
             Clear();
             _model = model;

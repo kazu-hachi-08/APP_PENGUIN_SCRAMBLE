@@ -61,7 +61,7 @@ namespace PenmonScramble.Game
             root.transform.SetParent(parent, false);
             var model = root.AddComponent<PenguinModel>();
             model.SetMaterials(materials);
-            var parts = new Parts(model, materials);
+            var parts = new ToyParts(model, materials);
 
             var figure = Pivot("Figure", root.transform, Vector3.zero);
             var body = Pivot("Body", figure, Vector3.zero);
@@ -80,14 +80,15 @@ namespace PenmonScramble.Game
                 BuildOrnament(rig, ornament);
             }
 
-            model.Assign(figure, body, head, flipperLeft, flipperRight, footLeft, footRight, shadow);
             var top = HeadPivotY * look.Height + (HeadCenter.y + HeadRadius) * look.HeadSize;
-            model.AssignShape(eyes, TorsoCenterY * look.Height, (BellyCenterZ + BellyHalfDepth) * look.Width, top);
+            model.AssignFrame(figure, shadow, top);
+            model.Assign(body, head, flipperLeft, flipperRight, footLeft, footRight);
+            model.AssignShape(eyes, TorsoCenterY * look.Height, (BellyCenterZ + BellyHalfDepth) * look.Width);
             model.SetRealShadows(true);
             return model;
         }
 
-        private static void BuildTorso(Parts parts, PenguinLook look, Transform body)
+        private static void BuildTorso(ToyParts parts, PenguinLook look, Transform body)
         {
             var w = look.Width;
             var h = look.Height;
@@ -95,7 +96,7 @@ namespace PenmonScramble.Game
             parts.Add("Belly", ToyMeshes.Egg, body, new Vector3(0f, BellyCenterY * h, BellyCenterZ * w), new Vector3(BellyWidth * w, BellyHalfHeight * 2f * h, BellyHalfDepth * 2f * w), look.Belly, BellyGloss);
         }
 
-        private static Transform BuildHead(Parts parts, PenguinLook look, Transform body, List<Transform> eyes)
+        private static Transform BuildHead(ToyParts parts, PenguinLook look, Transform body, List<Transform> eyes)
         {
             var s = look.HeadSize;
             var head = Pivot("Head", body, new Vector3(0f, HeadPivotY * look.Height, 0.02f));
@@ -115,7 +116,7 @@ namespace PenmonScramble.Game
             return head;
         }
 
-        private static void BuildEye(Parts parts, PenguinLook look, Transform head, float side, List<Transform> eyes)
+        private static void BuildEye(ToyParts parts, PenguinLook look, Transform head, float side, List<Transform> eyes)
         {
             var s = look.HeadSize;
             var position = Vector3.Scale(EyePosition, new Vector3(side, 1f, 1f)) * s;
@@ -140,7 +141,7 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>頭のてっぺんの寝ぐせ（タイトルのキービジュアルのペンギンと同じ）</summary>
-        private static void BuildTuft(Parts parts, PenguinLook look, Transform head)
+        private static void BuildTuft(ToyParts parts, PenguinLook look, Transform head)
         {
             var s = look.HeadSize;
             for (var i = -1; i <= 1; i++)
@@ -152,7 +153,7 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>肩を軸に回せるよう、ヒレの形は肩の下へずらして置く。side は左が -1、右が 1</summary>
-        private static Transform BuildFlipper(Parts parts, PenguinLook look, Transform body, float side)
+        private static Transform BuildFlipper(ToyParts parts, PenguinLook look, Transform body, float side)
         {
             var shoulder = Pivot(side < 0f ? "FlipperLeft" : "FlipperRight", body, new Vector3(0.34f * look.Width * side, 0.66f * look.Height, 0f));
             shoulder.localRotation = Quaternion.Euler(0f, 0f, FlipperSplay * side);
@@ -161,7 +162,7 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>足は胴と別に根元へ付ける。胴を揺らしても足は床から離れないようにするため</summary>
-        private static Transform BuildFoot(Parts parts, PenguinLook look, Transform root, float side)
+        private static Transform BuildFoot(ToyParts parts, PenguinLook look, Transform root, float side)
         {
             var foot = Pivot(side < 0f ? "FootLeft" : "FootRight", root, new Vector3(0.15f * look.Width * side, 0f, 0.04f));
             foot.localRotation = Quaternion.Euler(0f, FootSplay * side, 0f);
@@ -171,57 +172,9 @@ namespace PenmonScramble.Game
 
         private static Renderer BuildBlobShadow(ToonMaterials materials, PenguinLook look, Transform root)
         {
-            var obj = new GameObject("BlobShadow");
-            obj.transform.SetParent(root, false);
-            // 床と同じ高さだとちらつくので少し浮かせる
-            obj.transform.localPosition = new Vector3(0f, 0.005f, 0f);
-            obj.transform.localScale = new Vector3(0.95f * look.Width, 1f, 0.85f * look.Width);
-            obj.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.FloorQuad;
-            var renderer = obj.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = materials.BlobShadow;
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            renderer.receiveShadows = false;
-            return renderer;
+            return ToyParts.BlobShadow(materials, root, new Vector2(0.95f * look.Width, 0.85f * look.Width));
         }
 
-        private static Transform Pivot(string objName, Transform parent, Vector3 localPosition)
-        {
-            var pivot = new GameObject(objName).transform;
-            pivot.SetParent(parent, false);
-            pivot.localPosition = localPosition;
-            return pivot;
-        }
-
-        /// <summary>形の部品を作って PenguinModel に登録する</summary>
-        private readonly struct Parts
-        {
-            private readonly PenguinModel _model;
-            private readonly ToonMaterials _materials;
-
-            public Parts(PenguinModel model, ToonMaterials materials)
-            {
-                _model = model;
-                _materials = materials;
-            }
-
-            public Transform Add(string objName, Mesh mesh, Transform parent, Vector3 position, Vector3 scale, Color color, float gloss)
-            {
-                return Add(objName, mesh, parent, position, Quaternion.identity, scale, color, gloss);
-            }
-
-            public Transform Add(string objName, Mesh mesh, Transform parent, Vector3 position, Quaternion rotation, Vector3 scale, Color color, float gloss)
-            {
-                var obj = new GameObject(objName);
-                obj.transform.SetParent(parent, false);
-                obj.transform.localPosition = position;
-                obj.transform.localRotation = rotation;
-                obj.transform.localScale = scale;
-                obj.AddComponent<MeshFilter>().sharedMesh = mesh;
-                var renderer = obj.AddComponent<MeshRenderer>();
-                renderer.sharedMaterial = _materials.Get(color, gloss);
-                _model.AddPart(renderer, color, gloss);
-                return obj.transform;
-            }
-        }
+        private static Transform Pivot(string objName, Transform parent, Vector3 localPosition) => ToyParts.Pivot(objName, parent, localPosition);
     }
 }

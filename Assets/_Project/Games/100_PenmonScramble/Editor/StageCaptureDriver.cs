@@ -11,6 +11,7 @@ namespace PenmonScramble.Editor
     /// StageCapture の Play 中に、ステージを台本どおりに戦わせて撮る。StageHost と同じく固定の時間刻みで Core を進め、
     /// スナップショットを StageView に渡す。プレイヤーは近い敵へ歩いて技を出し続け、ゲージがたまれば必殺技を出す。
     /// 状態の見た目の場面（PLAN_3D フェーズ4）は、スナップショットの状態を書き換えて、凍る・ダウン・交代を決めた時刻に起こす。
+    /// 大ボスの場面（フェーズ5）は大ボスだけのエリアで戦わせ、赤い範囲が出てから少し後（構え）と、消えた直後（攻撃）を撮る。
     /// Editor のコードは MonoBehaviour としてシーンに付けられないので、EditorApplication.update から1フレームに1回呼ぶ
     /// </summary>
     public sealed class StageCaptureDriver
@@ -30,6 +31,11 @@ namespace PenmonScramble.Editor
         private const float SwitchAt = 1f;
         private const float DownRevive = 0.5f;
 
+        // 大ボスの場面: 範囲が出てから構えきるまで・消えてから攻撃の動きが見えるまで（秒）。撮り終わらなくても、この時刻で次へ
+        private const float TelegraphShotDelay = 0.55f;
+        private const float StrikeShotDelay = 0.15f;
+        private const float BossSceneTimeout = 20f;
+
         private readonly struct Scene
         {
             public readonly int StageNo;
@@ -37,26 +43,56 @@ namespace PenmonScramble.Editor
             public readonly bool Status;
             public readonly float[] ShotSeconds;
 
+            /// <summary>大ボスの場面の大ボスの番号（0 ならふつうの場面）と、撮る枚数（構えと攻撃を交互に）</summary>
+            public readonly int BigBossNo;
+            public readonly int BossShots;
+
             public Scene(int stageNo, int players, bool status, params float[] shotSeconds)
             {
                 StageNo = stageNo;
                 Players = players;
                 Status = status;
                 ShotSeconds = shotSeconds;
+                BigBossNo = 0;
+                BossShots = 0;
             }
 
-            public string FileName(int shot) => Status ? $"status{StageNo}_{shot + 1}.png" : $"stage{StageNo}_{shot + 1}.png";
+            private Scene(int stageNo, int bigBossNo, int bossShots)
+            {
+                StageNo = stageNo;
+                Players = 2;
+                Status = false;
+                ShotSeconds = Array.Empty<float>();
+                BigBossNo = bigBossNo;
+                BossShots = bossShots;
+            }
+
+            public static Scene BigBoss(int stageNo, int bigBossNo, int attacks) => new Scene(stageNo, bigBossNo, attacks * 2);
+
+            public bool IsBigBoss => BigBossNo != 0;
+
+            public int ShotCount => IsBigBoss ? BossShots : ShotSeconds.Length;
+
+            public string FileName(int shot)
+            {
+                if (IsBigBoss) return $"boss{StageNo}_{shot + 1}.png";
+                return Status ? $"status{StageNo}_{shot + 1}.png" : $"stage{StageNo}_{shot + 1}.png";
+            }
         }
 
         // ワールド1は2人で戦いの流れを、ワールド2・3は床の見た目を撮る。最後に状態の見た目
         // （status1_1: P1 の突進の残像・P2 のダウン、_2: 凍る・敵は暗い、_3: 交代の煙、_4: 氷が砕ける・被弾で白く光る）。
-        // 突進は台本の戦いで最初に出るもの（種が同じなので毎回同じ時刻）を撮る
+        // 突進は台本の戦いで最初に出るもの（種が同じなので毎回同じ時刻）を撮る。
+        // 大ボスは攻撃の順（§6.2）がひと回りする数だけ撮る（boss3: カモメ、boss6: アザラシ、boss9: シャチ。奇数枚目が構え・偶数枚目が攻撃）
         private static readonly Scene[] Scenes =
         {
             new Scene(1, 2, false, 0.1f, 1.2f, 2.5f, 4f, 6f),
             new Scene(4, 1, false, 2f),
             new Scene(7, 1, false, 2f),
             new Scene(1, 2, true, 0.3f, 0.7f, SwitchAt + 0.05f, FreezeUntil + 0.06f),
+            Scene.BigBoss(3, BigBossTable.SkuaNo, 2),
+            Scene.BigBoss(6, BigBossTable.LeopardSealNo, 2),
+            Scene.BigBoss(9, BigBossTable.OrcaNo, 3),
         };
 
         private StageView _view;
@@ -70,6 +106,8 @@ namespace PenmonScramble.Editor
         private float _sceneTime;
         private float _accumulator;
         private float _lastTime;
+        private int _warningCount;
+        private float _nextBossShot = float.MaxValue;
 
         public event Action Finished;
 
@@ -105,7 +143,8 @@ namespace PenmonScramble.Editor
                 parties[i] = TrialStage.PartyStats(TrialStage.RotatingParty(1, i, seats.Length));
             }
 
-            _players = TrialStage.Create(StageTable.Get(scene.StageNo), Seed, seats, parties, out _world);
+            var stage = scene.IsBigBoss ? BigBossOnly(scene) : StageTable.Get(scene.StageNo);
+            _players = TrialStage.Create(stage, Seed, seats, parties, out _world);
             _round++;
             _recorder = new StageRecorder(_world, _round);
             // 状態の書き換え（Override）は場面の時刻で決めるので、最初のスナップショットより前に戻す
@@ -116,6 +155,30 @@ namespace PenmonScramble.Editor
             _sceneTime = 0f;
             _accumulator = 0f;
             _lastTime = Time.time;
+            _warningCount = 0;
+            _nextBossShot = float.MaxValue;
+        }
+
+        /// <summary>大ボスだけが出る1エリアのステージ（番号はそのワールドの床にするため、大ボスのステージのまま）</summary>
+        private static StageDef BigBossOnly(Scene scene)
+        {
+            return new StageDef(scene.StageNo, "BigBossCapture", new AreaDef(new WaveDef(0, new[] { 1 }, scene.BigBossNo)));
+        }
+
+        /// <summary>赤い範囲が出た・消えた瞬間から、撮る時刻を決める</summary>
+        private void WatchWarnings()
+        {
+            var count = _world.Warnings.Count;
+            if (count > 0 && _warningCount == 0)
+            {
+                _nextBossShot = _sceneTime + TelegraphShotDelay;
+            }
+            else if (count == 0 && _warningCount > 0)
+            {
+                _nextBossShot = _sceneTime + StrikeShotDelay;
+            }
+
+            _warningCount = count;
         }
 
         /// <summary>
@@ -150,6 +213,10 @@ namespace PenmonScramble.Editor
 
                 _world.Tick();
                 _view.Apply(Override(_recorder.Capture()));
+                if (Scenes[_scene].IsBigBoss)
+                {
+                    WatchWarnings();
+                }
             }
 
             _view.Render(_accumulator / Balance.TickSeconds);
@@ -158,14 +225,23 @@ namespace PenmonScramble.Editor
         private void TryShoot()
         {
             var scene = Scenes[_scene];
-            if (_shot >= scene.ShotSeconds.Length || _sceneTime < scene.ShotSeconds[_shot])
+            if (scene.IsBigBoss && _sceneTime >= BossSceneTimeout)
+            {
+                Debug.LogWarning($"[StageCapture] 大ボス {scene.BigBossNo} の攻撃を撮りきれませんでした（{_shot} / {scene.ShotCount} 枚）");
+                NextScene();
+                return;
+            }
+
+            var due = scene.IsBigBoss ? _nextBossShot : _shot < scene.ShotSeconds.Length ? scene.ShotSeconds[_shot] : float.MaxValue;
+            if (_shot >= scene.ShotCount || _sceneTime < due)
             {
                 return;
             }
 
             Save(scene.FileName(_shot));
             _shot++;
-            if (_shot >= scene.ShotSeconds.Length)
+            _nextBossShot = float.MaxValue;
+            if (_shot >= scene.ShotCount)
             {
                 NextScene();
             }

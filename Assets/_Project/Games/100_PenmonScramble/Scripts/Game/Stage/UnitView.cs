@@ -5,6 +5,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ユニット1体の見た目。種類の見た目（PenguinLooks）から3Dのペンギンを組み、動き（PenguinMotion）に状態を渡す。
+    /// 大ボスは大ボスの組み立て役（BigBossModelBuilder）で組み、動き（BigBossMotion）に攻撃の構えも渡す（UnitView.BigBoss.cs）。
     /// プレイヤーは足元に席の色の輪と、頭の上に「P1」など。ボスは「BOSS」（UnitView.Parts.cs）。
     /// 凍る・無敵・突進・ダウン・被弾・交代の見た目は UnitView.Status.cs。
     /// 位置は更新（1/30秒）ごとに受け取り、その間を補間して描く（オンラインのゲストも同じ描き方にするため）
@@ -20,8 +21,8 @@ namespace PenmonScramble.Game
         private const float DefeatTimeoutSeconds = 2f;
 
         private StageMaterials _materials;
-        private PenguinModel _model;
-        private PenguinMotion _motion;
+        private ToyModel _model;
+        private IUnitMotion _motion;
         private float _radius;
         private float _modelScale;
         private Vector2 _from;
@@ -58,7 +59,7 @@ namespace PenmonScramble.Game
             Render(1f);
         }
 
-        /// <summary>種類の見た目から組み立てる。当たりの円とペンギンの胴の太さをそろえる</summary>
+        /// <summary>種類の見た目から組み立てる。当たりの円とペンギンの胴の太さ（大ボスは体の幅）をそろえる</summary>
         private void BuildModel(UnitState unit)
         {
             if (_model != null)
@@ -70,12 +71,22 @@ namespace PenmonScramble.Game
             }
 
             SpeciesNo = unit.SpeciesNo;
-            _model = PenguinModelBuilder.Build(PenguinLooks.Get(unit.SpeciesNo), _materials.Toon, transform);
-            _modelScale = PenguinModelBuilder.ScaleForRadius(_radius);
+            if (BigBossModelBuilder.Has(SpeciesNo))
+            {
+                BuildBigBoss();
+            }
+            else
+            {
+                var penguin = PenguinModelBuilder.Build(PenguinLooks.Get(SpeciesNo), _materials.Toon, transform);
+                _model = penguin;
+                _motion = penguin.gameObject.AddComponent<PenguinMotion>();
+                _bigBoss = null;
+                _modelScale = PenguinModelBuilder.ScaleForRadius(_radius);
+            }
+
             _model.transform.localScale = Vector3.one * _modelScale;
             // フェーズ0で決めたとおり、どの環境でも足元の丸い影にする
             _model.SetRealShadows(false);
-            _motion = _model.gameObject.AddComponent<PenguinMotion>();
             _motion.SnapFacing(unit.Facing.ToFloor());
             ApplyMotionState(unit, Vector3.zero);
             PlaceLabel();
@@ -88,6 +99,7 @@ namespace PenmonScramble.Game
             _from = _to;
             _to = unit.Position.ToVector2();
             var wasDown = IsDown;
+            var wasSubmerged = IsSubmerged;
             _flags = unit.Flags;
             _revive = unit.Revive;
             if (unit.SpeciesNo != SpeciesNo)
@@ -105,6 +117,11 @@ namespace PenmonScramble.Game
                 Poof();
             }
 
+            if (wasSubmerged != IsSubmerged)
+            {
+                OnSubmergedChanged();
+            }
+
             var velocity = (_to - _from).ToFloor() / Mathf.Max(seconds, Balance.TickSeconds);
             ApplyMotionState(unit, velocity);
             WatchKnockback(velocity, seconds);
@@ -116,6 +133,10 @@ namespace PenmonScramble.Game
             _motion.Facing = unit.Facing.ToFloor();
             _motion.Sliding = unit.Has(UnitFlags.Dashing);
             _motion.Down = unit.Has(UnitFlags.Down);
+            if (_bigBoss != null)
+            {
+                _bigBoss.Submerged = unit.Has(UnitFlags.Submerged);
+            }
         }
 
         /// <summary>
@@ -155,7 +176,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            transform.position = Vector2.Lerp(_from, _to, alpha).ToFloor();
+            transform.position = RenderPosition(alpha).ToFloor();
             RenderMarks();
         }
 

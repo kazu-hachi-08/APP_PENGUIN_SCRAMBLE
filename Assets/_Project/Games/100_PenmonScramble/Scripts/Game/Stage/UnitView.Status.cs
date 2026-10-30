@@ -45,6 +45,7 @@ namespace PenmonScramble.Game
             _statusTime += dt;
             _flashTimer -= dt;
             TickPop(dt);
+            TickUnderground(dt);
             ApplyStatus();
         }
 
@@ -99,10 +100,10 @@ namespace PenmonScramble.Game
                 return true;
             }
 
-            // もぐっている大ボスは、床の丸い影だけ見せる
+            // もぐっている大ボスは、床の下へ沈みきったら体を出さず、床の暗い影だけ見せる（UnitView.BigBoss.cs）
             if (IsSubmerged)
             {
-                return false;
+                return _bigBoss != null && !_bigBoss.IsUnderground;
             }
 
             return !IsInvincible || Mathf.Repeat(_statusTime * InvincibleBlinkPerSecond, 1f) < 0.5f;

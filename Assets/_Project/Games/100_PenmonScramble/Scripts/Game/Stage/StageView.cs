@@ -90,6 +90,7 @@ namespace PenmonScramble.Game
             SyncProjectiles(snapshot);
             SyncEffects(snapshot);
             SyncWarnings(snapshot);
+            PushBossWarnings(snapshot);
             PlayEvents(snapshot);
             UpdateGates(snapshot);
             FollowCamera(snapshot, snap: isNewRound);
@@ -223,6 +224,18 @@ namespace PenmonScramble.Game
             if (appeared)
             {
                 GameSounds.Play(GameSound.Warning);
+            }
+        }
+
+        /// <summary>大ボスに赤い範囲を渡して、攻撃の構え・攻撃が出た瞬間の動きをさせる（範囲は大ボスの分しか出ない）</summary>
+        private void PushBossWarnings(StageSnapshot snapshot)
+        {
+            foreach (var view in _units.Values)
+            {
+                if (view.IsBigBoss)
+                {
+                    view.PushWarnings(snapshot.Warnings);
+                }
             }
         }
 

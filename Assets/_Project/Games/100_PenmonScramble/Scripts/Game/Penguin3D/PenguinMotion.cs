@@ -9,7 +9,7 @@ namespace PenmonScramble.Game
     /// 毎フレームの姿勢は PenguinPose だけから決まる（Apply）。部品ごとの動きは PenguinMotion.Parts.cs、体全体の動きは PenguinMotion.Figure.cs
     /// </summary>
     [RequireComponent(typeof(PenguinModel))]
-    public sealed partial class PenguinMotion : MonoBehaviour
+    public sealed partial class PenguinMotion : MonoBehaviour, IUnitMotion
     {
         // 向きを変える速さ（度/秒）。速すぎるとカクッと見える
         private const float TurnSpeed = 720f;
