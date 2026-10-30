@@ -21,6 +21,8 @@ namespace PenmonScramble.Game
         private const float OutsideDepth = 6f;
         // エリアの外の床は少し下げて、エリアの床と同じ高さでちらつかないようにする
         private const float OutsideFloorHeight = -0.02f;
+        // 技の実演の床は、最初のワールドの地面（どのステージにも属さない場なので、いちばん見慣れた絵にする）
+        public const int PreviewWorld = 1;
 
         [SerializeField] private StageCamera _stageCamera;
 
@@ -30,6 +32,12 @@ namespace PenmonScramble.Game
         private void CreateGround(StageSnapshot snapshot)
         {
             _gates.Clear();
+            if (_preview)
+            {
+                CreatePreviewGround(snapshot);
+                return;
+            }
+
             var world = StageTable.WorldOf(snapshot.StageNo);
             var theme = StageTheme.ForWorld(world);
             var art = CreatureArt.Ground(world);
@@ -51,6 +59,18 @@ namespace PenmonScramble.Game
                     _gates.Add((max.x, CreateGate(i, max.x, min.y, max.y, theme.Gate)));
                 }
             }
+        }
+
+        /// <summary>技の実演: 動ける範囲（エリア1枚分）にワールド1の地面を敷き、外を暗い床で囲む。出入口は無い</summary>
+        private void CreatePreviewGround(StageSnapshot snapshot)
+        {
+            var art = CreatureArt.Ground(PreviewWorld);
+            var texture = art != null ? art.texture : Texture2D.whiteTexture;
+            var min = snapshot.AreaMin.ToVector2();
+            var max = snapshot.AreaMax.ToVector2();
+            var outside = new Vector2(OutsideWidth, OutsideDepth);
+            CreateFloor("Outside", _materials.Toon.Floor(texture, StageTheme.OutsideTint), min - outside, max + outside, OutsideFloorHeight);
+            CreateFloor("Area", _materials.Toon.Floor(texture, StageTheme.AreaTintOf(0, false)), min, max, 0f);
         }
 
         /// <summary>

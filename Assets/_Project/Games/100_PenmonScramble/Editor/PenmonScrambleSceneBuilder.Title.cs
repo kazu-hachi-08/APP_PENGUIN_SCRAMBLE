@@ -11,7 +11,7 @@ namespace PenmonScramble.Editor
     /// タイトル: 「ひとりで遊ぶ」「部屋を作る」「コードで参加」。
     /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る（§2）。
     /// 上半分は後ろで動く乱戦のジオラマとロゴを見せ、ボタンは下の帯にまとめる。ジオラマとロゴは PenmonScrambleSceneBuilder.TitleArt.cs、
-    /// コイン・ステージの選択・ガチャ・ペンギン一覧は PenmonScrambleSceneBuilder.Menu.cs
+    /// コイン・ステージの選択・ガチャは PenmonScrambleSceneBuilder.Menu.cs、ペンモン画面は PenmonScrambleSceneBuilder.PenmonScreen.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {

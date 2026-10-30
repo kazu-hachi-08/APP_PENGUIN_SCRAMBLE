@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// タイトルのうち、接続（ModeSelectPanel）以外の所: コイン・遊ぶステージの選択・ガチャ・ペンギン一覧・遊び方（§2）。
+    /// タイトルのうち、接続（ModeSelectPanel）以外の所: コイン・遊ぶステージの選択・ガチャ・ペンモン画面・遊び方（§2）。
     /// ステージはソロとホストが使う（ゲストはホストの選んだステージを遊ぶ）。初回はまず無料ガチャを開く（§7）
     /// </summary>
     public class TitleMenu : MonoBehaviour

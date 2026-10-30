@@ -27,6 +27,8 @@ namespace PenmonScramble.Game
         [SerializeField] private Shader _toonShader;
         [SerializeField] private Shader _blobShadowShader;
         [SerializeField] private Shader _fxShader;
+        // ペンモン画面の技の実演（SkillDemoView）で使う。床は1枚だけ敷き、カメラの追従・揺れ・カットイン・音・席の印を出さない
+        [SerializeField] private bool _preview;
 
         // ボスが倒れたときの揺れ（マス・秒）
         private const float BossDefeatShake = 0.3f;
@@ -93,7 +95,10 @@ namespace PenmonScramble.Game
             PushBossWarnings(snapshot);
             PlayEvents(snapshot);
             UpdateGates(snapshot);
-            FollowCamera(snapshot, snap: isNewRound);
+            if (!_preview)
+            {
+                FollowCamera(snapshot, snap: isNewRound);
+            }
         }
 
         public void Render(float alpha)
@@ -151,7 +156,7 @@ namespace PenmonScramble.Game
 
         private UnitView CreateUnitView(UnitState unit)
         {
-            if (unit.Team == Team.Enemy)
+            if (unit.Team == Team.Enemy || _preview)
             {
                 return UnitView.Create(transform, _materials, unit, null, null);
             }
@@ -221,7 +226,7 @@ namespace PenmonScramble.Game
             }
 
             RemoveMissing(_warnings, view => Destroy(view.gameObject));
-            if (appeared)
+            if (appeared && !_preview)
             {
                 GameSounds.Play(GameSound.Warning);
             }
@@ -285,7 +290,7 @@ namespace PenmonScramble.Game
                 DefeatSparkle.Spawn(transform, _materials, e.Position.ToVector2(), view.IsBoss ? BossDefeatCoins : DefeatCoins, view.IsBoss ? BossDefeatSpread : 1f);
             }
 
-            if (view.IsBoss)
+            if (view.IsBoss && !_preview)
             {
                 _cameraShake.Shake(BossDefeatShake, BossDefeatShakeSeconds);
                 GameSounds.Play(GameSound.BossDefeat);

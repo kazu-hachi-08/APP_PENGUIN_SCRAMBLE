@@ -15,6 +15,12 @@ namespace PenmonScramble.Core
                 return;
             }
 
+            // 技を持たない敵は立っているだけ（ペンモン画面の技の実演の的。SkillPractice）
+            if (unit.Skills.Length == 0)
+            {
+                return;
+            }
+
             var target = FindNearestOpponent(unit);
             if (target == null)
             {

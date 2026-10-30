@@ -77,7 +77,7 @@ namespace PenmonScramble.Game
         {
             if (state == PullResult.Full)
             {
-                return $"持てるのは {Balance.MaxPenguins} 体まで。ペンギン一覧で売ってください";
+                return $"持てるのは {Balance.MaxPenguins} 体まで。ペンモン画面で売ってください";
             }
 
             if (free > 0)

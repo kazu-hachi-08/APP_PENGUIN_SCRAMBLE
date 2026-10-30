@@ -67,7 +67,10 @@ namespace PenmonScramble.Game
                 OnCombo(combo);
             }
 
-            PlaySounds(snapshot);
+            if (!_preview)
+            {
+                PlaySounds(snapshot);
+            }
         }
 
         /// <summary>
@@ -147,13 +150,18 @@ namespace PenmonScramble.Game
             BurstFx.SpawnFacingCamera(transform, DecalSprites.Glow, _materials.Glow, ComboColor, position.ToFloor(ComboFlashHeight), ComboFlashRadius * 0.3f, ComboFlashRadius, ComboFlashSeconds);
             BurstFx.SpawnOnFloor(transform, DecalSprites.Glow, _materials.Glow, WithAlpha(ComboColor, BlastAlpha), position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds);
             BurstFx.SpawnOnFloor(transform, DecalSprites.Ring, _materials.Decal, ComboColor, position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds);
-            _cameraShake.Shake(ComboShake, ComboShakeSeconds);
+            Shake(ComboShake, ComboShakeSeconds);
         }
 
         private void OnSpecialUsed(SpecialUsedEvent e)
         {
+            if (_preview)
+            {
+                return;
+            }
+
             _cutIn.Play(e);
-            _cameraShake.Shake(SpecialUsedShake, Balance.SpecialCutInTicks * Balance.TickSeconds);
+            Shake(SpecialUsedShake, Balance.SpecialCutInTicks * Balance.TickSeconds);
         }
 
         private void OnBurst(BurstEvent e)
@@ -176,11 +184,20 @@ namespace PenmonScramble.Game
 
             if (e.IsSpecial)
             {
-                _cameraShake.Shake(SpecialHitShake, SpecialHitShakeSeconds);
+                Shake(SpecialHitShake, SpecialHitShakeSeconds);
             }
             else if (e.Shape == BurstShape.Blast && e.Radius >= BigBlastRadius)
             {
-                _cameraShake.Shake(BigBlastShake, BigBlastShakeSeconds);
+                Shake(BigBlastShake, BigBlastShakeSeconds);
+            }
+        }
+
+        /// <summary>技の実演の小窓は揺らさない（メニューの中の小さな絵が揺れても、見づらいだけ）</summary>
+        private void Shake(float strength, float seconds)
+        {
+            if (!_preview)
+            {
+                _cameraShake.Shake(strength, seconds);
             }
         }
 
