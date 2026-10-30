@@ -52,6 +52,8 @@ namespace PenmonScramble.Editor
         {
             RenderPipelineSetup.Ensure();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            // 空のシーンで撮る（ほかの物が写り込まないように）
+            CapturePortraits();
             var (shake, stageCamera) = CreateCamera();
             CreateSun();
             CreateEventSystem();
