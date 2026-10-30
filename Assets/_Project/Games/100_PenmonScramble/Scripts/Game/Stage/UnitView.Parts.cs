@@ -4,7 +4,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ユニットの体以外の目印: 足元の席の色の輪・頭の上の「P1」「BOSS」・ダウン中の復活の範囲とたまり具合（§4.5）
+    /// ユニットの体以外の目印: 足元の席の色の輪・頭の上の「P1」「BOSS」・ダウン中の復活の範囲とたまり具合（§4.5）・
+    /// 協力でメニューを開いている人の「MENU」（§3.2）
     /// </summary>
     public partial class UnitView
     {
@@ -15,9 +16,12 @@ namespace PenmonScramble.Game
         private const float LabelGap = 0.3f;
         private const float LabelCharacterSize = 0.09f;
         private static readonly Color BossLabelColor = new Color(0.9f, 0.15f, 0.15f);
+        // 頭の上の文字は標準フォントの英数字で描くので、日本語ではなく英語で出す（BillboardText）
+        private const string InMenuSuffix = " MENU";
 
         private SpriteRenderer _seatRing;
         private TextMesh _label;
+        private string _labelText;
         private SpriteRenderer _reviveRing;
         private SpriteRenderer _reviveFill;
         private float _revive;
@@ -42,6 +46,7 @@ namespace PenmonScramble.Game
         /// <summary>頭の上に浮かべる。ほかのペンギンの後ろに隠れて誰か分からなくならないよう、いつも手前に出す（BillboardText）</summary>
         private void CreateLabel(string label, Color color)
         {
+            _labelText = label;
             _label = BillboardText.Create(transform, "Label", _materials, label, color, LabelCharacterSize);
             PlaceLabel();
         }
@@ -76,6 +81,12 @@ namespace PenmonScramble.Game
             if (_label != null)
             {
                 _label.gameObject.SetActive(!IsSubmerged);
+                // メニューを開いている間は止まっているので、仲間が「やられそう」と心配しないよう分かるようにする
+                var text = IsInMenu ? _labelText + InMenuSuffix : _labelText;
+                if (_label.text != text)
+                {
+                    _label.text = text;
+                }
             }
 
             if (_reviveRing == null)

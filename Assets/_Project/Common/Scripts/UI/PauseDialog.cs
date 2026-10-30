@@ -14,6 +14,8 @@ namespace PenmonScramble.Common.UI
         [SerializeField] private Button _resumeButton;
         [SerializeField] private Button _restartButton;
         [SerializeField] private Button _titleButton;
+        // 遊び方を持つゲームだけ置く（無ければ出さない）
+        [SerializeField] private Button _helpButton;
 
         [Header("Audio Sliders")]
         [SerializeField] private Slider _bgmSlider;
@@ -23,12 +25,14 @@ namespace PenmonScramble.Common.UI
         private Action _onResume;
         private Action _onRestart;
         private Action _onTitle;
+        private Action _onHelp;
 
         private void Awake()
         {
             if (_resumeButton != null) _resumeButton.onClick.AddListener(OnResumeClicked);
             if (_restartButton != null) _restartButton.onClick.AddListener(OnRestartClicked);
             if (_titleButton != null) _titleButton.onClick.AddListener(OnTitleClicked);
+            if (_helpButton != null) _helpButton.onClick.AddListener(OnHelpClicked);
 
             if (_bgmSlider != null)
             {
@@ -58,11 +62,18 @@ namespace PenmonScramble.Common.UI
             }
         }
 
-        public void Initialize(Action onResume, Action onRestart, Action onTitle)
+        public void Initialize(Action onResume, Action onRestart, Action onTitle, Action onHelp = null)
         {
             _onResume = onResume;
             _onRestart = onRestart;
             _onTitle = onTitle;
+            _onHelp = onHelp;
+        }
+
+        /// <summary>やり直しを押せない人（オンラインのゲストなど）には出さない</summary>
+        public void SetRestartVisible(bool visible)
+        {
+            if (_restartButton != null) _restartButton.gameObject.SetActive(visible);
         }
 
         public void Show()
@@ -80,6 +91,8 @@ namespace PenmonScramble.Common.UI
         private void OnRestartClicked() => HideAndInvoke(_onRestart);
 
         private void OnTitleClicked() => HideAndInvoke(_onTitle);
+
+        private void OnHelpClicked() => HideAndInvoke(_onHelp);
 
         // 先に閉じてからコールバックを呼ぶ（コールバック側で次の画面を開いても、このダイアログが残らないようにする）
         private void HideAndInvoke(Action callback)

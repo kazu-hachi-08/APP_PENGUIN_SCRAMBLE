@@ -20,8 +20,19 @@ namespace PenmonScramble.Game
         private readonly bool[] _pressed = new bool[ActionCount];
         private UnityEngine.Vector2 _move;
 
+        /// <summary>メニューを開いている間は、押したものを貯めずに「メニュー中」の入力を出す（閉じた瞬間に技が出ないように）</summary>
+        public bool InMenu { get; set; }
+
         public void Sample(InputManager input)
         {
+            if (InMenu)
+            {
+                _move = UnityEngine.Vector2.zero;
+                System.Array.Clear(_held, 0, ActionCount);
+                System.Array.Clear(_pressed, 0, ActionCount);
+                return;
+            }
+
             _move = input.MoveVector;
             for (var i = 0; i < ActionCount; i++)
             {
@@ -32,6 +43,11 @@ namespace PenmonScramble.Game
 
         public PlayerInput Consume()
         {
+            if (InMenu)
+            {
+                return PlayerInput.MenuOpen;
+            }
+
             var result = new PlayerInput(_move.ToVec2(), Get(Skill1Action), Get(Skill2Action), Get(SpecialAction), Get(SwitchAction));
             System.Array.Clear(_pressed, 0, ActionCount);
             return result;

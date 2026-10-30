@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// タイトルのうち、接続（ModeSelectPanel）以外の所: コイン・遊ぶステージの選択・ガチャ・ペンギン一覧（§2）。
+    /// タイトルのうち、接続（ModeSelectPanel）以外の所: コイン・遊ぶステージの選択・ガチャ・ペンギン一覧・遊び方（§2）。
     /// ステージはソロとホストが使う（ゲストはホストの選んだステージを遊ぶ）。初回はまず無料ガチャを開く（§7）
     /// </summary>
     public class TitleMenu : MonoBehaviour
@@ -16,8 +16,10 @@ namespace PenmonScramble.Game
         [SerializeField] private Button _nextStageButton;
         [SerializeField] private Button _gachaButton;
         [SerializeField] private Button _penguinsButton;
+        [SerializeField] private Button _howToPlayButton;
         [SerializeField] private GachaScreen _gacha;
         [SerializeField] private PenguinListScreen _penguins;
+        [SerializeField] private HowToPlayScreen _howToPlay;
 
         private static PlayerRecord Record => GameSave.Record;
 
@@ -30,6 +32,7 @@ namespace PenmonScramble.Game
             _nextStageButton.onClick.AddListener(() => MoveStage(1));
             _gachaButton.onClick.AddListener(_gacha.Open);
             _penguinsButton.onClick.AddListener(_penguins.Open);
+            _howToPlayButton.onClick.AddListener(_howToPlay.Open);
             _gacha.Closed += Refresh;
             _penguins.Closed += Refresh;
         }

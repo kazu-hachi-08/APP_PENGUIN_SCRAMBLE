@@ -12,12 +12,13 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えて変な画面になるより無視する方がよい
         /// </summary>
-        public const byte FormatVersion = 6;
+        public const byte FormatVersion = 7;
 
         private const byte Skill1Flag = 1;
         private const byte Skill2Flag = 2;
         private const byte SpecialFlag = 4;
         private const byte SwitchFlag = 8;
+        private const byte MenuFlag = 16;
 
         public static byte[] EncodeSnapshot(StageSnapshot snapshot)
         {
@@ -233,7 +234,7 @@ namespace PenmonScramble.Core
             writer.Write(FormatVersion);
             Write(writer, input.Move);
             var flags = (input.Skill1 ? Skill1Flag : 0) | (input.Skill2 ? Skill2Flag : 0)
-                | (input.Special ? SpecialFlag : 0) | (input.Switch ? SwitchFlag : 0);
+                | (input.Special ? SpecialFlag : 0) | (input.Switch ? SwitchFlag : 0) | (input.InMenu ? MenuFlag : 0);
             writer.Write((byte)flags);
             return stream.ToArray();
         }
@@ -253,7 +254,7 @@ namespace PenmonScramble.Core
                 var move = ReadVec2(reader);
                 var flags = reader.ReadByte();
                 input = new PlayerInput(move, (flags & Skill1Flag) != 0, (flags & Skill2Flag) != 0,
-                    (flags & SpecialFlag) != 0, (flags & SwitchFlag) != 0);
+                    (flags & SpecialFlag) != 0, (flags & SwitchFlag) != 0, (flags & MenuFlag) != 0);
                 return true;
             }
             catch (EndOfStreamException)

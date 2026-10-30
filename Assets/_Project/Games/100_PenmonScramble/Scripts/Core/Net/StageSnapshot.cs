@@ -27,6 +27,9 @@ namespace PenmonScramble.Core
 
         /// <summary>大ボスがもぐっている（攻撃が効かない。影だけ描く）</summary>
         Submerged = 32,
+
+        /// <summary>協力プレイで、このプレイヤーがメニューを開いている（頭の上に「メニュー中」）</summary>
+        InMenu = 64,
     }
 
     /// <summary>描くのに要るユニット1体分の値（場に出ている子の値）</summary>

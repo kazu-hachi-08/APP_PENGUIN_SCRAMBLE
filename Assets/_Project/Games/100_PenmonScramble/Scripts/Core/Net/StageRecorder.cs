@@ -133,6 +133,11 @@ namespace PenmonScramble.Core
                 flags |= UnitFlags.Submerged;
             }
 
+            if (unit.IsInMenu)
+            {
+                flags |= UnitFlags.InMenu;
+            }
+
             return flags;
         }
 

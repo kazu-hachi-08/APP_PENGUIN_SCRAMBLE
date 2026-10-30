@@ -162,6 +162,45 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
+        public void Input_RoundTripsInMenu()
+        {
+            Assert.That(StageCodec.TryDecodeInput(StageCodec.EncodeInput(PlayerInput.MenuOpen), out var decoded), Is.True);
+            Assert.That(decoded.InMenu, Is.True);
+            Assert.That(decoded.Move, Is.EqualTo(Vec2.Zero));
+            Assert.That(decoded.Skill1 || decoded.Skill2 || decoded.Special || decoded.Switch, Is.False);
+        }
+
+        [Test]
+        public void InputLatch_KeepsLatestInMenu()
+        {
+            var latch = new InputLatch();
+            latch.Receive(PlayerInput.MenuOpen);
+
+            Assert.That(latch.Consume().InMenu, Is.True);
+            // メニューを開いたままなら、届いた最後の入力のまま「メニュー中」が続く
+            Assert.That(latch.Consume().InMenu, Is.True);
+
+            latch.Receive(new PlayerInput(Vec2.Zero, false, false));
+            Assert.That(latch.Consume().InMenu, Is.False);
+        }
+
+        [Test]
+        public void Recorder_MarksPlayerInMenu()
+        {
+            var players = TrialStage.Create(seed: 5, new[] { 0, 1 }, round: 1, out var world);
+            var recorder = new StageRecorder(world, round: 1);
+            world.SetInput(players[1].Id, PlayerInput.MenuOpen);
+            world.Tick();
+
+            var snapshot = StageCodec.DecodeSnapshot(StageCodec.EncodeSnapshot(recorder.Capture()));
+
+            Assert.That(snapshot.TryGetPlayer(0, out var open), Is.True);
+            Assert.That(open.Has(UnitFlags.InMenu), Is.False);
+            Assert.That(snapshot.TryGetPlayer(1, out var inMenu), Is.True);
+            Assert.That(inMenu.Has(UnitFlags.InMenu), Is.True);
+        }
+
+        [Test]
         public void InputLatch_KeepsSwitchTapUntilConsumed()
         {
             var latch = new InputLatch();

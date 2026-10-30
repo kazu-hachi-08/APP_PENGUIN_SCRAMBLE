@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// タイトルに足すメニュー（コイン・ステージの選択・ガチャ・ペンギン一覧）と、ガチャ画面・ペンギン一覧の画面（§2・§7。仮の見た目）
+    /// タイトルに足すメニュー（コイン・ステージの選択・ガチャ・ペンギン一覧・遊び方）と、ガチャ画面・ペンギン一覧の画面（§2・§7。仮の見た目）
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
@@ -78,7 +78,7 @@ namespace PenmonScramble.Editor
         private const float ScrollSensitivity = 40f;
 
         /// <summary>タイトルの Menu の中にメニューを置き、TitleMenu をタイトルに付ける</summary>
-        private static TitleMenu CreateTitleMenu(ModeSelectPanel title, GachaScreen gacha, PenguinListScreen penguins)
+        private static TitleMenu CreateTitleMenu(ModeSelectPanel title, GachaScreen gacha, PenguinListScreen penguins, HowToPlayScreen howToPlay)
         {
             var menu = title.transform.Find("Menu");
             var coin = CreateLabel(menu, "Coins", string.Empty, MenuFontSize, CoinPosition, CoinSize);
@@ -88,6 +88,7 @@ namespace PenmonScramble.Editor
             var next = CreateTitleButton(menu, "NextStage", "▶", new Vector2(StageArrowX, StageRowY), StageArrowSize, ArrowColor, MenuFontSize);
             var gachaButton = CreateTitleButton(menu, "Gacha", "ガチャ", GachaButtonPosition, MenuButtonSize, GachaColor, MenuFontSize);
             var penguinsButton = CreateTitleButton(menu, "Penguins", "ペンギン", PenguinsButtonPosition, MenuButtonSize, PenguinsColor, MenuFontSize);
+            var howToPlayButton = CreateTitleButton(menu, "HowToPlay", "遊び方", HowToPlayButtonPosition, MenuButtonSize, HowToPlayColor, MenuFontSize);
 
             var titleMenu = title.gameObject.AddComponent<TitleMenu>();
             var so = new SerializedObject(titleMenu);
@@ -97,8 +98,10 @@ namespace PenmonScramble.Editor
             so.FindProperty("_nextStageButton").objectReferenceValue = next;
             so.FindProperty("_gachaButton").objectReferenceValue = gachaButton;
             so.FindProperty("_penguinsButton").objectReferenceValue = penguinsButton;
+            so.FindProperty("_howToPlayButton").objectReferenceValue = howToPlayButton;
             so.FindProperty("_gacha").objectReferenceValue = gacha;
             so.FindProperty("_penguins").objectReferenceValue = penguins;
+            so.FindProperty("_howToPlay").objectReferenceValue = howToPlay;
             so.ApplyModifiedProperties();
             return titleMenu;
         }

@@ -1,4 +1,5 @@
 using PenmonScramble.Common.Editor;
+using PenmonScramble.Common.UI;
 using PenmonScramble.Game;
 using UnityEditor;
 using UnityEngine;
@@ -6,7 +7,7 @@ using UnityEngine.UI;
 
 namespace PenmonScramble.Editor
 {
-    /// <summary>ステージ中の HUD（HP・3体・必殺技のゲージ・エリアの進み具合・ボスの HP・結果）と必殺技のカットイン</summary>
+    /// <summary>ステージ中の HUD（HP・3体・必殺技のゲージ・エリアの進み具合・ボスの HP・結果・右上のメニューボタン）と必殺技のカットイン</summary>
     public static partial class PenmonScrambleSceneBuilder
     {
         private static readonly Vector2 HudMargin = new Vector2(40f, -32f);
@@ -44,6 +45,14 @@ namespace PenmonScramble.Editor
         private static readonly Color TitleButtonColor = new Color(0.45f, 0.5f, 0.6f);
         private const int RetryFontSize = 48;
         private static readonly Color RetryButtonColor = new Color(0.18f, 0.55f, 0.9f);
+
+        // 右上のメニューボタン（§3.2）。指で押しやすい大きさにして、進み具合の文字はその左へずらす
+        private const float HudMenuButtonSize = 120f;
+        private const float MenuButtonGap = 24f;
+        private const float MenuBarWidthRatio = 0.14f;
+        private const float MenuBarHeightRatio = 0.48f;
+        private const float MenuBarSpacingRatio = 0.24f;
+        private const string MenuHeading = "メニュー";
 
         private static StageHud CreateHud(Transform canvas, Image specialButton)
         {
@@ -193,12 +202,64 @@ namespace PenmonScramble.Editor
             var obj = UIDialogBuilder.CreateUIObject("Progress", parent);
             var rect = obj.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-HudMargin.x, HudMargin.y);
+            rect.anchoredPosition = new Vector2(-HudMargin.x - HudMenuButtonSize - MenuButtonGap, HudMargin.y);
             rect.sizeDelta = ProgressTextSize;
             var text = AddText(obj, string.Empty, HudFontSize);
             text.alignment = TextAnchor.MiddleRight;
             text.color = Color.white;
             return text;
+        }
+
+        /// <summary>
+        /// 右上の「‖」。角に寄せすぎると機種によって押せないので、セーフエリアの内側に置く。
+        /// 遊んでいる間だけ StageMenu が出す
+        /// </summary>
+        private static Button CreateMenuButton(Transform hud)
+        {
+            var area = CreateStretchGroup(hud, "MenuButtonArea");
+            area.AddComponent<SafeAreaFitter>();
+            var obj = UIDialogBuilder.CreateUIObject("MenuButton", area.transform);
+            var rect = obj.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one;
+            rect.anchoredPosition = new Vector2(-HudMargin.x, HudMargin.y);
+            rect.sizeDelta = Vector2.one * HudMenuButtonSize;
+            var image = obj.AddComponent<Image>();
+            image.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(RoundedSpritePath);
+            image.type = Image.Type.Sliced;
+            image.color = HpBarBackColor;
+            var button = obj.AddComponent<Button>();
+            button.targetGraphic = image;
+            // キーボード・コントローラーの「決定」で押されないように（Space は交代なので）
+            button.navigation = new Navigation { mode = Navigation.Mode.None };
+            CreateMenuIcon(obj.transform, "Icon", HudMenuButtonSize);
+            return button;
+        }
+
+        /// <summary>縦の棒2本の「‖」（一時停止の印）。文字にするとフォントで形が変わるので絵で描く</summary>
+        private static GameObject CreateMenuIcon(Transform parent, string name, float size)
+        {
+            var icon = UIDialogBuilder.CreateUIObject(name, parent);
+            icon.GetComponent<RectTransform>().sizeDelta = Vector2.one * size;
+            var barSize = new Vector2(size * MenuBarWidthRatio, size * MenuBarHeightRatio);
+            foreach (var side in new[] { -1f, 1f })
+            {
+                CreateRoundedBox(icon.transform, "Bar", new Vector2(side * size * MenuBarSpacingRatio * 0.5f, 0f), barSize, Color.white, null);
+            }
+
+            return icon;
+        }
+
+        /// <summary>ステージ中のメニュー。ポーズと確認は共通基盤のダイアログ、遊び方はタイトルと同じ画面を使う</summary>
+        private static StageMenu CreateStageMenu(Button openButton, PauseDialog dialog, CommonDialog confirm, HowToPlayScreen howToPlay)
+        {
+            var menu = new GameObject("StageMenu").AddComponent<StageMenu>();
+            var so = new SerializedObject(menu);
+            so.FindProperty("_openButton").objectReferenceValue = openButton;
+            so.FindProperty("_dialog").objectReferenceValue = dialog;
+            so.FindProperty("_confirm").objectReferenceValue = confirm;
+            so.FindProperty("_howToPlay").objectReferenceValue = howToPlay;
+            so.ApplyModifiedProperties();
+            return menu;
         }
 
         private static (GameObject panel, Text text, Button retry, Button toTitle) CreateResultPanel(Transform parent)

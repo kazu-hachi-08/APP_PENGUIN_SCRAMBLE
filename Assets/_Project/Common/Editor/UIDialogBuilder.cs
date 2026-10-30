@@ -75,7 +75,7 @@ namespace PenmonScramble.Common.Editor
             return dialog;
         }
 
-        // スマホで指で操作しやすいサイズ。項目の合計で高さは約830になる
+        // スマホで指で操作しやすいサイズ。ボタンは2列に並べて、横画面の低い高さに収める（合計で高さは約710）
         private const float PausePanelWidth = 820f;
         private const int PausePanelPadding = 30;
         private const float PauseItemSpacing = 20f;
@@ -83,6 +83,85 @@ namespace PenmonScramble.Common.Editor
         private const int PauseTitleFontSize = 44;
         private const float PauseButtonHeight = 100f;
         private const int PauseButtonFontSize = 36;
+        private const int PauseButtonColumns = 2;
+        private const int PauseButtonRows = 2;
+        private static readonly Color PauseResumeColor = new Color(0.18f, 0.55f, 0.9f);
+        private static readonly Color PauseHelpColor = new Color(0.30f, 0.70f, 0.45f);
+        private static readonly Color PauseRestartColor = new Color(0.95f, 0.55f, 0.25f);
+        private static readonly Color PauseTitleButtonColor = new Color(0.35f, 0.38f, 0.45f);
+
+        /// <summary>
+        /// ポーズ: 見出し・ボタン（つづける / 遊び方 / やり直し / タイトルへ）・BGM と効果音の音量。
+        /// 遊び方を持たないゲームは withHelp を false にする
+        /// </summary>
+        public static PauseDialog CreatePauseDialog(Transform parent, string heading, bool withHelp)
+        {
+            var dialogObj = CreateUIObject("PauseDialog", parent);
+            SetStretchAll(dialogObj.GetComponent<RectTransform>());
+            // 後ろのボタン（仮想スティックなど）を押せないよう、画面全体をふさぐ
+            dialogObj.AddComponent<Image>().color = new Color(0, 0, 0, 0.65f);
+
+            var contentHeight = PauseTitleHeight + PauseGridHeight + VolumeRowHeight * 2f;
+            var panelHeight = contentHeight + PausePanelPadding * 2f + PauseItemSpacing * 3f;
+            var panelObj = CreateCenteredPanel(dialogObj.transform, new Vector2(PausePanelWidth, panelHeight), new Color(0.14f, 0.16f, 0.22f));
+            var layout = panelObj.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(PausePanelPadding, PausePanelPadding, PausePanelPadding, PausePanelPadding);
+            layout.spacing = PauseItemSpacing;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+
+            var titleObj = CreateUIObject("TitleText", panelObj.transform);
+            SetPreferredHeight(titleObj, PauseTitleHeight);
+            AddBoldCenteredText(titleObj, heading, PauseTitleFontSize, Color.white);
+
+            var grid = CreatePauseButtonGrid(panelObj.transform);
+            var resume = CreatePauseButton(grid, "Btn_Resume", "つづける", PauseResumeColor);
+            var help = withHelp ? CreatePauseButton(grid, "Btn_Help", "遊び方", PauseHelpColor) : null;
+            var restart = CreatePauseButton(grid, "Btn_Restart", "やり直し", PauseRestartColor);
+            var title = CreatePauseButton(grid, "Btn_Title", "タイトルへ", PauseTitleButtonColor);
+
+            var bgm = CreateVolumeSlider("BgmVolume", panelObj.transform, "BGM");
+            SetPreferredHeight(bgm.transform.parent.gameObject, VolumeRowHeight);
+            var se = CreateVolumeSlider("SeVolume", panelObj.transform, "効果音");
+            SetPreferredHeight(se.transform.parent.gameObject, VolumeRowHeight);
+
+            var dialog = dialogObj.AddComponent<PauseDialog>();
+            var so = new SerializedObject(dialog);
+            so.FindProperty("_resumeButton").objectReferenceValue = resume.GetComponent<Button>();
+            so.FindProperty("_restartButton").objectReferenceValue = restart.GetComponent<Button>();
+            so.FindProperty("_titleButton").objectReferenceValue = title.GetComponent<Button>();
+            so.FindProperty("_helpButton").objectReferenceValue = help != null ? help.GetComponent<Button>() : null;
+            so.FindProperty("_bgmSlider").objectReferenceValue = bgm;
+            so.FindProperty("_seSlider").objectReferenceValue = se;
+            so.ApplyModifiedProperties();
+
+            dialogObj.SetActive(false);
+            return dialog;
+        }
+
+        private static float PauseGridHeight => PauseButtonHeight * PauseButtonRows + PauseItemSpacing * (PauseButtonRows - 1);
+
+        /// <summary>ボタンを2列に並べる。やり直しを隠したときは、残りが詰めて並ぶ</summary>
+        private static Transform CreatePauseButtonGrid(Transform parent)
+        {
+            var gridObj = CreateUIObject("Buttons", parent);
+            SetPreferredHeight(gridObj, PauseGridHeight);
+            var grid = gridObj.AddComponent<GridLayoutGroup>();
+            var innerWidth = PausePanelWidth - PausePanelPadding * 2f;
+            grid.cellSize = new Vector2((innerWidth - PauseItemSpacing * (PauseButtonColumns - 1)) / PauseButtonColumns, PauseButtonHeight);
+            grid.spacing = Vector2.one * PauseItemSpacing;
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = PauseButtonColumns;
+            grid.childAlignment = TextAnchor.UpperCenter;
+            return gridObj.transform;
+        }
+
+        private static void SetPreferredHeight(GameObject obj, float height)
+        {
+            obj.AddComponent<LayoutElement>().preferredHeight = height;
+        }
 
         private const float VolumeRowHeight = 140f;
         private const float VolumeLabelHeight = 50f;
