@@ -74,6 +74,7 @@ namespace PenmonScramble.Game
         {
             public readonly Parts Parts;
             public readonly PenguinLook Look;
+            /// <summary>体全体（PenguinModel.Figure）。床に立てる杖を付ける。転がる・倒れるときに一緒に動くよう、根元ではなくこちらに付ける</summary>
             public readonly Transform Root;
             public readonly Transform Body;
             public readonly Transform Head;

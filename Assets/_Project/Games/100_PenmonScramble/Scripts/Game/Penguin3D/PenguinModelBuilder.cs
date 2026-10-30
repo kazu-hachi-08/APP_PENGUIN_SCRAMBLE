@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PenmonScramble.Game
@@ -31,6 +32,13 @@ namespace PenmonScramble.Game
         private const float TorsoDepth = 0.68f;
         private const float TorsoBulge = 0.18f;
 
+        // 白いお腹の卵形（Torso と同じく体型の倍率を掛ける前）。前へ出ている分だけ、倒れたときに胴が浮く
+        private const float BellyCenterY = 0.38f;
+        private const float BellyHalfHeight = 0.31f;
+        private const float BellyCenterZ = 0.14f;
+        private const float BellyHalfDepth = 0.23f;
+        private const float BellyWidth = 0.58f;
+
         // 頭の球（頭の大きさの倍率を掛ける前）。頭の根元から見た中心と半径
         private const float HeadPivotY = 0.80f;
         private static readonly Vector3 HeadCenter = new Vector3(0f, 0.12f, 0f);
@@ -54,22 +62,26 @@ namespace PenmonScramble.Game
             var model = root.AddComponent<PenguinModel>();
             var parts = new Parts(model, materials);
 
-            var body = Pivot("Body", root.transform, Vector3.zero);
+            var figure = Pivot("Figure", root.transform, Vector3.zero);
+            var body = Pivot("Body", figure, Vector3.zero);
+            var eyes = new List<Transform>();
             BuildTorso(parts, look, body);
-            var head = BuildHead(parts, look, body);
+            var head = BuildHead(parts, look, body, eyes);
             var flipperLeft = BuildFlipper(parts, look, body, -1f);
             var flipperRight = BuildFlipper(parts, look, body, 1f);
-            var footLeft = BuildFoot(parts, look, root.transform, -1f);
-            var footRight = BuildFoot(parts, look, root.transform, 1f);
+            var footLeft = BuildFoot(parts, look, figure, -1f);
+            var footRight = BuildFoot(parts, look, figure, 1f);
             var shadow = BuildBlobShadow(materials, look, root.transform);
 
-            var rig = new Rig(parts, look, root.transform, body, head, flipperLeft, flipperRight);
+            var rig = new Rig(parts, look, figure, body, head, flipperLeft, flipperRight);
             foreach (var ornament in look.Ornaments)
             {
                 BuildOrnament(rig, ornament);
             }
 
-            model.Assign(body, head, flipperLeft, flipperRight, footLeft, footRight, shadow);
+            model.Assign(figure, body, head, flipperLeft, flipperRight, footLeft, footRight, shadow);
+            var top = HeadPivotY * look.Height + (HeadCenter.y + HeadRadius) * look.HeadSize;
+            model.AssignShape(eyes, TorsoCenterY * look.Height, (BellyCenterZ + BellyHalfDepth) * look.Width, top);
             model.SetRealShadows(true);
             return model;
         }
@@ -79,10 +91,10 @@ namespace PenmonScramble.Game
             var w = look.Width;
             var h = look.Height;
             parts.Add("Torso", ToyMeshes.Egg, body, new Vector3(0f, TorsoCenterY * h, 0f), new Vector3(BodyWidth * w, TorsoHeight * h, TorsoDepth * w), look.Back, BodyGloss);
-            parts.Add("Belly", ToyMeshes.Egg, body, new Vector3(0f, 0.38f * h, 0.14f * w), new Vector3(0.58f * w, 0.62f * h, 0.46f * w), look.Belly, BellyGloss);
+            parts.Add("Belly", ToyMeshes.Egg, body, new Vector3(0f, BellyCenterY * h, BellyCenterZ * w), new Vector3(BellyWidth * w, BellyHalfHeight * 2f * h, BellyHalfDepth * 2f * w), look.Belly, BellyGloss);
         }
 
-        private static Transform BuildHead(Parts parts, PenguinLook look, Transform body)
+        private static Transform BuildHead(Parts parts, PenguinLook look, Transform body, List<Transform> eyes)
         {
             var s = look.HeadSize;
             var head = Pivot("Head", body, new Vector3(0f, HeadPivotY * look.Height, 0.02f));
@@ -91,7 +103,7 @@ namespace PenmonScramble.Game
             parts.Add("Beak", ToyMeshes.Sphere, head, new Vector3(0f, 0.04f, 0.34f) * s, new Vector3(0.22f, 0.10f, 0.20f) * s, look.Beak, BeakGloss);
             for (var side = -1f; side <= 1f; side += 2f)
             {
-                BuildEye(parts, look, head, side);
+                BuildEye(parts, look, head, side, eyes);
             }
 
             if (look.Tuft)
@@ -102,7 +114,7 @@ namespace PenmonScramble.Game
             return head;
         }
 
-        private static void BuildEye(Parts parts, PenguinLook look, Transform head, float side)
+        private static void BuildEye(Parts parts, PenguinLook look, Transform head, float side, List<Transform> eyes)
         {
             var s = look.HeadSize;
             var position = Vector3.Scale(EyePosition, new Vector3(side, 1f, 1f)) * s;
@@ -118,11 +130,11 @@ namespace PenmonScramble.Game
                     break;
             }
 
-            parts.Add("Pupil", ToyMeshes.Sphere, head, position, size * s, look.Eye, EyeGloss);
+            eyes.Add(parts.Add("Pupil", ToyMeshes.Sphere, head, position, size * s, look.Eye, EyeGloss));
             // 線の目に光を入れると目を開けているように見えるので入れない
             if (look.Eyes != EyeStyle.Sleepy)
             {
-                parts.Add("EyeShine", ToyMeshes.Sphere, head, position + new Vector3(-0.012f * side, 0.03f, 0.03f) * s, Vector3.one * 0.035f * s, Highlight, 0f);
+                eyes.Add(parts.Add("EyeShine", ToyMeshes.Sphere, head, position + new Vector3(-0.012f * side, 0.03f, 0.03f) * s, Vector3.one * 0.035f * s, Highlight, 0f));
             }
         }
 

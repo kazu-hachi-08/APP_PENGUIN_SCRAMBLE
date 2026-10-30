@@ -145,10 +145,9 @@ namespace PenmonScramble.Game
             model.name = $"Penguin{speciesNo:00}";
             model.transform.localPosition = new Vector3(spot.x, 0f, spot.y);
             model.transform.localScale = Vector3.one * scale;
-            // 手前（カメラ側）を向かせて顔が見えるようにする
-            model.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             var motion = model.gameObject.AddComponent<PenguinMotion>();
-            motion.Apply(PenguinPose.Idle);
+            // 手前（カメラ側）を向かせて顔が見えるようにする
+            motion.SnapFacing(Vector3.back);
             _penguins.Add(motion);
         }
 

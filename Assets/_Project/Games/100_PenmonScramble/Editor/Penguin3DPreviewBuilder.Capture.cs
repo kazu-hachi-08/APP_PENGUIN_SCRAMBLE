@@ -27,13 +27,36 @@ namespace PenmonScramble.Editor
         private static readonly PenguinPose[] Poses =
         {
             PenguinPose.Idle,
-            new PenguinPose { Walk = 1f, WalkPhase = 0f, Attack = 1f, Hit = 1f },
-            new PenguinPose { Walk = 1f, WalkPhase = 0.25f, Attack = 1f, Hit = 1f },
-            new PenguinPose { Walk = 1f, WalkPhase = 0.75f, Attack = 1f, Hit = 1f },
-            new PenguinPose { Attack = 0.3f, Hit = 1f },
-            new PenguinPose { Attack = 0.5f, Hit = 1f },
-            new PenguinPose { Attack = 1f, Hit = 0.08f, Time = 0.02f },
+            Walking(0f),
+            Walking(0.25f),
+            Walking(0.75f),
+            Attacking(0.3f),
+            Attacking(0.5f),
+            Hit(0.08f),
         };
+
+        private static PenguinPose Walking(float phase)
+        {
+            var pose = PenguinPose.Idle;
+            pose.Walk = 1f;
+            pose.WalkPhase = phase;
+            return pose;
+        }
+
+        private static PenguinPose Attacking(float progress)
+        {
+            var pose = PenguinPose.Idle;
+            pose.Attack = progress;
+            return pose;
+        }
+
+        private static PenguinPose Hit(float progress)
+        {
+            var pose = PenguinPose.Idle;
+            pose.Hit = progress;
+            pose.Time = 0.02f;
+            return pose;
+        }
 
         [MenuItem("Tools/PenmonScramble/3D Preview Capture")]
         public static void Capture()
@@ -63,7 +86,7 @@ namespace PenmonScramble.Editor
                 foreach (var penguin in stage.Penguins)
                 {
                     penguin.gameObject.SetActive(true);
-                    penguin.Apply(PenguinPose.Idle);
+                    penguin.ResetPose();
                 }
             }
 
@@ -117,7 +140,10 @@ namespace PenmonScramble.Editor
             for (var i = 0; i < stage.Penguins.Count; i++)
             {
                 stage.Penguins[i].gameObject.SetActive(true);
-                stage.Penguins[i].Apply(Poses[i % Poses.Length]);
+                // 根元は回していないので、体の向きで顔をカメラ側へ向ける
+                var pose = Poses[i % Poses.Length];
+                pose.Yaw = 180f;
+                stage.Penguins[i].Apply(pose);
             }
 
             stage.SetOutline(true);

@@ -51,15 +51,18 @@ namespace PenmonScramble.Editor
                 foreach (var penguin in stage.Penguins)
                 {
                     penguin.gameObject.SetActive(true);
-                    penguin.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
-                    penguin.Apply(PenguinPose.Idle);
+                    penguin.transform.localRotation = Quaternion.identity;
+                    penguin.ResetPose();
                 }
             }
 
             Debug.Log($"[Penguin3DPreviewBuilder] {Path.GetFullPath(CaptureFolder)} に20種類のスクショを保存しました");
         }
 
-        /// <summary>1体ずつ、ほかを隠してエリアのまん中に連れてきて撮る（背景の床をそろえる）。yaw 180 で顔がカメラ側、0 で背中がカメラ側</summary>
+        /// <summary>
+        /// 1体ずつ、ほかを隠してエリアのまん中に連れてきて撮る（背景の床をそろえる）。yaw 180 で顔がカメラ側、0 で背中がカメラ側。
+        /// 向きは根元を回して決める（Apply の Idle は体の向きが 0 なので）
+        /// </summary>
         private static Texture2D CaptureLineupCells(PenguinPreviewStage stage, float yaw)
         {
             var count = stage.Penguins.Count;

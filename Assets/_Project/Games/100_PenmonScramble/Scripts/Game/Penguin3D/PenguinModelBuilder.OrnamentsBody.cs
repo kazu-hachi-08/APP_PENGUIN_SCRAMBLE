@@ -20,12 +20,6 @@ namespace PenmonScramble.Game
         // 首（マフラー・マントのえり・蝶ネクタイ）の高さ
         private const float NeckHeight = 0.70f;
 
-        // 白いお腹の卵形（Torso と同じく体型の倍率を掛ける前）
-        private const float BellyCenterY = 0.38f;
-        private const float BellyHalfHeight = 0.31f;
-        private const float BellyCenterZ = 0.14f;
-        private const float BellyHalfDepth = 0.23f;
-
         /// <summary>お腹の前の面の z（高さ y で）</summary>
         private static float BellyFront(Rig rig, float y)
         {

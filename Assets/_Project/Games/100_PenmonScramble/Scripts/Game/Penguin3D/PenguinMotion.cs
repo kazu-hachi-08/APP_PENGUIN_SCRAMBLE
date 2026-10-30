@@ -1,61 +1,130 @@
+using PenmonScramble.Core;
 using UnityEngine;
 
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 3D のペンギンの部品を動かす（歩く・技・被弾。フェーズ0の仮の動き）。
-    /// 毎フレームの姿勢は PenguinPose だけから決まるので、試作の場のスクショでは時刻を止めた姿勢を Apply で直接置ける
+    /// 3D のペンギンの部品を動かす（立つ・歩く・技・必殺技・被弾・吹っ飛び・すべる・ダウン・撃破）。
+    /// 状態は外（UnitView・試作の場）から受け取り、部品と体全体（Figure）だけを動かす。根元の位置・回転・大きさは呼び出し側のもの。
+    /// 毎フレームの姿勢は PenguinPose だけから決まる（Apply）。部品ごとの動きは PenguinMotion.Parts.cs、体全体の動きは PenguinMotion.Figure.cs
     /// </summary>
     [RequireComponent(typeof(PenguinModel))]
-    public sealed class PenguinMotion : MonoBehaviour
+    public sealed partial class PenguinMotion : MonoBehaviour
     {
         // 向きを変える速さ（度/秒）。速すぎるとカクッと見える
         private const float TurnSpeed = 720f;
-        // 立ち止まり⇔歩きの切り替えにかける時間の逆数
+        // 立ち止まり⇔歩き・すべる・倒れるの切り替えにかける時間の逆数
         private const float WalkBlendRate = 6f;
+        private const float SlideBlendRate = 10f;
+        private const float DownBlendRate = 5f;
         private const float MovingThreshold = 0.05f;
-        // 1マス進むあいだの歩数（左右で1周）
+        // 1マス進むあいだの歩数（左右で1周）。速く歩くほど揺れも速くなる
         private const float CyclesPerUnit = 0.9f;
 
-        private const float BreathRate = 0.6f;
-        private const float BreathScale = 0.02f;
-
-        private const float WalkRoll = 9f;
-        private const float WalkBob = 0.05f;
-        private const float WalkLean = 6f;
-        private const float Stride = 0.12f;
-        private const float FootLift = 0.07f;
-        private const float FlipperOpen = 22f;
-        private const float FlipperFlap = 10f;
-
         public const float AttackSeconds = 0.5f;
-        // 技の流れ（割合）: ここまでかがむ → ここまで前へ伸びる → 戻る
-        private const float AttackWindupEnd = 0.35f;
-        private const float AttackLungeEnd = 0.55f;
-        private const float CrouchSquash = 0.18f;
-        private const float WindupLean = 12f;
-        private const float LungeLean = 22f;
-        private const float LungeDistance = 0.25f;
-        private const float FlipperWindup = 35f;
-        private const float FlipperSwing = 80f;
-
+        public const float SpecialSeconds = 0.9f;
         public const float HitSeconds = 0.4f;
-        private const float HitLean = 25f;
-        private const float HitHeadLean = 15f;
-        private const float HitFlipper = 40f;
-        private const float HitShake = 0.04f;
-        private const float HitShakeRate = 60f;
+        public const float DefeatSeconds = 0.6f;
+        private const float BlinkSeconds = 0.15f;
+        private const float BlinkIntervalMin = 2f;
+        private const float BlinkIntervalMax = 5f;
+
+        // 吹っ飛びの長さ（秒）の範囲。Core の減速から求めた時間を、短すぎて見えない・長すぎて間延びしないように丸める
+        private const float KnockSecondsMin = 0.25f;
+        private const float KnockSecondsMax = 1f;
+        // 転がる回数は飛ぶ距離をこの半径の輪が転がる回数にする（体の半径より少し小さくして、よく転がるように見せる）
+        private const float RollRadius = 0.3f;
+        private const int MaxKnockTurns = 3;
 
         private PenguinModel _model;
         private Rest _rest;
         private PenguinPose _pose = PenguinPose.Idle;
+        private float _knockSeconds = KnockSecondsMin;
+        private float _blinkTimer;
 
-        /// <summary>床の上での速度（マス/秒）。向きと歩きの揺れに使う</summary>
+        /// <summary>床の上での速度（マス/秒）。歩きの揺れと、Facing が無いときの向きに使う</summary>
         public Vector3 Velocity { get; set; }
 
-        public void PlayAttack() => _pose.Attack = 0f;
+        /// <summary>向く方向。ゼロなら進む方向を向く</summary>
+        public Vector3 Facing { get; set; }
+
+        /// <summary>突進中（お腹ですべる）</summary>
+        public bool Sliding { get; set; }
+
+        /// <summary>ダウン中（お腹を下にして倒れ、ヒレをじたばた）</summary>
+        public bool Down { get; set; }
+
+        public bool IsDefeatFinished => _pose.Defeated && _pose.Defeat >= 1f;
+
+        public void PlayAttack(SkillShape shape)
+        {
+            _pose.Attack = 0f;
+            _pose.AttackShape = shape;
+        }
+
+        /// <summary>必殺技・合体技</summary>
+        public void PlaySpecial() => _pose.Special = 0f;
 
         public void PlayHit() => _pose.Hit = 0f;
+
+        public void PlayBlink() => _pose.Blink = 0f;
+
+        /// <summary>
+        /// 吹っ飛ばされた。velocity は飛ばされた初速（マス/秒）。Core と同じ減速で止まるまでの時間だけ、飛ぶ向きへ転がる。
+        /// 飛ばしてきた側へすぐ向き直って後ろへ転がる（横へ転がると、広げたヒレが床にめり込むため）。
+        /// 位置は呼び出し側が動かす（ここでは転がりと跳ねだけ）
+        /// </summary>
+        public void PlayKnockback(Vector3 velocity)
+        {
+            Bind();
+            var local = transform.InverseTransformDirection(new Vector3(velocity.x, 0f, velocity.z));
+            var speed = local.magnitude;
+            if (speed <= 0f)
+            {
+                return;
+            }
+
+            _knockSeconds = Mathf.Clamp(speed / Balance.KnockbackDeceleration, KnockSecondsMin, KnockSecondsMax);
+            var distance = speed * speed / (2f * Balance.KnockbackDeceleration) / Mathf.Max(0.01f, transform.lossyScale.x);
+            _pose.Knock = 0f;
+            _pose.KnockDirection = local / speed;
+            _pose.Yaw = YawOf(-local);
+            _pose.KnockTurns = Mathf.Min(MaxKnockTurns, Mathf.Round(distance / (2f * Mathf.PI * RollRadius)));
+        }
+
+        /// <summary>倒された。回りながら飛んで消える。終わったら IsDefeatFinished</summary>
+        public void PlayDefeat()
+        {
+            _pose.Defeated = true;
+            _pose.Defeat = 0f;
+        }
+
+        /// <summary>今の向きをなめらかに回さず、すぐこの方向へ向ける（出てきたとき・試作の場で並べたとき）</summary>
+        public void SnapFacing(Vector3 direction)
+        {
+            Bind();
+            var local = transform.InverseTransformDirection(direction);
+            if (local.x * local.x + local.z * local.z > 0f)
+            {
+                _pose.Yaw = YawOf(local);
+            }
+
+            Apply(_pose);
+        }
+
+        /// <summary>動きを全部止めて立った姿勢に戻す（向きは残す）</summary>
+        public void ResetPose()
+        {
+            Bind();
+            var yaw = _pose.Yaw;
+            _pose = PenguinPose.Idle;
+            _pose.Yaw = yaw;
+            Sliding = false;
+            Down = false;
+            Velocity = Vector3.zero;
+            _blinkTimer = NextBlinkInterval();
+            Apply(_pose);
+        }
 
         private void Awake() => Bind();
 
@@ -68,112 +137,89 @@ namespace PenmonScramble.Game
 
             _model = GetComponent<PenguinModel>();
             _rest = new Rest(_model);
+            _blinkTimer = NextBlinkInterval();
         }
 
-        private void Update()
+        private void Update() => Tick(Time.deltaTime);
+
+        /// <summary>dt 秒進めて姿勢を置く。試作の場のスクショは、これで時刻を進めて撮る</summary>
+        public void Tick(float dt)
         {
-            var dt = Time.deltaTime;
-            var speed = new Vector3(Velocity.x, 0f, Velocity.z).magnitude;
-            var moving = speed > MovingThreshold;
-            if (moving)
+            Bind();
+            var local = transform.InverseTransformDirection(new Vector3(Velocity.x, 0f, Velocity.z));
+            var speed = local.magnitude;
+            var knocked = _pose.Knock < 1f;
+            var moving = speed > MovingThreshold && !knocked && !Down;
+            Turn(local, moving, dt);
+
+            _pose.Walk = Mathf.MoveTowards(_pose.Walk, moving && !Sliding ? 1f : 0f, WalkBlendRate * dt);
+            _pose.WalkPhase = Mathf.Repeat(_pose.WalkPhase + speed * CyclesPerUnit * dt, 1f);
+            _pose.Slide = Mathf.MoveTowards(_pose.Slide, Sliding && !Down ? 1f : 0f, SlideBlendRate * dt);
+            _pose.Down = Mathf.MoveTowards(_pose.Down, Down ? 1f : 0f, DownBlendRate * dt);
+            _pose.Attack = Advance(_pose.Attack, dt, AttackSeconds);
+            _pose.Special = Advance(_pose.Special, dt, SpecialSeconds);
+            _pose.Hit = Advance(_pose.Hit, dt, HitSeconds);
+            _pose.Knock = Advance(_pose.Knock, dt, _knockSeconds);
+            _pose.Blink = Advance(_pose.Blink, dt, BlinkSeconds);
+            if (_pose.Defeated)
             {
-                var target = Quaternion.LookRotation(new Vector3(Velocity.x, 0f, Velocity.z));
-                transform.localRotation = Quaternion.RotateTowards(transform.localRotation, target, TurnSpeed * dt);
+                _pose.Defeat = Advance(_pose.Defeat, dt, DefeatSeconds);
             }
 
-            _pose.Walk = Mathf.MoveTowards(_pose.Walk, moving ? 1f : 0f, WalkBlendRate * dt);
-            _pose.WalkPhase = Mathf.Repeat(_pose.WalkPhase + speed * CyclesPerUnit * dt, 1f);
-            _pose.Attack = Mathf.Min(1f, _pose.Attack + dt / AttackSeconds);
-            _pose.Hit = Mathf.Min(1f, _pose.Hit + dt / HitSeconds);
+            UpdateBlinkTimer(dt);
             _pose.Time += dt;
             Apply(_pose);
         }
+
+        /// <summary>Facing があればそちらへ、無ければ進む向きへ回る。吹っ飛び中・ダウン中は向きを変えない</summary>
+        private void Turn(Vector3 localVelocity, bool moving, float dt)
+        {
+            if (_pose.Knock < 1f || Down || _pose.Defeated)
+            {
+                return;
+            }
+
+            var facing = transform.InverseTransformDirection(new Vector3(Facing.x, 0f, Facing.z));
+            var target = facing.sqrMagnitude > 0f ? facing : moving ? localVelocity : Vector3.zero;
+            if (target.sqrMagnitude > 0f)
+            {
+                _pose.Yaw = Mathf.MoveTowardsAngle(_pose.Yaw, YawOf(target), TurnSpeed * dt);
+            }
+        }
+
+        private void UpdateBlinkTimer(float dt)
+        {
+            _blinkTimer -= dt;
+            if (_blinkTimer > 0f)
+            {
+                return;
+            }
+
+            _blinkTimer = NextBlinkInterval();
+            PlayBlink();
+        }
+
+        // 全員が同時にまばたきしないよう、間隔を毎回ばらつかせる（見た目だけなので Core の乱数とは関係ない）
+        private static float NextBlinkInterval() => Random.Range(BlinkIntervalMin, BlinkIntervalMax);
+
+        private static float Advance(float progress, float dt, float seconds) => Mathf.Min(1f, progress + dt / seconds);
+
+        private static float YawOf(Vector3 direction) => Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
 
         /// <summary>姿勢を部品に置く。毎回休みの姿勢から組み直すので、前のフレームの値が残らない</summary>
         public void Apply(PenguinPose pose)
         {
             Bind();
-            var body = new Offset(_rest.Body);
-            var head = new Offset(_rest.Head);
-            var flipperL = new Offset(_rest.FlipperLeft);
-            var flipperR = new Offset(_rest.FlipperRight);
-            var footL = new Offset(_rest.FootLeft);
-            var footR = new Offset(_rest.FootRight);
+            var parts = new PartPose(_rest);
+            ApplyParts(pose, ref parts);
+            parts.ApplyTo(_model);
 
-            Breathe(pose, ref body);
-            Walk(pose, ref body, ref flipperL, ref flipperR, ref footL, ref footR);
-            Attack(pose, ref body, ref flipperL, ref flipperR);
-            Hit(pose, ref body, ref head, ref flipperL, ref flipperR);
-
-            body.ApplyTo(_model.Body);
-            head.ApplyTo(_model.Head);
-            flipperL.ApplyTo(_model.FlipperLeft);
-            flipperR.ApplyTo(_model.FlipperRight);
-            footL.ApplyTo(_model.FootLeft);
-            footR.ApplyTo(_model.FootRight);
-        }
-
-        private static void Breathe(PenguinPose pose, ref Offset body)
-        {
-            var breath = Mathf.Sin(pose.Time * BreathRate * Mathf.PI * 2f) * BreathScale;
-            body.Scale = Vector3.Scale(body.Scale, new Vector3(1f - breath * 0.5f, 1f + breath, 1f - breath * 0.5f));
-        }
-
-        /// <summary>体を左右に揺らしながら跳ねるように歩く。足は前へ出すときだけ持ち上げる</summary>
-        private static void Walk(PenguinPose pose, ref Offset body, ref Offset flipperL, ref Offset flipperR, ref Offset footL, ref Offset footR)
-        {
-            if (pose.Walk <= 0f)
-            {
-                return;
-            }
-
-            var angle = pose.WalkPhase * Mathf.PI * 2f;
-            var swing = Mathf.Sin(angle);
-            var lift = Mathf.Cos(angle);
-            body.Euler += new Vector3(WalkLean, 0f, swing * WalkRoll) * pose.Walk;
-            body.Position += Vector3.up * (Mathf.Abs(swing) * WalkBob * pose.Walk);
-
-            footL.Position += new Vector3(0f, Mathf.Max(0f, lift) * FootLift, swing * Stride) * pose.Walk;
-            footR.Position += new Vector3(0f, Mathf.Max(0f, -lift) * FootLift, -swing * Stride) * pose.Walk;
-
-            var flap = Mathf.Sin(angle * 2f) * FlipperFlap;
-            flipperL.Euler += new Vector3(0f, 0f, -(FlipperOpen + flap)) * pose.Walk;
-            flipperR.Euler += new Vector3(0f, 0f, FlipperOpen + flap) * pose.Walk;
-        }
-
-        /// <summary>かがんでヒレを後ろへ引き、前へ伸びながらヒレを振り出す</summary>
-        private static void Attack(PenguinPose pose, ref Offset body, ref Offset flipperL, ref Offset flipperR)
-        {
-            if (pose.Attack >= 1f)
-            {
-                return;
-            }
-
-            var crouch = Bell(pose.Attack, 0f, AttackWindupEnd, AttackLungeEnd);
-            var lunge = Bell(pose.Attack, AttackWindupEnd, AttackLungeEnd, 1f);
-            body.Scale = Vector3.Scale(body.Scale, new Vector3(1f + crouch * CrouchSquash * 0.6f, 1f - crouch * CrouchSquash, 1f + crouch * CrouchSquash * 0.6f));
-            body.Euler += new Vector3(-crouch * WindupLean + lunge * LungeLean, 0f, 0f);
-            body.Position += Vector3.forward * (lunge * LungeDistance);
-
-            var flipper = new Vector3(crouch * FlipperWindup - lunge * FlipperSwing, 0f, 0f);
-            flipperL.Euler += flipper;
-            flipperR.Euler += flipper;
-        }
-
-        /// <summary>のけぞって震え、ヒレが跳ね上がる。すぐ強く、ゆっくり戻る</summary>
-        private static void Hit(PenguinPose pose, ref Offset body, ref Offset head, ref Offset flipperL, ref Offset flipperR)
-        {
-            if (pose.Hit >= 1f)
-            {
-                return;
-            }
-
-            var recoil = (1f - pose.Hit) * (1f - pose.Hit);
-            body.Euler += new Vector3(-recoil * HitLean, 0f, 0f);
-            body.Position += Vector3.right * (Mathf.Sin(pose.Time * HitShakeRate) * HitShake * (1f - pose.Hit));
-            head.Euler += new Vector3(-recoil * HitHeadLean, 0f, 0f);
-            flipperL.Euler += new Vector3(0f, 0f, -recoil * HitFlipper);
-            flipperR.Euler += new Vector3(0f, 0f, recoil * HitFlipper);
+            var figure = FigureOf(pose);
+            _model.Figure.localPosition = figure.Position;
+            _model.Figure.localRotation = figure.Rotation;
+            _model.Figure.localScale = Vector3.one * figure.Scale;
+            ApplyShadow(pose, figure);
+            ApplyBlink(pose);
         }
 
         /// <summary>start で 0、peak で 1、end で 0 に戻る山（なめらかに）</summary>
@@ -192,6 +238,11 @@ namespace PenmonScramble.Game
             public readonly Offset FlipperRight;
             public readonly Offset FootLeft;
             public readonly Offset FootRight;
+            public readonly Vector3 ShadowScale;
+            public readonly Vector3[] EyeScales;
+            public readonly float CenterHeight;
+            public readonly float LieHeight;
+            public readonly float TopHeight;
 
             public Rest(PenguinModel model)
             {
@@ -201,22 +252,76 @@ namespace PenmonScramble.Game
                 FlipperRight = Offset.From(model.FlipperRight);
                 FootLeft = Offset.From(model.FootLeft);
                 FootRight = Offset.From(model.FootRight);
+                ShadowScale = model.BlobShadow.transform.localScale;
+                EyeScales = new Vector3[model.Eyes.Count];
+                for (var i = 0; i < EyeScales.Length; i++)
+                {
+                    EyeScales[i] = model.Eyes[i].localScale;
+                }
+
+                CenterHeight = model.CenterHeight;
+                LieHeight = model.LieHeight;
+                TopHeight = model.TopHeight;
             }
         }
 
-        /// <summary>部品1つ分の姿勢。休みの姿勢に動きを足していき、最後にまとめて置く</summary>
+        /// <summary>部品ごとの姿勢。休みの姿勢に動きを足していき、最後にまとめて置く</summary>
+        private struct PartPose
+        {
+            public Offset Body;
+            public Offset Head;
+            public Offset FlipperLeft;
+            public Offset FlipperRight;
+            public Offset FootLeft;
+            public Offset FootRight;
+
+            public PartPose(Rest rest)
+            {
+                Body = rest.Body;
+                Head = rest.Head;
+                FlipperLeft = rest.FlipperLeft;
+                FlipperRight = rest.FlipperRight;
+                FootLeft = rest.FootLeft;
+                FootRight = rest.FootRight;
+            }
+
+            /// <summary>ヒレを外へ開く（左右で向きが逆なので、正の値で両方とも外へ）</summary>
+            public void OpenFlippers(float degrees)
+            {
+                FlipperLeft.Euler.z -= degrees;
+                FlipperRight.Euler.z += degrees;
+            }
+
+            /// <summary>ヒレを前後に振る。正で後ろへ、負で前へ</summary>
+            public void SwingFlippers(float degrees)
+            {
+                FlipperLeft.Euler.x += degrees;
+                FlipperRight.Euler.x += degrees;
+            }
+
+            /// <summary>胴をつぶす（正）・伸ばす（負）。つぶすと横に広がる</summary>
+            public void Squash(float amount)
+            {
+                Body.Scale = Vector3.Scale(Body.Scale, new Vector3(1f + amount * 0.6f, 1f - amount, 1f + amount * 0.6f));
+            }
+
+            public void ApplyTo(PenguinModel model)
+            {
+                Body.ApplyTo(model.Body);
+                Head.ApplyTo(model.Head);
+                FlipperLeft.ApplyTo(model.FlipperLeft);
+                FlipperRight.ApplyTo(model.FlipperRight);
+                FootLeft.ApplyTo(model.FootLeft);
+                FootRight.ApplyTo(model.FootRight);
+            }
+        }
+
+        /// <summary>部品1つ分の姿勢</summary>
         private struct Offset
         {
             public Vector3 Position;
             public Vector3 Euler;
             public Vector3 Scale;
-
-            public Offset(Offset rest)
-            {
-                Position = rest.Position;
-                Euler = rest.Euler;
-                Scale = rest.Scale;
-            }
 
             public static Offset From(Transform t) => new Offset { Position = t.localPosition, Euler = t.localEulerAngles, Scale = t.localScale };
 
@@ -227,17 +332,5 @@ namespace PenmonScramble.Game
                 t.localScale = Scale;
             }
         }
-    }
-
-    /// <summary>ペンギンの動きの状態。Attack・Hit は始まってからの割合（0〜1、1 で終わり）</summary>
-    public struct PenguinPose
-    {
-        public float Walk;
-        public float WalkPhase;
-        public float Attack;
-        public float Hit;
-        public float Time;
-
-        public static PenguinPose Idle => new PenguinPose { Attack = 1f, Hit = 1f };
     }
 }
