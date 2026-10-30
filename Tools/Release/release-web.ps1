@@ -5,7 +5,7 @@
 #   .\Tools\Release\release-web.ps1 -Message "v0.2 を公開"
 #
 # 前提:
-#   - UnityでWeb向けに -PagesDir（既定は <repo>\..\penmon-scramble-web）へ直接ビルド済みであること
+#   - Unity の Tools > PenmonScramble > Release > Web で -PagesDir（既定は <repo>\..\penmon-scramble-web）へ直接ビルド済みであること
 #   - gh CLI がインストール済みで `gh auth login` 済みであること
 #
 # ビルド先と公開用リポジトリの clone を同じフォルダにして、コピーの手間とフォルダの二重管理をなくしている。
@@ -47,7 +47,7 @@ if (-not (Test-Path $PagesDir)) {
     }
     git clone "https://github.com/$Repo.git" $PagesDir
     if ($LASTEXITCODE -ne 0) { Write-Error "clone に失敗しました。" }
-    Write-Host "準備できました。Unity で $PagesDir に Web ビルドしてから、もう一度実行してください。"
+    Write-Host "準備できました。Unity の Tools > PenmonScramble > Release > Web でビルドしてから、もう一度実行してください。"
     return
 }
 if (-not (Test-Path (Join-Path $PagesDir ".git"))) {

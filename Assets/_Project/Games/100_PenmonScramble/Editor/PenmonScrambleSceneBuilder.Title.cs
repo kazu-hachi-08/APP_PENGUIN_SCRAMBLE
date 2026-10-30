@@ -1,3 +1,4 @@
+using PenmonScramble.Common.AppUpdate;
 using PenmonScramble.Common.Editor;
 using PenmonScramble.Common.Online;
 using UnityEditor;
@@ -79,7 +80,21 @@ namespace PenmonScramble.Editor
             so.FindProperty("_copyButtonLabel").objectReferenceValue = copy.GetComponentInChildren<Text>();
             so.FindProperty("_startButton").objectReferenceValue = start;
             so.ApplyModifiedProperties();
+            AddUpdateNotice(root);
             return panel;
+        }
+
+        /// <summary>
+        /// Windows 版の「新しい版が あります」。タイトルの子の最後に置いてメニューより手前に出し、
+        /// タイトルを離れたら一緒に消えるようにする
+        /// </summary>
+        private static void AddUpdateNotice(GameObject title)
+        {
+            var dialog = UIDialogBuilder.CreateCommonDialog(title.transform);
+            var notice = title.AddComponent<UpdateNotice>();
+            var so = new SerializedObject(notice);
+            so.FindProperty("_dialog").objectReferenceValue = dialog;
+            so.ApplyModifiedProperties();
         }
 
         private static GameObject CreateTitleMenu(Transform parent, out Button solo, out Button host, out Button join, out InputField codeInput)
