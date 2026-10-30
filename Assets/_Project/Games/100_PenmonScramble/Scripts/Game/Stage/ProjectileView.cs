@@ -63,7 +63,7 @@ namespace PenmonScramble.Game
             var glow = new GameObject("Glow").AddComponent<SpriteRenderer>();
             glow.transform.SetParent(transform, false);
             glow.transform.localPosition = Vector3.up * FlyHeight;
-            glow.sprite = PlaceholderSprites.Glow;
+            glow.sprite = DecalSprites.Glow;
             glow.sharedMaterial = materials.Glow;
             glow.color = new Color(color.r, color.g, color.b, alpha);
             glow.sortingOrder = SortingDepth.Popup - 4;

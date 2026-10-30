@@ -114,7 +114,7 @@ namespace PenmonScramble.Editor
             if (pipeline == null)
             {
                 pipeline = UniversalRenderPipelineAsset.Create(renderer);
-                // 今の2Dの見た目（スプライトの色）を変えないよう、HDR は使わない
+                // 明るさの上限を超える演出は無いので HDR は使わない（スマホ・ブラウザで描く色の量を減らす）
                 pipeline.supportsHDR = false;
                 AssetDatabase.CreateAsset(pipeline, path);
             }

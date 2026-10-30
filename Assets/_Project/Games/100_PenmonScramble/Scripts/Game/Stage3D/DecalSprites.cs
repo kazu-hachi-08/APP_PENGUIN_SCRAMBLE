@@ -3,10 +3,10 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 絵ができるまでの仮の形（丸・輪・三角・四角）を実行時に作る。どれも1マスの大きさ。
-    /// アセットにしないのは、絵に差し替えたら丸ごと消すため
+    /// 床に寝かせる範囲・輪（FloorDecal）と、はじける光（BurstFx）の形を実行時に作る。どれも1マスの大きさ。
+    /// 単純な形なのでアセットにせず、ブラウザ版のダウンロードを増やさない
     /// </summary>
-    public static class PlaceholderSprites
+    public static class DecalSprites
     {
         private const int Size = 64;
         // 縁を1ピクセルぼかして、拡大してもギザギザに見えないようにする
@@ -17,13 +17,11 @@ namespace PenmonScramble.Game
 
         private static Sprite _circle;
         private static Sprite _ring;
-        private static Sprite _triangle;
         private static Sprite _square;
         private static Sprite _glow;
 
         public static Sprite Circle => _circle != null ? _circle : _circle = Create(CircleAlpha);
         public static Sprite Ring => _ring != null ? _ring : _ring = Create(RingAlpha);
-        public static Sprite Triangle => _triangle != null ? _triangle : _triangle = Create(TriangleAlpha);
         public static Sprite Square => _square != null ? _square : _square = Create((x, y) => 1f);
 
         /// <summary>真ん中ほど濃く、縁へなめらかに消える丸（光）</summary>
@@ -50,14 +48,6 @@ namespace PenmonScramble.Game
             var halfWidth = radius * RingThickness * 0.5f;
             var center = radius - halfWidth - EdgeSoftness;
             return Mathf.Clamp01((halfWidth - Mathf.Abs(distance - center)) / EdgeSoftness);
-        }
-
-        /// <summary>右向きの三角（向きの矢印）。左端の辺から右の頂点へ細くなる</summary>
-        private static float TriangleAlpha(float x, float y)
-        {
-            var halfHeight = (1f - x / Size) * Size * 0.5f;
-            var distanceFromEdge = halfHeight - Mathf.Abs(y - Size * 0.5f);
-            return Mathf.Clamp01(distanceFromEdge / EdgeSoftness);
         }
 
         private static Sprite Create(System.Func<float, float, float> alpha)

@@ -10,14 +10,14 @@ namespace PenmonScramble.Game
     public partial class UnitView
     {
         // 野生のペンギンは同じ形を暗い色で出す（大ボスは野生ではないので暗くしない）。
-        // 2D の絵より暗く見えやすい（トゥーンの影の段でさらに暗くなる）ので、2D の 0.55 より少し浅くする
+        // トゥーンの影の段でさらに暗くなるので、浅めにして形と色が読めるようにする
         private const float EnemyDarkness = 0.45f;
 
         private const float FlashSeconds = 0.1f;
         private const float FlashAmount = 0.85f;
         private static readonly Color FrozenTint = new Color(0.62f, 0.9f, 1f);
         private const float FrozenTintAmount = 0.55f;
-        // 2D（0.6）より強くする。赤い種類でも、倒れていると一目で分かる灰色に寄せるため
+        // 強めに寄せる。赤い種類でも、倒れていると一目で分かる灰色にするため
         private static readonly Color DownTint = new Color(0.55f, 0.55f, 0.6f);
         private const float DownTintAmount = 0.75f;
         // 無敵の間は点滅させて、攻撃が効かないことを分かるようにする

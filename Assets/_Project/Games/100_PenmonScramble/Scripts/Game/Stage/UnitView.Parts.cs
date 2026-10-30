@@ -27,7 +27,7 @@ namespace PenmonScramble.Game
             if (seatColor.HasValue)
             {
                 // 種類の見た目だけだと協力で誰のか分からないので、席の色の輪を足元に出す
-                _seatRing = CreateDecal("SeatRing", PlaceholderSprites.Ring, seatColor.Value, FloorDecal.SeatRingHeight, _radius * 2f * SeatRingRatio);
+                _seatRing = CreateDecal("SeatRing", DecalSprites.Ring, seatColor.Value, FloorDecal.SeatRingHeight, _radius * 2f * SeatRingRatio);
                 CreateLabel(label, seatColor.Value);
                 CreateReviveParts(seatColor.Value);
             }
@@ -60,8 +60,8 @@ namespace PenmonScramble.Game
         private void CreateReviveParts(Color seatColor)
         {
             var diameter = Balance.ReviveRadius * 2f;
-            _reviveRing = CreateDecal("ReviveRing", PlaceholderSprites.Ring, WithAlpha(seatColor, ReviveRingAlpha), FloorDecal.ReviveHeight, diameter);
-            _reviveFill = CreateDecal("ReviveFill", PlaceholderSprites.Circle, WithAlpha(seatColor, ReviveFillAlpha), FloorDecal.ReviveHeight, diameter);
+            _reviveRing = CreateDecal("ReviveRing", DecalSprites.Ring, WithAlpha(seatColor, ReviveRingAlpha), FloorDecal.ReviveHeight, diameter);
+            _reviveFill = CreateDecal("ReviveFill", DecalSprites.Circle, WithAlpha(seatColor, ReviveFillAlpha), FloorDecal.ReviveHeight, diameter);
         }
 
         private SpriteRenderer CreateDecal(string partName, Sprite sprite, Color color, float height, float diameter)

@@ -32,9 +32,9 @@ namespace PenmonScramble.Game
             var isDrop = effect.Kind == AreaEffectKind.Drop;
             var ringColor = isDrop ? Color.Lerp(element, DropWarningColor, 0.6f) : element;
             var fillAlpha = isDrop ? DropFillAlpha : ZoneFillAlpha;
-            view.CreatePart(materials, "Fill", PlaceholderSprites.Circle, new Color(ringColor.r, ringColor.g, ringColor.b, fillAlpha), 0);
+            view.CreatePart(materials, "Fill", DecalSprites.Circle, new Color(ringColor.r, ringColor.g, ringColor.b, fillAlpha), 0);
             // 輪は円の上に描く（同じ高さなので、順番で決める）
-            view.CreatePart(materials, "Ring", PlaceholderSprites.Ring, ringColor, 1);
+            view.CreatePart(materials, "Ring", DecalSprites.Ring, ringColor, 1);
             view.Apply();
             return view;
         }

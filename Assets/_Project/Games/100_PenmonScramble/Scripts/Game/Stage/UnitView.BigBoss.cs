@@ -105,7 +105,7 @@ namespace PenmonScramble.Game
                     return;
                 }
 
-                _underShadow = CreateDecal("UnderShadow", PlaceholderSprites.Circle, UnderShadowColor, FloorDecal.ReviveHeight, 1f);
+                _underShadow = CreateDecal("UnderShadow", DecalSprites.Circle, UnderShadowColor, FloorDecal.ReviveHeight, 1f);
             }
 
             _underShadow.enabled = under;
@@ -139,7 +139,7 @@ namespace PenmonScramble.Game
 
             _rippleTimer = RippleInterval;
             var floor = new Vector2(transform.position.x, transform.position.z);
-            BurstFx.SpawnOnFloor(transform.parent, PlaceholderSprites.Ring, _materials.Decal, RippleColor, floor, _radius * 0.6f, _radius * UnderShadowRatio * 1.3f, RippleSeconds);
+            BurstFx.SpawnOnFloor(transform.parent, DecalSprites.Ring, _materials.Decal, RippleColor, floor, _radius * 0.6f, _radius * UnderShadowRatio * 1.3f, RippleSeconds);
         }
     }
 }

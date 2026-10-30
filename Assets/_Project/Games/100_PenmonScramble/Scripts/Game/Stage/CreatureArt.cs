@@ -5,9 +5,8 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンギン・大ボス・ワールドの地面の絵（§9）。SceneBuilder が Art/ にある PNG をここへ入れる。
-    /// ペンギンと大ボスの絵は、Rebuild のときに3Dのモデルを撮って作る（UI の顔がゲーム中の見た目とそろうように）。
-    /// 絵が無い所は null のままで、仮の見た目（色の丸・単色の地面）で描く
+    /// UI の顔（ペンギン・大ボス）とワールドの地面の絵（§9）。SceneBuilder が Art/ にある PNG をここへ入れる。
+    /// 顔は、Rebuild のときに3Dのモデルを撮って作る（UI の顔がゲーム中の見た目とそろうように）
     /// </summary>
     // 画面の部品が Start で絵を引くより先に、居場所を知らせておく
     [DefaultExecutionOrder(-100)]
@@ -19,8 +18,6 @@ namespace PenmonScramble.Game
         [SerializeField] private Sprite[] _bigBosses = new Sprite[Balance.WorldCount];
         /// <summary>添字はワールド-1。1エリア分（16×9マス）に引き伸ばして敷く</summary>
         [SerializeField] private Sprite[] _grounds = new Sprite[Balance.WorldCount];
-        /// <summary>UI で絵が無いときに出す丸</summary>
-        [SerializeField] private Sprite _uiPlaceholder;
 
         private static CreatureArt _instance;
 
@@ -50,24 +47,14 @@ namespace PenmonScramble.Game
 
         public static Sprite Ground(int world) => _instance != null ? At(_instance._grounds, world - 1) : null;
 
-        /// <summary>UI の顔（カード・ガチャ・カットイン）。絵があれば絵を、無ければ種類の色の丸を出す</summary>
+        /// <summary>UI の顔（カード・ガチャ・カットイン）。絵の無い種類（新しい版で増えた子など）は出さない</summary>
         public static void ShowFace(Image image, int speciesNo)
         {
             var art = Find(speciesNo);
-            if (art != null)
-            {
-                image.sprite = art;
-                image.color = Color.white;
-                image.preserveAspect = true;
-                return;
-            }
-
-            if (_instance != null && _instance._uiPlaceholder != null)
-            {
-                image.sprite = _instance._uiPlaceholder;
-            }
-
-            image.color = PenguinPalette.SpeciesColor(speciesNo);
+            image.sprite = art;
+            image.color = Color.white;
+            image.preserveAspect = true;
+            image.enabled = art != null;
         }
 
         // 配列の外や、まだ絵の無い所は null（Unity の「消えたオブジェクト」も null にそろえる）

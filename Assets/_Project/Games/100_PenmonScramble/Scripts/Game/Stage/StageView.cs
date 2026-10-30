@@ -141,7 +141,7 @@ namespace PenmonScramble.Game
                 _units.Add(unit.Id, CreateUnitView(unit));
                 if (showSpawn)
                 {
-                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Ring, _materials.Decal, Color.white, unit.Position.ToVector2(), unit.Radius, unit.Radius * 2.5f, SpawnPoofSeconds);
+                    BurstFx.SpawnOnFloor(transform, DecalSprites.Ring, _materials.Decal, Color.white, unit.Position.ToVector2(), unit.Radius, unit.Radius * 2.5f, SpawnPoofSeconds);
                 }
             }
 

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージの床・エリアの出入口・カメラ（§6.1）。床はワールドごとの絵か色（§6.2・StageTheme）を貼った板
+    /// ステージの床・エリアの出入口・カメラ（§6.1）。床はワールドごとの地面の絵（§6.2）を貼った板
     /// </summary>
     public partial class StageView
     {
@@ -36,7 +36,7 @@ namespace PenmonScramble.Game
             var texture = art != null ? art.texture : Texture2D.whiteTexture;
             if (Camera.main != null)
             {
-                Camera.main.backgroundColor = theme.Outside;
+                Camera.main.backgroundColor = theme.Background;
             }
 
             for (var i = 0; i < snapshot.AreaCount; i++)
@@ -44,9 +44,8 @@ namespace PenmonScramble.Game
                 var min = StageLayout.AreaMin(i).ToVector2();
                 var max = StageLayout.AreaMax(i).ToVector2();
                 var isBossArea = snapshot.AreaCount > 1 && i == snapshot.AreaCount - 1;
-                var color = theme.AreaColor(i, isBossArea, art != null);
-                CreateOutside(i, snapshot.AreaCount, texture, min, max, theme.OutsideColor(art != null));
-                CreateFloor($"Area{i}", _materials.Toon.Floor(texture, color), min, max, 0f);
+                CreateOutside(i, snapshot.AreaCount, texture, min, max);
+                CreateFloor($"Area{i}", _materials.Toon.Floor(texture, StageTheme.AreaTintOf(i, isBossArea)), min, max, 0f);
                 if (i < snapshot.AreaCount - 1)
                 {
                     _gates.Add((max.x, CreateGate(i, max.x, min.y, max.y, theme.Gate)));
@@ -58,11 +57,11 @@ namespace PenmonScramble.Game
         /// エリアより一回り大きい床を暗くして下に敷く。横長の画面ではエリアの外まで映るので、
         /// カメラの背景色が見えて不自然にならないようにする。重ならないよう、左右へはみ出すのは最初と最後のエリアだけ
         /// </summary>
-        private void CreateOutside(int index, int areaCount, Texture texture, Vector2 min, Vector2 max, Color color)
+        private void CreateOutside(int index, int areaCount, Texture texture, Vector2 min, Vector2 max)
         {
             var outsideMin = new Vector2(index == 0 ? min.x - OutsideWidth : min.x, min.y - OutsideDepth);
             var outsideMax = new Vector2(index == areaCount - 1 ? max.x + OutsideWidth : max.x, max.y + OutsideDepth);
-            CreateFloor($"Outside{index}", _materials.Toon.Floor(texture, color), outsideMin, outsideMax, OutsideFloorHeight);
+            CreateFloor($"Outside{index}", _materials.Toon.Floor(texture, StageTheme.OutsideTint), outsideMin, outsideMax, OutsideFloorHeight);
         }
 
         /// <summary>絵を min〜max（床の上の長方形）いっぱいに引き伸ばして貼った板</summary>

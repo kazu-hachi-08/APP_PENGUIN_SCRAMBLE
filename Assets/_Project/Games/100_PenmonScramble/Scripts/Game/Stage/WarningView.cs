@@ -29,13 +29,13 @@ namespace PenmonScramble.Game
             var direction = to - from;
             if (direction.sqrMagnitude < Mathf.Epsilon)
             {
-                view._part = FloorDecal.Create(view.transform, "Area", PlaceholderSprites.Circle, materials.Decal, Color.clear, from.ToFloor(FloorDecal.AreaHeight), Vector2.one * width);
+                view._part = FloorDecal.Create(view.transform, "Area", DecalSprites.Circle, materials.Decal, Color.clear, from.ToFloor(FloorDecal.AreaHeight), Vector2.one * width);
             }
             else
             {
                 var center = ((from + to) * 0.5f).ToFloor(FloorDecal.AreaHeight);
                 var size = new Vector2(direction.magnitude + width, width);
-                view._part = FloorDecal.Create(view.transform, "Area", PlaceholderSprites.Square, materials.Decal, Color.clear, center, size, FloorDecal.YawOf(direction));
+                view._part = FloorDecal.Create(view.transform, "Area", DecalSprites.Square, materials.Decal, Color.clear, center, size, FloorDecal.YawOf(direction));
             }
 
             view.PushState(warning);

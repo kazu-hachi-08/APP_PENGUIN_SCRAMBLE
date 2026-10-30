@@ -272,7 +272,7 @@ namespace PenmonScramble.Editor
             return card;
         }
 
-        /// <summary>仮の見た目の丸（ペンギン・カプセル・光）。下のボタンを押す邪魔をしない</summary>
+        /// <summary>丸い絵（ペンギンの顔・カプセル・光）。下のボタンを押す邪魔をしない</summary>
         private static Image CreateCircle(Transform parent, string name, Vector2 position, float size, Color color)
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);

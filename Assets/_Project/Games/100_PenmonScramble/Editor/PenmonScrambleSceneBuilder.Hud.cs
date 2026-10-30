@@ -141,7 +141,6 @@ namespace PenmonScramble.Editor
             faceRect.anchoredPosition = new Vector2(CutInFaceX, 0f);
             faceRect.sizeDelta = Vector2.one * CutInFaceSize;
             var faceImage = face.AddComponent<Image>();
-            faceImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(KnobSpritePath);
             faceImage.raycastTarget = false;
 
             var textObj = UIDialogBuilder.CreateUIObject("Text", band.transform);

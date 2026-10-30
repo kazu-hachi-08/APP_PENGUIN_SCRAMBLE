@@ -1,55 +1,18 @@
-"""ComfyUI（Comfy Desktop）の API で、ステージの絵（§9）の元絵を作る。
-Comfy Desktop を起動しておく（モデル: DreamShaperXL_Turbo_v2_1）。出力は Tools/Art/raw/（git には入れない）。
-使い方: python gen.py <name> [<name> ...]   （name: p01..p20, b101..b103, w1..w3, all）
-seed を変えて作り直すとき: python gen.py p01:1234 。気に入ったら SEEDS に書いておく
-背景の透過と Art/ への配置は cutout.py（README.md）
+"""ComfyUI（Comfy Desktop）の API で、ワールドの地面の絵（§9）を作る。
+Comfy Desktop を起動しておく（モデル: DreamShaperXL_Turbo_v2_1）。元絵は Tools/Art/raw/（git には入れない）に出し、
+同じ絵を Art/Stage/World<n>.png へ置く。
+使い方: python gen.py <name> [<name> ...]   （name: w1..w3, all）
+seed を変えて作り直すとき: python gen.py w1:1234 。気に入ったら SEEDS に書いておく
 """
-import json, sys, time, urllib.request, os
+import json, sys, time, urllib.request, os, shutil
 
 SERVER = "http://127.0.0.1:8188"
 CKPT = "DreamShaperXL_Turbo_v2_1.safetensors"
-OUT = os.path.join(os.path.dirname(__file__), "raw")
-# 既定の seed（種類ごとに 5000+No など）で気に入らず、作り直して決めたもの
-SEEDS = {"p20": 6021, "w2": 9102}
-
-STYLE = ("cute chubby round toy penguin character, colorful vinyl toy figure style, glossy 3d render, "
-         "soft studio lighting, vibrant saturated colors, full body, single character, "
-         "(three-quarter side view, body and head turned to the right:1.3), walking to the right, centered, "
-         "(isolated on solid pure white background:1.4), simple white background")
-CREATURE_NEG = ("text, letters, logo, watermark, signature, blood, scary, realistic, photo, dark, gloomy, horror, "
-                "blurry, lowres, deformed, extra limbs, multiple characters, group, crowd, cropped, cut off, "
-                "front view, facing viewer, symmetrical, colored background, gradient background, blue background, shadow on background, scenery, ground, floor, frame, border")
-
-PENGUINS = {
-    1: "adelie penguin, black head with white eye rings, tough delinquent attitude, frowning brave eyes, icy light blue accents",
-    2: "chinstrap penguin, thin black chin strap line like a beard, wise old grandpa with tiny round glasses, icy light blue accents",
-    3: "gentoo penguin, white patch over the eyes, bright orange beak, sporty runner with a light blue headband, energetic",
-    4: "king penguin, golden orange ear patches, wearing a tiny golden crown and a red royal cape, proud",
-    5: "big chubby emperor penguin, yellow neck patch, sturdy boss with a little ice blue scarf, confident, large",
-    6: "humboldt penguin, black chest band, sleepy relaxed half-closed eyes, water drops, ocean blue accents",
-    7: "african cape penguin, black chest stripe and pink patch above eyes, chatty open beak smile, blue water splash accents",
-    8: "magellanic penguin, two black chest bands, adventurer with a small blue backpack and explorer hat",
-    9: "galapagos penguin, small, sweating drops, holding a little blue fan, hot sweaty, ocean blue accents",
-    10: "royal penguin, white face, rich little prince with a golden bow tie and sparkling jewels, blue water accents",
-    11: "rockhopper penguin, spiky yellow crest feathers like a punk mohawk, angry red eyes, green wind accents",
-    12: "fiordland penguin, yellow eyebrow crest, shy hiding behind a green leaf, timid eyes, green wind accents",
-    13: "snares penguin, yellow crest, playing a small green drum around its belly, rhythmic happy",
-    14: "macaroni penguin, flowing orange yellow crest, spinning dancer pose on one foot, green swirl wind effect",
-    15: "yellow-eyed penguin, pale yellow band around the head, mysterious old hermit sage with a long white beard and a wooden staff, green wind aura",
-    16: "tiny little blue penguin, very small and round, static electricity sparks, fluffy staticky feathers, yellow lightning accents",
-    17: "white-flippered penguin, inventor wearing goggles on the head, holding a little wrench, yellow lightning accents",
-    18: "erect-crested penguin, upright yellow crest like an antenna, glowing tip, yellow electric sparks",
-    19: "fantasy electric penguin with glowing yellow electric eel stripe patterns on the body, glowing, lightning sparks",
-    20: "fantasy thunder god penguin child, (a fluffy dark grey storm cloud floating right above its head:1.3), yellow lightning bolts striking from the cloud, ring of small taiko drums on its back, golden glowing eyes, powerful",
-}
-
-BOSSES = {
-    101: "big fierce brown great skua seabird boss monster, spread wings, sharp hooked beak, angry eyes, toy figure style",
-    102: "big leopard seal boss monster, spotted grey body, wide toothy grin, menacing but cute, toy figure style",
-    103: "big orca killer whale boss monster, black and white, jumping pose, toothy grin, menacing but cute, toy figure style",
-}
-BOSS_STYLE = ("colorful vinyl toy figure style, glossy 3d render, soft studio lighting, vibrant colors, full body, "
-              "single character, (three-quarter side view, turned to the right:1.3), centered, (isolated on solid pure white background:1.4), simple white background")
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, "raw")
+STAGE_ART = os.path.join(HERE, "..", "..", "Assets", "_Project", "Games", "100_PenmonScramble", "Art", "Stage")
+# 既定の seed（9000+ワールド）で気に入らず、作り直して決めたもの
+SEEDS = {"w2": 9102}
 
 GROUND_STYLE = ("top-down view, flat ground texture for a 2d game, seen from directly above, no characters, "
                 "soft colors, low contrast, simple, evenly lit, stylized cartoon, toy diorama style")
@@ -78,14 +41,10 @@ def workflow(pos, neg, w, h, seed, prefix):
 
 def job(name, seed=None):
     seed = seed or SEEDS.get(name)
-    kind, num = name[0], int(name[1:])
-    if kind == "p":
-        return workflow(f"{PENGUINS[num]}, {STYLE}", CREATURE_NEG, 896, 896, seed or 5000 + num, f"penguin{num:02}")
-    if kind == "b":
-        return workflow(f"{BOSSES[num]}, {BOSS_STYLE}", CREATURE_NEG, 896, 896, seed or 7000 + num, f"boss{num}")
-    if kind == "w":
-        return workflow(f"{GROUNDS[num]}, {GROUND_STYLE}", GROUND_NEG, 1344, 768, seed or 9000 + num, f"world{num}")
-    raise ValueError(name)
+    num = int(name[1:])
+    if name[0] != "w" or num not in GROUNDS:
+        raise ValueError(name)
+    return workflow(f"{GROUNDS[num]}, {GROUND_STYLE}", GROUND_NEG, 1344, 768, seed or 9000 + num, f"world{num}")
 
 
 def post(path, data):
@@ -114,8 +73,10 @@ def run(name, seed=None):
     img = entry["outputs"]["7"]["images"][0]
     q = f"/view?filename={img['filename']}&subfolder={img['subfolder']}&type={img['type']}"
     os.makedirs(OUT, exist_ok=True)
-    with open(os.path.join(OUT, f"{name}.png"), "wb") as f:
+    raw = os.path.join(OUT, f"{name}.png")
+    with open(raw, "wb") as f:
         f.write(urllib.request.urlopen(SERVER + q).read())
+    shutil.copyfile(raw, os.path.join(STAGE_ART, f"World{name[1:]}.png"))
     print(f"{name}: ok {time.time() - start:.0f}s", flush=True)
     return True
 
@@ -124,7 +85,7 @@ if __name__ == "__main__":
     names = []
     for a in sys.argv[1:]:
         if a == "all":
-            names += [f"p{i:02}" for i in range(1, 21)] + ["b101", "b102", "b103", "w1", "w2", "w3"]
+            names += [f"w{i}" for i in GROUNDS]
         else:
             names.append(a)
     for a in names:

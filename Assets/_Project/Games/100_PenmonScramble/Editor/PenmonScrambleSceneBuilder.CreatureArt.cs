@@ -6,9 +6,8 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ペンギン・大ボス・ワールドの地面の絵（§9）を CreatureArt に入れる。
-    /// ペンギンと大ボスは3Dのモデルを撮った絵（PenmonScrambleSceneBuilder.Portraits.cs）、地面は Art/Stage/ の絵。
-    /// 置いてある絵だけを入れ、無い所は仮の見た目のまま
+    /// UI の顔とワールドの地面の絵（§9）を CreatureArt に入れる。
+    /// 顔は3Dのモデルを撮った絵（PenmonScrambleSceneBuilder.Portraits.cs）、地面は Art/Stage/ の絵（Tools/Art/gen.py）
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
@@ -24,7 +23,6 @@ namespace PenmonScramble.Editor
             FillSprites(so.FindProperty("_penguins"), SpeciesTable.Count, i => PenguinPortraitPath(i + 1), CreatureArtMaxSize);
             FillSprites(so.FindProperty("_bigBosses"), Balance.WorldCount, i => BossPortraitPath(BigBossTable.SkuaNo + i), CreatureArtMaxSize);
             FillSprites(so.FindProperty("_grounds"), Balance.WorldCount, i => $"{ArtFolder}Stage/World{i + 1}.png", GroundArtMaxSize);
-            so.FindProperty("_uiPlaceholder").objectReferenceValue = AssetDatabase.GetBuiltinExtraResource<Sprite>(KnobSpritePath);
             so.ApplyModifiedProperties();
         }
 

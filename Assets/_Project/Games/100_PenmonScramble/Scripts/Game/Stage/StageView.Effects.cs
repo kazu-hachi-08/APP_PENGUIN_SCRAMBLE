@@ -144,9 +144,9 @@ namespace PenmonScramble.Game
         private void OnCombo(ComboEvent e)
         {
             var position = e.Position.ToVector2();
-            BurstFx.SpawnFacingCamera(transform, PlaceholderSprites.Glow, _materials.Glow, ComboColor, position.ToFloor(ComboFlashHeight), ComboFlashRadius * 0.3f, ComboFlashRadius, ComboFlashSeconds);
-            BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Glow, _materials.Glow, WithAlpha(ComboColor, BlastAlpha), position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds);
-            BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Ring, _materials.Decal, ComboColor, position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds);
+            BurstFx.SpawnFacingCamera(transform, DecalSprites.Glow, _materials.Glow, ComboColor, position.ToFloor(ComboFlashHeight), ComboFlashRadius * 0.3f, ComboFlashRadius, ComboFlashSeconds);
+            BurstFx.SpawnOnFloor(transform, DecalSprites.Glow, _materials.Glow, WithAlpha(ComboColor, BlastAlpha), position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds);
+            BurstFx.SpawnOnFloor(transform, DecalSprites.Ring, _materials.Decal, ComboColor, position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds);
             _cameraShake.Shake(ComboShake, ComboShakeSeconds);
         }
 
@@ -163,14 +163,14 @@ namespace PenmonScramble.Game
             switch (e.Shape)
             {
                 case BurstShape.Swing:
-                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Circle, _materials.Decal, WithAlpha(color, SwingAlpha), position, e.Radius * 0.6f, e.Radius, SwingSeconds);
+                    BurstFx.SpawnOnFloor(transform, DecalSprites.Circle, _materials.Decal, WithAlpha(color, SwingAlpha), position, e.Radius * 0.6f, e.Radius, SwingSeconds);
                     break;
                 case BurstShape.Ring:
-                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Glow, _materials.Glow, WithAlpha(color, RingGlowAlpha), position, e.Radius * 0.3f, e.Radius, RingSeconds);
-                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Ring, _materials.Decal, color, position, e.Radius * 0.3f, e.Radius, RingSeconds);
+                    BurstFx.SpawnOnFloor(transform, DecalSprites.Glow, _materials.Glow, WithAlpha(color, RingGlowAlpha), position, e.Radius * 0.3f, e.Radius, RingSeconds);
+                    BurstFx.SpawnOnFloor(transform, DecalSprites.Ring, _materials.Decal, color, position, e.Radius * 0.3f, e.Radius, RingSeconds);
                     break;
                 default:
-                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Circle, _materials.Decal, WithAlpha(color, BlastAlpha), position, e.Radius * 0.5f, e.Radius * 1.1f, BlastSeconds);
+                    BurstFx.SpawnOnFloor(transform, DecalSprites.Circle, _materials.Decal, WithAlpha(color, BlastAlpha), position, e.Radius * 0.5f, e.Radius * 1.1f, BlastSeconds);
                     break;
             }
 
