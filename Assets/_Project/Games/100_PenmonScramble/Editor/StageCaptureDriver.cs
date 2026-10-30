@@ -10,6 +10,7 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// StageCapture の Play 中に、ステージを台本どおりに戦わせて撮る。StageHost と同じく固定の時間刻みで Core を進め、
     /// スナップショットを StageView に渡す。プレイヤーは近い敵へ歩いて技を出し続け、ゲージがたまれば必殺技を出す。
+    /// 状態の見た目の場面（PLAN_3D フェーズ4）は、スナップショットの状態を書き換えて、凍る・ダウン・交代を決めた時刻に起こす。
     /// Editor のコードは MonoBehaviour としてシーンに付けられないので、EditorApplication.update から1フレームに1回呼ぶ
     /// </summary>
     public sealed class StageCaptureDriver
@@ -23,26 +24,39 @@ namespace PenmonScramble.Editor
         private const float Skill2Period = 1.5f;
         private const float Skill2Hold = 0.2f;
 
+        // 状態の見た目の場面: P2 はずっとダウン、半分の敵はこの間だけ凍る、P1 はこの時刻に交代する
+        private const float FreezeFrom = 0.4f;
+        private const float FreezeUntil = 2.2f;
+        private const float SwitchAt = 1f;
+        private const float DownRevive = 0.5f;
+
         private readonly struct Scene
         {
             public readonly int StageNo;
             public readonly int Players;
+            public readonly bool Status;
             public readonly float[] ShotSeconds;
 
-            public Scene(int stageNo, int players, params float[] shotSeconds)
+            public Scene(int stageNo, int players, bool status, params float[] shotSeconds)
             {
                 StageNo = stageNo;
                 Players = players;
+                Status = status;
                 ShotSeconds = shotSeconds;
             }
+
+            public string FileName(int shot) => Status ? $"status{StageNo}_{shot + 1}.png" : $"stage{StageNo}_{shot + 1}.png";
         }
 
-        // ワールド1は2人で戦いの流れを、ワールド2・3は床の見た目を撮る
+        // ワールド1は2人で戦いの流れを、ワールド2・3は床の見た目を撮る。最後に状態の見た目
+        // （status1_1: P1 の突進の残像・P2 のダウン、_2: 凍る・敵は暗い、_3: 交代の煙、_4: 氷が砕ける・被弾で白く光る）。
+        // 突進は台本の戦いで最初に出るもの（種が同じなので毎回同じ時刻）を撮る
         private static readonly Scene[] Scenes =
         {
-            new Scene(1, 2, 0.1f, 1.2f, 2.5f, 4f, 6f),
-            new Scene(4, 1, 2f),
-            new Scene(7, 1, 2f),
+            new Scene(1, 2, false, 0.1f, 1.2f, 2.5f, 4f, 6f),
+            new Scene(4, 1, false, 2f),
+            new Scene(7, 1, false, 2f),
+            new Scene(1, 2, true, 0.3f, 0.7f, SwitchAt + 0.05f, FreezeUntil + 0.06f),
         };
 
         private StageView _view;
@@ -94,7 +108,9 @@ namespace PenmonScramble.Editor
             _players = TrialStage.Create(StageTable.Get(scene.StageNo), Seed, seats, parties, out _world);
             _round++;
             _recorder = new StageRecorder(_world, _round);
-            _view.Apply(_recorder.Capture());
+            // 状態の書き換え（Override）は場面の時刻で決めるので、最初のスナップショットより前に戻す
+            _sceneTime = 0f;
+            _view.Apply(Override(_recorder.Capture()));
             _view.Render(1f);
             _shot = 0;
             _sceneTime = 0f;
@@ -133,7 +149,7 @@ namespace PenmonScramble.Editor
                 }
 
                 _world.Tick();
-                _view.Apply(_recorder.Capture());
+                _view.Apply(Override(_recorder.Capture()));
             }
 
             _view.Render(_accumulator / Balance.TickSeconds);
@@ -147,7 +163,7 @@ namespace PenmonScramble.Editor
                 return;
             }
 
-            Save($"stage{scene.StageNo}_{_shot + 1}.png");
+            Save(scene.FileName(_shot));
             _shot++;
             if (_shot >= scene.ShotSeconds.Length)
             {
@@ -157,6 +173,12 @@ namespace PenmonScramble.Editor
 
         private PlayerInput InputFor(Unit player)
         {
+            // 状態の見た目の場面では、ダウンに見せている P2 は動かさない
+            if (Scenes[_scene].Status && player.Seat != 0)
+            {
+                return new PlayerInput(Vec2.Zero, false, false, false);
+            }
+
             var move = Vec2.Zero;
             if (TryNearestEnemy(player.Position, out var enemy))
             {
@@ -169,6 +191,46 @@ namespace PenmonScramble.Editor
 
             var skill2 = _sceneTime % Skill2Period < Skill2Hold;
             return new PlayerInput(move, skill1: !skill2, skill2: skill2, special: true);
+        }
+
+        /// <summary>状態の見た目の場面だけ、スナップショットの状態を書き換える（Core は変えない。見た目だけを確かめるため）</summary>
+        private StageSnapshot Override(StageSnapshot snapshot)
+        {
+            if (!Scenes[_scene].Status)
+            {
+                return snapshot;
+            }
+
+            var enemyIndex = 0;
+            var units = snapshot.Units;
+            for (var i = 0; i < units.Count; i++)
+            {
+                var u = units[i];
+                var flags = u.Flags;
+                var species = u.SpeciesNo;
+                var revive = u.Revive;
+                if (u.Team == Team.Enemy)
+                {
+                    if (enemyIndex++ % 2 == 0 && _sceneTime >= FreezeFrom && _sceneTime < FreezeUntil)
+                    {
+                        flags |= UnitFlags.Frozen;
+                    }
+                }
+                else if (u.Seat == 0)
+                {
+                    // 交代先は次の番号の種類（どの種類から始まっても、見た目が変わるように）
+                    species = _sceneTime >= SwitchAt ? species % SpeciesTable.Count + 1 : species;
+                }
+                else
+                {
+                    flags |= UnitFlags.Down;
+                    revive = DownRevive;
+                }
+
+                units[i] = new UnitState(u.Id, u.Team, u.Seat, species, u.Position, u.Facing, u.Hp, u.MaxHp, u.Radius, flags, revive);
+            }
+
+            return snapshot;
         }
 
         private bool TryNearestEnemy(Vec2 from, out Vec2 nearest)

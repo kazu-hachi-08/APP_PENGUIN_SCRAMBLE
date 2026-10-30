@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンギンの部品に使う形（球・卵形・しずく・丸い円柱・輪）。縦の輪郭を回して作る。形ごとに1つだけ作って全部の部品で使い回す。
+    /// ペンギンの部品に使う形（球・卵形・しずく・丸い円柱・輪・氷の塊）。縦の輪郭を回して作る。形ごとに1つだけ作って全部の部品で使い回す。
     /// Unity の Primitive を使わないのは、Collider が付くのと、面の数を自分で決めたいため（スマホで重いときに減らせる）
     /// </summary>
     public static class ToyMeshes
@@ -32,6 +32,12 @@ namespace PenmonScramble.Game
         private static Mesh _torus;
         private static Mesh _quad;
         private static Mesh _star;
+        private static Mesh _ice;
+
+        // 氷の塊: 六角柱の上の角を面取りした形。角ごとに少し出っ張りを変えて、削り出したように見せる
+        private static readonly float[] IceCornerRadii = { 0.5f, 0.44f, 0.52f, 0.45f, 0.5f, 0.47f };
+        private const float IceShoulderHeight = 0.78f;
+        private const float IceTopRatio = 0.62f;
 
         /// <summary>直径1の球</summary>
         public static Mesh Sphere => _sphere != null ? _sphere : _sphere = Lathe("ToySphere", SphereProfile(_ => 1f));
@@ -53,6 +59,9 @@ namespace PenmonScramble.Game
 
         /// <summary>外側の直径1の、ふくらんだ五角の星。厚みは Z。撃破のときに飛び散る星に使う</summary>
         public static Mesh Star => _star != null ? _star : _star = CreateStar();
+
+        /// <summary>高さ1・直径約1の氷の塊。底が原点。面ごとに法線を分けて、角ばった面がはっきり光るようにする</summary>
+        public static Mesh IceChunk => _ice != null ? _ice : _ice = CreateIceChunk();
 
         /// <summary>球の輪郭（y = -0.5〜0.5）の半径に widthScale(y) を掛ける。y は -1（下）〜1（上）</summary>
         private static Func<float, Vector2> SphereProfile(Func<float, float> widthScale)
@@ -224,6 +233,57 @@ namespace PenmonScramble.Game
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             return mesh;
+        }
+
+        private static Mesh CreateIceChunk()
+        {
+            var corners = IceCornerRadii.Length;
+            var bottom = new Vector3[corners];
+            var shoulder = new Vector3[corners];
+            var top = new Vector3[corners];
+            for (var i = 0; i < corners; i++)
+            {
+                var angle = i * Mathf.PI * 2f / corners;
+                var direction = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * IceCornerRadii[i];
+                bottom[i] = direction;
+                shoulder[i] = direction + Vector3.up * IceShoulderHeight;
+                top[i] = direction * IceTopRatio + Vector3.up;
+            }
+
+            var vertices = new List<Vector3>();
+            for (var i = 0; i < corners; i++)
+            {
+                var next = (i + 1) % corners;
+                AddOutwardTriangle(vertices, Vector3.zero, bottom[next], bottom[i]);
+                AddOutwardTriangle(vertices, bottom[i], bottom[next], shoulder[next]);
+                AddOutwardTriangle(vertices, bottom[i], shoulder[next], shoulder[i]);
+                AddOutwardTriangle(vertices, shoulder[i], shoulder[next], top[next]);
+                AddOutwardTriangle(vertices, shoulder[i], top[next], top[i]);
+                AddOutwardTriangle(vertices, Vector3.up, top[i], top[next]);
+            }
+
+            var triangles = new int[vertices.Count];
+            for (var i = 0; i < triangles.Length; i++)
+            {
+                triangles[i] = i;
+            }
+
+            var mesh = new Mesh { name = "ToyIceChunk" };
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        /// <summary>塊の中心から見て外を向くように回り方を決めて、三角形を足す（頂点は面ごとに分けて、角を立てる）</summary>
+        private static void AddOutwardTriangle(List<Vector3> vertices, Vector3 a, Vector3 b, Vector3 c)
+        {
+            var center = Vector3.up * 0.5f;
+            var outward = Vector3.Dot(Vector3.Cross(b - a, c - a), (a + b + c) / 3f - center) > 0f;
+            vertices.Add(a);
+            vertices.Add(outward ? b : c);
+            vertices.Add(outward ? c : b);
         }
 
         /// <summary>星の i 番目の角。偶数が外側（とがった先）、奇数が内側。0 番は真上</summary>

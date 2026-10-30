@@ -6,12 +6,11 @@ namespace PenmonScramble.Game
     /// <summary>
     /// ユニット1体の見た目。種類の見た目（PenguinLooks）から3Dのペンギンを組み、動き（PenguinMotion）に状態を渡す。
     /// プレイヤーは足元に席の色の輪と、頭の上に「P1」など。ボスは「BOSS」（UnitView.Parts.cs）。
+    /// 凍る・無敵・突進・ダウン・被弾・交代の見た目は UnitView.Status.cs。
     /// 位置は更新（1/30秒）ごとに受け取り、その間を補間して描く（オンラインのゲストも同じ描き方にするため）
     /// </summary>
     public partial class UnitView : MonoBehaviour
     {
-        private const float SwitchPoofSeconds = 0.3f;
-
         // 吹っ飛びは Core の速度がスナップショットに無いので、当たった直後の動きの速さから見分ける。
         // どの種類の歩く速さ（最大 5.5 マス/秒）よりも速ければ吹っ飛ばされている
         private const float KnockbackSpeed = 6f;
@@ -24,6 +23,7 @@ namespace PenmonScramble.Game
         private PenguinModel _model;
         private PenguinMotion _motion;
         private float _radius;
+        private float _modelScale;
         private Vector2 _from;
         private Vector2 _to;
         private UnitFlags _flags;
@@ -63,18 +63,23 @@ namespace PenmonScramble.Game
         {
             if (_model != null)
             {
-                Destroy(_model.gameObject);
+                // Destroy は次のフレームまで残るので、先に外して、作り直した体と取り違えないようにする
+                _model.transform.SetParent(null, false);
+                _model.gameObject.SetActive(false);
+                DestroyNow(_model.gameObject);
             }
 
             SpeciesNo = unit.SpeciesNo;
             _model = PenguinModelBuilder.Build(PenguinLooks.Get(unit.SpeciesNo), _materials.Toon, transform);
-            _model.transform.localScale = Vector3.one * PenguinModelBuilder.ScaleForRadius(_radius);
+            _modelScale = PenguinModelBuilder.ScaleForRadius(_radius);
+            _model.transform.localScale = Vector3.one * _modelScale;
             // フェーズ0で決めたとおり、どの環境でも足元の丸い影にする
             _model.SetRealShadows(false);
             _motion = _model.gameObject.AddComponent<PenguinMotion>();
             _motion.SnapFacing(unit.Facing.ToFloor());
             ApplyMotionState(unit, Vector3.zero);
             PlaceLabel();
+            OnModelBuilt(unit);
         }
 
         /// <param name="seconds">前の更新からの時間（秒）。ゲストは2回に1回しか届かないので、歩く速さを正しく出すために要る</param>
@@ -90,6 +95,7 @@ namespace PenmonScramble.Game
                 // 交代した（自分で替えた・倒れて次の子が出た）。組み直して、ぽんと出てきたように見せる
                 BuildModel(unit);
                 Poof();
+                PopIn();
                 return;
             }
 
@@ -110,8 +116,6 @@ namespace PenmonScramble.Game
             _motion.Facing = unit.Facing.ToFloor();
             _motion.Sliding = unit.Has(UnitFlags.Dashing);
             _motion.Down = unit.Has(UnitFlags.Down);
-            // もぐっている大ボスは、床の丸い影だけ見せる
-            _model.Figure.gameObject.SetActive(!unit.Has(UnitFlags.Submerged));
         }
 
         /// <summary>
@@ -126,6 +130,12 @@ namespace PenmonScramble.Game
             }
 
             _knockbackWatch--;
+            if ((_flags & UnitFlags.Frozen) != 0)
+            {
+                // 凍ったまま飛ばされたら、転がらずに氷の塊ごとすべる
+                return;
+            }
+
             var speed = velocity.magnitude;
             if ((_flags & UnitFlags.Dashing) != 0 || speed < KnockbackSpeed)
             {
@@ -135,11 +145,6 @@ namespace PenmonScramble.Game
             _knockbackWatch = 0;
             var initialSpeed = speed + Balance.KnockbackDeceleration * seconds * 0.5f;
             _motion.PlayKnockback(velocity / speed * initialSpeed);
-        }
-
-        private void Poof()
-        {
-            BurstFx.SpawnOnFloor(transform.parent, PlaceholderSprites.Ring, _materials.Decal, Color.white, _to, _radius, _radius * 2f, SwitchPoofSeconds);
         }
 
         /// <summary>alpha は前回の更新から次の更新までの進み具合（0〜1）</summary>
@@ -154,11 +159,16 @@ namespace PenmonScramble.Game
             RenderMarks();
         }
 
-        /// <summary>当たった。のけぞって、吹っ飛ばされていたら転がる</summary>
+        /// <summary>当たった。一瞬白く光り、のけぞって、吹っ飛ばされていたら転がる</summary>
         public void Flash()
         {
-            _motion.PlayHit();
+            _flashTimer = FlashSeconds;
             _knockbackWatch = KnockbackWatchUpdates;
+            // 凍っている間は氷の中で固まっているので、のけぞらない
+            if ((_flags & UnitFlags.Frozen) == 0)
+            {
+                _motion.PlayHit();
+            }
         }
 
         public void PlayAttack(SkillShape shape) => _motion.PlayAttack(shape);
@@ -175,10 +185,26 @@ namespace PenmonScramble.Game
             _motion.Sliding = false;
             _motion.PlayDefeat();
             HideMarks();
+            // 凍ったまま倒れたら、氷が砕けてから飛んでいく
+            ApplyStatus();
+        }
+
+        /// <summary>Play していないとき（エディターのテスト）は Destroy が使えないので、すぐ消す</summary>
+        private static void DestroyNow(Object obj)
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(obj);
+            }
+            else
+            {
+                DestroyImmediate(obj);
+            }
         }
 
         private void Update()
         {
+            TickStatus(Time.deltaTime);
             if (_defeatTimer < 0f)
             {
                 return;

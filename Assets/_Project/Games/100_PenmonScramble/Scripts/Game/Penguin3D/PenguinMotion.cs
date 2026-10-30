@@ -54,6 +54,9 @@ namespace PenmonScramble.Game
         /// <summary>ダウン中（お腹を下にして倒れ、ヒレをじたばた）</summary>
         public bool Down { get; set; }
 
+        /// <summary>凍っている。姿勢をその場で止める（呼吸・まばたきも止めて、氷の中で固まって見せる）</summary>
+        public bool Frozen { get; set; }
+
         public bool IsDefeatFinished => _pose.Defeated && _pose.Defeat >= 1f;
 
         public void PlayAttack(SkillShape shape)
@@ -121,6 +124,7 @@ namespace PenmonScramble.Game
             _pose.Yaw = yaw;
             Sliding = false;
             Down = false;
+            Frozen = false;
             Velocity = Vector3.zero;
             _blinkTimer = NextBlinkInterval();
             Apply(_pose);
@@ -146,6 +150,11 @@ namespace PenmonScramble.Game
         public void Tick(float dt)
         {
             Bind();
+            if (Frozen)
+            {
+                return;
+            }
+
             var local = transform.InverseTransformDirection(new Vector3(Velocity.x, 0f, Velocity.z));
             var speed = local.magnitude;
             var knocked = _pose.Knock < 1f;

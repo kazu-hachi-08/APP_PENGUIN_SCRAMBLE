@@ -155,6 +155,27 @@ namespace PenmonScramble.Tests
             Assert.That(eye.localScale.y, Is.EqualTo(open).Within(1e-5f));
         }
 
+        [Test]
+        public void Frozen_HoldsThePoseUntilThawed()
+        {
+            var motion = Build();
+            motion.Velocity = Vector3.right * 3f;
+            Run(motion, 0.3f);
+            motion.Frozen = true;
+            var frozen = Snapshot(motion);
+            Run(motion, 0.5f);
+
+            var after = Snapshot(motion);
+            for (var i = 0; i < frozen.Length; i++)
+            {
+                Assert.That(Vector3.Distance(frozen[i], after[i]), Is.LessThan(1e-5f), $"部品 {i} が凍ったまま動いた");
+            }
+
+            motion.Frozen = false;
+            Run(motion, 0.1f);
+            Assert.That(Snapshot(motion), Is.Not.EqualTo(frozen), "溶けたら動き出す");
+        }
+
         private static void AssertAboveFloorWhile(PenguinMotion motion, float seconds, string label)
         {
             for (var t = 0f; t < seconds; t += Step)

@@ -1,6 +1,7 @@
 // おもちゃのペンギン用のトゥーン調シェーダー（URP）。
 // 陰影は「明るい・影」の2段＋プラスチックのつやの3段。影の色は黒ではなく青みのある色にして、雪の照り返しのように見せる。
 // 縁の線は裏返した殻を少し太らせて描く（_OutlineWidth = 0 で消える。スマホでは切る想定）
+// 氷の塊・突進の残像は同じ陰影のまま半透明で描く（_SrcBlend / _DstBlend / _ZWrite を素材ごとに変え、_BaseColor の a を透明度にする）
 Shader "PenmonScramble/Toon"
 {
     Properties
@@ -16,6 +17,9 @@ Shader "PenmonScramble/Toon"
         _RimStrength ("Rim Strength", Range(0, 1)) = 0.25
         _OutlineColor ("Outline Color", Color) = (0.08, 0.09, 0.14, 1)
         _OutlineWidth ("Outline Width", Range(0, 0.05)) = 0.012
+        [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend ("Src Blend", Float) = 1
+        [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend ("Dst Blend", Float) = 0
+        [Toggle] _ZWrite ("ZWrite", Float) = 1
     }
 
     SubShader
@@ -48,6 +52,8 @@ Shader "PenmonScramble/Toon"
         {
             Name "ToonForward"
             Tags { "LightMode" = "UniversalForward" }
+            Blend [_SrcBlend] [_DstBlend]
+            ZWrite [_ZWrite]
 
             HLSLPROGRAM
             #pragma vertex Vert
@@ -109,7 +115,7 @@ Shader "PenmonScramble/Toon"
                 color += _RimColor.rgb * rim;
 
                 color = MixFog(color, input.fogFactor);
-                return half4(color, 1.0);
+                return half4(color, _BaseColor.a);
             }
             ENDHLSL
         }

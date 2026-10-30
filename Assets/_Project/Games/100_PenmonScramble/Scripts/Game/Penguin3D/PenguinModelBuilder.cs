@@ -60,6 +60,7 @@ namespace PenmonScramble.Game
             var root = new GameObject("Penguin3D");
             root.transform.SetParent(parent, false);
             var model = root.AddComponent<PenguinModel>();
+            model.SetMaterials(materials);
             var parts = new Parts(model, materials);
 
             var figure = Pivot("Figure", root.transform, Vector3.zero);
@@ -218,7 +219,7 @@ namespace PenmonScramble.Game
                 obj.AddComponent<MeshFilter>().sharedMesh = mesh;
                 var renderer = obj.AddComponent<MeshRenderer>();
                 renderer.sharedMaterial = _materials.Get(color, gloss);
-                _model.AddPart(renderer);
+                _model.AddPart(renderer, color, gloss);
                 return obj.transform;
             }
         }
