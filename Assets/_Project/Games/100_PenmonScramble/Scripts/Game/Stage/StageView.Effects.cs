@@ -4,7 +4,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 技・必殺技の演出（範囲がはじける見た目・画面の揺れ・カットイン・効果音）
+    /// 技・必殺技の演出（ペンギンの技の動き・範囲がはじける見た目・画面の揺れ・カットイン・効果音）。
+    /// 範囲は床に寝かせて描き、周囲の輪と合体技は光も足す
     /// </summary>
     public partial class StageView
     {
@@ -13,6 +14,8 @@ namespace PenmonScramble.Game
         private const float RingSeconds = 0.25f;
         private const float BlastAlpha = 0.6f;
         private const float BlastSeconds = 0.3f;
+        // 周囲の輪の下に敷く光
+        private const float RingGlowAlpha = 0.5f;
 
         // 揺れの強さ（マス）と長さ（秒）
         private const float SpecialUsedShake = 0.15f;
@@ -29,6 +32,8 @@ namespace PenmonScramble.Game
         private const float ComboRingSeconds = 0.4f;
         private const float ComboFlashRadius = 1.6f;
         private const float ComboFlashSeconds = 0.25f;
+        // 合体技の光はペンギンの胸の高さに浮かせる
+        private const float ComboFlashHeight = 0.6f;
         private const float ComboShake = 0.18f;
         private const float ComboShakeSeconds = 0.25f;
 
@@ -38,12 +43,17 @@ namespace PenmonScramble.Game
             {
                 if (_units.TryGetValue(used.UnitId, out var view))
                 {
-                    view.Squash();
+                    view.PlayAttack(used.Shape);
                 }
             }
 
             foreach (var special in snapshot.SpecialsUsed)
             {
+                if (_units.TryGetValue(special.UnitId, out var view))
+                {
+                    view.PlaySpecial();
+                }
+
                 OnSpecialUsed(special);
             }
 
@@ -134,8 +144,9 @@ namespace PenmonScramble.Game
         private void OnCombo(ComboEvent e)
         {
             var position = e.Position.ToVector2();
-            BurstFx.Spawn(transform, PlaceholderSprites.Circle, WithAlpha(Color.white, BlastAlpha), position, ComboFlashRadius * 0.3f, ComboFlashRadius, ComboFlashSeconds, SortingDepth.Popup - 1);
-            BurstFx.Spawn(transform, PlaceholderSprites.Ring, ComboColor, position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds, SortingDepth.Popup - 1);
+            BurstFx.SpawnFacingCamera(transform, PlaceholderSprites.Glow, _materials.Glow, ComboColor, position.ToFloor(ComboFlashHeight), ComboFlashRadius * 0.3f, ComboFlashRadius, ComboFlashSeconds);
+            BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Glow, _materials.Glow, WithAlpha(ComboColor, BlastAlpha), position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds);
+            BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Ring, _materials.Decal, ComboColor, position, ComboRingRadius * 0.2f, ComboRingRadius, ComboRingSeconds);
             _cameraShake.Shake(ComboShake, ComboShakeSeconds);
         }
 
@@ -152,13 +163,14 @@ namespace PenmonScramble.Game
             switch (e.Shape)
             {
                 case BurstShape.Swing:
-                    BurstFx.Spawn(transform, PlaceholderSprites.Circle, WithAlpha(color, SwingAlpha), position, e.Radius * 0.6f, e.Radius, SwingSeconds, SortingDepth.Ground);
+                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Circle, _materials.Decal, WithAlpha(color, SwingAlpha), position, e.Radius * 0.6f, e.Radius, SwingSeconds);
                     break;
                 case BurstShape.Ring:
-                    BurstFx.Spawn(transform, PlaceholderSprites.Ring, color, position, e.Radius * 0.3f, e.Radius, RingSeconds, SortingDepth.Popup - 3);
+                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Glow, _materials.Glow, WithAlpha(color, RingGlowAlpha), position, e.Radius * 0.3f, e.Radius, RingSeconds);
+                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Ring, _materials.Decal, color, position, e.Radius * 0.3f, e.Radius, RingSeconds);
                     break;
                 default:
-                    BurstFx.Spawn(transform, PlaceholderSprites.Circle, WithAlpha(color, BlastAlpha), position, e.Radius * 0.5f, e.Radius * 1.1f, BlastSeconds, SortingDepth.Popup - 3);
+                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Circle, _materials.Decal, WithAlpha(color, BlastAlpha), position, e.Radius * 0.5f, e.Radius * 1.1f, BlastSeconds);
                     break;
             }
 

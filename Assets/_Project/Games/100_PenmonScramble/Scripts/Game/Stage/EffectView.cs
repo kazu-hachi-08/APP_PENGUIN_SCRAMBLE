@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 地面に置かれた範囲の仮の見た目。設置は属性の色でうっすら、落下は落ちる場所を赤っぽく点滅させて知らせる
+    /// 床に置かれた範囲（床に寝かせた円と輪）。設置は属性の色でうっすら、落下は落ちる場所を赤っぽく脈打たせて知らせる
     /// </summary>
     public class EffectView : MonoBehaviour
     {
@@ -16,51 +16,46 @@ namespace PenmonScramble.Game
         private const float FollowSharpness = 12f;
         private static readonly Color DropWarningColor = new Color(1f, 0.25f, 0.2f);
 
-        private SpriteRenderer _fill;
-        private SpriteRenderer _ring;
         private float _radius;
         private float _age;
-        private Vector2 _target;
+        private Vector3 _target;
 
-        public static EffectView Create(Transform parent, EffectState effect)
+        public static EffectView Create(Transform parent, StageMaterials materials, EffectState effect)
         {
             var view = new GameObject($"Effect{effect.Id}_{effect.Kind}").AddComponent<EffectView>();
             view.transform.SetParent(parent, false);
-            view.transform.position = effect.Position.ToVector2();
-            view._target = effect.Position.ToVector2();
+            view._target = effect.Position.ToFloor(FloorDecal.AreaHeight);
+            view.transform.position = view._target;
             view._radius = effect.Radius;
 
             var element = PenguinPalette.ElementColor(effect.Element);
             var isDrop = effect.Kind == AreaEffectKind.Drop;
             var ringColor = isDrop ? Color.Lerp(element, DropWarningColor, 0.6f) : element;
             var fillAlpha = isDrop ? DropFillAlpha : ZoneFillAlpha;
-            view._fill = view.CreatePart("Fill", PlaceholderSprites.Circle, new Color(ringColor.r, ringColor.g, ringColor.b, fillAlpha));
-            view._ring = view.CreatePart("Ring", PlaceholderSprites.Ring, ringColor);
+            view.CreatePart(materials, "Fill", PlaceholderSprites.Circle, new Color(ringColor.r, ringColor.g, ringColor.b, fillAlpha), 0);
+            // 輪は円の上に描く（同じ高さなので、順番で決める）
+            view.CreatePart(materials, "Ring", PlaceholderSprites.Ring, ringColor, 1);
             view.Apply();
             return view;
         }
 
-        private SpriteRenderer CreatePart(string partName, Sprite sprite, Color color)
+        /// <summary>1マスの大きさで作り、根元の大きさで半径に合わせる（脈打たせるため）</summary>
+        private void CreatePart(StageMaterials materials, string partName, Sprite sprite, Color color, int order)
         {
-            var obj = new GameObject(partName);
-            obj.transform.SetParent(transform, false);
-            var renderer = obj.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.color = color;
-            renderer.sortingOrder = SortingDepth.Ground;
-            return renderer;
+            var part = FloorDecal.Create(transform, partName, sprite, materials.Decal, color, transform.position, Vector2.one);
+            part.sortingOrder = SortingDepth.Ground + order;
         }
 
         public void PushState(EffectState effect)
         {
-            _target = effect.Position.ToVector2();
+            _target = effect.Position.ToFloor(FloorDecal.AreaHeight);
         }
 
         private void Update()
         {
             _age += Time.deltaTime;
             var follow = 1f - Mathf.Exp(-FollowSharpness * Time.deltaTime);
-            transform.position = Vector2.Lerp(transform.position, _target, follow);
+            transform.position = Vector3.Lerp(transform.position, _target, follow);
             Apply();
         }
 

@@ -19,17 +19,28 @@ namespace PenmonScramble.Game
         private static Sprite _ring;
         private static Sprite _triangle;
         private static Sprite _square;
+        private static Sprite _glow;
 
         public static Sprite Circle => _circle != null ? _circle : _circle = Create(CircleAlpha);
         public static Sprite Ring => _ring != null ? _ring : _ring = Create(RingAlpha);
         public static Sprite Triangle => _triangle != null ? _triangle : _triangle = Create(TriangleAlpha);
         public static Sprite Square => _square != null ? _square : _square = Create((x, y) => 1f);
 
+        /// <summary>真ん中ほど濃く、縁へなめらかに消える丸（光）</summary>
+        public static Sprite Glow => _glow != null ? _glow : _glow = Create(GlowAlpha);
+
         private static float CircleAlpha(float x, float y)
         {
             var radius = Size * 0.5f;
             var distance = new Vector2(x - radius, y - radius).magnitude;
             return Mathf.Clamp01((radius - distance) / EdgeSoftness);
+        }
+
+        private static float GlowAlpha(float x, float y)
+        {
+            var radius = Size * 0.5f;
+            var t = Mathf.Clamp01(new Vector2(x - radius, y - radius).magnitude / radius);
+            return (1f - t) * (1f - t);
         }
 
         private static float RingAlpha(float x, float y)

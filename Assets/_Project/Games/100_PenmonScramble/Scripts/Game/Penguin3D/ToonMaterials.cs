@@ -20,6 +20,7 @@ namespace PenmonScramble.Game
 
         private readonly Shader _toon;
         private readonly Dictionary<(Color color, float gloss), Material> _cache = new Dictionary<(Color, float), Material>();
+        private readonly Dictionary<(Texture texture, Color color), Material> _floors = new Dictionary<(Texture, Color), Material>();
         private readonly List<Material> _all = new List<Material>();
 
         public Material BlobShadow { get; }
@@ -45,14 +46,20 @@ namespace PenmonScramble.Game
             return material;
         }
 
-        /// <summary>床の板。縁の線とつやは出さない</summary>
+        /// <summary>床の板。縁の線とつやは出さない。ステージを作り直すたびに増えないよう、絵と色ごとに1つ</summary>
         public Material Floor(Texture texture, Color color)
         {
-            var material = Track(new Material(_toon) { name = "ToonFloor" });
+            if (_floors.TryGetValue((texture, color), out var material))
+            {
+                return material;
+            }
+
+            material = Track(new Material(_toon) { name = "ToonFloor" });
             material.SetTexture(BaseMapId, texture);
             material.SetColor(BaseColorId, color);
             material.SetFloat(GlossId, 0f);
             material.SetFloat(OutlineWidthId, 0f);
+            _floors.Add((texture, color), material);
             return material;
         }
 
@@ -75,6 +82,7 @@ namespace PenmonScramble.Game
 
             _all.Clear();
             _cache.Clear();
+            _floors.Clear();
         }
 
         private Material Track(Material material)

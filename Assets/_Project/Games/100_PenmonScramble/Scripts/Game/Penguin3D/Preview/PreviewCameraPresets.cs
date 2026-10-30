@@ -27,17 +27,16 @@ namespace PenmonScramble.Game
         private static readonly Preset[] Presets =
         {
             new Preset("透視 45° 画角30", false, 45f, 30f),
-            new Preset("透視 55° 画角30", false, 55f, 30f),
+            new Preset("透視 55° 画角30", false, StageCamera.Pitch, StageCamera.FieldOfView),
             new Preset("透視 65° 画角30", false, 65f, 30f),
             new Preset("平行投影 55°", true, 55f, 0f),
         };
 
-        // 奥の端に立ったペンギンの頭まで入れる高さ（マス）
-        private const float Headroom = 1.6f;
-        // 上下の HUD の分だけ画面の端を空ける（割合）
-        private const float Margin = 0.1f;
+        // 奥の端の余裕と上下の余白は、ステージのカメラと同じにする
+        private const float Headroom = StageCamera.Headroom;
+        private const float Margin = StageCamera.Margin;
 
-        /// <summary>フェーズ0で決めたカメラ（透視 55°）。フェーズ3のステージのカメラもこれに合わせる</summary>
+        /// <summary>フェーズ0で決めたカメラ（透視 55°）。ステージのカメラ（StageCamera）と同じ構え</summary>
         public const int Chosen = 1;
 
         public static int Count => Presets.Length;

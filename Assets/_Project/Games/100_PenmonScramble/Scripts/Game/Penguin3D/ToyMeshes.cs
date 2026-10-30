@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PenmonScramble.Game
@@ -30,6 +31,7 @@ namespace PenmonScramble.Game
         private static Mesh _puck;
         private static Mesh _torus;
         private static Mesh _quad;
+        private static Mesh _star;
 
         /// <summary>直径1の球</summary>
         public static Mesh Sphere => _sphere != null ? _sphere : _sphere = Lathe("ToySphere", SphereProfile(_ => 1f));
@@ -48,6 +50,9 @@ namespace PenmonScramble.Game
 
         /// <summary>上を向いた1x1の板（床・丸い影）</summary>
         public static Mesh FloorQuad => _quad != null ? _quad : _quad = CreateFloorQuad();
+
+        /// <summary>外側の直径1の、ふくらんだ五角の星。厚みは Z。撃破のときに飛び散る星に使う</summary>
+        public static Mesh Star => _star != null ? _star : _star = CreateStar();
 
         /// <summary>球の輪郭（y = -0.5〜0.5）の半径に widthScale(y) を掛ける。y は -1（下）〜1（上）</summary>
         private static Func<float, Vector2> SphereProfile(Func<float, float> widthScale)
@@ -179,6 +184,54 @@ namespace PenmonScramble.Game
             };
             mesh.RecalculateBounds();
             return mesh;
+        }
+
+        // 星のとがり（内側の角の半径 / 外側の角の半径）と、真ん中のふくらみ（外側の直径1に対する厚み）
+        private const int StarPoints = 5;
+        private const float StarInnerRatio = 0.45f;
+        private const float StarPuff = 0.18f;
+
+        /// <summary>
+        /// 表と裏の真ん中を盛り上げた星。面ごとに頂点を分けて、トゥーンの陰影で面の切り替わりが見えるようにする（おもちゃの星らしく）
+        /// </summary>
+        private static Mesh CreateStar()
+        {
+            var vertices = new List<Vector3>();
+            var corners = StarPoints * 2;
+            for (var side = -1f; side <= 1f; side += 2f)
+            {
+                var tip = new Vector3(0f, 0f, side * StarPuff * 0.5f);
+                for (var i = 0; i < corners; i++)
+                {
+                    var a = StarCorner(i);
+                    var b = StarCorner((i + 1) % corners);
+                    // 表と裏で回り方を逆にして、どちらも外を向かせる
+                    vertices.Add(tip);
+                    vertices.Add(side > 0f ? a : b);
+                    vertices.Add(side > 0f ? b : a);
+                }
+            }
+
+            var triangles = new int[vertices.Count];
+            for (var i = 0; i < triangles.Length; i++)
+            {
+                triangles[i] = i;
+            }
+
+            var mesh = new Mesh { name = "ToyStar" };
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        /// <summary>星の i 番目の角。偶数が外側（とがった先）、奇数が内側。0 番は真上</summary>
+        private static Vector3 StarCorner(int i)
+        {
+            var angle = Mathf.PI * 0.5f + i * Mathf.PI / StarPoints;
+            var radius = i % 2 == 0 ? 0.5f : 0.5f * StarInnerRatio;
+            return new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0f);
         }
     }
 }

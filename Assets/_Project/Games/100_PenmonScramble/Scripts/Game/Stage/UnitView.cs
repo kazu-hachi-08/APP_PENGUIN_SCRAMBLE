@@ -4,73 +4,30 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ユニット1体の見た目。絵（CreatureArt）があれば右向きの絵を向きで左右反転し、歩くと跳ねさせる。
-    /// 絵が無ければ仮の見た目（種類の色の丸＋向きの三角）。プレイヤーは席の色の輪と、頭の上に「P1」など。ボスは「BOSS」。
+    /// ユニット1体の見た目。種類の見た目（PenguinLooks）から3Dのペンギンを組み、動き（PenguinMotion）に状態を渡す。
+    /// プレイヤーは足元に席の色の輪と、頭の上に「P1」など。ボスは「BOSS」（UnitView.Parts.cs）。
     /// 位置は更新（1/30秒）ごとに受け取り、その間を補間して描く（オンラインのゲストも同じ描き方にするため）
     /// </summary>
-    public class UnitView : MonoBehaviour
+    public partial class UnitView : MonoBehaviour
     {
-        private const float FlashSeconds = 0.1f;
-        private const float SquashSeconds = 0.15f;
-        private const float SquashAmount = 0.25f;
-        private const float DefeatSeconds = 0.5f;
-        private const float DefeatSpinDegreesPerSecond = 900f;
-        private const float DefeatRiseSpeed = 3f;
-        private const float FacingDistanceRatio = 0.85f;
-        private const float FacingSizeRatio = 0.5f;
-        private const float SeatRingRatio = 1.25f;
-        private const float LabelHeightRatio = 1.6f;
-        private const float LabelCharacterSize = 0.05f;
-        private const int LabelFontSize = 64;
-
-        // 状態ごとの見た目
-        private static readonly Color FrozenTint = new Color(0.75f, 0.95f, 1f);
-        private const float FrozenTintAmount = 0.65f;
-        private const float InvincibleBlinkPerSecond = 12f;
-        private const float AfterimageInterval = 0.04f;
-        private const float AfterimageSeconds = 0.2f;
-        private const float AfterimageAlpha = 0.45f;
         private const float SwitchPoofSeconds = 0.3f;
 
-        // ダウン中は灰色でつぶれて見せ、足元に復活の範囲と進み具合を出す（§4.5）
-        private static readonly Color DownTint = new Color(0.55f, 0.55f, 0.6f);
-        private const float DownTintAmount = 0.6f;
-        private static readonly Vector2 DownScale = new Vector2(1.3f, 0.55f);
-        private const float ReviveRingAlpha = 0.6f;
-        private const float ReviveFillAlpha = 0.35f;
-        private static readonly Color BossLabelColor = new Color(0.9f, 0.15f, 0.15f);
+        // 吹っ飛びは Core の速度がスナップショットに無いので、当たった直後の動きの速さから見分ける。
+        // どの種類の歩く速さ（最大 5.5 マス/秒）よりも速ければ吹っ飛ばされている
+        private const float KnockbackSpeed = 6f;
+        // 当たった更新と、その次の更新の動きを見る（当たった更新では、まだ飛んでいないことがあるため）
+        private const int KnockbackWatchUpdates = 2;
+        // 撃破の動きが終わらなかったとき（止めたままなど）でも、いつかは消す
+        private const float DefeatTimeoutSeconds = 2f;
 
-        // 絵は当たりの円より少し大きく描く（円いっぱいだと小さく見えるため）
-        private const float ArtSizeRatio = 1.5f;
-        // 絵は白く光らせられないので、被弾は赤っぽくする
-        private static readonly Color ArtFlashTint = new Color(1f, 0.55f, 0.55f);
-        // 歩くと上下に跳ねる（§9）。半径に対する高さと、1秒の跳ねる回数
-        private const float BobHeightRatio = 0.25f;
-        private const float BobPerSecond = 3f;
-        // これより動いていたら歩いているとみなす（1回の更新あたり、マス）
-        private const float WalkingStep = 0.01f;
-        // もぐっている大ボスは、暗い影だけ見せる
-        private static readonly Color SubmergedColor = new Color(0.08f, 0.12f, 0.25f, 0.45f);
-
-        private SpriteRenderer _body;
-        private SpriteRenderer _facing;
-        private SpriteRenderer _seatRing;
-        private GameObject _label;
-        private SpriteRenderer _reviveRing;
-        private SpriteRenderer _reviveFill;
-        private float _revive;
-        private Color _color;
-        private Color _trailColor;
-        private bool _hasArt;
-        private float _bodySize;
+        private StageMaterials _materials;
+        private PenguinModel _model;
+        private PenguinMotion _motion;
         private float _radius;
         private Vector2 _from;
         private Vector2 _to;
-        private Vector2 _facingDirection;
         private UnitFlags _flags;
-        private float _flashTimer;
-        private float _squashTimer;
-        private float _afterimageTimer;
+        private int _knockbackWatch;
         private float _defeatTimer = -1f;
 
         public Team Team { get; private set; }
@@ -80,134 +37,109 @@ namespace PenmonScramble.Game
         private bool IsSubmerged => (_flags & UnitFlags.Submerged) != 0;
 
         /// <param name="seatColor">プレイヤーの席の色。null なら輪と文字を出さない（敵）</param>
-        public static UnitView Create(Transform parent, UnitState unit, Color? seatColor, string label)
+        public static UnitView Create(Transform parent, StageMaterials materials, UnitState unit, Color? seatColor, string label)
         {
             var view = new GameObject($"Unit{unit.Id}_{unit.Team}").AddComponent<UnitView>();
             view.transform.SetParent(parent, false);
-            view.Setup(unit, seatColor);
-            if (seatColor.HasValue)
-            {
-                view.CreateLabel(label, seatColor.Value);
-                view.CreateReviveParts(seatColor.Value);
-            }
-            else if (view.IsBoss)
-            {
-                view.CreateLabel("BOSS", BossLabelColor);
-            }
-
+            view._materials = materials;
+            view.Setup(unit);
+            view.CreateMarks(seatColor, label);
             return view;
         }
 
-        private void Setup(UnitState unit, Color? seatColor)
+        private void Setup(UnitState unit)
         {
             Team = unit.Team;
             _radius = unit.Radius;
-            if (seatColor.HasValue)
-            {
-                // 種類の色だけだと協力で誰のか分からないので、席の色の輪を足元に出す
-                _seatRing = CreatePart("SeatRing", PlaceholderSprites.Ring, seatColor.Value);
-                _seatRing.transform.localScale = Vector3.one * (_radius * 2f * SeatRingRatio);
-            }
-
-            _body = CreatePart("Body", PlaceholderSprites.Circle, Color.white);
-            _facing = CreatePart("Facing", PlaceholderSprites.Triangle, Color.white);
-            _facing.transform.localScale = Vector3.one * (_radius * FacingSizeRatio);
-            SetSpecies(unit);
             _from = _to = unit.Position.ToVector2();
-            _facingDirection = unit.Facing.ToVector2();
             _flags = unit.Flags;
             _revive = unit.Revive;
+            BuildModel(unit);
             Render(1f);
         }
 
-        /// <summary>英数字だけなので、ダメージ数字と同じく日本語フォントの要らない TextMesh で描く</summary>
-        private void CreateLabel(string label, Color color)
+        /// <summary>種類の見た目から組み立てる。当たりの円とペンギンの胴の太さをそろえる</summary>
+        private void BuildModel(UnitState unit)
         {
-            var obj = new GameObject("Label");
-            _label = obj;
-            obj.transform.SetParent(transform, false);
-            obj.transform.localPosition = Vector3.up * (_radius * LabelHeightRatio);
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            var text = obj.AddComponent<TextMesh>();
-            text.font = font;
-            text.text = label;
-            text.fontSize = LabelFontSize;
-            text.characterSize = LabelCharacterSize;
-            text.anchor = TextAnchor.MiddleCenter;
-            text.fontStyle = FontStyle.Bold;
-            text.color = color;
-            var renderer = obj.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = font.material;
-            // ほかのペンギンの後ろに隠れて誰か分からなくならないよう、いつも手前に出す
-            renderer.sortingOrder = SortingDepth.Popup - 1;
+            if (_model != null)
+            {
+                Destroy(_model.gameObject);
+            }
+
+            SpeciesNo = unit.SpeciesNo;
+            _model = PenguinModelBuilder.Build(PenguinLooks.Get(unit.SpeciesNo), _materials.Toon, transform);
+            _model.transform.localScale = Vector3.one * PenguinModelBuilder.ScaleForRadius(_radius);
+            // フェーズ0で決めたとおり、どの環境でも足元の丸い影にする
+            _model.SetRealShadows(false);
+            _motion = _model.gameObject.AddComponent<PenguinMotion>();
+            _motion.SnapFacing(unit.Facing.ToFloor());
+            ApplyMotionState(unit, Vector3.zero);
+            PlaceLabel();
         }
 
-        /// <summary>復活の範囲（輪）と、たまった分だけ広がる円。ダウンの間だけ出す</summary>
-        private void CreateReviveParts(Color seatColor)
-        {
-            _reviveRing = CreatePart("ReviveRing", PlaceholderSprites.Ring, new Color(seatColor.r, seatColor.g, seatColor.b, ReviveRingAlpha));
-            _reviveRing.transform.localScale = Vector3.one * (Balance.ReviveRadius * 2f);
-            _reviveRing.sortingOrder = SortingDepth.Ground;
-            _reviveFill = CreatePart("ReviveFill", PlaceholderSprites.Circle, new Color(seatColor.r, seatColor.g, seatColor.b, ReviveFillAlpha));
-            _reviveFill.sortingOrder = SortingDepth.Ground;
-            _reviveRing.enabled = false;
-            _reviveFill.enabled = false;
-        }
-
-        private SpriteRenderer CreatePart(string partName, Sprite sprite, Color color)
-        {
-            var obj = new GameObject(partName);
-            obj.transform.SetParent(transform, false);
-            var renderer = obj.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.color = color;
-            return renderer;
-        }
-
-        public void PushState(UnitState unit)
+        /// <param name="seconds">前の更新からの時間（秒）。ゲストは2回に1回しか届かないので、歩く速さを正しく出すために要る</param>
+        public void PushState(UnitState unit, float seconds)
         {
             _from = _to;
             _to = unit.Position.ToVector2();
-            _facingDirection = unit.Facing.ToVector2();
             var wasDown = IsDown;
             _flags = unit.Flags;
             _revive = unit.Revive;
             if (unit.SpeciesNo != SpeciesNo)
             {
-                ChangeSpecies(unit);
+                // 交代した（自分で替えた・倒れて次の子が出た）。組み直して、ぽんと出てきたように見せる
+                BuildModel(unit);
+                Poof();
+                return;
             }
-            else if (wasDown != IsDown)
+
+            if (wasDown != IsDown)
             {
                 // ダウンした・起き上がった瞬間を見せる（起き上がりは先頭の子なので、種類が変わればそちらの演出で出る）
                 Poof();
             }
+
+            var velocity = (_to - _from).ToFloor() / Mathf.Max(seconds, Balance.TickSeconds);
+            ApplyMotionState(unit, velocity);
+            WatchKnockback(velocity, seconds);
         }
 
-        /// <summary>交代した（自分で替えた・倒れて次の子が出た）。見た目を替えて、ぽんと出てきたように見せる</summary>
-        private void ChangeSpecies(UnitState unit)
+        private void ApplyMotionState(UnitState unit, Vector3 velocity)
         {
-            SetSpecies(unit);
-            Poof();
+            _motion.Velocity = velocity;
+            _motion.Facing = unit.Facing.ToFloor();
+            _motion.Sliding = unit.Has(UnitFlags.Dashing);
+            _motion.Down = unit.Has(UnitFlags.Down);
+            // もぐっている大ボスは、床の丸い影だけ見せる
+            _model.Figure.gameObject.SetActive(!unit.Has(UnitFlags.Submerged));
         }
 
-        /// <summary>絵があれば絵を、無ければ種類の色の丸を出す</summary>
-        private void SetSpecies(UnitState unit)
+        /// <summary>
+        /// 当たった直後に歩くより速く動いていたら、吹っ飛ばされたとみなして転がす。
+        /// 測った速さは更新の間の平均で、Core はその間も減速しているので、間の半分ぶんの減速を足して初速に戻す
+        /// </summary>
+        private void WatchKnockback(Vector3 velocity, float seconds)
         {
-            SpeciesNo = unit.SpeciesNo;
-            var art = CreatureArt.Find(unit.SpeciesNo);
-            _hasArt = art != null;
-            _body.sprite = _hasArt ? art : PlaceholderSprites.Circle;
-            _color = PenguinPalette.BodyColor(unit, _hasArt);
-            _trailColor = PenguinPalette.BodyColor(unit, hasArt: false);
-            var spriteSize = _body.sprite.bounds.size;
-            _bodySize = _hasArt ? _radius * 2f * ArtSizeRatio / Mathf.Max(spriteSize.x, spriteSize.y) : _radius * 2f;
-            _facing.color = Color.Lerp(_trailColor, Color.black, 0.5f);
+            if (_knockbackWatch <= 0)
+            {
+                return;
+            }
+
+            _knockbackWatch--;
+            var speed = velocity.magnitude;
+            if ((_flags & UnitFlags.Dashing) != 0 || speed < KnockbackSpeed)
+            {
+                return;
+            }
+
+            _knockbackWatch = 0;
+            var initialSpeed = speed + Balance.KnockbackDeceleration * seconds * 0.5f;
+            _motion.PlayKnockback(velocity / speed * initialSpeed);
         }
 
         private void Poof()
         {
-            BurstFx.Spawn(transform.parent, PlaceholderSprites.Ring, Color.white, _to, _radius, _radius * 2f, SwitchPoofSeconds, SortingDepth.Popup - 2);
-            Squash();
+            BurstFx.SpawnOnFloor(transform.parent, PlaceholderSprites.Ring, _materials.Decal, Color.white, _to, _radius, _radius * 2f, SwitchPoofSeconds);
         }
 
         /// <summary>alpha は前回の更新から次の更新までの進み具合（0〜1）</summary>
@@ -218,138 +150,34 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var position = Vector2.Lerp(_from, _to, alpha);
-            transform.position = position;
-            var order = SortingDepth.ForY(position.y);
-            if (_seatRing != null)
-            {
-                _seatRing.sortingOrder = order;
-            }
-
-            _body.sortingOrder = order + 1;
-            _facing.sortingOrder = order + 2;
-            // 絵は左右の反転で向きを見せるので、三角は仮の見た目のときだけ
-            _facing.enabled = !IsDown && !IsSubmerged && !_hasArt;
-            _body.flipX = _hasArt && _facingDirection.x < 0f;
-            if (_label != null)
-            {
-                _label.SetActive(!IsSubmerged);
-            }
-
-            RenderRevive();
-            _facing.transform.localPosition = _facingDirection * (_radius * FacingDistanceRatio);
-            _facing.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(_facingDirection.y, _facingDirection.x) * Mathf.Rad2Deg);
+            transform.position = Vector2.Lerp(_from, _to, alpha).ToFloor();
+            RenderMarks();
         }
 
-        private void RenderRevive()
+        /// <summary>当たった。のけぞって、吹っ飛ばされていたら転がる</summary>
+        public void Flash()
         {
-            if (_reviveRing == null)
-            {
-                return;
-            }
-
-            _reviveRing.enabled = IsDown;
-            _reviveFill.enabled = IsDown && _revive > 0f;
-            _reviveFill.transform.localScale = Vector3.one * (Balance.ReviveRadius * 2f * _revive);
+            _motion.PlayHit();
+            _knockbackWatch = KnockbackWatchUpdates;
         }
 
-        public void Flash() => _flashTimer = FlashSeconds;
+        public void PlayAttack(SkillShape shape) => _motion.PlayAttack(shape);
 
-        public void Squash() => _squashTimer = SquashSeconds;
+        public void PlaySpecial() => _motion.PlaySpecial();
 
-        /// <summary>倒れたら回りながら飛んで消える（§9）。Core からは消えているので、ここからは見た目だけで動く</summary>
+        /// <summary>倒れたら回りながら昇って消える（§9）。Core からは消えているので、ここからは見た目だけで動く</summary>
         public void PlayDefeat()
         {
             _defeatTimer = 0f;
-            _facing.enabled = false;
-            if (_seatRing != null)
-            {
-                _seatRing.enabled = false;
-            }
-
-            if (_reviveRing != null)
-            {
-                _reviveRing.enabled = false;
-                _reviveFill.enabled = false;
-            }
-
-            if (_label != null)
-            {
-                _label.SetActive(false);
-            }
+            _model.Figure.gameObject.SetActive(true);
+            _motion.Velocity = Vector3.zero;
+            _motion.Down = false;
+            _motion.Sliding = false;
+            _motion.PlayDefeat();
+            HideMarks();
         }
 
         private void Update()
-        {
-            _flashTimer -= Time.deltaTime;
-            _body.color = CurrentBodyColor();
-            UpdateSquash();
-            UpdateAfterimage();
-            UpdateDefeat();
-        }
-
-        private Color CurrentBodyColor()
-        {
-            if (IsSubmerged)
-            {
-                return SubmergedColor;
-            }
-
-            if (_flashTimer > 0f)
-            {
-                return _hasArt ? ArtFlashTint : Color.white;
-            }
-
-            if (IsDown)
-            {
-                return Color.Lerp(_color, DownTint, DownTintAmount);
-            }
-
-            var color = (_flags & UnitFlags.Frozen) != 0 ? Color.Lerp(_color, FrozenTint, FrozenTintAmount) : _color;
-            // 無敵の間は点滅させて、攻撃が効かないことを分かるようにする
-            if ((_flags & UnitFlags.Invincible) != 0 && Mathf.Repeat(Time.time * InvincibleBlinkPerSecond, 1f) < 0.5f)
-            {
-                color.a = 0.4f;
-            }
-
-            return color;
-        }
-
-        private void UpdateSquash()
-        {
-            _squashTimer -= Time.deltaTime;
-            var amount = _squashTimer > 0f ? SquashAmount * (_squashTimer / SquashSeconds) : 0f;
-            var scale = IsDown ? DownScale : Vector2.one;
-            _body.transform.localScale = new Vector3(scale.x + amount, scale.y - amount, 1f) * _bodySize;
-            _body.transform.localPosition = Vector3.up * BobHeight();
-        }
-
-        private float BobHeight()
-        {
-            var walking = _hasArt && !IsDown && (_to - _from).sqrMagnitude > WalkingStep * WalkingStep;
-            return walking ? Mathf.Abs(Mathf.Sin(Time.time * BobPerSecond * Mathf.PI)) * _radius * BobHeightRatio : 0f;
-        }
-
-        /// <summary>突進中は残像を残して、すべっているのが分かるようにする</summary>
-        private void UpdateAfterimage()
-        {
-            if ((_flags & UnitFlags.Dashing) == 0 || _defeatTimer >= 0f)
-            {
-                return;
-            }
-
-            _afterimageTimer -= Time.deltaTime;
-            if (_afterimageTimer > 0f)
-            {
-                return;
-            }
-
-            _afterimageTimer = AfterimageInterval;
-            var color = new Color(_trailColor.r, _trailColor.g, _trailColor.b, AfterimageAlpha);
-            BurstFx.Spawn(transform.parent, PlaceholderSprites.Circle, color, transform.position, _radius, _radius * 0.7f, AfterimageSeconds, _body.sortingOrder - 1);
-        }
-
-        private void UpdateDefeat()
         {
             if (_defeatTimer < 0f)
             {
@@ -357,11 +185,7 @@ namespace PenmonScramble.Game
             }
 
             _defeatTimer += Time.deltaTime;
-            var t = _defeatTimer / DefeatSeconds;
-            transform.Rotate(0f, 0f, DefeatSpinDegreesPerSecond * Time.deltaTime);
-            transform.position += Vector3.up * (DefeatRiseSpeed * Time.deltaTime);
-            transform.localScale = Vector3.one * Mathf.Max(0f, 1f - t);
-            if (t >= 1f)
+            if (_motion.IsDefeatFinished || _defeatTimer >= DefeatTimeoutSeconds)
             {
                 Destroy(gameObject);
             }

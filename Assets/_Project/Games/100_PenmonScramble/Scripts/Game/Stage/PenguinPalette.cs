@@ -13,9 +13,6 @@ namespace PenmonScramble.Game
         private const float HueStep = 0.035f;
         private const int SpeciesPerElement = 5;
 
-        // 敵は同じ絵を暗くして使う（§9）
-        private const float EnemyDarkness = 0.55f;
-
         private static readonly Color Unknown = new Color(0.7f, 0.7f, 0.7f);
 
         public static Color ElementColor(Element element)
@@ -55,17 +52,6 @@ namespace PenmonScramble.Game
                 case BigBossTable.LeopardSealNo: return new Color(0.55f, 0.58f, 0.66f);
                 default: return new Color(0.12f, 0.13f, 0.18f);
             }
-        }
-
-        /// <summary>
-        /// 絵が無いときの体の色。絵があるときは絵に掛ける色（敵は暗くするだけ）。
-        /// 大ボスは野生のペンギンではないので暗くしない
-        /// </summary>
-        public static Color BodyColor(UnitState unit, bool hasArt)
-        {
-            var color = hasArt ? Color.white : SpeciesColor(unit.SpeciesNo);
-            var darken = unit.Team == Team.Enemy && BigBossTable.Get(unit.SpeciesNo) == null;
-            return darken ? Color.Lerp(color, Color.black, EnemyDarkness) : color;
         }
 
         public static string SpeciesName(int speciesNo)

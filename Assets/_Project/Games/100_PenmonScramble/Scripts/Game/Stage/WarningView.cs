@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 大ボスの攻撃の前の赤い範囲（§6.2）。長さ0なら円、それ以外は帯（四角）で描く。
+    /// 大ボスの攻撃の前の赤い範囲（§6.2）。床に寝かせて、長さ0なら円、それ以外は帯（四角）で描く。
     /// 当たりは両端が丸い形だが、半透明を重ねると濃い所ができるので、帯は端の丸を含む四角で少し広めに見せる。
     /// 攻撃が近づくほど濃くして、いつ来るか分かるようにする
     /// </summary>
@@ -19,7 +19,7 @@ namespace PenmonScramble.Game
         private SpriteRenderer _part;
         private float _progress;
 
-        public static WarningView Create(Transform parent, WarningState warning)
+        public static WarningView Create(Transform parent, StageMaterials materials, WarningState warning)
         {
             var view = new GameObject($"Warning{warning.Id}").AddComponent<WarningView>();
             view.transform.SetParent(parent, false);
@@ -29,28 +29,18 @@ namespace PenmonScramble.Game
             var direction = to - from;
             if (direction.sqrMagnitude < Mathf.Epsilon)
             {
-                view._part = view.CreatePart(PlaceholderSprites.Circle, from, Vector2.one * width);
+                view._part = FloorDecal.Create(view.transform, "Area", PlaceholderSprites.Circle, materials.Decal, Color.clear, from.ToFloor(FloorDecal.AreaHeight), Vector2.one * width);
             }
             else
             {
-                view._part = view.CreatePart(PlaceholderSprites.Square, (from + to) * 0.5f, new Vector2(direction.magnitude + width, width));
-                view._part.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
+                var center = ((from + to) * 0.5f).ToFloor(FloorDecal.AreaHeight);
+                var size = new Vector2(direction.magnitude + width, width);
+                view._part = FloorDecal.Create(view.transform, "Area", PlaceholderSprites.Square, materials.Decal, Color.clear, center, size, FloorDecal.YawOf(direction));
             }
 
             view.PushState(warning);
+            view.Update();
             return view;
-        }
-
-        private SpriteRenderer CreatePart(Sprite sprite, Vector2 position, Vector2 size)
-        {
-            var obj = new GameObject("Area");
-            obj.transform.SetParent(transform, false);
-            obj.transform.position = position;
-            obj.transform.localScale = new Vector3(size.x, size.y, 1f);
-            var renderer = obj.AddComponent<SpriteRenderer>();
-            renderer.sprite = sprite;
-            renderer.sortingOrder = SortingDepth.Ground;
-            return renderer;
         }
 
         public void PushState(WarningState warning)

@@ -19,9 +19,16 @@ namespace PenmonScramble.Game
         {
             camera.orthographic = false;
             camera.fieldOfView = fieldOfView;
+            var (position, rotation) = PerspectivePose(camera.aspect, center, size, pitch, fieldOfView, headroom, margin);
+            camera.transform.SetPositionAndRotation(position, rotation);
+        }
+
+        /// <summary>FitPerspective で置く位置と向き。ステージのカメラは、エリアへ動く土台からの相対で置くのでこちらを使う</summary>
+        public static (Vector3 position, Quaternion rotation) PerspectivePose(float aspect, Vector3 center, Vector2 size, float pitch, float fieldOfView, float headroom, float margin)
+        {
             var rotation = Quaternion.Euler(pitch, 0f, 0f);
             var tanY = Mathf.Tan(fieldOfView * 0.5f * Mathf.Deg2Rad) * (1f - margin);
-            var tanX = tanY * camera.aspect;
+            var tanX = tanY * aspect;
             float near = MinDistance, far = MaxDistance;
             for (var i = 0; i < SearchSteps; i++)
             {
@@ -30,7 +37,7 @@ namespace PenmonScramble.Game
                 else near = mid;
             }
 
-            camera.transform.SetPositionAndRotation(Centered(center, rotation, far, size, headroom), rotation);
+            return (Centered(center, rotation, far, size, headroom), rotation);
         }
 
         /// <summary>

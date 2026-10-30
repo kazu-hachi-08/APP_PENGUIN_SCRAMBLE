@@ -3,7 +3,6 @@ using PenmonScramble.Common.Editor;
 using PenmonScramble.Common.Input;
 using PenmonScramble.Common.Online;
 using PenmonScramble.Common.Scene;
-using PenmonScramble.Core;
 using PenmonScramble.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -29,8 +28,13 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 VersionMargin = new Vector2(-24f, 16f);
         private static readonly Vector2 VersionSize = new Vector2(400f, 60f);
 
-        // エリアの上下に HUD 分の余白を足して、エリア全体が画面に収まるようにする
-        private const float CameraVerticalMargin = 0.8f;
+        private const string ShaderFolder = "Assets/_Project/Games/100_PenmonScramble/Shaders/";
+        // カメラは斜め上から20マスほど離れて見下ろす。揺れても奥のエリアの外まで写るよう余裕を持たせる
+        private const float CameraFarClip = 200f;
+        // 左上の奥から照らす（試作の場 Penguin3DPreviewBuilder と同じ）。顔（手前）が明るく見える
+        private static readonly Vector3 SunAngles = new Vector3(50f, -35f, 0f);
+        private static readonly Color SunColor = new Color(1f, 0.97f, 0.92f);
+        private const float SunIntensity = 1.1f;
 
         [MenuItem("Tools/PenmonScramble/Rebuild")]
         public static void Rebuild()
@@ -46,8 +50,10 @@ namespace PenmonScramble.Editor
         /// <summary>バッチモード（-executeMethod）からも呼べるよう、保存の確認をしない入口を分けている</summary>
         public static void BuildScene()
         {
+            RenderPipelineSetup.Ensure();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var (shake, stageCamera) = CreateCamera();
+            CreateSun();
             CreateEventSystem();
             var canvas = CreateCanvas();
             var touch = CreateTouchControls(canvas.transform);
@@ -70,21 +76,43 @@ namespace PenmonScramble.Editor
             Debug.Log($"[PenmonScrambleSceneBuilder] {ScenePath} を生成しました");
         }
 
-        /// <summary>エリアへ動く土台（StageCamera）の子にカメラを置き、揺れはカメラ側で出す（2つの動きがぶつからないように）</summary>
+        /// <summary>
+        /// エリアへ動く土台（StageCamera）→ 見下ろす構えの腕 → カメラ の3段にする。
+        /// 揺れはカメラ側で腕からずらして出す（エリアへの移動・構え・揺れの3つの動きがぶつからないように）。
+        /// 構え（腕の位置と角度）は画面の縦横比で変わるので、実行時に StageCamera が決める
+        /// </summary>
         private static (CameraShake shake, StageCamera stageCamera) CreateCamera()
         {
             var rig = new GameObject("CameraRig").AddComponent<StageCamera>();
+            var arm = new GameObject("CameraArm");
+            arm.transform.SetParent(rig.transform, false);
             var cameraObj = new GameObject("Main Camera");
             cameraObj.tag = "MainCamera";
-            cameraObj.transform.SetParent(rig.transform, false);
-            cameraObj.transform.localPosition = new Vector3(0f, 0f, -10f);
+            cameraObj.transform.SetParent(arm.transform, false);
             var camera = cameraObj.AddComponent<Camera>();
-            camera.orthographic = true;
-            camera.orthographicSize = Balance.AreaHeight * 0.5f + CameraVerticalMargin;
+            camera.orthographic = false;
+            camera.fieldOfView = StageCamera.FieldOfView;
+            camera.farClipPlane = CameraFarClip;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = BackgroundColor;
             cameraObj.AddComponent<AudioListener>();
+            var so = new SerializedObject(rig);
+            so.FindProperty("_arm").objectReferenceValue = arm.transform;
+            so.FindProperty("_camera").objectReferenceValue = camera;
+            so.ApplyModifiedProperties();
             return (cameraObj.AddComponent<CameraShake>(), rig);
+        }
+
+        /// <summary>影は足元の丸い影で出すので、光の影は切る（フェーズ0で決めた）</summary>
+        private static void CreateSun()
+        {
+            var obj = new GameObject("Sun");
+            obj.transform.rotation = Quaternion.Euler(SunAngles);
+            var light = obj.AddComponent<Light>();
+            light.type = LightType.Directional;
+            light.color = SunColor;
+            light.intensity = SunIntensity;
+            light.shadows = LightShadows.None;
         }
 
         private static void CreateEventSystem()
@@ -141,6 +169,9 @@ namespace PenmonScramble.Editor
             viewSo.FindProperty("_cameraShake").objectReferenceValue = shake;
             viewSo.FindProperty("_stageCamera").objectReferenceValue = stageCamera;
             viewSo.FindProperty("_cutIn").objectReferenceValue = cutIn;
+            viewSo.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
+            viewSo.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
+            viewSo.FindProperty("_fxShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Fx.shader");
             viewSo.ApplyModifiedProperties();
             var runner = stageObj.AddComponent<StageRunner>();
             var so = new SerializedObject(runner);

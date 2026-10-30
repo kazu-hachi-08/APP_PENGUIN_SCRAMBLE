@@ -5,17 +5,22 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージの地面・エリアの出入口・カメラ（§6.1）。地面はワールドごとの絵か色（§6.2・StageTheme）
+    /// ステージの床・エリアの出入口・カメラ（§6.1）。床はワールドごとの絵か色（§6.2・StageTheme）を貼った板
     /// </summary>
     public partial class StageView
     {
+        // 出入口は床に置いた低い柵。ペンギンを隠さない高さにする
         private const float GateWidth = 0.35f;
+        private const float GateHeight = 0.3f;
+        private const float GateGloss = 0.3f;
         // 出入口がいまの範囲の内側にあるか（開いているか）を比べるときの余裕
         private const float GateEpsilon = 0.01f;
-        // エリアの外に敷く地面のはみ出し（マス）。横長のスマホ（21:9 くらい）でも端の外まで埋まるように
-        private const float OutsideWidth = 6f;
-        // カメラの上下の余白と揺れの分
-        private const float OutsideHeight = 2f;
+        // エリアの外に敷く床のはみ出し（マス）。横長のスマホ（21:9 くらい）でも、斜めに見た奥の左右まで埋まるように
+        private const float OutsideWidth = 12f;
+        // 奥と手前のはみ出し。カメラの上下の余白と揺れの分
+        private const float OutsideDepth = 6f;
+        // エリアの外の床は少し下げて、エリアの床と同じ高さでちらつかないようにする
+        private const float OutsideFloorHeight = -0.02f;
 
         [SerializeField] private StageCamera _stageCamera;
 
@@ -28,6 +33,7 @@ namespace PenmonScramble.Game
             var world = StageTable.WorldOf(snapshot.StageNo);
             var theme = StageTheme.ForWorld(world);
             var art = CreatureArt.Ground(world);
+            var texture = art != null ? art.texture : Texture2D.whiteTexture;
             if (Camera.main != null)
             {
                 Camera.main.backgroundColor = theme.Outside;
@@ -39,40 +45,48 @@ namespace PenmonScramble.Game
                 var max = StageLayout.AreaMax(i).ToVector2();
                 var isBossArea = snapshot.AreaCount > 1 && i == snapshot.AreaCount - 1;
                 var color = theme.AreaColor(i, isBossArea, art != null);
-                var sprite = art != null ? art : PlaceholderSprites.Square;
-                CreateOutside(i, snapshot.AreaCount, sprite, min, max, theme.OutsideColor(art != null));
-                CreateRect($"Area{i}", sprite, (min + max) * 0.5f, max - min, color, SortingDepth.Background);
+                CreateOutside(i, snapshot.AreaCount, texture, min, max, theme.OutsideColor(art != null));
+                CreateFloor($"Area{i}", _materials.Toon.Floor(texture, color), min, max, 0f);
                 if (i < snapshot.AreaCount - 1)
                 {
-                    var gate = CreateRect($"Gate{i}", PlaceholderSprites.Square, new Vector2(max.x, (min.y + max.y) * 0.5f), new Vector2(GateWidth, max.y - min.y), theme.Gate, SortingDepth.Ground);
-                    _gates.Add((max.x, gate.gameObject));
+                    _gates.Add((max.x, CreateGate(i, max.x, min.y, max.y, theme.Gate)));
                 }
             }
         }
 
         /// <summary>
-        /// エリアより一回り大きい地面を暗くして後ろに敷く。横長の画面ではエリアの外まで映るので、
+        /// エリアより一回り大きい床を暗くして下に敷く。横長の画面ではエリアの外まで映るので、
         /// カメラの背景色が見えて不自然にならないようにする。重ならないよう、左右へはみ出すのは最初と最後のエリアだけ
         /// </summary>
-        private void CreateOutside(int index, int areaCount, Sprite sprite, Vector2 min, Vector2 max, Color color)
+        private void CreateOutside(int index, int areaCount, Texture texture, Vector2 min, Vector2 max, Color color)
         {
-            var outsideMin = new Vector2(index == 0 ? min.x - OutsideWidth : min.x, min.y - OutsideHeight);
-            var outsideMax = new Vector2(index == areaCount - 1 ? max.x + OutsideWidth : max.x, max.y + OutsideHeight);
-            CreateRect($"Outside{index}", sprite, (outsideMin + outsideMax) * 0.5f, outsideMax - outsideMin, color, SortingDepth.Outside);
+            var outsideMin = new Vector2(index == 0 ? min.x - OutsideWidth : min.x, min.y - OutsideDepth);
+            var outsideMax = new Vector2(index == areaCount - 1 ? max.x + OutsideWidth : max.x, max.y + OutsideDepth);
+            CreateFloor($"Outside{index}", _materials.Toon.Floor(texture, color), outsideMin, outsideMax, OutsideFloorHeight);
         }
 
-        /// <summary>sprite を size（マス）いっぱいに引き伸ばして置く</summary>
-        private SpriteRenderer CreateRect(string objName, Sprite sprite, Vector2 center, Vector2 size, Color color, int order)
+        /// <summary>絵を min〜max（床の上の長方形）いっぱいに引き伸ばして貼った板</summary>
+        private void CreateFloor(string objName, Material material, Vector2 min, Vector2 max, float height)
         {
-            var rect = new GameObject(objName).AddComponent<SpriteRenderer>();
-            rect.transform.SetParent(transform, false);
-            rect.sprite = sprite;
-            rect.color = color;
-            rect.sortingOrder = order;
-            rect.transform.position = center;
-            var spriteSize = sprite.bounds.size;
-            rect.transform.localScale = new Vector3(size.x / spriteSize.x, size.y / spriteSize.y, 1f);
-            return rect;
+            var floor = new GameObject(objName);
+            floor.transform.SetParent(transform, false);
+            floor.transform.position = ((min + max) * 0.5f).ToFloor(height);
+            var size = max - min;
+            floor.transform.localScale = new Vector3(size.x, 1f, size.y);
+            floor.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.FloorQuad;
+            floor.AddComponent<MeshRenderer>().sharedMaterial = material;
+        }
+
+        /// <summary>エリアの境目に、奥から手前まで横たわる低い柵（角の丸い円柱を細長くつぶす）</summary>
+        private GameObject CreateGate(int index, float x, float minY, float maxY, Color color)
+        {
+            var gate = new GameObject($"Gate{index}");
+            gate.transform.SetParent(transform, false);
+            gate.transform.position = new Vector3(x, GateHeight * 0.5f, (minY + maxY) * 0.5f);
+            gate.transform.localScale = new Vector3(GateWidth, GateHeight, maxY - minY);
+            gate.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.Puck;
+            gate.AddComponent<MeshRenderer>().sharedMaterial = _materials.Toon.Get(color, GateGloss);
+            return gate;
         }
 
         /// <summary>動ける範囲の内側にある出入口は開いている（消す）。通ってきた出入口・先の出入口は閉じている</summary>

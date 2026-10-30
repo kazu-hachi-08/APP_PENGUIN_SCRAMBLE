@@ -5,7 +5,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// スナップショットを絵にする。ユニット・弾・範囲と同じ ID で見た目を作り、消えたら消す。
+    /// スナップショットを3Dで描く。Core の床の上の (x, y) を3Dの (x, 0, y) に置く（CoreConversions.ToFloor）。
+    /// ユニット・弾・範囲と同じ ID で見た目を作り、消えたら消す。
     /// ホストもゲストも同じスナップショットから描くので、どちらの画面も同じに見える
     /// </summary>
     public partial class StageView : MonoBehaviour
@@ -22,11 +23,19 @@ namespace PenmonScramble.Game
         [SerializeField] private Color _damageToPlayerColor = new Color(1f, 0.3f, 0.3f);
         [SerializeField] private CameraShake _cameraShake;
         [SerializeField] private SpecialCutIn _cutIn;
+        // シェーダーはシーンの参照で持つ（Shader.Find だとビルドに入らないことがあるため）
+        [SerializeField] private Shader _toonShader;
+        [SerializeField] private Shader _blobShadowShader;
+        [SerializeField] private Shader _fxShader;
 
         // ボスが倒れたときの揺れ（マス・秒）
         private const float BossDefeatShake = 0.3f;
         private const float BossDefeatShakeSeconds = 0.5f;
         private const float SpawnPoofSeconds = 0.3f;
+        // 倒したときに飛び散るコインの数（星はその半分）と、散らばる広さ
+        private const int DefeatCoins = 3;
+        private const int BossDefeatCoins = 10;
+        private const float BossDefeatSpread = 1.8f;
 
         private readonly Dictionary<int, UnitView> _units = new Dictionary<int, UnitView>();
         private readonly Dictionary<int, ProjectileView> _projectiles = new Dictionary<int, ProjectileView>();
@@ -34,7 +43,22 @@ namespace PenmonScramble.Game
         private readonly Dictionary<int, WarningView> _warnings = new Dictionary<int, WarningView>();
         private readonly HashSet<int> _aliveIds = new HashSet<int>();
         private readonly List<int> _removeIds = new List<int>();
+        private StageMaterials _materials;
         private int _round;
+        private int _lastTick = -1;
+
+        // 前のスナップショットからの時間（秒）。ゲストは2回に1回しか届かないので、ユニットの歩く速さを出すのに要る
+        private float _sinceLastSnapshot = Balance.TickSeconds;
+
+        private void Awake()
+        {
+            _materials = new StageMaterials(_toonShader, _blobShadowShader, _fxShader);
+        }
+
+        private void OnDestroy()
+        {
+            _materials?.DestroyAll();
+        }
 
         public Color SeatColor(int seat) => _seatColors[seat % _seatColors.Length];
 
@@ -46,6 +70,10 @@ namespace PenmonScramble.Game
             {
                 Rebuild(snapshot);
             }
+
+            var ticks = isNewRound || _lastTick < 0 ? 1 : Mathf.Max(1, snapshot.Tick - _lastTick);
+            _sinceLastSnapshot = ticks * Balance.TickSeconds;
+            _lastTick = snapshot.Tick;
 
             // 倒れたユニットはスナップショットにもういないので、消す前に当たった演出を出す
             foreach (var hit in snapshot.Hits)
@@ -105,15 +133,14 @@ namespace PenmonScramble.Game
                 _aliveIds.Add(unit.Id);
                 if (_units.TryGetValue(unit.Id, out var view))
                 {
-                    view.PushState(unit);
+                    view.PushState(unit, _sinceLastSnapshot);
                     continue;
                 }
 
                 _units.Add(unit.Id, CreateUnitView(unit));
                 if (showSpawn)
                 {
-                    var position = unit.Position.ToVector2();
-                    BurstFx.Spawn(transform, PlaceholderSprites.Ring, Color.white, position, unit.Radius, unit.Radius * 2.5f, SpawnPoofSeconds, SortingDepth.Popup - 2);
+                    BurstFx.SpawnOnFloor(transform, PlaceholderSprites.Ring, _materials.Decal, Color.white, unit.Position.ToVector2(), unit.Radius, unit.Radius * 2.5f, SpawnPoofSeconds);
                 }
             }
 
@@ -125,10 +152,10 @@ namespace PenmonScramble.Game
         {
             if (unit.Team == Team.Enemy)
             {
-                return UnitView.Create(transform, unit, null, null);
+                return UnitView.Create(transform, _materials, unit, null, null);
             }
 
-            return UnitView.Create(transform, unit, SeatColor(unit.Seat), SeatLabel(unit.Seat));
+            return UnitView.Create(transform, _materials, unit, SeatColor(unit.Seat), SeatLabel(unit.Seat));
         }
 
         public static string SeatLabel(int seat) => $"P{seat + 1}";
@@ -145,7 +172,7 @@ namespace PenmonScramble.Game
                 }
                 else
                 {
-                    _projectiles.Add(projectile.Id, ProjectileView.Create(transform, projectile, projectile.Team == Team.Enemy));
+                    _projectiles.Add(projectile.Id, ProjectileView.Create(transform, _materials, projectile, projectile.Team == Team.Enemy));
                 }
             }
 
@@ -166,7 +193,7 @@ namespace PenmonScramble.Game
                 }
                 else
                 {
-                    _effects.Add(effect.Id, EffectView.Create(transform, effect));
+                    _effects.Add(effect.Id, EffectView.Create(transform, _materials, effect));
                 }
             }
 
@@ -187,7 +214,7 @@ namespace PenmonScramble.Game
                 }
                 else
                 {
-                    _warnings.Add(warning.Id, WarningView.Create(transform, warning));
+                    _warnings.Add(warning.Id, WarningView.Create(transform, _materials, warning));
                     appeared = true;
                 }
             }
@@ -227,20 +254,28 @@ namespace PenmonScramble.Game
 
             view.Flash();
             var color = view.Team == Team.Player ? _damageToPlayerColor : _damageToEnemyColor;
-            DamagePopup.Spawn(transform, e.Position.ToVector2(), e.Damage, color);
+            DamagePopup.Spawn(transform, _materials, e.Position.ToVector2(), e.Damage, color);
         }
 
         private void OnDefeated(DefeatedEvent e)
         {
-            if (_units.TryGetValue(e.UnitId, out var view))
+            if (!_units.TryGetValue(e.UnitId, out var view))
             {
-                _units.Remove(e.UnitId);
-                view.PlayDefeat();
-                if (view.IsBoss)
-                {
-                    _cameraShake.Shake(BossDefeatShake, BossDefeatShakeSeconds);
-                    GameSounds.Play(GameSound.BossDefeat);
-                }
+                return;
+            }
+
+            _units.Remove(e.UnitId);
+            view.PlayDefeat();
+            if (e.Team == Team.Enemy)
+            {
+                // 倒したらコインと星が飛び散る（§9）。ボスは多く、広く
+                DefeatSparkle.Spawn(transform, _materials, e.Position.ToVector2(), view.IsBoss ? BossDefeatCoins : DefeatCoins, view.IsBoss ? BossDefeatSpread : 1f);
+            }
+
+            if (view.IsBoss)
+            {
+                _cameraShake.Shake(BossDefeatShake, BossDefeatShakeSeconds);
+                GameSounds.Play(GameSound.BossDefeat);
             }
         }
     }
