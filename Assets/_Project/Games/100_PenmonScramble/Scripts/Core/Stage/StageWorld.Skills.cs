@@ -3,7 +3,7 @@ using System;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 技の発動と当たり。技は「形」ごとの処理を使い回す（§4.2）
+    /// 技の発動と当たり。技は「形」ごとの処理を使い回す
     /// </summary>
     public sealed partial class StageWorld
     {
@@ -61,7 +61,7 @@ namespace PenmonScramble.Core
             }
         }
 
-        /// <summary>止まったまま技を出したとき、狙いをつけなくても敵へ向くようにする（§3）</summary>
+        /// <summary>止まったまま技を出したとき、狙いをつけなくても敵へ向くようにする</summary>
         private void FaceNearestOpponent(Unit unit)
         {
             var nearest = FindNearestOpponent(unit);
@@ -70,11 +70,8 @@ namespace PenmonScramble.Core
                 return;
             }
 
-            var direction = (nearest.Position - unit.Position).Normalized;
-            if (!direction.IsNearlyZero)
-            {
-                unit.Facing = direction;
-            }
+            // 重なっているときは今の向きのまま（AwayFrom の fallback）
+            unit.Facing = AwayFrom(unit.Position, nearest, unit.Facing);
         }
 
         private void UseMelee(Unit user, SkillDef skill)
@@ -133,6 +130,9 @@ namespace PenmonScramble.Core
             return direction.IsNearlyZero ? fallback : direction;
         }
 
+        /// <summary>ベクトルの向き。長さ0なら fallback（正規化すると Zero になり、向きが決まらないため）</summary>
+        private static Vec2 DirectionOr(Vec2 vector, Vec2 fallback) => vector.IsNearlyZero ? fallback : vector.Normalized;
+
         /// <summary>円が範囲に少しでもかかっていれば当てる</summary>
         private static bool IsWithin(Unit target, Vec2 center, float radius)
         {
@@ -142,7 +142,7 @@ namespace PenmonScramble.Core
 
         private void ApplyHit(int attackerId, Unit target, int damage, float knockback, Vec2 direction, SkillDef skill)
         {
-            // 必殺技のあいだ、出した本人は無敵（§4.3）
+            // 必殺技のあいだ、出した本人は無敵
             if (target.IsInvincible)
             {
                 return;

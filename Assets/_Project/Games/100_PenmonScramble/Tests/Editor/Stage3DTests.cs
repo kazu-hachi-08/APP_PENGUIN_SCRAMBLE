@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>ステージを3Dで描く部分（PLAN_3D フェーズ3）。座標の置き方・カメラの構え・床に寝かせる向き・ユニットの目印</summary>
+    /// <summary>ステージを3Dで描く部分。座標の置き方・カメラの構え・床に寝かせる向き・ユニットの目印</summary>
     public class Stage3DTests
     {
         private const float Tolerance = 1e-4f;

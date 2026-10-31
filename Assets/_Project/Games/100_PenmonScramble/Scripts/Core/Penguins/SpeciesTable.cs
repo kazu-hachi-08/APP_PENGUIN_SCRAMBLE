@@ -4,13 +4,13 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 20種類のペンギンと40個の技の定義表（§5.3）。数値を変えるときはここを直す
+    /// 20種類のペンギンと40個の技の定義表。数値を変えるときはここを直す
     /// </summary>
     public static partial class SpeciesTable
     {
         public const int Count = 20;
 
-        // ★ごとの基本の倍率（§5.3「★2・★3 は HP・攻撃の倍率が少し高い」）。個性の分はそれぞれの行で足し引きする
+        // ★ごとの基本の倍率（「★2・★3 は HP・攻撃の倍率が少し高い」）。個性の分はそれぞれの行で足し引きする
         private const float Hp1 = 1.2f, Hp2 = 1.35f, Hp3 = 1.5f;
         private const float Atk1 = 1.0f, Atk2 = 1.15f, Atk3 = 1.3f;
         private const float Speed = 4.5f;
@@ -94,7 +94,7 @@ namespace PenmonScramble.Core
             return no >= 1 && no <= All.Length ? All[no - 1] : null;
         }
 
-        /// <summary>プレイヤーの1体分（§5.1）。HP ＝ HP の倍率 × パワー、攻撃 ＝ 攻撃の倍率 × パワー / 100</summary>
+        /// <summary>プレイヤーの1体分。HP ＝ HP の倍率 × パワー、攻撃 ＝ 攻撃の倍率 × パワー / 100</summary>
         public static UnitStats PlayerStats(SpeciesDef species, int power)
         {
             return new UnitStats
@@ -103,13 +103,13 @@ namespace PenmonScramble.Core
                 Element = species.Element,
                 Radius = Balance.PenguinRadius,
                 MoveSpeed = species.MoveSpeed,
-                MaxHp = Math.Max(1, (int)MathF.Round(species.HpRate * power)),
+                MaxHp = UnitStats.HpOf(species.HpRate * power),
                 Attack = species.AttackRate * power / 100f,
                 Skills = new[] { species.Skill1, species.Skill2 },
             };
         }
 
-        /// <summary>野生の敵（§4.7）。技1だけを、待ち時間を長くして使う。HP は協力の人数で、HP と攻撃は先のワールドほど増える</summary>
+        /// <summary>野生の敵。技1だけを、待ち時間を長くして使う。HP は協力の人数で、HP と攻撃は先のワールドほど増える</summary>
         public static UnitStats EnemyStats(SpeciesDef species, int playerCount, int world = 1)
         {
             return new UnitStats
@@ -125,13 +125,13 @@ namespace PenmonScramble.Core
             };
         }
 
-        /// <summary>ステージのボス（§6.1）。野生の敵を大きく・強くして、技2も使う</summary>
+        /// <summary>ステージのボス。野生の敵を大きく・強くして、技2も使う</summary>
         public static UnitStats BossStats(SpeciesDef species, int playerCount, int world = 1)
         {
             var stats = EnemyStats(species, playerCount, world);
             stats.IsBoss = true;
             stats.Radius *= Balance.BossRadiusScale;
-            stats.MaxHp = Math.Max(1, (int)MathF.Round(stats.MaxHp * Balance.BossHpScale));
+            stats.MaxHp = UnitStats.HpOf(stats.MaxHp * Balance.BossHpScale);
             stats.Attack *= Balance.BossAttackScale;
             stats.Skills = new[] { species.Skill1, species.Skill2 };
             stats.CooldownScale = Balance.BossCooldownScale;
@@ -141,7 +141,7 @@ namespace PenmonScramble.Core
 
         public static int EnemyMaxHp(SpeciesDef species, int playerCount, int world = 1)
         {
-            return Math.Max(1, (int)MathF.Round(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(playerCount) * Balance.WorldEnemyScale(world)));
+            return UnitStats.HpOf(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(playerCount) * Balance.WorldEnemyScale(world));
         }
     }
 }

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// タイトルのロビー（§2・§9.6）: 上に名前の札・コイン・設定、左の列にガチャ・ペンモン・遊び方、
+    /// タイトルのロビー: 上に名前の札・コイン・設定、左の列にガチャ・ペンモン・遊び方、
     /// 右下にステージのカードと「みんなで遊ぶ」「ひとりで遊ぶ」。まん中は後ろのジオラマの自分の編成が見えるよう空けておく。
     /// 部品は3つの組（上・左・右下）に分け、ロビーに入るたびに外から時間差ですべり込ませる（UiSlideIn）
     /// </summary>
@@ -170,8 +170,7 @@ namespace PenmonScramble.Editor
         /// <summary>画面いっぱいの入れ物。中の部品をまとめてすべり込ませる</summary>
         private static Transform CreateSlideGroup(Transform parent, string name, Vector2 from, float delay)
         {
-            var obj = UIDialogBuilder.CreateUIObject(name, parent);
-            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
+            var obj = CreateStretchGroup(parent, name);
             SetSlideIn(obj, from, delay);
             return obj.transform;
         }

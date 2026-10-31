@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Common.Editor
 {
     /// <summary>
-    /// 共通ダイアログ（確認・ポーズ・リザルト）のUIをシーンへ生成するエディタユーティリティ
+    /// 共通ダイアログ（確認・ポーズ）のUIをシーンへ生成するエディタユーティリティ
     /// タイトルと各ゲームのSceneBuilderから共有して使う
     /// </summary>
     public static class UIDialogBuilder
@@ -41,11 +41,7 @@ namespace PenmonScramble.Common.Editor
             // メッセージ
             var msgObj = CreateUIObject("MessageText", panelObj.transform);
             SetAnchorRange(msgObj.GetComponent<RectTransform>(), new Vector2(0.08f, 0.35f), new Vector2(0.92f, 0.75f));
-            var msgText = msgObj.AddComponent<Text>();
-            msgText.text = "メッセージ内容";
-            msgText.fontSize = CommonMessageFontSize;
-            msgText.alignment = TextAnchor.MiddleCenter;
-            msgText.color = new Color(0.85f, 0.88f, 0.95f);
+            var msgText = AddText(msgObj, "メッセージ内容", CommonMessageFontSize, TextAnchor.MiddleCenter, new Color(0.85f, 0.88f, 0.95f));
 
             // ボタンエリア
             var btnAreaObj = CreateUIObject("ButtonArea", panelObj.transform);
@@ -76,7 +72,7 @@ namespace PenmonScramble.Common.Editor
         }
 
         // スマホで指で操作しやすいサイズ。ボタンは2列に並べて、横画面の低い高さに収める（合計で高さは約710）
-        private const float PausePanelWidth = 820f;
+        private const float PausePanelWidth = CommonPanelWidth;
         private const int PausePanelPadding = 30;
         private const float PauseItemSpacing = 20f;
         private const float PauseTitleHeight = 90f;
@@ -177,17 +173,7 @@ namespace PenmonScramble.Common.Editor
             return btnObj;
         }
 
-        // リザルトも全ゲーム共通で毎回目にするため、確認ダイアログと同じ基準で大きくする
-        private const float ResultPanelWidth = 820f;
-        private const float ResultPanelHeight = 600f;
-        private const int ResultTitleFontSize = 48;
-        private const int ResultScoreFontSize = 52;
-        private const int ResultDetailFontSize = 36;
-        private const float ResultButtonWidth = 340f;
-        private const float ResultButtonHeight = 100f;
-        private const int ResultButtonFontSize = 36;
-
-        // 3つのダイアログで同じ作り方のパネル（中央基準・固定サイズ）を1か所にまとめる
+        // 確認・ポーズのダイアログで同じ作り方のパネル（中央基準・固定サイズ）を1か所にまとめる
         private static GameObject CreateCenteredPanel(Transform parent, Vector2 size, Color color)
         {
             var panelObj = CreateUIObject("Panel", parent);
@@ -210,14 +196,20 @@ namespace PenmonScramble.Common.Editor
             rect.offsetMax = Vector2.zero;
         }
 
-        // ラベル系の太字・中央寄せ文字。設定順は呼び出し前と同じ（text → fontSize → 太字 → 中央 → color）
+        // ラベル系の太字・中央寄せ文字。設定順は text → fontSize → 太字 → 中央 → color
         private static Text AddBoldCenteredText(GameObject obj, string content, int fontSize, Color color)
+        {
+            return AddText(obj, content, fontSize, TextAnchor.MiddleCenter, color, FontStyle.Bold);
+        }
+
+        // 文字の設定順（text → fontSize → fontStyle → alignment → color）は、生成結果の見た目を揃えるため固定する
+        private static Text AddText(GameObject obj, string content, int fontSize, TextAnchor alignment, Color color, FontStyle style = FontStyle.Normal)
         {
             var text = obj.AddComponent<Text>();
             text.text = content;
             text.fontSize = fontSize;
-            text.fontStyle = FontStyle.Bold;
-            text.alignment = TextAnchor.MiddleCenter;
+            text.fontStyle = style;
+            text.alignment = alignment;
             text.color = color;
             return text;
         }
@@ -242,12 +234,7 @@ namespace PenmonScramble.Common.Editor
 
             var textObj = CreateUIObject("Text", btnObj.transform);
             SetStretchAll(textObj.GetComponent<RectTransform>());
-            var text = textObj.AddComponent<Text>();
-            text.text = label;
-            text.fontSize = 22;
-            text.fontStyle = FontStyle.Bold;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.color = Color.white;
+            AddText(textObj, label, 22, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
 
             return btnObj;
         }
@@ -284,11 +271,7 @@ namespace PenmonScramble.Common.Editor
             lRect.anchorMax = new Vector2(1, 1);
             lRect.pivot = new Vector2(0.5f, 1);
             lRect.sizeDelta = new Vector2(0, VolumeLabelHeight);
-            var text = labelObj.AddComponent<Text>();
-            text.text = label;
-            text.fontSize = VolumeLabelFontSize;
-            text.alignment = TextAnchor.MiddleLeft;
-            text.color = Color.white;
+            AddText(labelObj, label, VolumeLabelFontSize, TextAnchor.MiddleLeft, Color.white);
 
             // 透明な Image をタッチ判定にする（Slider は自分に当たったレイキャストでしかドラッグを受け取らないため）
             var sliderObj = CreateUIObject("SliderBar", rowObj.transform);

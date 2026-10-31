@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// タイトル（§2・§9.6）: 後ろで動く乱戦のジオラマとロゴの上に、「タップしてスタート」の画面とロビーの2段を重ねる。
+    /// タイトル: 後ろで動く乱戦のジオラマとロゴの上に、「タップしてスタート」の画面とロビーの2段を重ねる。
     /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る。
     /// ここではタイトルの土台・スタートの画面・接続待ちの窓・「みんなで遊ぶ」の窓を作る。ロビーの中身と画面どうしのつなぎは
     /// PenmonScrambleSceneBuilder.TitleLobby.cs、ジオラマとロゴは TitleArt.cs、設定と名前の入力は Settings.cs
@@ -84,19 +84,15 @@ namespace PenmonScramble.Editor
         /// </summary>
         private static ModeSelectPanel CreateTitlePanel(Transform canvas, OnlineSession session, Camera stageCamera)
         {
-            var root = UIDialogBuilder.CreateUIObject("Title", canvas);
-            UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
             // 後ろの HUD やボタンを押せないよう、画面全体をふさぐ（透明なので後ろのジオラマは見える）
-            root.AddComponent<Image>().color = Color.clear;
+            var root = CreateFullScreenBacking(canvas, "Title", Color.clear);
             CreateTitleDiorama(root, stageCamera);
             CreateTitleFades(root.transform);
             CreateTitleLogo(root.transform);
             CreateTitleSplash(root.transform);
 
-            var menu = UIDialogBuilder.CreateUIObject(MenuGroupName, root.transform);
-            UIDialogBuilder.SetStretchAll(menu.GetComponent<RectTransform>());
-            var lobby = UIDialogBuilder.CreateUIObject(LobbyName, menu.transform);
-            UIDialogBuilder.SetStretchAll(lobby.GetComponent<RectTransform>());
+            var menu = CreateStretchGroup(root.transform, MenuGroupName);
+            var lobby = CreateStretchGroup(menu.transform, LobbyName);
             var waiting = CreateTitleWaiting(root.transform, out var status, out var copy, out var start, out var cancel);
 
             var panel = root.AddComponent<ModeSelectPanel>();
@@ -131,9 +127,7 @@ namespace PenmonScramble.Editor
         /// </summary>
         private static GameObject CreateTitleSplash(Transform parent)
         {
-            var splash = UIDialogBuilder.CreateUIObject(SplashName, parent);
-            UIDialogBuilder.SetStretchAll(splash.GetComponent<RectTransform>());
-            splash.AddComponent<Image>().color = Color.clear;
+            var splash = CreateFullScreenBacking(parent, SplashName, Color.clear);
             splash.AddComponent<Button>().transition = Selectable.Transition.None;
 
             var prompt = CreateLabel(splash.transform, "Prompt", string.Empty, StartPromptFontSize, StartPromptPosition, StartPromptSize);
@@ -149,8 +143,7 @@ namespace PenmonScramble.Editor
         /// <summary>接続待ち。ロビーは隠れて、ロゴとジオラマの上に窓だけが出る</summary>
         private static GameObject CreateTitleWaiting(Transform parent, out Text status, out Button copy, out Button start, out Button cancel)
         {
-            var waiting = UIDialogBuilder.CreateUIObject("Waiting", parent);
-            UIDialogBuilder.SetStretchAll(waiting.GetComponent<RectTransform>());
+            var waiting = CreateStretchGroup(parent, "Waiting");
             var panel = CreatePanel(waiting.transform, "Panel", WaitingPanelPosition, WaitingPanelSize).transform;
             status = CreateLabel(panel, "Status", string.Empty, StatusFontSize, StatusPosition, StatusSize);
 
@@ -206,9 +199,8 @@ namespace PenmonScramble.Editor
 
         private static Text CreateInputText(Transform parent, string name, string value, Color color)
         {
-            var obj = UIDialogBuilder.CreateUIObject(name, parent);
+            var obj = CreateStretchGroup(parent, name);
             var rect = obj.GetComponent<RectTransform>();
-            UIDialogBuilder.SetStretchAll(rect);
             rect.offsetMin = new Vector2(InputPadding, 0f);
             rect.offsetMax = new Vector2(-InputPadding, 0f);
             var text = AddText(obj, value, CodeFontSize);

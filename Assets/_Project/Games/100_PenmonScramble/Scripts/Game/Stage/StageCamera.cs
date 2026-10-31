@@ -4,13 +4,13 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 斜め上から見下ろすカメラを、今のエリアへ動かす（§6.1）。土台（これ）は床の上を横にだけ動き、
+    /// 斜め上から見下ろすカメラを、今のエリアへ動かす。土台（これ）は床の上を横にだけ動き、
     /// 腕（_arm）がエリア（16×9マス）がちょうど画面に収まる位置・角度にカメラを構える。
     /// 揺れ（CameraShake）は腕の先のカメラが自分の位置をずらして出すので、ここは土台と腕だけを持つ
     /// </summary>
     public class StageCamera : MonoBehaviour
     {
-        /// <summary>フェーズ0で決めた構え（透視・見下ろし 55°・画角 30°）。試作の場（PreviewCameraPresets）も同じ値を使う</summary>
+        /// <summary>構え（透視・見下ろし 55°・画角 30°）。試作の場（PreviewCameraPresets）も同じ値を使う</summary>
         public const float Pitch = 55f;
         public const float FieldOfView = 30f;
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 遊び方の「ルール」のページ（§3.1）。中身は §4・§6 の要約なので、ルールを変えたらここも直す
+    /// 遊び方の「ルール」のページ。中身はルールの要約なので、ルールを変えたらここも直す
     /// </summary>
     public static class HowToPlayPages
     {

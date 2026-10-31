@@ -58,7 +58,7 @@ namespace PenmonScramble.Game
             for (var side = -1f; side <= 1f; side += 2f)
             {
                 var direction = new Vector3(0.35f * side, 0f, -1f).normalized;
-                kit.Parts.Add("HindFlipper", ToyMeshes.Drop, tail, new Vector3(0.1f * side, 0f, 0f) + direction * 0.24f, Fin(direction, Vector3.up), new Vector3(0.34f, 0.5f, 0.08f), SealFlipper, BodyGloss);
+                AddFin(kit, tail, "HindFlipper", new Vector3(0.1f * side, 0f, 0f) + direction * 0.24f, direction, new Vector3(0.34f, 0.5f, 0.08f), SealFlipper);
                 BuildSealFlipper(kit, body, side);
             }
 
@@ -73,7 +73,7 @@ namespace PenmonScramble.Game
         {
             var shoulder = kit.Joint(side < 0f ? BigBossPart.LimbLeft : BigBossPart.LimbRight, body, new Vector3(0.55f * side, 0.2f, 0.15f));
             var direction = new Vector3(0.6f * side, -0.25f, -0.75f).normalized;
-            kit.Parts.Add("Flipper", ToyMeshes.Drop, shoulder, direction * 0.26f, Fin(direction, Vector3.up), new Vector3(0.32f, 0.62f, 0.08f), SealFlipper, BodyGloss);
+            AddFin(kit, shoulder, "Flipper", direction * 0.26f, direction, new Vector3(0.32f, 0.62f, 0.08f), SealFlipper);
         }
 
         /// <summary>大きな頭と鼻先。下あご（Jaw）には赤い口の中と下の歯を付け、開くと見える</summary>

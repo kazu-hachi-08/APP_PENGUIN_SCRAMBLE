@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 遊び方の「操作」の絵（§3 の表を絵にしたもの）。キーボードはキーの並びどおりに置き、押したキーが光る（HowToPlayKey）。
+    /// 遊び方の「操作」の絵。キーボードはキーの並びどおりに置き、押したキーが光る（HowToPlayKey）。
     /// スマホはステージ中の仮想スティック・ボタンの配置（TouchControls の定数）を縮めて描く
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -42,7 +42,7 @@ namespace PenmonScramble.Editor
         private const float PadGlyphSize = 110f;
         private static readonly Vector2 PadWideGlyphSize = new Vector2(200f, 90f);
         private const int PadWideFontSize = 28;
-        // 絵の右端から文字の左端まで（丸いボタンでは以前と同じ位置になる）
+        // 絵の右端から文字の左端まで
         private const float PadLabelGap = 30f;
         private static readonly Vector2 PadLabelSize = new Vector2(520f, 80f);
         private static readonly Color PadCrossColor = new Color(0.40f, 0.60f, 0.95f);
@@ -161,8 +161,7 @@ namespace PenmonScramble.Editor
             rect.anchoredPosition = position * scale;
             obj.GetComponent<Image>().raycastTarget = false;
 
-            var textObj = UIDialogBuilder.CreateUIObject("Text", obj.transform);
-            UIDialogBuilder.SetStretchAll(textObj.GetComponent<RectTransform>());
+            var textObj = CreateStretchGroup(obj.transform, "Text");
             var text = AddText(textObj, label, PhoneButtonFontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
@@ -194,8 +193,7 @@ namespace PenmonScramble.Editor
             shadow.raycastTarget = false;
             face.raycastTarget = false;
 
-            var textObj = UIDialogBuilder.CreateUIObject("Text", obj.transform);
-            UIDialogBuilder.SetStretchAll(textObj.GetComponent<RectTransform>());
+            var textObj = CreateStretchGroup(obj.transform, "Text");
             var text = AddText(textObj, label, fontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.fontStyle = FontStyle.Bold;
@@ -228,11 +226,8 @@ namespace PenmonScramble.Editor
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
-            var image = obj.AddComponent<Image>();
-            image.sprite = sprite;
+            var image = AddImage(obj, sprite, color, false);
             image.type = sprite != null && sprite.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Simple;
-            image.color = color;
-            image.raycastTarget = false;
             return image;
         }
 

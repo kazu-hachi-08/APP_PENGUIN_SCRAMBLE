@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンモン画面の右側の、選んだ子の図鑑カード（§7）: 顔・★・名前・属性・個性・パワーと HP・体力／攻撃／速さの棒・
+    /// ペンモン画面の右側の、選んだ子の図鑑カード:顔・★・名前・属性・個性・パワーと HP・体力／攻撃／速さの棒・
     /// 技の実演の小窓・技2つのカード。技のカードを押すと、小窓の実演がその技に替わる
     /// </summary>
     public class PenmonDetailPanel : MonoBehaviour
@@ -69,7 +69,7 @@ namespace PenmonScramble.Game
         private void ShowProfile()
         {
             CreatureArt.ShowFace(_face, _species.No);
-            _titleText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(PenguinLabels.StarColor(_species.Stars))}>{PenguinLabels.Stars(_species.Stars)}</color> {_species.Name}";
+            _titleText.text = $"{PenguinLabels.ColoredStars(_species.Stars)} {_species.Name}";
             _elementChip.color = PenguinPalette.ElementColor(_species.Element);
             _elementText.text = PenguinLabels.ElementName(_species.Element);
             _personalityText.text = SpeciesTexts.Personality(_species.No);

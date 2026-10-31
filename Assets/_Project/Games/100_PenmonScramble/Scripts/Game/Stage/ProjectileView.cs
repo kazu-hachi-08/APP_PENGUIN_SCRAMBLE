@@ -52,9 +52,7 @@ namespace PenmonScramble.Game
             ball.transform.SetParent(transform, false);
             ball.transform.localPosition = Vector3.up * FlyHeight;
             ball.transform.localScale = Vector3.one * size;
-            ball.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.Sphere;
-            var renderer = ball.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = materials.Toon.Get(color, BallGloss);
+            var renderer = ToyParts.AddMesh(ball, ToyMeshes.Sphere, materials.Toon.Get(color, BallGloss));
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
@@ -75,12 +73,7 @@ namespace PenmonScramble.Game
 
         private void CreateShadow(StageMaterials materials, float size)
         {
-            var shadow = new GameObject("Shadow");
-            shadow.transform.SetParent(transform, false);
-            shadow.transform.localPosition = Vector3.up * FloorDecal.BurstHeight;
-            shadow.transform.localScale = new Vector3(size, 1f, size);
-            shadow.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.FloorQuad;
-            shadow.AddComponent<MeshRenderer>().sharedMaterial = materials.Toon.BlobShadow;
+            ToyParts.FloorPlate("Shadow", transform, Vector3.up * FloorDecal.BurstHeight, new Vector3(size, 1f, size), materials.Toon.BlobShadow);
         }
 
         public void PushState(ProjectileState projectile)

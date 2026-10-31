@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 大ボスの動き（§6.2）: 休みの間は一番近いプレイヤーへ寄り、時間が来たら赤い範囲で予告 → 攻撃、を順に繰り返す。
+    /// 大ボスの動き: 休みの間は一番近いプレイヤーへ寄り、時間が来たら赤い範囲で予告 → 攻撃、を順に繰り返す。
     /// 予告が出ている間は動かない（予告の場所と攻撃の場所がずれないように）
     /// </summary>
     public sealed partial class StageWorld
@@ -56,9 +56,9 @@ namespace PenmonScramble.Core
             {
                 MoveBy(boss, toTarget.Normalized, dt);
             }
-            else if (!toTarget.IsNearlyZero)
+            else
             {
-                boss.Facing = toTarget.Normalized;
+                boss.Facing = DirectionOr(toTarget, boss.Facing);
             }
 
             if (brain.RestSeconds <= 0f)
@@ -77,7 +77,7 @@ namespace PenmonScramble.Core
             switch (attack.Kind)
             {
                 case BossAttackKind.Charge:
-                    brain.Direction = attack.CrossScreen ? HorizontalToward(boss, target) : DirectionToward(boss, target);
+                    brain.Direction = attack.CrossScreen ? HorizontalToward(boss, target) : AwayFrom(boss.Position, target, boss.Facing);
                     boss.Facing = brain.Direction;
                     // 壁で止まるので、予告も壁までにする
                     var end = ClampInsideArea(boss.Position + brain.Direction * skill.Range, boss.Radius);
@@ -193,12 +193,6 @@ namespace PenmonScramble.Core
             }
 
             brain.Warnings.Clear();
-        }
-
-        private static Vec2 DirectionToward(Unit from, Unit target)
-        {
-            var direction = (target.Position - from.Position).Normalized;
-            return direction.IsNearlyZero ? from.Facing : direction;
         }
 
         private static Vec2 HorizontalToward(Unit from, Unit target)

@@ -8,9 +8,9 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージ中のメニュー（右上のボタン・Esc / P・PS5 コントローラーの OPTIONS）: つづける・遊び方・やり直し・タイトルへ・音量（§3.2）。
+    /// ステージ中のメニュー（右上のボタン・Esc / P・PS5 コントローラーの OPTIONS）: つづける・遊び方・やり直し・タイトルへ・音量。
     /// ソロは全体を止める（Time.timeScale）。協力は止めずに重ねるだけで、開いている間は自分のペンギンが動かない
-    /// （ホストがすべて計算するので、1人の都合で全員を止めないため。§8）
+    /// （ホストがすべて計算するので、1人の都合で全員を止めないため。）
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後、StageRunner が自分の入力を読む前に開け閉めする
     [DefaultExecutionOrder(50)]
@@ -48,7 +48,7 @@ namespace PenmonScramble.Game
         }
 
         /// <param name="solo">ソロは開いている間、全体を止める</param>
-        /// <param name="canRestart">「やり直し」を出すのはソロとホストだけ（§8「もう一度はホストだけ」とそろえる）</param>
+        /// <param name="canRestart">「やり直し」を出すのはソロとホストだけ</param>
         public void Bind(bool solo, bool canRestart)
         {
             _solo = solo;
@@ -162,7 +162,7 @@ namespace PenmonScramble.Game
             _confirm.Show("タイトルへ", TitleMessage(), OnTitleConfirmed, ShowDialog, "タイトルへ", "もどる");
         }
 
-        /// <summary>協力では、抜けると何が起きるかを伝える（§8: ゲストは部屋から抜け、ホストが抜けると全員が戻る）</summary>
+        /// <summary>協力では、抜けると何が起きるかを伝える（ゲストは部屋から抜け、ホストが抜けると全員が戻る）</summary>
         private string TitleMessage()
         {
             if (_solo)

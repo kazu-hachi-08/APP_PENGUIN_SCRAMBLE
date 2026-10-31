@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ステージの HUD のプレート（§9.8）: 左上の自分（顔とゲージの輪・名札・HP・3体の小さな顔）、右上のエリアの進み具合と残りの敵、
+    /// ステージの HUD のプレート:左上の自分（顔とゲージの輪・名札・HP・3体の小さな顔）、右上のエリアの進み具合と残りの敵、
     /// 上のまん中のボスの HP。斜めの板とゲージの輪の絵は HudArt、丸い顔の絵はスマホのボタンと同じ TouchArt を使う
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -78,7 +78,7 @@ namespace PenmonScramble.Editor
         private const float PipRowRight = -30f;
         private const float PipSpacing = 12f;
         private const float PipSize = 24f;
-        // 1ステージのエリアの数（今は6）より少し多めに作っておく
+        // 1ステージのエリアの数より少し多めに作っておく
         private const int MaxAreaPips = 8;
         private static readonly Vector2 BossTagSize = new Vector2(80f, 34f);
         private const int BossTagFontSize = 22;
@@ -392,11 +392,7 @@ namespace PenmonScramble.Editor
         /// <summary>飾りの絵（押す邪魔をしない）。spritePath が null なら絵の無い四角（顔は実行時に入れる）</summary>
         private static Image CreateHudImage(Transform parent, string name, string spritePath, Color color, Vector2 anchor, Vector2 position, Vector2 size)
         {
-            var image = CreateHudRect(parent, name, anchor, position, size).gameObject.AddComponent<Image>();
-            image.sprite = spritePath != null ? UiSprite(spritePath) : null;
-            image.color = color;
-            image.raycastTarget = false;
-            return image;
+            return AddImage(CreateHudRect(parent, name, anchor, position, size).gameObject, spritePath != null ? UiSprite(spritePath) : null, color, false);
         }
 
         /// <summary>親いっぱいに広げた太字の白い文字（濃い紺で縁取る）。左右の余白で、板の斜めの部分や顔との重なりを避ける</summary>

@@ -20,7 +20,7 @@ namespace PenmonScramble.Core
     }
 
     /// <summary>
-    /// 記録の読み書き（§10）。読めない記録は消さずに別のキーへ退避し、新しい記録で始める（CLAUDE.md §3.5）
+    /// 記録の読み書き。読めない記録は消さずに別のキーへ退避し、新しい記録で始める（CLAUDE.md §3.5）
     /// </summary>
     public sealed class SaveStore
     {
@@ -73,7 +73,7 @@ namespace PenmonScramble.Core
         }
 
         /// <summary>
-        /// 設定の「初期化」（§3.3。最初の3体を引き直したい人向け）。新しい記録を作って保存し、それを返す。
+        /// 設定の「初期化」（最初の3体を引き直したい人向け）。新しい記録を作って保存し、それを返す。
         /// 読めなかった記録の退避（Broken）には触らない（プレイヤーが消したのは今の記録だけなので）
         /// </summary>
         public SaveData Reset()

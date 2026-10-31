@@ -23,10 +23,10 @@ namespace PenmonScramble.Game
         private const float SpecialHitShakeSeconds = 0.3f;
         private const float BigBlastShake = 0.08f;
         private const float BigBlastShakeSeconds = 0.15f;
-        // これより大きい落下は、必殺技でなくても少し揺らす
+        // これ以上の大きさの落下は、必殺技でなくても少し揺らす
         private const float BigBlastRadius = 1.5f;
 
-        // 合体技（§4.6）。必殺技ほどではないが、ふつうの技より大きく見せる
+        // 合体技。必殺技ほどではないが、ふつうの技より大きく見せる
         private static readonly Color ComboColor = new Color(1f, 0.9f, 0.35f);
         private const float ComboRingRadius = 3f;
         private const float ComboRingSeconds = 0.4f;

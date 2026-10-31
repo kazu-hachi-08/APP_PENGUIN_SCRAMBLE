@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace PenmonScramble.Game
 {
-    /// <summary>効果音の波形（ペンモンの BattleSounds.Synth と同じ作り。予告の「警報」だけ足した）</summary>
+    /// <summary>効果音の波形</summary>
     public static partial class GameSounds
     {
         private const int SampleRate = 44100;

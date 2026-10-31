@@ -10,7 +10,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// アプリのアイコン（§9.6）。Rebuild のたびに、ゲーム中と同じ3Dのアデリンを寄りで撮り、コードで描いた背景に重ねて作る。
+    /// アプリのアイコン。Rebuild のたびに、ゲーム中と同じ3Dのアデリンを寄りで撮り、コードで描いた背景に重ねて作る。
     /// Windows / Linux（デスクトップ共通）・Android（前と背景を分けたアダプティブ。Unity 6.6 からは Android はこれだけ）・ブラウザ（favicon）に入れる。
     /// 生成物なので手で直さない（見た目は PenguinLooks とここの定数を直す）
     /// </summary>
@@ -70,32 +70,21 @@ namespace PenmonScramble.Editor
         /// <summary>アデリンを、アイコン全体用と、アダプティブの前の層用（安全な範囲に収める）の2枚撮る</summary>
         private static (Color32[] full, Color32[] adaptive) ShootIconFigures()
         {
-            var materials = new ToonMaterials(AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader"), AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader"));
-            var studio = new GameObject("IconStudio");
-            try
+            return WithPortraitStudio<(Color32[] full, Color32[] adaptive)>("IconStudio", (camera, materials, parent) =>
             {
-                var camera = CreatePortraitCamera(studio.transform);
-                CreatePortraitLight(studio.transform);
-                var model = PenguinModelBuilder.Build(PenguinLooks.Get(IconSpeciesNo), materials, studio.transform);
-                model.BlobShadow.enabled = false;
+                var model = PenguinModelBuilder.Build(PenguinLooks.Get(IconSpeciesNo), materials, parent);
                 var pose = PenguinPose.Idle;
                 pose.Attack = IconAttackProgress;
                 pose.AttackShape = SkillShape.Melee;
                 model.gameObject.AddComponent<PenguinMotion>().Apply(pose);
-                model.transform.localRotation = Quaternion.Euler(0f, IconYaw, 0f);
-                camera.transform.rotation = Quaternion.Euler(IconPitch, 180f, 0f);
+                PoseForPortrait(camera, model, IconYaw, IconPitch);
 
                 FrameIcon(camera, model, 1f);
                 var full = RenderIconLayer(camera);
                 FrameIcon(camera, model, 1f / AdaptiveSafeZone);
                 var adaptive = RenderIconLayer(camera);
                 return (full, adaptive);
-            }
-            finally
-            {
-                Object.DestroyImmediate(studio);
-                materials.DestroyAll();
-            }
+            });
         }
 
         /// <summary>
@@ -221,13 +210,7 @@ namespace PenmonScramble.Editor
             texture.Apply();
             var png = texture.EncodeToPNG();
             Object.DestroyImmediate(texture);
-            if (File.Exists(path) && File.ReadAllBytes(path).SequenceEqual(png))
-            {
-                return false;
-            }
-
-            File.WriteAllBytes(path, png);
-            return true;
+            return WriteBytesIfChanged(path, png);
         }
 
         /// <summary>Player Settings のアイコンへ入れる。デスクトップ（Windows / Linux 共通）と Android</summary>
@@ -259,24 +242,19 @@ namespace PenmonScramble.Editor
         /// <summary>アイコン用の取り込み設定（圧縮しない・縮めない）にそろえてから読む</summary>
         private static Texture2D LoadIconTexture(string path)
         {
-            if (AssetImporter.GetAtPath(path) is not TextureImporter importer)
-            {
-                return null;
-            }
-
-            if (importer.textureType != TextureImporterType.Default || importer.maxTextureSize != IconSize || importer.textureCompression != TextureImporterCompression.Uncompressed
-                || importer.npotScale != TextureImporterNPOTScale.None || !importer.alphaIsTransparency || importer.mipmapEnabled)
-            {
-                importer.textureType = TextureImporterType.Default;
-                importer.maxTextureSize = IconSize;
-                importer.textureCompression = TextureImporterCompression.Uncompressed;
-                importer.npotScale = TextureImporterNPOTScale.None;
-                importer.alphaIsTransparency = true;
-                importer.mipmapEnabled = false;
-                importer.SaveAndReimport();
-            }
-
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            return LoadTextureAsset<Texture2D>(path,
+                importer => importer.textureType == TextureImporterType.Default && importer.maxTextureSize == IconSize
+                    && importer.textureCompression == TextureImporterCompression.Uncompressed && importer.npotScale == TextureImporterNPOTScale.None
+                    && importer.alphaIsTransparency && !importer.mipmapEnabled,
+                importer =>
+                {
+                    importer.textureType = TextureImporterType.Default;
+                    importer.maxTextureSize = IconSize;
+                    importer.textureCompression = TextureImporterCompression.Uncompressed;
+                    importer.npotScale = TextureImporterNPOTScale.None;
+                    importer.alphaIsTransparency = true;
+                    importer.mipmapEnabled = false;
+                });
         }
     }
 }

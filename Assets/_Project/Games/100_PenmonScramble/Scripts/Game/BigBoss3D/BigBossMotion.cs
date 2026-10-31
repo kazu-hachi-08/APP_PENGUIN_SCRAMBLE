@@ -1,5 +1,6 @@
 using PenmonScramble.Core;
 using UnityEngine;
+using static PenmonScramble.Game.ToyMotionMath;
 
 namespace PenmonScramble.Game
 {
@@ -66,7 +67,7 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>もぐっている（§6.2 の飛び出し）。もぐると床の下へ沈み、出てくると飛び出す</summary>
+        /// <summary>もぐっている（飛び出し）。もぐると床の下へ沈み、出てくると飛び出す</summary>
         public bool Submerged
         {
             get => _submerged;
@@ -124,12 +125,7 @@ namespace PenmonScramble.Game
         public void SnapFacing(Vector3 direction)
         {
             Bind();
-            var local = transform.InverseTransformDirection(direction);
-            if (local.x * local.x + local.z * local.z > 0f)
-            {
-                _pose.Yaw = YawOf(local);
-            }
-
+            _pose.Yaw = SnapYaw(transform, direction, _pose.Yaw);
             Apply(_pose);
         }
 
@@ -173,7 +169,7 @@ namespace PenmonScramble.Game
             }
 
             _shadowScale = _model.BlobShadow.transform.localScale;
-            _blinkTimer = NextBlinkInterval();
+            _blinkTimer = NextBlinkInterval(BlinkIntervalMin, BlinkIntervalMax);
         }
 
         private void Update() => Tick(Time.deltaTime);
@@ -187,7 +183,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var local = transform.InverseTransformDirection(new Vector3(Velocity.x, 0f, Velocity.z));
+            var local = FlatLocal(transform, Velocity);
             var speed = local.magnitude;
             var moving = speed > MovingThreshold;
             Turn(local, moving, dt);
@@ -219,7 +215,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var facing = transform.InverseTransformDirection(new Vector3(Facing.x, 0f, Facing.z));
+            var facing = FlatLocal(transform, Facing);
             var target = facing.sqrMagnitude > 0f ? facing : moving ? localVelocity : Vector3.zero;
             if (target.sqrMagnitude > 0f)
             {
@@ -242,22 +238,16 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            _blinkTimer = NextBlinkInterval();
+            _blinkTimer = NextBlinkInterval(BlinkIntervalMin, BlinkIntervalMax);
             PlayBlink();
         }
 
-        private static float NextBlinkInterval() => Random.Range(BlinkIntervalMin, BlinkIntervalMax);
+        /// <summary>攻撃が出た瞬間の動きのうち、kind の攻撃のものだけ Bell を返す（別の攻撃の出た瞬間では 0）</summary>
+        private static float StrikeBell(BigBossPose pose, BossAttackKind kind, float start, float peak, float end) =>
+            pose.StrikeKind == kind ? Bell(pose.Strike, start, peak, end) : 0f;
 
-        private static float Advance(float progress, float dt, float seconds) => Mathf.Min(1f, progress + dt / seconds);
-
-        private static float YawOf(Vector3 direction) => Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
-
-        /// <summary>start で 0、peak で 1、end で 0 に戻る山（なめらかに）</summary>
-        private static float Bell(float t, float start, float peak, float end)
-        {
-            if (t <= start || t >= end) return 0f;
-            return t < peak ? Mathf.SmoothStep(0f, 1f, (t - start) / (peak - start)) : Mathf.SmoothStep(1f, 0f, (t - peak) / (end - peak));
-        }
+        /// <summary>羽ばたき・這う・泳ぐ周期の角度（ラジアン）。Phase は周単位なので 2π を掛ける</summary>
+        private static float CyclePhase(BigBossPose pose) => pose.Phase * Mathf.PI * 2f;
 
         /// <summary>姿勢を関節に置く。毎回休みの姿勢から組み直すので、前のフレームの値が残らない</summary>
         public void Apply(BigBossPose pose)
@@ -265,12 +255,12 @@ namespace PenmonScramble.Game
             Bind();
             System.Array.Copy(_rest, _work, _rest.Length);
             var figure = FigureOffset.Rest(_model.CenterHeight);
-            switch (_model.BossNo)
+            switch (BigBossModel.SpeciesOf(_model.BossNo))
             {
-                case BigBossTable.SkuaNo:
+                case BigBossSpecies.Skua:
                     PoseSkua(pose, ref figure);
                     break;
-                case BigBossTable.LeopardSealNo:
+                case BigBossSpecies.LeopardSeal:
                     PoseSeal(pose, ref figure);
                     break;
                 default:
@@ -305,23 +295,6 @@ namespace PenmonScramble.Game
         /// <summary>左右の関節（side は左が -1、右が 1）</summary>
         private ref Offset Side(BigBossPart left, BigBossPart right, float side) => ref _work[(int)(side < 0f ? left : right)];
 
-        /// <summary>関節1つ分の姿勢</summary>
-        private struct Offset
-        {
-            public Vector3 Position;
-            public Vector3 Euler;
-            public Vector3 Scale;
-
-            public static Offset From(Transform t) => new Offset { Position = t.localPosition, Euler = t.localEulerAngles, Scale = t.localScale };
-
-            public void ApplyTo(Transform t)
-            {
-                t.localPosition = Position;
-                t.localRotation = Quaternion.Euler(Euler);
-                t.localScale = Scale;
-            }
-        }
-
         /// <summary>大ボスごとの動きの速さ（周/秒）: いつも・1マス/秒ごと・構えている間に足す分・突進中に足す分</summary>
         private readonly struct MotionStyle
         {
@@ -343,10 +316,10 @@ namespace PenmonScramble.Game
         {
             get
             {
-                switch (_model.BossNo)
+                switch (BigBossModel.SpeciesOf(_model.BossNo))
                 {
-                    case BigBossTable.SkuaNo: return SkuaStyle;
-                    case BigBossTable.LeopardSealNo: return SealStyle;
+                    case BigBossSpecies.Skua: return SkuaStyle;
+                    case BigBossSpecies.LeopardSeal: return SealStyle;
                     default: return OrcaStyle;
                 }
             }

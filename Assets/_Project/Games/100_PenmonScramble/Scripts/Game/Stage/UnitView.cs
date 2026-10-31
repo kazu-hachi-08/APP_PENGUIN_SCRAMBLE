@@ -86,7 +86,7 @@ namespace PenmonScramble.Game
             }
 
             _model.transform.localScale = Vector3.one * _modelScale;
-            // フェーズ0で決めたとおり、どの環境でも足元の丸い影にする
+            // どの環境でも足元の丸い影にする
             _model.SetRealShadows(false);
             _motion.SnapFacing(unit.Facing.ToFloor());
             ApplyMotionState(unit, Vector3.zero);
@@ -197,7 +197,7 @@ namespace PenmonScramble.Game
 
         public void PlaySpecial() => _motion.PlaySpecial();
 
-        /// <summary>倒れたら回りながら昇って消える（§9）。Core からは消えているので、ここからは見た目だけで動く</summary>
+        /// <summary>倒れたら回りながら昇って消える。Core からは消えているので、ここからは見た目だけで動く</summary>
         public void PlayDefeat()
         {
             _defeatTimer = 0f;

@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// タイトルのロビー（§2）。接続の流れ（ModeSelectPanel）以外の所: 上の名前の札・コイン・設定、左の列（ガチャ・ペンモン・遊び方）、
+    /// タイトルのロビー。接続の流れ（ModeSelectPanel）以外の所: 上の名前の札・コイン・設定、左の列（ガチャ・ペンモン・遊び方）、
     /// 右下のステージのカードと「ひとりで遊ぶ」「みんなで遊ぶ」。「みんなで遊ぶ」は部屋を作る / コードで参加の窓を開く。
     /// ステージはソロとホストが使う（ゲストはホストの選んだステージを遊ぶ）
     /// </summary>
@@ -168,7 +168,7 @@ namespace PenmonScramble.Game
             var inWorld = (no - 1) % StageTable.StagesPerWorld + 1;
             _stageNoText.text = $"ワールド {world} - {inWorld}";
             _stageNameText.text = stage?.Name;
-            // ワールドの最後のステージには大ボスが出る（§6.2）
+            // ワールドの最後のステージには大ボスが出る
             _stageBadgeText.text = Record.IsCleared(no) ? ClearedBadge : inWorld == StageTable.StagesPerWorld ? BigBossBadge : string.Empty;
             _prevStageButton.interactable = no > 1;
             _nextStageButton.interactable = StageTable.Get(no + 1) != null && Record.IsUnlocked(no + 1);

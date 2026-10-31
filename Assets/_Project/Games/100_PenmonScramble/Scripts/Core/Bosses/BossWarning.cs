@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 大ボスの攻撃の前に地面へ出す赤い範囲（§6.2）。From〜To の線から HalfWidth 以内（端は丸い）。
+    /// 大ボスの攻撃の前に地面へ出す赤い範囲。From〜To の線から HalfWidth 以内（端は丸い）。
     /// From と To が同じなら円になる。円・帯・突進の道を、この1つの形で表す
     /// </summary>
     public sealed class BossWarning

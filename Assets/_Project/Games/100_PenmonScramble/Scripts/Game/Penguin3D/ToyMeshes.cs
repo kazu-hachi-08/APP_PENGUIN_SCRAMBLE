@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンギンの部品に使う形（球・卵形・しずく・丸い円柱・輪・氷の塊）。縦の輪郭を回して作る。形ごとに1つだけ作って全部の部品で使い回す。
+    /// ペンギンの部品に使う形（球・卵形・しずく・丸い円柱・輪・氷の塊・半球・星・床の板）。縦の輪郭を回して作る。形ごとに1つだけ作って全部の部品で使い回す。
     /// Unity の Primitive を使わないのは、Collider が付くのと、面の数を自分で決めたいため（スマホで重いときに減らせる）
     /// </summary>
     public static class ToyMeshes
@@ -238,18 +238,7 @@ namespace PenmonScramble.Game
                 }
             }
 
-            var triangles = new int[vertices.Count];
-            for (var i = 0; i < triangles.Length; i++)
-            {
-                triangles[i] = i;
-            }
-
-            var mesh = new Mesh { name = "ToyStar" };
-            mesh.SetVertices(vertices);
-            mesh.SetTriangles(triangles, 0);
-            mesh.RecalculateNormals();
-            mesh.RecalculateBounds();
-            return mesh;
+            return MeshFromVertexList("ToyStar", vertices);
         }
 
         private static Mesh CreateIceChunk()
@@ -279,13 +268,19 @@ namespace PenmonScramble.Game
                 AddOutwardTriangle(vertices, Vector3.up, top[i], top[next]);
             }
 
+            return MeshFromVertexList("ToyIceChunk", vertices);
+        }
+
+        /// <summary>面ごとに分けた頂点を、0..n-1 の順にそのまま三角形にしたメッシュを作る（法線は面から自動で求める）</summary>
+        private static Mesh MeshFromVertexList(string meshName, List<Vector3> vertices)
+        {
             var triangles = new int[vertices.Count];
             for (var i = 0; i < triangles.Length; i++)
             {
                 triangles[i] = i;
             }
 
-            var mesh = new Mesh { name = "ToyIceChunk" };
+            var mesh = new Mesh { name = meshName };
             mesh.SetVertices(vertices);
             mesh.SetTriangles(triangles, 0);
             mesh.RecalculateNormals();

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ガチャで出てきた子のカード（§7）: ★・名前・属性・個性・パワーと HP・技2つ。初めて手に入れた種類なら「NEW!」の札。
+    /// ガチャで出てきた子のカード: ★・名前・属性・個性・パワーと HP・技2つ。初めて手に入れた種類なら「NEW!」の札。
     /// 出すたびに右からすべり込む（UiSlideIn）。技のカードはペンモン画面と同じ見た目（押しても何もしない）
     /// </summary>
     public class GachaResultCard : MonoBehaviour
@@ -27,7 +27,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            _titleText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(PenguinLabels.StarColor(species.Stars))}>{PenguinLabels.Stars(species.Stars)}</color> {species.Name}";
+            _titleText.text = $"{PenguinLabels.ColoredStars(species.Stars)} {species.Name}";
             _elementChip.color = PenguinPalette.ElementColor(species.Element);
             _elementText.text = PenguinLabels.ElementName(species.Element);
             _personalityText.text = SpeciesTexts.Personality(species.No);

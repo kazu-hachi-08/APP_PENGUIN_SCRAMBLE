@@ -3,7 +3,7 @@ using System;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 大ボス3体の定義表（§6.2）。各ワールドの3ステージ目の最後に出る。数値を変えるときはここを直す
+    /// 大ボス3体の定義表。各ワールドの3ステージ目の最後に出る。数値を変えるときはここを直す
     /// </summary>
     public static class BigBossTable
     {
@@ -45,7 +45,7 @@ namespace PenmonScramble.Core
                 Element = boss.Element,
                 Radius = boss.Radius,
                 MoveSpeed = boss.MoveSpeed,
-                MaxHp = Math.Max(1, (int)MathF.Round(hp)),
+                MaxHp = UnitStats.HpOf(hp),
                 Attack = Balance.BigBossAttack * Balance.WorldEnemyScale(world),
                 // 技は持たず、BigBoss の攻撃を順に出す
                 Skills = Array.Empty<SkillDef>(),

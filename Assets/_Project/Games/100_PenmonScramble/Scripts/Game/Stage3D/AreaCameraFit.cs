@@ -1,10 +1,12 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PenmonScramble.Game
 {
     /// <summary>
     /// 斜め上から見下ろすカメラを、床の上の長方形（エリア）が画面にちょうど収まる位置に置く。
-    /// 奥の端はペンギンの頭の高さまで入るようにする（奥に立ったペンギンの頭が切れないように）
+    /// 奥の端はペンギンの頭の高さまで入るようにする（奥に立ったペンギンの頭が切れないように）。
+    /// 画面に映す RenderTexture の作り方も、カメラの構えと同じく見せ方の一部なのでここに置く
     /// </summary>
     public static class AreaCameraFit
     {
@@ -13,6 +15,8 @@ namespace PenmonScramble.Game
         private const int SearchSteps = 40;
         private const int CenteringSteps = 6;
         private const float OrthographicDistance = 50f;
+        // 深度バッファ。手前と奥のペンギンの前後を正しく隠し合うために必要
+        private const int RenderDepthBits = 24;
 
         /// <summary>透視カメラ: 見下ろす角度（pitch）と画角を決めたまま、収まるいちばん近い距離を探す</summary>
         public static void FitPerspective(Camera camera, Vector3 center, Vector2 size, float pitch, float fieldOfView, float headroom, float margin)
@@ -80,6 +84,56 @@ namespace PenmonScramble.Game
             var halfWidth = size.x * 0.5f / camera.aspect;
             camera.orthographicSize = Mathf.Max(halfHeight, halfWidth) / (1f - margin);
             camera.transform.SetPositionAndRotation(Position(center, rotation, OrthographicDistance), rotation);
+        }
+
+        /// <summary>見下ろす角度と距離で、center を見る位置に置く（タイトルのジオラマとアイコンの撮影で同じ構えにする）</summary>
+        public static void Aim(Transform camera, Vector3 center, float pitch, float distance)
+        {
+            var rotation = Quaternion.Euler(pitch, 0f, 0f);
+            camera.SetPositionAndRotation(Position(center, rotation, distance), rotation);
+        }
+
+        /// <summary>
+        /// 画面に映す RawImage の画素数で撮れるよう、RenderTexture を用意する。大きさが変わったときだけ作り直す。
+        /// 基準解像度のままだと大きな画面でぼやけるので、canvas の拡大率を掛けて実際の画素数にする
+        /// </summary>
+        public static void EnsureScreenTexture(ref RenderTexture texture, RawImage screen, Camera camera, string name)
+        {
+            var canvas = screen.canvas;
+            var scale = canvas != null ? canvas.scaleFactor : 1f;
+            var size = screen.rectTransform.rect.size * scale;
+            var width = Mathf.Max(1, Mathf.RoundToInt(size.x));
+            var height = Mathf.Max(1, Mathf.RoundToInt(size.y));
+            if (texture != null && texture.width == width && texture.height == height)
+            {
+                return;
+            }
+
+            if (texture != null)
+            {
+                camera.targetTexture = null;
+            }
+
+            ReleaseTexture(ref texture);
+            texture = new RenderTexture(width, height, RenderDepthBits)
+            {
+                name = name,
+                // 品質設定が 0 のときも有効な値にする（1 はアンチエイリアスなし）
+                antiAliasing = Mathf.Max(1, QualitySettings.antiAliasing),
+            };
+            screen.texture = texture;
+        }
+
+        /// <summary>作り直し・破棄のときに、GPU 側のバッファも一緒に解放する</summary>
+        public static void ReleaseTexture(ref RenderTexture texture)
+        {
+            if (texture != null)
+            {
+                texture.Release();
+                Object.Destroy(texture);
+            }
+
+            texture = null;
         }
 
         private static Vector3 Position(Vector3 center, Quaternion rotation, float distance) => center - rotation * Vector3.forward * distance;

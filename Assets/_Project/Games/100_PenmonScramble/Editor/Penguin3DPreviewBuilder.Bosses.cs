@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 大ボス3体のスクショ（PLAN_3D フェーズ5。形と動きを人が確かめる）。試作の場に一時的に組んで撮り、撮り終えたら消す。
+    /// 大ボス3体のスクショ（形と動きを人が確かめる）。試作の場に一時的に組んで撮り、撮り終えたら消す。
     /// boss_skua.png / boss_seal.png / boss_orca.png: 縦に動き、横にその動きの始めから終わりまでを6枚。
     /// bosses_area.png: ゲームのカメラでエリア全体（ペンギンと並べた大きさ）
     /// </summary>
@@ -77,13 +77,8 @@ namespace PenmonScramble.Editor
         [MenuItem("Tools/PenmonScramble/3D Preview Boss Capture")]
         public static void CaptureBosses()
         {
-            var stage = Object.FindAnyObjectByType<PenguinPreviewStage>();
-            if (stage == null)
-            {
-                Open();
-                stage = Object.FindAnyObjectByType<PenguinPreviewStage>();
-                if (stage == null) return;
-            }
+            var stage = FindOrOpenPreviewStage();
+            if (stage == null) return;
 
             Directory.CreateDirectory(CaptureFolder);
             var shadows = stage.RealShadows;
@@ -92,8 +87,7 @@ namespace PenmonScramble.Editor
             holder.transform.SetParent(stage.Generated, false);
             try
             {
-                stage.SetRealShadows(false);
-                stage.SetOutline(true);
+                BeginPreviewCapture(stage);
                 var skua = AddBoss(stage, holder.transform, BigBossTable.SkuaNo);
                 var seal = AddBoss(stage, holder.transform, BigBossTable.LeopardSealNo);
                 var orca = AddBoss(stage, holder.transform, BigBossTable.OrcaNo);
@@ -161,17 +155,7 @@ namespace PenmonScramble.Editor
             }
 
             row.Start(boss);
-            boss.Tick(row.PreRoll);
-            var step = row.Seconds / (MotionSamples - 1);
-            for (var col = 0; col < MotionSamples; col++)
-            {
-                if (col > 0)
-                {
-                    boss.Tick(step);
-                }
-
-                Blit(sheet, Render(stage.Camera, BossCellSize, BossCellSize), col * BossCellSize, y * BossCellSize);
-            }
+            SampleRow(stage.Camera, boss.Tick, row.PreRoll, row.Seconds, sheet, BossCellSize, y);
         }
 
         /// <summary>エリアに3体とペンギンを並べて、ゲームのカメラで撮る</summary>

@@ -45,7 +45,7 @@ namespace PenmonScramble.Game
 
         private void PoseOrca(BigBossPose pose, ref FigureOffset f)
         {
-            var cycle = pose.Phase * Mathf.PI * 2f;
+            var cycle = CyclePhase(pose);
             var wave = TelegraphOf(pose, BossAttackKind.Wave);
             var charge = TelegraphOf(pose, BossAttackKind.Charge);
             var dash = pose.Dash;
@@ -72,7 +72,7 @@ namespace PenmonScramble.Game
             }
 
             f.Roll += OrcaWaveTremble * Mathf.Sin(pose.Time * 25f) * wave;
-            f.Squash += OrcaSlamSquash * (pose.StrikeKind == BossAttackKind.Wave ? Bell(pose.Strike, OrcaSlamShare, OrcaSlamShare * 1.4f, 0.6f) : 0f);
+            f.Squash += OrcaSlamSquash * StrikeBell(pose, BossAttackKind.Wave, OrcaSlamShare, OrcaSlamShare * 1.4f, 0.6f);
             Joint(BigBossPart.Hips).Euler.x += hips;
             Joint(BigBossPart.Tail).Euler.x += tail;
 
@@ -83,7 +83,7 @@ namespace PenmonScramble.Game
                 flipper.Euler.y += side * OrcaDashSweep * dash;
             }
 
-            var bite = pose.StrikeKind == BossAttackKind.Charge ? Bell(pose.Strike, 0f, 0.1f, 0.35f) : 0f;
+            var bite = StrikeBell(pose, BossAttackKind.Charge, 0f, 0.1f, 0.35f);
             Joint(BigBossPart.Jaw).Euler.x += OrcaJawRest + Mathf.Max(OrcaWaveJaw * wave + OrcaChargeJaw * charge, OrcaDashJaw * dash) + OrcaBite * bite;
         }
 

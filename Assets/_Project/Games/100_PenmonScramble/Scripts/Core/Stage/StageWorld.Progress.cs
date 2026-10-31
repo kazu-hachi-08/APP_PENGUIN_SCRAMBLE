@@ -3,7 +3,7 @@ using System;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// ステージの進み方（§6.1）: エリアに入ると出入口が閉じ、敵が何回かに分けて出る。全部倒すと開き、次のエリアへ入るとまた閉じる。
+    /// ステージの進み方: エリアに入ると出入口が閉じ、敵が何回かに分けて出る。全部倒すと開き、次のエリアへ入るとまた閉じる。
     /// 出入口は「動ける範囲（AreaMin〜AreaMax）」を次のエリアまで広げる・縮めるだけで表す
     /// </summary>
     public sealed partial class StageWorld

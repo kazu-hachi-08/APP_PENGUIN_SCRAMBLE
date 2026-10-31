@@ -19,7 +19,7 @@ namespace PenmonScramble.Core
         public int BossSpeciesNo { get; }
     }
 
-    /// <summary>1エリア分。波を順に出し、全部倒すと出入口が開く（§6.1）</summary>
+    /// <summary>1エリア分。波を順に出し、全部倒すと出入口が開く</summary>
     public sealed class AreaDef
     {
         public AreaDef(params WaveDef[] waves)
@@ -46,7 +46,7 @@ namespace PenmonScramble.Core
     }
 
     /// <summary>
-    /// ステージは横に長いマップを、画面1枚分のエリアに区切ったもの（§6.1）。エリア0の中心が原点で、右へ並ぶ
+    /// ステージは横に長いマップを、画面1枚分のエリアに区切ったもの。エリア0の中心が原点で、右へ並ぶ
     /// </summary>
     public static class StageLayout
     {

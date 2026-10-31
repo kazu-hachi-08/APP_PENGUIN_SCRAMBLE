@@ -13,7 +13,7 @@ namespace PenmonScramble.Game
     }
 
     /// <summary>
-    /// 仮の BGM（§9）。素材がまだ無いので楽譜（GameMusic.Songs.cs）から曲をコードで作る（ペンモンから移植）。
+    /// 仮の BGM。素材がまだ無いので楽譜（GameMusic.Songs.cs）から曲をコードで作る。
     /// 再生は共通基盤の AudioManager に任せる。同じ曲が続くときに頭から流し直さない判定とクロスフェードは、AudioManager がやってくれる。
     /// 音の作り方は GameMusic.Synth.cs
     /// </summary>

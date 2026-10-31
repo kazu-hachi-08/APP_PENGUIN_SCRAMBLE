@@ -6,7 +6,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 引く流れ（§7）: レバーが回る → カプセルが転がり出て台に止まる（カメラが寄る）→ 揺れる →（★3 は部屋が暗くなり金の光の柱）
+    /// 引く流れ:レバーが回る → カプセルが転がり出て台に止まる（カメラが寄る）→ 揺れる →（★3 は部屋が暗くなり金の光の柱）
     /// → ★の色に光って★が1つずつ出る → 割れて中の子が飛び出し、くるっと回ってポーズ。
     /// 流れは GachaScreen のコルーチンの中で回すので、とばすときは GachaScreen が止めてから Finish を呼ぶ
     /// </summary>
@@ -97,11 +97,8 @@ namespace PenmonScramble.Game
         /// <summary>とばしたとき: 途中の物を片付けて、出てきた子が台に立った所にする</summary>
         public void Finish(int speciesNo, int stars)
         {
-            DestroyCapsule();
-            DestroyPillar();
-            SetRareDark(0f);
-            _stir = 0f;
-            LeverAngle = 0f;
+            ClearProps();
+            ResetLever();
             if (_penguin == null)
             {
                 SpawnPenguin(speciesNo);
@@ -120,8 +117,7 @@ namespace PenmonScramble.Game
             DestroyCapsule();
             DestroyPillar();
             if (_halo != null) _halo.gameObject.SetActive(false);
-            _stir = 0f;
-            LeverAngle = 0f;
+            ResetLever();
             SetRareDark(0f);
         }
 
@@ -165,8 +161,7 @@ namespace PenmonScramble.Game
                 yield return null;
             }
 
-            LeverAngle = 0f;
-            _stir = 0f;
+            ResetLever();
         }
 
         /// <summary>取り出し口から飛び出したカプセルが、はねながら転がって台の上に止まる。その間にカメラが台へ寄る</summary>
@@ -319,9 +314,7 @@ namespace PenmonScramble.Game
                 yield return null;
             }
 
-            DestroyCapsule();
-            DestroyPillar();
-            SetRareDark(0f);
+            ClearProps();
             SetHaloAlpha(HaloRestAlpha);
             while (_popAge < PopSeconds)
             {
@@ -437,6 +430,22 @@ namespace PenmonScramble.Game
 
             var pulse = 1f + Mathf.Sin(_time * 2f) * HaloPulse;
             FloorDecal.SetSize(_halo, Vector2.one * (HaloSize(_haloStars) * pulse));
+        }
+
+        /// <summary>カプセル・柱・暗転をまとめて消す。Finish と Open は必ずこの3つを続けて片付けるので1つにした。
+        /// ResetReveal は halo を間に挟んでいて順番を変えられないので、ここは使わない</summary>
+        private void ClearProps()
+        {
+            DestroyCapsule();
+            DestroyPillar();
+            SetRareDark(0f);
+        }
+
+        /// <summary>かき混ぜとレバーの角度を、止めた状態（初期位置）に戻す。どちらも一緒に戻さないと見た目がずれる</summary>
+        private void ResetLever()
+        {
+            _stir = 0f;
+            LeverAngle = 0f;
         }
 
         private void DestroyCapsule()

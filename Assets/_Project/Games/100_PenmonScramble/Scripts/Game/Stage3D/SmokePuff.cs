@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 交代・ダウン・起き上がりの「ぽん」という煙（§9）。白い玉がぱっとふくらみ、外へ広がりながらしぼんで消える。
+    /// 交代・ダウン・起き上がりの「ぽん」という煙。白い玉がぱっとふくらみ、外へ広がりながらしぼんで消える。
     /// 煙が一瞬ペンギンを隠すので、組み直した瞬間の入れ替わりが目立たない。見た目だけなので物理演算は使わない
     /// </summary>
     public sealed class SmokePuff : MonoBehaviour
@@ -13,7 +13,7 @@ namespace PenmonScramble.Game
         private const int Puffs = 9;
         private const float LifeSeconds = 0.42f;
 
-        // 大きさ・位置・速さは、ユニットの当たりの半径に対する倍率（大きいボスほど大きな煙になる）
+        // 大きさ・速さ・横の位置は当たりの半径に対する倍率（大きいボスほど大きな煙になる）。高さは背の高さに対する割合
         private const float PuffSizeMin = 0.9f;
         private const float PuffSizeMax = 1.4f;
         private const float StartSpread = 0.5f;
@@ -43,9 +43,8 @@ namespace PenmonScramble.Game
             _sizes = new float[Puffs];
             for (var i = 0; i < Puffs; i++)
             {
-                // ぐるりと等間隔に散らしてから少しずらし、高さは下から上へ順に（見た目だけなので Core の乱数とは関係ない）
-                var angle = (i + Random.value * 0.7f) / Puffs * Mathf.PI * 2f;
-                var outward = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+                // 高さは黄金比（0.618）でずらして、下から上まで満遍なく散らす
+                var outward = ToyEasing.RingDirection(i, Puffs, 0.7f);
                 var y = height * (0.15f + 0.75f * ((i * 0.618f) % 1f));
                 var start = outward * (radius * StartSpread) + Vector3.up * y;
                 _sizes[i] = radius * Random.Range(PuffSizeMin, PuffSizeMax);
@@ -61,9 +60,7 @@ namespace PenmonScramble.Game
             var obj = new GameObject("Puff");
             obj.transform.SetParent(transform, false);
             obj.transform.localPosition = localPosition;
-            obj.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.Sphere;
-            var renderer = obj.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
+            var renderer = ToyParts.AddMesh(obj, ToyMeshes.Sphere, material);
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             return obj.transform;
         }

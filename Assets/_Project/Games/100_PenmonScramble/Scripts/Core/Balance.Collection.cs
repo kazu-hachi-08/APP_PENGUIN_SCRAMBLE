@@ -2,7 +2,7 @@ using System;
 
 namespace PenmonScramble.Core
 {
-    /// <summary>ガチャ・コイン・持てる数（§7）と、ステージの報酬（§6.3）の調整値</summary>
+    /// <summary>ガチャ・コイン・持てる数と、ステージの報酬の調整値</summary>
     public static partial class Balance
     {
         public const int GachaCost = 100;

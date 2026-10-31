@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 画面の揺れ（§9）。カメラの位置を元の位置からずらすだけ。揺れが重なったら強い方を取る
+    /// 画面の揺れ。カメラの位置を元の位置からずらすだけ。揺れが重なったら強い方を取る
     /// </summary>
     public class CameraShake : MonoBehaviour
     {

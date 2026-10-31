@@ -63,15 +63,6 @@ namespace PenmonScramble.Common.Scene
         }
 
         /// <summary>
-        /// 現在のシーンをリスタート
-        /// </summary>
-        public void RestartCurrentScene(float fadeDuration = 0.3f, Action onLoaded = null)
-        {
-            string currentSceneName = SceneManager.GetActiveScene().name;
-            LoadScene(currentSceneName, fadeDuration, onLoaded);
-        }
-
-        /// <summary>
         /// タイトルシーンへ戻る
         /// </summary>
         public void LoadTitleScene(float fadeDuration = 0.4f, Action onLoaded = null)

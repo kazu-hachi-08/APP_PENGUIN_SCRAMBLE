@@ -18,5 +18,23 @@ namespace PenmonScramble.Game
             var decay = (1f - t) * (1f - t);
             return 1f + (start - 1f) * decay * Mathf.Cos(PopWobbles * Mathf.PI * t);
         }
+
+        /// <summary>
+        /// 終わりの方で小さくする倍率。t が shrinkFrom までは 1、そこから 0 へ直線的に縮む
+        /// </summary>
+        public static float Shrink(float t, float shrinkFrom)
+        {
+            return t < shrinkFrom ? 1f : 1f - (t - shrinkFrom) / (1f - shrinkFrom);
+        }
+
+        /// <summary>
+        /// count 個を、ぐるりと等間隔に散らした水平方向の単位ベクトル。index 番目の角度を jitter の分だけずらし、
+        /// 全部が同じ向きへ飛ばないようにする（見た目だけなので Core の乱数とは関係ない）
+        /// </summary>
+        public static Vector3 RingDirection(int index, int count, float jitter)
+        {
+            var angle = (index + Random.value * jitter) / count * Mathf.PI * 2f;
+            return new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+        }
     }
 }

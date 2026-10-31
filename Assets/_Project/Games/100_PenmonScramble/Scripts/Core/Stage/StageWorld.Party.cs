@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 3体の交代と必殺技（§4.1・§4.3）
+    /// 3体の交代と必殺技
     /// </summary>
     public sealed partial class StageWorld
     {
@@ -133,15 +133,8 @@ namespace PenmonScramble.Core
 
             for (var i = 0; i < SpecialMoves.ThunderExtraBolts; i++)
             {
-                AddDrop(user, skill, RandomPointInArea(), skill.Delay + SpecialMoves.ThunderBoltStagger * bolt++);
+                AddDrop(user, skill, RandomPointInArea(0f), skill.Delay + SpecialMoves.ThunderBoltStagger * bolt++);
             }
-        }
-
-        private Vec2 RandomPointInArea()
-        {
-            var x = AreaMin.X + (float)_random.NextDouble() * (AreaMax.X - AreaMin.X);
-            var y = AreaMin.Y + (float)_random.NextDouble() * (AreaMax.Y - AreaMin.Y);
-            return new Vec2(x, y);
         }
     }
 }

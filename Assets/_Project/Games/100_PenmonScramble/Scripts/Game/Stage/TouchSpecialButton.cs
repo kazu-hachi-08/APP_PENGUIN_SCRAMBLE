@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// スマホの必殺技のボタン（§3「ゲージ満タンで光る」）: 縁のリングがゲージの分だけたまり、たまるまでは面をくすませる。
+    /// スマホの必殺技のボタン: 縁のリングがゲージの分だけたまり、たまるまでは面をくすませる。
     /// 満タンになったら、後ろの光が脈打ち、外の輪が回り、文字が弾む
     /// </summary>
     public class TouchSpecialButton : MonoBehaviour

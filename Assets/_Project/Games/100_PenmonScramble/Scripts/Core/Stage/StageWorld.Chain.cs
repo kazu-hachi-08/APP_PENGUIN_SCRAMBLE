@@ -3,7 +3,7 @@ using System;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 吹っ飛びの連鎖（§4.4）。強く飛ばされた敵がほかの敵にぶつかると、ダメージを与えてその敵も飛ばす
+    /// 吹っ飛びの連鎖。強く飛ばされた敵がほかの敵にぶつかると、ダメージを与えてその敵も飛ばす
     /// </summary>
     public sealed partial class StageWorld
     {

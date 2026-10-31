@@ -7,7 +7,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// メニューの部品の絵（§9.6）: ボタンの色の面・つや・白い縁、角の丸い板、上下を暗くするぼかし、アイコン（歯車・コイン・ガチャのカプセル）。
+    /// メニューの部品の絵: ボタンの色の面・つや・白い縁、角の丸い板、上下を暗くするぼかし、アイコン（歯車・コイン・ガチャのカプセル）。
     /// Rebuild のたびにコードで描いて Art/UI/ に PNG で置く（ボタンの形を変えるときはここを直す。生成物なので手で直さない）。
     /// ボタンと板は白で描いて Image の色で塗る（1枚の絵でどの色のボタンも作れるように）。9スライスなので大きさは自由
     /// </summary>
@@ -71,9 +71,8 @@ namespace PenmonScramble.Editor
         {
             var png = texture.EncodeToPNG();
             UnityEngine.Object.DestroyImmediate(texture);
-            if (!File.Exists(path) || !File.ReadAllBytes(path).SequenceEqual(png))
+            if (WriteBytesIfChanged(path, png))
             {
-                File.WriteAllBytes(path, png);
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
             }
 
@@ -95,24 +94,48 @@ namespace PenmonScramble.Editor
             importer.SaveAndReimport();
         }
 
-        // ---- 角の丸い板 ----
+        /// <summary>PNG の中身が同じなら書き直さない（取り込み直しと差分を出さないため）。書き直したら true</summary>
+        private static bool WriteBytesIfChanged(string path, byte[] bytes)
+        {
+            if (File.Exists(path) && File.ReadAllBytes(path).SequenceEqual(bytes))
+            {
+                return false;
+            }
 
-        /// <summary>角の丸い四角の形を、縁からの距離（内側が負）と縦の位置（0=下・1=上）から1画素ずつ塗る</summary>
-        private static Texture2D DrawRound(int width, int height, Func<float, float, Color> pixel)
+            File.WriteAllBytes(path, bytes);
+            return true;
+        }
+
+        /// <summary>
+        /// 画素を左上から1行ずつ塗ったテクスチャを作る（RGBA32・mipmap なし）。
+        /// 絵の描き方は呼び出し側の colorAt で決める。描く順番を変えると絵が変わるので、ここの順番は動かさない
+        /// </summary>
+        private static Texture2D PaintTexture(int width, int height, Func<int, int, Color> colorAt)
         {
             var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            var half = new Vector2(width, height) * 0.5f;
             for (var y = 0; y < height; y++)
             {
                 for (var x = 0; x < width; x++)
                 {
-                    var p = new Vector2(x + 0.5f, y + 0.5f) - half;
-                    texture.SetPixel(x, y, pixel(RoundRectDistance(p, half, RoundSpriteRadius), (y + 0.5f) / height));
+                    texture.SetPixel(x, y, colorAt(x, y));
                 }
             }
 
             texture.Apply();
             return texture;
+        }
+
+        // ---- 角の丸い板 ----
+
+        /// <summary>角の丸い四角の形を、縁からの距離（内側が負）と縦の位置（0=下・1=上）から1画素ずつ塗る</summary>
+        private static Texture2D DrawRound(int width, int height, Func<float, float, Color> pixel)
+        {
+            var half = new Vector2(width, height) * 0.5f;
+            return PaintTexture(width, height, (x, y) =>
+            {
+                var p = new Vector2(x + 0.5f, y + 0.5f) - half;
+                return pixel(RoundRectDistance(p, half, RoundSpriteRadius), (y + 0.5f) / height);
+            });
         }
 
         private static float RoundRectDistance(Vector2 p, Vector2 half, float radius)
@@ -147,15 +170,11 @@ namespace PenmonScramble.Editor
         /// <summary>下が濃く上へ消える帯。画面の上下を暗くして、ジオラマの上でも文字やボタンを読めるようにする</summary>
         private static Texture2D DrawFade()
         {
-            var texture = new Texture2D(1, FadeHeight, TextureFormat.RGBA32, false);
-            for (var y = 0; y < FadeHeight; y++)
+            return PaintTexture(1, FadeHeight, (_, y) =>
             {
                 var t = 1f - (y + 0.5f) / FadeHeight;
-                texture.SetPixel(0, y, new Color(1f, 1f, 1f, t * t * (3f - 2f * t)));
-            }
-
-            texture.Apply();
-            return texture;
+                return new Color(1f, 1f, 1f, t * t * (3f - 2f * t));
+            });
         }
 
         // ---- アイコン ----
@@ -163,19 +182,12 @@ namespace PenmonScramble.Editor
         /// <summary>まん中が原点・半径1の座標で1画素ずつ塗る。scale は1画素の大きさ（縁のぼかしに使う）</summary>
         private static Texture2D DrawIcon(Func<Vector2, float, Color> pixel)
         {
-            var texture = new Texture2D(UiIconSize, UiIconSize, TextureFormat.RGBA32, false);
             var scale = 2f / UiIconSize;
-            for (var y = 0; y < UiIconSize; y++)
+            return PaintTexture(UiIconSize, UiIconSize, (x, y) =>
             {
-                for (var x = 0; x < UiIconSize; x++)
-                {
-                    var p = new Vector2((x + 0.5f) * scale - 1f, (y + 0.5f) * scale - 1f);
-                    texture.SetPixel(x, y, pixel(p, scale));
-                }
-            }
-
-            texture.Apply();
-            return texture;
+                var p = new Vector2((x + 0.5f) * scale - 1f, (y + 0.5f) * scale - 1f);
+                return pixel(p, scale);
+            });
         }
 
         private static float IconCoverage(float distance, float pixel) => Mathf.Clamp01(0.5f - distance / pixel);

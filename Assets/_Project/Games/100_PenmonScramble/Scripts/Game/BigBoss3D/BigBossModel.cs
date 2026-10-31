@@ -1,8 +1,17 @@
 using System.Collections.Generic;
+using PenmonScramble.Core;
 using UnityEngine;
 
 namespace PenmonScramble.Game
 {
+    /// <summary>大ボスの体の種類。組み立て（BigBossModelBuilder）と動き（BigBossMotion）で同じ振り分けを使う</summary>
+    public enum BigBossSpecies
+    {
+        Skua,
+        LeopardSeal,
+        Orca,
+    }
+
     /// <summary>大ボスの動かす関節。どの大ボスも同じ名前で持ち、その大ボスに無い関節は null</summary>
     public enum BigBossPart
     {
@@ -42,6 +51,17 @@ namespace PenmonScramble.Game
 
         /// <summary>大ボスの番号（BigBossTable の 101〜）。動きの型を選ぶのに使う</summary>
         public int BossNo { get; private set; }
+
+        /// <summary>bossNo の体の種類。それ以外の番号は Orca（シャチ）として扱う（既定の振り分け）</summary>
+        public static BigBossSpecies SpeciesOf(int bossNo)
+        {
+            switch (bossNo)
+            {
+                case BigBossTable.SkuaNo: return BigBossSpecies.Skua;
+                case BigBossTable.LeopardSealNo: return BigBossSpecies.LeopardSeal;
+                default: return BigBossSpecies.Orca;
+            }
+        }
 
         /// <summary>目（白目・ひとみ・光をまとめた軸）。まばたきで縦につぶす</summary>
         public IReadOnlyList<Transform> Eyes { get; private set; }

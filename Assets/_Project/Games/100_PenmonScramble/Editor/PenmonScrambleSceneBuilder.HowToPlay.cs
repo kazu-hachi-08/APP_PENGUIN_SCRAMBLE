@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 遊び方の画面（§3.1）: 上に「操作」「ルール」のタブ。操作の絵（キーボード・コントローラー・スマホ）は
+    /// 遊び方の画面:上に「操作」「ルール」のタブ。操作の絵（キーボード・コントローラー・スマホ）は
     /// PenmonScrambleSceneBuilder.HowToPlayControls.cs。タイトルとステージ中のメニューの両方から開くので、どちらよりも手前に作る
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder

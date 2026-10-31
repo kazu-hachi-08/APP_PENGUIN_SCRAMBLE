@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 合体技（§4.6）。別のプレイヤーの技が1秒以内に同じ敵へ当たると、その敵の位置で属性の組み合わせの技が起きる
+    /// 合体技。別のプレイヤーの技が1秒以内に同じ敵へ当たると、その敵の位置で属性の組み合わせの技が起きる
     /// </summary>
     public sealed partial class StageWorld
     {

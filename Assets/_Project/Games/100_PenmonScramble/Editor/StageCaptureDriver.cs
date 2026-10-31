@@ -10,8 +10,8 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// StageCapture の Play 中に、ステージを台本どおりに戦わせて撮る。StageHost と同じく固定の時間刻みで Core を進め、
     /// スナップショットを StageView に渡す。プレイヤーは StageBot が動かす。
-    /// 状態の見た目の場面（PLAN_3D フェーズ4）は、スナップショットの状態を書き換えて、凍る・ダウン・交代を決めた時刻に起こす。
-    /// 大ボスの場面（フェーズ5）は大ボスだけのエリアで戦わせ、赤い範囲が出てから少し後（構え）と、消えた直後（攻撃）を撮る。
+    /// 状態の見た目の場面は、スナップショットの状態を書き換えて、凍る・ダウン・交代を決めた時刻に起こす。
+    /// 大ボスの場面は大ボスだけのエリアで戦わせ、赤い範囲が出てから少し後（構え）と、消えた直後（攻撃）を撮る。
     /// Editor のコードは MonoBehaviour としてシーンに付けられないので、EditorApplication.update から1フレームに1回呼ぶ
     /// </summary>
     public sealed class StageCaptureDriver
@@ -19,6 +19,8 @@ namespace PenmonScramble.Editor
         private const int Width = 1280;
         private const int Height = 720;
         private const int Seed = 12345;
+        // 撮る絵の縁をなめらかにする（試作の場の撮影と同じ値）
+        private const int CaptureMsaa = 4;
 
         // 状態の見た目の場面: P2 はずっとダウン、半分の敵はこの間だけ凍る、P1 はこの時刻に交代する
         private const float FreezeFrom = 0.4f;
@@ -78,7 +80,7 @@ namespace PenmonScramble.Editor
         // ワールド1は2人で戦いの流れを、ワールド2・3は床の見た目を撮る。最後に状態の見た目
         // （status1_1: P1 の突進の残像・P2 のダウン、_2: 凍る・敵は暗い、_3: 交代の煙、_4: 氷が砕ける・被弾で白く光る）。
         // 突進は台本の戦いで最初に出るもの（種が同じなので毎回同じ時刻）を撮る。
-        // 大ボスは攻撃の順（§6.2）がひと回りする数だけ撮る（boss3: カモメ、boss6: アザラシ、boss9: シャチ。奇数枚目が構え・偶数枚目が攻撃）
+        // 大ボスは攻撃の順がひと回りする数だけ撮る（boss3: カモメ、boss6: アザラシ、boss9: シャチ。奇数枚目が構え・偶数枚目が攻撃）
         private static readonly Scene[] Scenes =
         {
             new Scene(1, 2, false, 0.1f, 1.2f, 2.5f, 4f, 6f),
@@ -295,17 +297,8 @@ namespace PenmonScramble.Editor
 
         private void Save(string fileName)
         {
-            var target = RenderTexture.GetTemporary(Width, Height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, 4);
-            var previous = _camera.targetTexture;
-            _camera.targetTexture = target;
-            _camera.Render();
-            _camera.targetTexture = previous;
-            RenderTexture.active = target;
-            var texture = new Texture2D(Width, Height, TextureFormat.RGB24, false);
-            texture.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
+            var texture = StageCapture.RenderToTexture(_camera, Width, Height, CaptureMsaa, TextureFormat.RGB24);
             texture.Apply();
-            RenderTexture.active = null;
-            RenderTexture.ReleaseTemporary(target);
             File.WriteAllBytes(Path.Combine(StageCapture.CaptureFolder, fileName), texture.EncodeToPNG());
             Object.Destroy(texture);
         }

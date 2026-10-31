@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// タイトルの後ろで動き続ける乱戦のジオラマ（§9.6）。ゲーム中と同じ3Dのペンギンを使い、
+    /// タイトルの後ろで動き続ける乱戦のジオラマ。ゲーム中と同じ3Dのペンギンを使い、
     /// まん中の味方3体（自分の編成）へ野生のペンギンが四方から寄ってきては、技で吹っ飛ばされてコインと星になる。
     /// タイトル（このコンポーネントを付けた UI）が閉じたら全部消し、ステージのカメラに戻す。
     /// 見た目だけなので Core のステージは使わず、乱数も UnityEngine.Random（役者の動きは TitleDiorama.Actors.cs）
@@ -89,11 +89,7 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>カメラの構え。アイコンを撮るときも同じ構えを使う</summary>
-        public static void Aim(Transform camera, Vector3 target, float pitch, float distance)
-        {
-            var rotation = Quaternion.Euler(pitch, 0f, 0f);
-            camera.SetPositionAndRotation(target - rotation * Vector3.forward * distance, rotation);
-        }
+        public static void Aim(Transform camera, Vector3 target, float pitch, float distance) => AreaCameraFit.Aim(camera, target, pitch, distance);
 
         private void PlaceCamera()
         {
@@ -113,12 +109,8 @@ namespace PenmonScramble.Game
                 for (var x = 0; x < FloorTilesX; x++)
                 {
                     var offset = new Vector2(x - (FloorTilesX - 1) * 0.5f, y - (FloorTilesY - 1) * 0.5f);
-                    var floor = new GameObject("Floor");
-                    floor.transform.SetParent(_world, false);
-                    floor.transform.position = (FloorCenter + Vector2.Scale(offset, FloorTile)).ToFloor();
-                    floor.transform.localScale = new Vector3(FloorTile.x, 1f, FloorTile.y);
-                    floor.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.FloorQuad;
-                    floor.AddComponent<MeshRenderer>().sharedMaterial = material;
+                    // _world は原点・無回転の親なので、ローカルの位置は床の位置と同じ
+                    ToyParts.FloorPlate("Floor", _world, (FloorCenter + Vector2.Scale(offset, FloorTile)).ToFloor(), new Vector3(FloorTile.x, 1f, FloorTile.y), material);
                 }
             }
         }

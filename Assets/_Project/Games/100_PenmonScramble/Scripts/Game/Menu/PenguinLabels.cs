@@ -15,6 +15,9 @@ namespace PenmonScramble.Game
 
         public static string Stars(int stars) => new string('★', Mathf.Clamp(stars, 1, Balance.MaxStars));
 
+        /// <summary>★を★の色で着色したリッチテキスト（タイトル・ガチャの確率表で同じ見た目にする）</summary>
+        public static string ColoredStars(int stars) => $"<color=#{ColorUtility.ToHtmlStringRGB(StarColor(stars))}>{Stars(stars)}</color>";
+
         public static Color StarColor(int stars)
         {
             return stars >= 3 ? Star3Color : stars == 2 ? Star2Color : Star1Color;
@@ -31,12 +34,6 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>「★★ マゼラ（水）」</summary>
-        public static string Title(SpeciesDef species)
-        {
-            return $"{Stars(species.Stars)} {species.Name}（{ElementName(species.Element)}）";
-        }
-
         /// <summary>3段階の目安を「●●○」のように出す（消えている所は薄く）</summary>
         public static string Pips(int rating, int max)
         {
@@ -44,7 +41,7 @@ namespace PenmonScramble.Game
             return $"<color={PipOnColor}>{new string(Pip, on)}</color><color={PipOffColor}>{new string(Pip, max - on)}</color>";
         }
 
-        /// <summary>カードに出す2行。知らない種類（新しい版で増えた子）は「？」</summary>
+        /// <summary>カードに出す3行。知らない種類（新しい版で増えた子）は「？」</summary>
         public static string Card(OwnedPenguin penguin)
         {
             var species = SpeciesTable.Get(penguin.speciesNo);

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// スマホの技・交代のボタンの見た目（§3）: 色の面と下の厚み・中のアイコン・待ちの残りを暗い扇で見せ、明けた瞬間に光る。
+    /// スマホの技・交代のボタンの見た目: 色の面と下の厚み・中のアイコン・待ちの残りを暗い扇で見せ、明けた瞬間に光る。
     /// 何を出すかは TouchControlsView が決める
     /// </summary>
     public class TouchSkillButton : MonoBehaviour

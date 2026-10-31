@@ -48,9 +48,7 @@ namespace PenmonScramble.Game
             _sizes = new Vector3[Shards];
             for (var i = 0; i < Shards; i++)
             {
-                // ぐるりと等間隔に散らしてから少しずらす（見た目だけなので Core の乱数とは関係ない）
-                var angle = (i + Random.value * 0.6f) / Shards * Mathf.PI * 2f;
-                var outward = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+                var outward = ToyEasing.RingDirection(i, Shards, 0.6f);
                 var start = outward * (blockSize.x * 0.25f) + Vector3.up * (blockSize.y * Random.Range(0.2f, 0.8f));
                 _sizes[i] = Vector3.one * (blockSize.x * Random.Range(ShardSizeMin, ShardSizeMax));
                 _pieces[i] = CreatePiece(material, start, _sizes[i]);
@@ -66,9 +64,7 @@ namespace PenmonScramble.Game
             piece.transform.localPosition = localPosition;
             piece.transform.localScale = size;
             piece.transform.localRotation = Random.rotation;
-            piece.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.IceChunk;
-            var renderer = piece.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
+            var renderer = ToyParts.AddMesh(piece, ToyMeshes.IceChunk, material);
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             return piece.transform;
         }
@@ -84,7 +80,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var shrink = t < ShrinkFrom ? 1f : 1f - (t - ShrinkFrom) / (1f - ShrinkFrom);
+            var shrink = ToyEasing.Shrink(t, ShrinkFrom);
             for (var i = 0; i < _pieces.Length; i++)
             {
                 _velocities[i] += Vector3.down * (Gravity * dt);

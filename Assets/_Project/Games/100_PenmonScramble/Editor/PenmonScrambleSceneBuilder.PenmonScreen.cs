@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ペンモン画面（§7）: 左上に編成の帯、左下に持っている子の一覧、右に選んだ子の図鑑カード（技の実演の小窓つき）。
+    /// ペンモン画面: 左上に編成の帯、左下に持っている子の一覧、右に選んだ子の図鑑カード（技の実演の小窓つき）。
     /// 実演は、離れた所に置いた練習場を専用のカメラで撮って小窓に映す（SkillDemoView）
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -113,9 +113,6 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 RatingPipsSize = new Vector2(70f, 108f);
         private const int RatingFontSize = 22;
 
-        // 実演のカメラはタイトルのジオラマと同じく、近くだけを描く
-        private const float SkillDemoFarClip = 60f;
-
         private static PenguinListScreen CreatePenguinListScreen(Transform canvas)
         {
             var root = CreateScreen(canvas, "Penguins", string.Empty);
@@ -135,12 +132,7 @@ namespace PenmonScramble.Editor
 
             var screen = root.AddComponent<PenguinListScreen>();
             var so = new SerializedObject(screen);
-            var slotsProperty = so.FindProperty("_partySlots");
-            slotsProperty.arraySize = slots.Length;
-            for (var i = 0; i < slots.Length; i++)
-            {
-                slotsProperty.GetArrayElementAtIndex(i).objectReferenceValue = slots[i];
-            }
+            SetObjectArray(so.FindProperty("_partySlots"), slots);
 
             so.FindProperty("_cardTemplate").objectReferenceValue = template;
             so.FindProperty("_content").objectReferenceValue = content;
@@ -263,8 +255,7 @@ namespace PenmonScramble.Editor
             var panelObj = panelImage.gameObject;
             var emptyText = CreatePlainText(panelObj.transform, "Empty", "ペンモンを選んでください", MenuFontSize, Vector2.zero, EmptyTextSize, TextAnchor.MiddleCenter, SubTextColor);
 
-            var contentObj = UIDialogBuilder.CreateUIObject("Content", panelObj.transform);
-            UIDialogBuilder.SetStretchAll(contentObj.GetComponent<RectTransform>());
+            var contentObj = CreateStretchGroup(panelObj.transform, "Content");
             var content = contentObj.transform;
             var face = CreateCircle(content, "Face", FacePosition, FaceSize, Color.white);
             var title = CreatePlainText(content, "Title", string.Empty, TitleFontSize, TitlePosition, TitleSize, TextAnchor.MiddleLeft, Color.white);
@@ -302,12 +293,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_hpBar").objectReferenceValue = hpBar;
             so.FindProperty("_attackBar").objectReferenceValue = attackBar;
             so.FindProperty("_speedBar").objectReferenceValue = speedBar;
-            var cardsProperty = so.FindProperty("_skillCards");
-            cardsProperty.arraySize = skillCards.Length;
-            for (var i = 0; i < skillCards.Length; i++)
-            {
-                cardsProperty.GetArrayElementAtIndex(i).objectReferenceValue = skillCards[i];
-            }
+            SetObjectArray(so.FindProperty("_skillCards"), skillCards);
 
             so.FindProperty("_demo").objectReferenceValue = demo;
             so.ApplyModifiedProperties();
@@ -373,17 +359,13 @@ namespace PenmonScramble.Editor
             var screen = screenObj.AddComponent<RawImage>();
             screen.raycastTarget = false;
 
-            var cameraObj = new GameObject("SkillDemoCamera");
-            var camera = cameraObj.AddComponent<Camera>();
-            camera.farClipPlane = SkillDemoFarClip;
-            camera.enabled = false;
+            // 実演のカメラはタイトルのジオラマと同じく、近くだけを描く
+            var camera = CreateStandbyCamera("SkillDemoCamera", TitleCameraFarClip);
 
             var stageObj = new GameObject("SkillDemoStage");
             var view = stageObj.AddComponent<StageView>();
             var viewSo = new SerializedObject(view);
-            viewSo.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
-            viewSo.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
-            viewSo.FindProperty("_fxShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Fx.shader");
+            BindStageShaders(viewSo);
             viewSo.FindProperty("_preview").boolValue = true;
             viewSo.ApplyModifiedProperties();
             stageObj.SetActive(false);

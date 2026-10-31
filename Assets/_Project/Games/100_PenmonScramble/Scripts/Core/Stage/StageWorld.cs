@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// ステージの戦闘を固定の時間刻みで進める。オンラインではホストだけがこれを動かし、結果を全員へ送る（§8）。
+    /// ステージの戦闘を固定の時間刻みで進める。オンラインではホストだけがこれを動かし、結果を全員へ送る。
     /// 表示・音はここで行わず、イベントを外へ出す
     /// </summary>
     public sealed partial class StageWorld
@@ -22,7 +22,7 @@ namespace PenmonScramble.Core
             _random = new Random(seed);
         }
 
-        /// <summary>ステージ定義どおりにエリアを順に進める。敵は波ごとに出し、HP は人数で増やす（§4.7・§6.1）</summary>
+        /// <summary>ステージ定義どおりにエリアを順に進める。敵は波ごとに出し、HP は人数で増やす</summary>
         public StageWorld(StageDef stage, int playerCount, int seed)
             : this(StageLayout.AreaMin(0), StageLayout.AreaMax(0), seed)
         {
@@ -60,7 +60,7 @@ namespace PenmonScramble.Core
             return AddUnit(team, new[] { stats }, position, seat);
         }
 
-        /// <summary>party の先頭の子から場に出る（§4.1）</summary>
+        /// <summary>party の先頭の子から場に出る</summary>
         public Unit AddUnit(Team team, IReadOnlyList<UnitStats> party, Vec2 position, int seat = Unit.NoSeat)
         {
             var unit = new Unit(_nextId++, team, party, position, seat);
@@ -228,8 +228,8 @@ namespace PenmonScramble.Core
         }
 
         /// <summary>
-        /// 場に出ている子が倒れたら、控えがいれば次の子を出す（§4.1）。
-        /// プレイヤーは3体とも倒れたらその場でダウンして残り（§4.5）、敵は場から消す
+        /// 場に出ている子が倒れたら、控えがいれば次の子を出す。
+        /// プレイヤーは3体とも倒れたらその場でダウンして残り、敵は場から消す
         /// </summary>
         private void ReplaceOrRemoveFallen()
         {

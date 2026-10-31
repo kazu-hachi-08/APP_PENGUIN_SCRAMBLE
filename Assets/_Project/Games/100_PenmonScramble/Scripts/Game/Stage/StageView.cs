@@ -28,7 +28,7 @@ namespace PenmonScramble.Game
         [SerializeField] private Shader _toonShader;
         [SerializeField] private Shader _blobShadowShader;
         [SerializeField] private Shader _fxShader;
-        // ペンモン画面の技の実演（SkillDemoView）で使う。床は1枚だけ敷き、カメラの追従・揺れ・カットイン・音・席の印を出さない
+        // ペンモン画面の技の実演（SkillDemoView）で使う。床は動ける範囲の1枚とその外を囲む床だけにし、カメラの追従・揺れ・カットイン・音・席の印を出さない
         [SerializeField] private bool _preview;
 
         // ボスが倒れたときの揺れ（マス・秒）
@@ -170,64 +170,29 @@ namespace PenmonScramble.Game
 
         private void SyncProjectiles(StageSnapshot snapshot)
         {
-            _aliveIds.Clear();
-            foreach (var projectile in snapshot.Projectiles)
-            {
-                _aliveIds.Add(projectile.Id);
-                if (_projectiles.TryGetValue(projectile.Id, out var view))
-                {
-                    view.PushState(projectile);
-                }
-                else
-                {
-                    _projectiles.Add(projectile.Id, ProjectileView.Create(transform, _materials, projectile, projectile.Team == Team.Enemy));
-                }
-            }
-
-            // 弾には消えたイベントが無いので、スナップショットに無くなったものを消す
-            RemoveMissing(_projectiles, view => Destroy(view.gameObject));
+            // 弾には消えたイベントが無いので、スナップショットに無くなったものを消す（SyncViews の中で消す）
+            SyncViews(snapshot.Projectiles, _projectiles,
+                projectile => projectile.Id,
+                projectile => ProjectileView.Create(transform, _materials, projectile, projectile.Team == Team.Enemy),
+                (view, projectile) => view.PushState(projectile));
         }
 
         /// <summary>範囲は出たら作って、無くなったら消す（落ちた演出は BurstEvent で出る）。動くのは雷雲だけ</summary>
         private void SyncEffects(StageSnapshot snapshot)
         {
-            _aliveIds.Clear();
-            foreach (var effect in snapshot.Effects)
-            {
-                _aliveIds.Add(effect.Id);
-                if (_effects.TryGetValue(effect.Id, out var view))
-                {
-                    view.PushState(effect);
-                }
-                else
-                {
-                    _effects.Add(effect.Id, EffectView.Create(transform, _materials, effect));
-                }
-            }
-
-            RemoveMissing(_effects, view => Destroy(view.gameObject));
+            SyncViews(snapshot.Effects, _effects,
+                effect => effect.Id,
+                effect => EffectView.Create(transform, _materials, effect),
+                (view, effect) => view.PushState(effect));
         }
 
         /// <summary>大ボスの攻撃の予告。新しく出たら警報を鳴らす（同時にいくつ出ても1回）</summary>
         private void SyncWarnings(StageSnapshot snapshot)
         {
-            _aliveIds.Clear();
-            var appeared = false;
-            foreach (var warning in snapshot.Warnings)
-            {
-                _aliveIds.Add(warning.Id);
-                if (_warnings.TryGetValue(warning.Id, out var view))
-                {
-                    view.PushState(warning);
-                }
-                else
-                {
-                    _warnings.Add(warning.Id, WarningView.Create(transform, _materials, warning));
-                    appeared = true;
-                }
-            }
-
-            RemoveMissing(_warnings, view => Destroy(view.gameObject));
+            var appeared = SyncViews(snapshot.Warnings, _warnings,
+                warning => warning.Id,
+                warning => WarningView.Create(transform, _materials, warning),
+                (view, warning) => view.PushState(warning));
             if (appeared && !_preview)
             {
                 GameSounds.Play(GameSound.Warning);
@@ -244,6 +209,35 @@ namespace PenmonScramble.Game
                     view.PushWarnings(snapshot.Warnings);
                 }
             }
+        }
+
+        /// <summary>
+        /// 一覧の各要素を ID で引く。無ければ作り、あれば PushState する。最後に一覧に無くなったものを消す。
+        /// 戻り値は「新しく作ったものが1つでもあった」か（警報の判定に使う）。_aliveIds は呼ぶたびに作り直す
+        /// </summary>
+        private bool SyncViews<TState, TView>(List<TState> states, Dictionary<int, TView> views,
+            System.Func<TState, int> idOf, System.Func<TState, TView> create, System.Action<TView, TState> push)
+            where TView : Component
+        {
+            _aliveIds.Clear();
+            var created = false;
+            foreach (var state in states)
+            {
+                var id = idOf(state);
+                _aliveIds.Add(id);
+                if (views.TryGetValue(id, out var view))
+                {
+                    push(view, state);
+                }
+                else
+                {
+                    views.Add(id, create(state));
+                    created = true;
+                }
+            }
+
+            RemoveMissing(views, view => Destroy(view.gameObject));
+            return created;
         }
 
         /// <summary>_aliveIds に無いものを消す</summary>
@@ -288,7 +282,7 @@ namespace PenmonScramble.Game
             view.PlayDefeat();
             if (e.Team == Team.Enemy)
             {
-                // 倒したらコインと星が飛び散る（§9）。ボスは多く、広く
+                // 倒したらコインと星が飛び散る。ボスは多く、広く
                 DefeatSparkle.Spawn(transform, _materials, e.Position.ToVector2(), view.IsBoss ? BossDefeatCoins : DefeatCoins, view.IsBoss ? BossDefeatSpread : 1f);
             }
 

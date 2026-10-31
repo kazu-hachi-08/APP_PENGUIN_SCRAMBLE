@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 遊び方（§3.1）。タイトルとステージ中のメニューから開く。
+    /// 遊び方。タイトルとステージ中のメニューから開く。
     /// 「操作」タブはキーボード・コントローラー・スマホを切り替えて見せる（押したキーが光るので、その場で試せる）。
     /// 「ルール」タブはページをめくる（HowToPlayScreen.Rules.cs）
     /// </summary>

@@ -35,7 +35,7 @@ namespace PenmonScramble.Game
     }
 
     /// <summary>
-    /// 仮の効果音。素材がまだ無いのでコードで作る（ペンモンの BattleSounds から移植）。
+    /// 仮の効果音。素材がまだ無いのでコードで作る。
     /// 共通基盤の SeId はゲーム固有の音を持たないので、クリップを作って AudioManager に直接渡す（音量設定はそちらで掛かる）。
     /// 音の作り方は GameSounds.Synth.cs
     /// </summary>

@@ -35,7 +35,7 @@ namespace PenmonScramble.Editor
             }
         }
 
-        // 影はどの環境も足元の丸い影（PLAN_3D フェーズ0で決めた）なので、URP の本物の影は両方とも切る
+        // 影はどの環境も足元の丸い影なので、URP の本物の影は両方とも切る
         private static readonly Tier Mobile = new Tier(msaa: 2, outline: true);
         private static readonly Tier Pc = new Tier(msaa: 4, outline: true);
 

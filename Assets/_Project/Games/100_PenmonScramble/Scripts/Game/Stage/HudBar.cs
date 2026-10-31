@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// HUD の HP のバー（自分・ボス。§9.8）: 減った分は明るい色の残りとして少し残ってから追いつき、減った瞬間にバーが揺れる。
+    /// HUD の HP のバー（自分・ボス）: 減った分は明るい色の残りとして少し残ってから追いつき、減った瞬間にバーが揺れる。
     /// 中身は斜めの板を2つの切り抜き（RectMask2D）に入れて、切り抜きの右端を割合に合わせて縮める（斜めの形がつぶれないように）
     /// </summary>
     public class HudBar : MonoBehaviour

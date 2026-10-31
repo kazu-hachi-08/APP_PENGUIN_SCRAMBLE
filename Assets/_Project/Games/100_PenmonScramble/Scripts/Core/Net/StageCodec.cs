@@ -20,26 +20,35 @@ namespace PenmonScramble.Core
         private const byte SwitchFlag = 8;
         private const byte MenuFlag = 16;
 
-        public static byte[] EncodeSnapshot(StageSnapshot snapshot)
+        /// <summary>先頭に版番号を書き、続きは中身の書き込みに任せる（版の書き忘れ・書き方の食い違いを防ぐ）</summary>
+        private static byte[] Encode(Action<BinaryWriter> write)
         {
             using var stream = new MemoryStream();
             using var writer = new BinaryWriter(stream);
             writer.Write(FormatVersion);
-            writer.Write(snapshot.Round);
-            writer.Write((byte)snapshot.StageNo);
-            writer.Write(snapshot.Tick);
-            writer.Write((byte)snapshot.Result);
-            Write(writer, snapshot.AreaMin);
-            Write(writer, snapshot.AreaMax);
-            writer.Write((byte)snapshot.AreaIndex);
-            writer.Write((byte)snapshot.AreaCount);
-            writer.Write(snapshot.IsGateOpen);
-            writer.Write(snapshot.EnemiesDefeated);
-            WriteUnits(writer, snapshot);
-            WriteObjects(writer, snapshot);
-            WritePlayers(writer, snapshot);
-            WriteEvents(writer, snapshot);
+            write(writer);
             return stream.ToArray();
+        }
+
+        public static byte[] EncodeSnapshot(StageSnapshot snapshot)
+        {
+            return Encode(writer =>
+            {
+                writer.Write(snapshot.Round);
+                writer.Write((byte)snapshot.StageNo);
+                writer.Write(snapshot.Tick);
+                writer.Write((byte)snapshot.Result);
+                Write(writer, snapshot.AreaMin);
+                Write(writer, snapshot.AreaMax);
+                writer.Write((byte)snapshot.AreaIndex);
+                writer.Write((byte)snapshot.AreaCount);
+                writer.Write(snapshot.IsGateOpen);
+                writer.Write(snapshot.EnemiesDefeated);
+                WriteUnits(writer, snapshot);
+                WriteObjects(writer, snapshot);
+                WritePlayers(writer, snapshot);
+                WriteEvents(writer, snapshot);
+            });
         }
 
         private static void WriteUnits(BinaryWriter writer, StageSnapshot snapshot)
@@ -123,36 +132,52 @@ namespace PenmonScramble.Core
         /// <summary>版が違う・壊れているときは null（その回は描かずに次を待つ）</summary>
         public static StageSnapshot DecodeSnapshot(byte[] data)
         {
+            return TryRead(data, ReadSnapshot, out var snapshot) ? snapshot : null;
+        }
+
+        private static StageSnapshot ReadSnapshot(BinaryReader reader)
+        {
+            var snapshot = new StageSnapshot
+            {
+                Round = reader.ReadInt32(),
+                StageNo = reader.ReadByte(),
+                Tick = reader.ReadInt32(),
+                Result = (StageResult)reader.ReadByte(),
+                AreaMin = ReadVec2(reader),
+                AreaMax = ReadVec2(reader),
+                AreaIndex = reader.ReadByte(),
+                AreaCount = reader.ReadByte(),
+                IsGateOpen = reader.ReadBoolean(),
+                EnemiesDefeated = reader.ReadInt32(),
+            };
+            ReadUnits(reader, snapshot);
+            ReadObjects(reader, snapshot);
+            ReadPlayers(reader, snapshot);
+            ReadEvents(reader, snapshot);
+            return snapshot;
+        }
+
+        /// <summary>
+        /// 版番号を確かめてから read で読む。版が違う・途中で切れている・壊れているときは false（value は既定値）。
+        /// 版が違う記録を読み違えて変な画面にしないため、ここで必ず止める
+        /// </summary>
+        private static bool TryRead<T>(byte[] data, Func<BinaryReader, T> read, out T value)
+        {
+            value = default;
             try
             {
                 using var reader = new BinaryReader(new MemoryStream(data));
                 if (reader.ReadByte() != FormatVersion)
                 {
-                    return null;
+                    return false;
                 }
 
-                var snapshot = new StageSnapshot
-                {
-                    Round = reader.ReadInt32(),
-                    StageNo = reader.ReadByte(),
-                    Tick = reader.ReadInt32(),
-                    Result = (StageResult)reader.ReadByte(),
-                    AreaMin = ReadVec2(reader),
-                    AreaMax = ReadVec2(reader),
-                    AreaIndex = reader.ReadByte(),
-                    AreaCount = reader.ReadByte(),
-                    IsGateOpen = reader.ReadBoolean(),
-                    EnemiesDefeated = reader.ReadInt32(),
-                };
-                ReadUnits(reader, snapshot);
-                ReadObjects(reader, snapshot);
-                ReadPlayers(reader, snapshot);
-                ReadEvents(reader, snapshot);
-                return snapshot;
+                value = read(reader);
+                return true;
             }
             catch (EndOfStreamException)
             {
-                return null;
+                return false;
             }
         }
 
@@ -241,38 +266,27 @@ namespace PenmonScramble.Core
 
         public static byte[] EncodeInput(PlayerInput input)
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter(stream);
-            writer.Write(FormatVersion);
-            Write(writer, input.Move);
-            var flags = (input.Skill1 ? Skill1Flag : 0) | (input.Skill2 ? Skill2Flag : 0)
-                | (input.Special ? SpecialFlag : 0) | (input.Switch ? SwitchFlag : 0) | (input.InMenu ? MenuFlag : 0);
-            writer.Write((byte)flags);
-            return stream.ToArray();
+            return Encode(writer =>
+            {
+                Write(writer, input.Move);
+                var flags = (input.Skill1 ? Skill1Flag : 0) | (input.Skill2 ? Skill2Flag : 0)
+                    | (input.Special ? SpecialFlag : 0) | (input.Switch ? SwitchFlag : 0) | (input.InMenu ? MenuFlag : 0);
+                writer.Write((byte)flags);
+            });
         }
 
         /// <summary>版が違う・壊れているときは false</summary>
         public static bool TryDecodeInput(byte[] data, out PlayerInput input)
         {
-            input = default;
-            try
-            {
-                using var reader = new BinaryReader(new MemoryStream(data));
-                if (reader.ReadByte() != FormatVersion)
-                {
-                    return false;
-                }
+            return TryRead(data, ReadInput, out input);
+        }
 
-                var move = ReadVec2(reader);
-                var flags = reader.ReadByte();
-                input = new PlayerInput(move, (flags & Skill1Flag) != 0, (flags & Skill2Flag) != 0,
-                    (flags & SpecialFlag) != 0, (flags & SwitchFlag) != 0, (flags & MenuFlag) != 0);
-                return true;
-            }
-            catch (EndOfStreamException)
-            {
-                return false;
-            }
+        private static PlayerInput ReadInput(BinaryReader reader)
+        {
+            var move = ReadVec2(reader);
+            var flags = reader.ReadByte();
+            return new PlayerInput(move, (flags & Skill1Flag) != 0, (flags & Skill2Flag) != 0,
+                (flags & SpecialFlag) != 0, (flags & SwitchFlag) != 0, (flags & MenuFlag) != 0);
         }
 
         /// <summary>0〜1 の値を1バイトに縮める（見た目にしか使わない進み具合）</summary>

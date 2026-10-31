@@ -4,8 +4,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ユニットの体以外の目印: 足元の席の色の輪・頭の上の名前（無ければ「P1」）「BOSS」・ダウン中の復活の範囲とたまり具合（§4.5）・
-    /// 協力でメニューを開いている人の「MENU」（§3.2）
+    /// ユニットの体以外の目印: 足元の席の色の輪・頭の上の名前（無ければ「P1」）「BOSS」・ダウン中の復活の範囲とたまり具合・
+    /// 協力でメニューを開いている人の「MENU」
     /// </summary>
     public partial class UnitView
     {

@@ -1,6 +1,6 @@
 namespace PenmonScramble.Core
 {
-    /// <summary>技の形（§4.2）。40個の技を、この7つの処理の組み合わせで作る</summary>
+    /// <summary>技の形。40個の技を、この7つの処理の組み合わせで作る</summary>
     public enum SkillShape : byte
     {
         Melee,

@@ -36,11 +36,17 @@ namespace PenmonScramble.Editor
         /// <summary>画面全体をふさぐ下地（後ろのタイトルを押せないように）と、上の見出し</summary>
         private static GameObject CreateScreen(Transform canvas, string name, string heading)
         {
-            var root = UIDialogBuilder.CreateUIObject(name, canvas);
-            UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
-            root.AddComponent<Image>().color = ScreenBackColor;
+            var root = CreateFullScreenBacking(canvas, name, ScreenBackColor);
             CreateLabel(root.transform, "Heading", heading, ScreenTitleFontSize, ScreenTitlePosition, ScreenTitleSize).fontStyle = FontStyle.Bold;
             return root;
+        }
+
+        /// <summary>画面全体を覆う下地。Image で受けるので、後ろの物は押せなくなる（色が透明でも同じ）</summary>
+        private static GameObject CreateFullScreenBacking(Transform parent, string name, Color color)
+        {
+            var obj = CreateStretchGroup(parent, name);
+            obj.AddComponent<Image>().color = color;
+            return obj;
         }
 
         /// <summary>丸い絵（ペンモンの顔・ボタンの丸）。下のボタンを押す邪魔をしない</summary>
@@ -48,11 +54,7 @@ namespace PenmonScramble.Editor
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, Vector2.one * size);
-            var image = obj.AddComponent<Image>();
-            image.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(KnobSpritePath);
-            image.color = color;
-            image.raycastTarget = false;
-            return image;
+            return AddImage(obj, AssetDatabase.GetBuiltinExtraResource<Sprite>(KnobSpritePath), color, false);
         }
     }
 }

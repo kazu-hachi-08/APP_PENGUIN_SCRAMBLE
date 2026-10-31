@@ -15,18 +15,16 @@
 - **Web Build Support**（ブラウザ版）
 - **Windows Build Support (IL2CPP)**（Windows版を IL2CPP で出す場合。Mono なら不要）
 
-## 3. 初回のセットアップ（Unity プロジェクトの作成）
+## 3. 初回のセットアップ
 
-このリポジトリには、ペンモンから移植した共通基盤・リリーススクリプトなどが先に入っている（`ProjectSettings/` `Packages/` はまだ無い）。
+このリポジトリには `ProjectSettings/` `Packages/` も含めて一式入っているので、Unity Hub で開けばそのまま使える。
 
-1. Unity Hub で **Universal 2D** テンプレートの新規プロジェクトを、別の空フォルダ（例: `C:\MyApp\_tmp_scramble`）に作る
-2. 作ったフォルダの `Assets/` `Packages/` `ProjectSettings/` をこのリポジトリへ移す（`Assets/` は中身をマージ）
-3. Unity Hub の「Add」でこのリポジトリを開く
-4. Player Settings
+1. Unity Hub の「Add」でこのリポジトリを開く
+2. 確認する設定（Player Settings）
    - Company Name: `kazuhachi08` / Product Name: `乱戦！ペンモンスクランブル`（**一度配信したら変えない**。保存先が変わる）
    - Web > Resolution and Presentation > WebGL Template: `PenmonScramble`
-   - Default Orientation: Landscape
-5. 共通基盤が使うパッケージ: Input System（`VirtualJoystick` 等）、uGUI（Legacy Text）
+   - Default Orientation: Auto Rotation（許可は左右の横向きだけ。起動時に `ScreenOrientationApplier` が横へ固定する）
+3. 共通基盤が使うパッケージ: Input System（`VirtualJoystick` 等）、uGUI（Legacy Text）
 
 ## 4. ディレクトリ構成
 
@@ -34,14 +32,24 @@
 Assets/
 ├── _Project/
 │   ├── Common/                       # 共通基盤（PenmonScramble.Common.* 名前空間）
-│   │   ├── Scripts/                  # AppUpdate / Audio / Core / Input / Scene / UI
+│   │   ├── Scripts/                  # AppUpdate / Audio / Core / Input / Online / Profile / Scene / UI
 │   │   ├── Editor/                   # 共通ダイアログのシーン生成（UIDialogBuilder）
-│   │   ├── Plugins/WebGL/            # ブラウザ版の表示枠の縦横比（WebScreen.jslib）
+│   │   ├── Plugins/WebGL/            # ブラウザ用の jslib（WebScreen: 表示枠の縦横比 / NameInput: 名前入力 / WebBrowser: ブラウザを開く）
 │   │   └── Resources/Fonts/          # M PLUS Rounded 1c（OFL）
 │   └── Games/
 │       └── 100_PenmonScramble/       # ゲーム本体
+│           ├── Art/                  # 絵（Icon / Portraits / Stage / Title / UI）
+│           ├── Editor/               # エディタ拡張（3D プレビュー・ビルド・ベンチマーク）
+│           ├── Scenes/               # ゲームのシーン（PenmonScrambleScene / Preview3D）
+│           ├── Scripts/              # Core / Game
+│           ├── Settings/             # URP の設定アセット
+│           ├── Shaders/              # Toon / BlobShadow / Fx
+│           └── Tests/                # EditMode テスト
 └── WebGLTemplates/PenmonScramble/    # ブラウザ版の index.html
-Tools/Release/                        # Windows版・ブラウザ版のリリーススクリプト
+Tools/
+├── Art/                              # 絵の生成スクリプト（ComfyUI で地面の絵を作る gen.py。元絵は raw/）
+└── Release/                          # Windows版・ブラウザ版のリリーススクリプト
+    └── Windows/                      # 配布 zip に入れる PenmonScramble_Start.bat・update.ps1
 ```
 
 ## 5. リリース
@@ -66,4 +74,3 @@ Tools/Release/                        # Windows版・ブラウザ版のリリー
 ## 6. Git・ファイル管理ルール
 
 - **`.meta` ファイル**: アセットを追加・変更したときに生成される `.meta` は**必ずセットでコミット**する。
-- 移植したファイルの `.meta` はペンモンと GUID を共有しないよう消してある。初回に Unity で開くと作り直されるので、それをコミットする。

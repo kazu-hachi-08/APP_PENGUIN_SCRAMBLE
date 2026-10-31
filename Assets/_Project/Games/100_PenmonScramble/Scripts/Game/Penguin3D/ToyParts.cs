@@ -26,11 +26,28 @@ namespace PenmonScramble.Game
             obj.transform.localPosition = position;
             obj.transform.localRotation = rotation;
             obj.transform.localScale = scale;
-            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
-            var renderer = obj.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = _materials.Get(color, gloss);
+            var renderer = AddMesh(obj, mesh, _materials.Get(color, gloss));
             _model.AddPart(renderer, color, gloss);
             return obj.transform;
+        }
+
+        /// <summary>メッシュの絵を付ける（MeshFilter → MeshRenderer の順）。影の設定は呼び出し側で返った renderer に行う</summary>
+        public static MeshRenderer AddMesh(GameObject obj, Mesh mesh, Material material)
+        {
+            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = obj.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            return renderer;
+        }
+
+        /// <summary>床や影に使う四角い板を、親の下に位置と大きさを決めて置く（寝かせた向きは FloorQuad の形で決まる）</summary>
+        public static MeshRenderer FloorPlate(string name, Transform parent, Vector3 localPosition, Vector3 localScale, Material material)
+        {
+            var obj = new GameObject(name);
+            obj.transform.SetParent(parent, false);
+            obj.transform.localPosition = localPosition;
+            obj.transform.localScale = localScale;
+            return AddMesh(obj, ToyMeshes.FloorQuad, material);
         }
 
         /// <summary>形を持たない回転の軸（関節）</summary>
@@ -45,13 +62,7 @@ namespace PenmonScramble.Game
         /// <summary>足元の丸い影。床と同じ高さだとちらつくので少し浮かせる</summary>
         public static Renderer BlobShadow(ToonMaterials materials, Transform root, Vector2 size)
         {
-            var obj = new GameObject("BlobShadow");
-            obj.transform.SetParent(root, false);
-            obj.transform.localPosition = new Vector3(0f, 0.005f, 0f);
-            obj.transform.localScale = new Vector3(size.x, 1f, size.y);
-            obj.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.FloorQuad;
-            var renderer = obj.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = materials.BlobShadow;
+            var renderer = FloorPlate("BlobShadow", root, new Vector3(0f, 0.005f, 0f), new Vector3(size.x, 1f, size.y), materials.BlobShadow);
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
             return renderer;

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 大ボス3体（§6.2）を球・卵形・しずく形で組み立てる。形がペンギンと違うので、ペンギンの組み立て役とは分ける。
+    /// 大ボス3体を球・卵形・しずく形で組み立てる。形がペンギンと違うので、ペンギンの組み立て役とは分ける。
     /// 寸法は当たりの半径を 1 とした値（全体の大きさは根元の scale = 当たりの半径）。前は +Z、足元が原点。
     /// 体ごとの組み立ては BigBossModelBuilder.Skua.cs / .Seal.cs / .Orca.cs。当たり判定（Collider）は付けない
     /// </summary>
@@ -36,12 +36,12 @@ namespace PenmonScramble.Game
             var model = root.AddComponent<BigBossModel>();
             model.SetMaterials(materials);
             var kit = new Kit(model, new ToyParts(model, materials), ToyParts.Pivot("Figure", root.transform, Vector3.zero));
-            switch (bossNo)
+            switch (BigBossModel.SpeciesOf(bossNo))
             {
-                case BigBossTable.SkuaNo:
+                case BigBossSpecies.Skua:
                     BuildSkua(kit);
                     break;
-                case BigBossTable.LeopardSealNo:
+                case BigBossSpecies.LeopardSeal:
                     BuildSeal(kit);
                     break;
                 default:
@@ -79,6 +79,12 @@ namespace PenmonScramble.Game
 
         /// <summary>しずく形の先を tip の向きへ、平たい面を normal の向きへ向ける（ヒレ・羽・歯）</summary>
         private static Quaternion Fin(Vector3 tip, Vector3 normal) => Quaternion.LookRotation(normal, tip);
+
+        /// <summary>ヒレ・羽・尾びれの薄いしずく形。先を direction へ、平たい面を上へ向ける（どの大ボスも同じ向き・同じつや）</summary>
+        private static void AddFin(Kit kit, Transform parent, string name, Vector3 position, Vector3 direction, Vector3 size, Color color)
+        {
+            kit.Parts.Add(name, ToyMeshes.Drop, parent, position, Fin(direction, Vector3.up), size, color, BodyGloss);
+        }
 
         /// <summary>歯を並べる。tip は歯の先の向き（上あごは下、下あごは上）</summary>
         private static void Teeth(Kit kit, Transform parent, Vector3[] positions, Vector3 tip, float size)

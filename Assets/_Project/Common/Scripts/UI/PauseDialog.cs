@@ -53,13 +53,12 @@ namespace PenmonScramble.Common.UI
         private void OnEnable()
         {
             // AudioManagerの現在値をUIに同期
-            if (AudioManager.HasInstance)
+            WithAudio(audioMgr =>
             {
-                var audioMgr = AudioManager.Instance;
                 if (_bgmSlider != null) _bgmSlider.value = audioMgr.BgmVolume;
                 if (_seSlider != null) _seSlider.value = audioMgr.SeVolume;
                 if (_muteToggle != null) _muteToggle.isOn = audioMgr.IsMuted;
-            }
+            });
         }
 
         public void Initialize(Action onResume, Action onRestart, Action onTitle, Action onHelp = null)
@@ -102,36 +101,18 @@ namespace PenmonScramble.Common.UI
             callback?.Invoke();
         }
 
-        private void OnBgmSliderChanged(float value)
-        {
-            if (AudioManager.HasInstance)
-            {
-                AudioManager.Instance.SetBgmVolume(value);
-            }
-        }
+        private void OnBgmSliderChanged(float value) => WithAudio(a => a.SetBgmVolume(value));
 
-        private void OnSeSliderChanged(float value)
-        {
-            if (AudioManager.HasInstance)
-            {
-                AudioManager.Instance.SetSeVolume(value);
-            }
-        }
+        private void OnSeSliderChanged(float value) => WithAudio(a => a.SetSeVolume(value));
 
-        private void OnMuteToggleChanged(bool isMute)
-        {
-            if (AudioManager.HasInstance)
-            {
-                AudioManager.Instance.SetMute(isMute);
-            }
-        }
+        private void OnMuteToggleChanged(bool isMute) => WithAudio(a => a.SetMute(isMute));
 
-        private void OnDisable()
+        private void OnDisable() => WithAudio(a => a.SaveAudioSettings());
+
+        // AudioManager が無い（シーン単体で開いた・終了処理中など）ときは何もしない
+        private static void WithAudio(Action<AudioManager> onReady)
         {
-            if (AudioManager.HasInstance)
-            {
-                AudioManager.Instance.SaveAudioSettings();
-            }
+            if (AudioManager.HasInstance) onReady(AudioManager.Instance);
         }
     }
 }

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// UI の顔とワールドの地面の絵（§9）を CreatureArt に入れる。
+    /// UI の顔とワールドの地面の絵を CreatureArt に入れる。
     /// 顔は3Dのモデルを撮った絵（PenmonScrambleSceneBuilder.Portraits.cs）、地面は Art/Stage/ の絵（Tools/Art/gen.py）
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder

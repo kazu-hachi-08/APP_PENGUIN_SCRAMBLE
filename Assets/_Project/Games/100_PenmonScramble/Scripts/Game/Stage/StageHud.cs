@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージ中の画面表示（§9.8）: 左上の自分のプレート（場に出ている子の顔・必殺技のゲージ・名札・HP・3体の小さな顔）と結果。
+    /// ステージ中の画面表示: 左上の自分のプレート（場に出ている子の顔・必殺技のゲージ・名札・HP・3体の小さな顔）と結果。
     /// エリアの進み具合・ボスの HP・画面の真ん中の知らせは StageHud.Progress.cs
     /// </summary>
     public partial class StageHud : MonoBehaviour
@@ -69,9 +69,12 @@ namespace PenmonScramble.Game
             ShowSlots(state, fallen);
         }
 
+        /// <summary>HP の割合（0〜1）。最大 HP が 0 以下のときは 0 にして、0 割りを避ける</summary>
+        private static float HpRatio(int hp, int maxHp) => maxHp > 0 ? (float)hp / maxHp : 0f;
+
         private void ShowActive(int index, MemberState active, int hp)
         {
-            var ratio = active.MaxHp > 0 ? (float)hp / active.MaxHp : 0f;
+            var ratio = HpRatio(hp, active.MaxHp);
             if (index != _shownIndex || active.SpeciesNo != _shownSpecies)
             {
                 // 交代した: 前の子の HP から減ったように見せない
@@ -89,7 +92,7 @@ namespace PenmonScramble.Game
             _activeDisc.color = down ? DownDiscColor : PenguinPalette.SpeciesElementColor(active.SpeciesNo);
             _activeFace.color = down ? DownFaceColor : Color.white;
             _nameText.text = $"{_playerLabel}  {PenguinPalette.SpeciesName(active.SpeciesNo)}";
-            // 3体とも倒れた（ダウン）ときは、何をすれば戻れるかを出す（§4.5）
+            // 3体とも倒れた（ダウン）ときは、何をすれば戻れるかを出す
             _hpText.text = down ? DownMessage : $"{hp} / {active.MaxHp}";
         }
 
@@ -107,7 +110,7 @@ namespace PenmonScramble.Game
 
                 var member = state.Members[i];
                 var hp = fallen ? 0 : member.Hp;
-                var ratio = member.MaxHp > 0 ? (float)hp / member.MaxHp : 0f;
+                var ratio = HpRatio(hp, member.MaxHp);
                 _slots[i].Show(member.SpeciesNo, ratio, i == state.ActiveIndex && !fallen, i == next, cooldown);
             }
         }

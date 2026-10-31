@@ -177,7 +177,7 @@ namespace PenmonScramble.Game
             rig.Parts.Add("LeafVein", ToyMeshes.Sphere, rig.FlipperLeft, position + rotation * new Vector3(0f, 0f, 0.012f), rotation, new Vector3(0.02f, 0.42f, 0.02f), Color.Lerp(c, Color.black, 0.3f), AccessoryGloss);
         }
 
-        /// <summary>仙人の杖。根元に付けて、歩いても揺れないようにする。先に緑の玉</summary>
+        /// <summary>仙人の杖。体全体（Figure）に付けて、歩いても揺れないようにする。先に緑の玉</summary>
         private static void Staff(Rig rig, Color c)
         {
             var x = 0.46f * rig.W;

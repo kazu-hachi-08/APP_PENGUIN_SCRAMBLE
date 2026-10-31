@@ -19,7 +19,7 @@ namespace PenmonScramble.Core
         Frozen = 2,
         Invincible = 4,
 
-        /// <summary>3体とも倒れて、仲間の助けを待っている（§4.5）</summary>
+        /// <summary>3体とも倒れて、仲間の助けを待っている</summary>
         Down = 8,
 
         /// <summary>ステージのボス（大きく描き、HUD に HP を出す）</summary>
@@ -152,32 +152,23 @@ namespace PenmonScramble.Core
         /// <summary>場に出ている子の技の待ちの残り（技の番号ごとに 0〜1。1 は出したばかり、0 で出せる）。スマホのボタンに出す</summary>
         public List<float> SkillCooldowns { get; } = new List<float>();
 
-        /// <summary>交代したら出る子（1→2→3→1 の順で、倒れた子は飛ばす。§4.1）。いなければ -1</summary>
+        /// <summary>交代したら出る子（1→2→3→1 の順で、倒れた子は飛ばす）。いなければ -1</summary>
         public int NextAliveIndex()
         {
-            for (var i = 1; i < Members.Count; i++)
-            {
-                var index = (ActiveIndex + i) % Members.Count;
-                if (Members[index].Hp > 0)
-                {
-                    return index;
-                }
-            }
-
-            return -1;
+            return Unit.NextAliveIndex(ActiveIndex, Members.Count, index => Members[index].Hp > 0);
         }
     }
 
     /// <summary>
     /// ある更新の時点の、描くのに要る全部（位置・HP・前回からの間に起きたこと）。
-    /// ホストは自分の画面にもこれを描き、ゲストへも同じものを送る。ソロ・ホスト・ゲストで描き方を分けないため（§2・§8）
+    /// ホストは自分の画面にもこれを描き、ゲストへも同じものを送る。ソロ・ホスト・ゲストで描き方を分けないため
     /// </summary>
     public sealed class StageSnapshot
     {
         /// <summary>何回目の挑戦か。「もう一度」で増える。ゲストはこれが変わったら画面を作り直す</summary>
         public int Round { get; set; }
 
-        /// <summary>遊んでいるステージの番号。ゲストはクリアしたときにこの番号を自分の記録に書く（§8）</summary>
+        /// <summary>遊んでいるステージの番号。ゲストはクリアしたときにこの番号を自分の記録に書く</summary>
         public int StageNo { get; set; }
         public int Tick { get; set; }
         public StageResult Result { get; set; }
@@ -206,17 +197,7 @@ namespace PenmonScramble.Core
 
         public bool TryGetPlayer(int seat, out UnitState state)
         {
-            foreach (var unit in Units)
-            {
-                if (unit.Team == Team.Player && unit.Seat == seat)
-                {
-                    state = unit;
-                    return true;
-                }
-            }
-
-            state = default;
-            return false;
+            return TryFindUnit(unit => unit.Team == Team.Player && unit.Seat == seat, out state);
         }
 
         /// <summary>倒れて場から消えた人は見つからない</summary>
@@ -235,9 +216,20 @@ namespace PenmonScramble.Core
 
         public bool TryGetBoss(out UnitState state)
         {
+            return TryFindUnit(unit => unit.Has(UnitFlags.Boss), out state);
+        }
+
+        public int CountAlive(Team team)
+        {
+            return CountUnits(unit => unit.Team == team);
+        }
+
+        /// <summary>最初に match に合うユニットを返す。無ければ false（state は default）</summary>
+        private bool TryFindUnit(Func<UnitState, bool> match, out UnitState state)
+        {
             foreach (var unit in Units)
             {
-                if (unit.Has(UnitFlags.Boss))
+                if (match(unit))
                 {
                     state = unit;
                     return true;
@@ -248,12 +240,12 @@ namespace PenmonScramble.Core
             return false;
         }
 
-        public int CountAlive(Team team)
+        private int CountUnits(Func<UnitState, bool> match)
         {
             var count = 0;
             foreach (var unit in Units)
             {
-                if (unit.Team == team)
+                if (match(unit))
                 {
                     count++;
                 }

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 必殺技のカットイン（§4.3）。画面の真ん中に帯を横から滑り込ませ、ペンギンの顔（絵が無ければ色の丸）と技の名前を出す。
+    /// 必殺技のカットイン。画面の真ん中に帯を横から滑り込ませ、ペンギンの顔（絵が無ければ色の丸）と技の名前を出す。
     /// 長さは Core のヒットストップと同じにして、止まっている間だけ出す
     /// </summary>
     public class SpecialCutIn : MonoBehaviour

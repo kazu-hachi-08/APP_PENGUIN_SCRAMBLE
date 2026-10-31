@@ -1,6 +1,6 @@
 namespace PenmonScramble.Core
 {
-    /// <summary>合体技の種類（§4.6）。2つの属性の組み合わせで決まる</summary>
+    /// <summary>合体技の種類。2つの属性の組み合わせで決まる</summary>
     public enum ComboKind : byte
     {
         /// <summary>同じ属性</summary>
@@ -26,7 +26,7 @@ namespace PenmonScramble.Core
     }
 
     /// <summary>
-    /// 合体技の数値（§4.6）。必殺技と同じく、技の形（落下・設置・弾）を組み合わせて作る
+    /// 合体技の数値。必殺技と同じく、技の形（落下・設置・弾）を組み合わせて作る
     /// </summary>
     public static class ComboMoves
     {

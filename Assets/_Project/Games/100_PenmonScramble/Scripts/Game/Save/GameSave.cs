@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 端末の記録（§10）。PlayerPrefs に JSON で保存する。シーンを読み直しても同じものを使うよう static に持つ
+    /// 端末の記録。PlayerPrefs に JSON で保存する。シーンを読み直しても同じものを使うよう static に持つ
     /// </summary>
     public static class GameSave
     {

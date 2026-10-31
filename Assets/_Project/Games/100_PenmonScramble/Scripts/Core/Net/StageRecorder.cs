@@ -103,41 +103,13 @@ namespace PenmonScramble.Core
         private static UnitFlags FlagsOf(Unit unit)
         {
             var flags = UnitFlags.None;
-            if (unit.IsDashing)
-            {
-                flags |= UnitFlags.Dashing;
-            }
-
-            if (unit.IsFrozen)
-            {
-                flags |= UnitFlags.Frozen;
-            }
-
-            if (unit.IsInvincible)
-            {
-                flags |= UnitFlags.Invincible;
-            }
-
-            if (unit.IsDown)
-            {
-                flags |= UnitFlags.Down;
-            }
-
-            if (unit.IsBoss)
-            {
-                flags |= UnitFlags.Boss;
-            }
-
-            if (unit.IsSubmerged)
-            {
-                flags |= UnitFlags.Submerged;
-            }
-
-            if (unit.IsInMenu)
-            {
-                flags |= UnitFlags.InMenu;
-            }
-
+            if (unit.IsDashing) flags |= UnitFlags.Dashing;
+            if (unit.IsFrozen) flags |= UnitFlags.Frozen;
+            if (unit.IsInvincible) flags |= UnitFlags.Invincible;
+            if (unit.IsDown) flags |= UnitFlags.Down;
+            if (unit.IsBoss) flags |= UnitFlags.Boss;
+            if (unit.IsSubmerged) flags |= UnitFlags.Submerged;
+            if (unit.IsInMenu) flags |= UnitFlags.InMenu;
             return flags;
         }
 

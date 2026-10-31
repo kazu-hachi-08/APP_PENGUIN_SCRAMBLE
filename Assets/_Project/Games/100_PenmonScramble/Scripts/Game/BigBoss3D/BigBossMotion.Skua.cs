@@ -42,12 +42,12 @@ namespace PenmonScramble.Game
 
         private void PoseSkua(BigBossPose pose, ref FigureOffset f)
         {
-            var cycle = pose.Phase * Mathf.PI * 2f;
+            var cycle = CyclePhase(pose);
             var flap = Mathf.Sin(cycle);
             var charge = TelegraphOf(pose, BossAttackKind.Charge);
             var rain = TelegraphOf(pose, BossAttackKind.Rain);
             var dash = pose.Dash;
-            var slam = pose.StrikeKind == BossAttackKind.Rain ? Bell(pose.Strike, 0f, 0.2f, 0.8f) : 0f;
+            var slam = StrikeBell(pose, BossAttackKind.Rain, 0f, 0.2f, 0.8f);
             // 打ち下ろしても翼の先が床に届かないよう、上がった高さから少しずつ下りる
             if (pose.StrikeKind == BossAttackKind.Rain && pose.Strike < 1f)
             {

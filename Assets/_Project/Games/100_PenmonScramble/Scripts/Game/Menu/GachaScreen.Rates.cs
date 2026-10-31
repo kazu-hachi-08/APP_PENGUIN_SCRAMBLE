@@ -38,9 +38,8 @@ namespace PenmonScramble.Game
             {
                 var names = SpeciesNames(stars);
                 var rate = Balance.StarRatePercent(stars);
-                var color = ColorUtility.ToHtmlStringRGB(PenguinLabels.StarColor(stars));
                 var each = names.Count > 0 ? rate / (float)names.Count : 0f;
-                text.AppendLine($"<color=#{color}>{PenguinLabels.Stars(stars)}</color>　<b>{rate}%</b>　<size=26>（1種類あたり {each:0.##}%）</size>");
+                text.AppendLine($"{PenguinLabels.ColoredStars(stars)}　<b>{rate}%</b>　<size=26>（1種類あたり {each:0.##}%）</size>");
                 text.AppendLine($"<size=28>{string.Join("・", names)}</size>");
                 text.AppendLine();
             }

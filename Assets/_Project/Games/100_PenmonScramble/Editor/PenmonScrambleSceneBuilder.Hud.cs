@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ステージ中の HUD（§9.8）の土台・画面の真ん中の知らせ・結果・右上のメニューボタンと、必殺技のカットイン。
+    /// ステージ中の HUDの土台・画面の真ん中の知らせ・結果・右上のメニューボタンと、必殺技のカットイン。
     /// 自分のプレート・エリアの進み具合・ボスの HP は PenmonScrambleSceneBuilder.HudPlates.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -35,7 +35,7 @@ namespace PenmonScramble.Editor
         private const int RetryFontSize = 48;
         private static readonly Color RetryButtonColor = new Color(0.18f, 0.55f, 0.9f);
 
-        // 右上のメニューボタン（§3.2）。指で押しやすい大きさにして、進み具合はその左へずらす
+        // 右上のメニューボタン。指で押しやすい大きさにして、進み具合はその左へずらす
         private const float HudMenuButtonSize = 120f;
         private const float MenuButtonGap = 24f;
         private const float MenuBarWidthRatio = 0.14f;
@@ -45,8 +45,7 @@ namespace PenmonScramble.Editor
 
         private static StageHud CreateHud(Transform canvas)
         {
-            var hudObj = UIDialogBuilder.CreateUIObject("Hud", canvas);
-            UIDialogBuilder.SetStretchAll(hudObj.GetComponent<RectTransform>());
+            var hudObj = CreateStretchGroup(canvas, "Hud");
             var hud = hudObj.AddComponent<StageHud>();
             var so = new SerializedObject(hud);
 
@@ -73,8 +72,7 @@ namespace PenmonScramble.Editor
         /// <summary>画面の真ん中を横切る帯。出す間だけ有効にする（SpecialCutIn）</summary>
         private static SpecialCutIn CreateCutIn(Transform canvas)
         {
-            var root = UIDialogBuilder.CreateUIObject("SpecialCutIn", canvas);
-            UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
+            var root = CreateStretchGroup(canvas, "SpecialCutIn");
 
             var band = UIDialogBuilder.CreateUIObject("Band", root.transform);
             var bandRect = band.GetComponent<RectTransform>();
@@ -93,8 +91,7 @@ namespace PenmonScramble.Editor
             var faceImage = face.AddComponent<Image>();
             faceImage.raycastTarget = false;
 
-            var textObj = UIDialogBuilder.CreateUIObject("Text", band.transform);
-            UIDialogBuilder.SetStretchAll(textObj.GetComponent<RectTransform>());
+            var textObj = CreateStretchGroup(band.transform, "Text");
             var text = AddText(textObj, string.Empty, CutInFontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
@@ -186,12 +183,10 @@ namespace PenmonScramble.Editor
 
         private static (GameObject panel, Text text, Button retry, Button toTitle) CreateResultPanel(Transform parent)
         {
-            var panel = UIDialogBuilder.CreateUIObject("Result", parent);
-            UIDialogBuilder.SetStretchAll(panel.GetComponent<RectTransform>());
+            var panel = CreateStretchGroup(parent, "Result");
             panel.AddComponent<Image>().color = ResultOverlayColor;
 
-            var textObj = UIDialogBuilder.CreateUIObject("Text", panel.transform);
-            UIDialogBuilder.SetStretchAll(textObj.GetComponent<RectTransform>());
+            var textObj = CreateStretchGroup(panel.transform, "Text");
             var text = AddText(textObj, string.Empty, ResultFontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
