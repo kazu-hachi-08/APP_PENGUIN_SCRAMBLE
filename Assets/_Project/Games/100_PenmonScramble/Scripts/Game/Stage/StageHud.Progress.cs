@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// エリアの進み具合（右上のつぶと残りの敵・画面の真ん中の知らせ）とボスの HP
+    /// エリアの進み具合（右上のつぶと残りの敵・画面の真ん中の知らせ）とボスの HP、画面の外の大ボス・仲間・予告を指す端の印
     /// </summary>
     public partial class StageHud
     {
@@ -30,6 +30,7 @@ namespace PenmonScramble.Game
         [SerializeField] private HudBar _bossBar;
         [SerializeField] private Image _bossFace;
         [SerializeField] private Text _bossText;
+        [SerializeField] private EdgeMarkers _edgeMarkers;
 
         private float _bannerTimer;
         private int _announcedRound = -1;
@@ -54,6 +55,12 @@ namespace PenmonScramble.Game
             Announce(snapshot, snapshot.IsBossArea);
             AnnounceCombos(snapshot);
             SetBoss(snapshot);
+        }
+
+        /// <param name="seatColor">仲間の印を、その人のペンギンの足元の輪と同じ色にする</param>
+        public void SetEdgeMarkers(StageSnapshot snapshot, int localSeat, System.Func<int, Color> seatColor)
+        {
+            _edgeMarkers.Set(snapshot, localSeat, seatColor);
         }
 
         /// <summary>エリアに入ったとき・出入口が開いたときに、画面の真ん中に大きく出す</summary>

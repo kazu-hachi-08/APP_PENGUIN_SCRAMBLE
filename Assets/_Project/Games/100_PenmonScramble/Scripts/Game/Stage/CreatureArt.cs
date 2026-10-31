@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// UI の顔（ペンギン・大ボス）とワールドの地面の絵。SceneBuilder が Art/ にある PNG をここへ入れる。
+    /// UI の顔（ペンギン・大ボス）とワールドの地面・闘技場の床の絵。SceneBuilder が Art/ にある PNG をここへ入れる。
     /// 顔は、Rebuild のときに3Dのモデルを撮って作る（UI の顔がゲーム中の見た目とそろうように）
     /// </summary>
     // 画面の部品が Start で絵を引くより先に、居場所を知らせておく
@@ -18,6 +18,8 @@ namespace PenmonScramble.Game
         [SerializeField] private Sprite[] _bigBosses = new Sprite[Balance.WorldCount];
         /// <summary>添字はワールド-1。1エリア分（16×9マス）に引き伸ばして敷く</summary>
         [SerializeField] private Sprite[] _grounds = new Sprite[Balance.WorldCount];
+        /// <summary>添字はワールド-1。大ボスの闘技場の床。楕円を囲む四角（32×18マス）に引き伸ばして、楕円の形に切って敷く</summary>
+        [SerializeField] private Sprite[] _arenaGrounds = new Sprite[Balance.WorldCount];
 
         private static CreatureArt _instance;
 
@@ -46,6 +48,9 @@ namespace PenmonScramble.Game
         }
 
         public static Sprite Ground(int world) => _instance != null ? At(_instance._grounds, world - 1) : null;
+
+        /// <summary>闘技場の床の絵。無ければ null（ワールドの地面で代わりに敷く）</summary>
+        public static Sprite ArenaGround(int world) => _instance != null ? At(_instance._arenaGrounds, world - 1) : null;
 
         /// <summary>UI の顔（カード・ガチャ・カットイン）。絵の無い種類（新しい版で増えた子など）は出さない</summary>
         public static void ShowFace(Image image, int speciesNo)

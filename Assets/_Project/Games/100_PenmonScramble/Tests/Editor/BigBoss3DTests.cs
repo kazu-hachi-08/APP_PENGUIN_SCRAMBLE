@@ -156,6 +156,26 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
+        public void DropIn_FallsFromAboveTheScreen_ThenLandsOnTheFloor([ValueSource(nameof(Bosses))] int no)
+        {
+            // 羽ばたきで上下する大ボスもいるので、降りてこない同じ大ボスと同じ時間だけ動かして比べる
+            var standing = Build(no);
+            var motion = Build(no);
+            var model = motion.GetComponent<BigBossModel>();
+
+            motion.PlayDropIn();
+
+            Assert.That(motion.IsDroppingIn, Is.True);
+            Assert.That(Bounds(model).min.y, Is.GreaterThan(10f), "画面の上の外から");
+            Run(motion, BigBossMotion.DropFallSeconds + Step);
+            Assert.That(motion.IsDroppingIn, Is.False, "落ちる秒数で床に着く");
+            Run(motion, BigBossMotion.DropSeconds);
+            Run(standing, BigBossMotion.DropFallSeconds + Step);
+            Run(standing, BigBossMotion.DropSeconds);
+            Assert.That(Bounds(model).min.y, Is.EqualTo(Bounds(standing.GetComponent<BigBossModel>()).min.y).Within(FloorTolerance), "着地して休みの高さに戻る");
+        }
+
+        [Test]
         public void Defeat_SpinsAwayAndFinishes([ValueSource(nameof(Bosses))] int no)
         {
             var motion = Build(no);

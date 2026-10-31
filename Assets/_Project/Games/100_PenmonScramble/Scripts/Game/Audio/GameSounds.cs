@@ -34,6 +34,8 @@ namespace PenmonScramble.Game
         GachaOpen,
         /// <summary>ガチャで★3 の光の柱が立った</summary>
         GachaRare,
+        /// <summary>大ボスが空から闘技場へ降りてきて、床に着いた</summary>
+        BossLand,
     }
 
     /// <summary>
@@ -67,6 +69,7 @@ namespace PenmonScramble.Game
             { GameSound.GachaDrop, 0.55f },
             { GameSound.GachaOpen, 0.5f },
             { GameSound.GachaRare, 0.55f },
+            { GameSound.BossLand, 0.75f },
         };
 
         public static void Play(GameSound sound)
@@ -106,6 +109,8 @@ namespace PenmonScramble.Game
                 case GameSound.GachaDrop: return Impact("Se_GachaDrop", 0.12f, 260f);
                 case GameSound.GachaOpen: return Sweep("Se_GachaOpen", 0.25f, 500f, 1400f);
                 case GameSound.GachaRare: return Jingle("Se_GachaRare", new[] { 1047f, 1319f, 1568f, 2093f });
+                // 撃破（BossDefeat）よりさらに低く、地面が鳴るような重い音
+                case GameSound.BossLand: return Impact("Se_BossLand", 0.5f, 42f);
                 default: return Jingle("Se_Fail", new[] { 392f, 330f, 262f, 196f });
             }
         }

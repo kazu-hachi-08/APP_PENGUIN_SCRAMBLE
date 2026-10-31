@@ -32,6 +32,7 @@ namespace PenmonScramble.Game
         private float _defeatTimer = -1f;
 
         public Team Team { get; private set; }
+        public float Radius => _radius;
         public int SpeciesNo { get; private set; }
         public bool IsBoss => (_flags & UnitFlags.Boss) != 0;
         private bool IsDown => (_flags & UnitFlags.Down) != 0;
@@ -195,6 +196,9 @@ namespace PenmonScramble.Game
         }
 
         public void PlayAttack(SkillShape shape) => _motion.PlayAttack(shape);
+
+        /// <summary>大ボスが闘技場に現れたとき、空から降りてくる（ほかのユニットは何もしない）</summary>
+        public void PlayDropIn() => _bigBoss?.PlayDropIn();
 
         public void PlaySpecial() => _motion.PlaySpecial();
 

@@ -33,6 +33,8 @@ namespace PenmonScramble.Game
 
         public bool IsBigBoss => _bigBoss != null;
 
+        private bool IsDroppingIn => _bigBoss != null && _bigBoss.IsDroppingIn;
+
         private void BuildBigBoss()
         {
             var boss = BigBossModelBuilder.Build(SpeciesNo, _materials.Toon, transform);

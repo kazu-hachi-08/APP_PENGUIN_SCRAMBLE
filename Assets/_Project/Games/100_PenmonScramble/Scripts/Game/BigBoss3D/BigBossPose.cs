@@ -4,7 +4,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// 大ボスの動きの状態。BigBossMotion.Apply はこれだけから姿勢を決める（スクショでも同じ流れで撮れるように）。
-    /// 1回きりの動き（Strike・Emerge・Hit・Blink）は始まってからの割合（0〜1、1 で終わり）。切り替わる状態（Move・Telegraph・Dash・Submerge）は 0〜1 でなめらかに
+    /// 1回きりの動き（Strike・Emerge・Hit・Drop・Blink）は始まってからの割合（0〜1、1 で終わり）。切り替わる状態（Move・Telegraph・Dash・Submerge）は 0〜1 でなめらかに
     /// </summary>
     public struct BigBossPose
     {
@@ -32,12 +32,15 @@ namespace PenmonScramble.Game
 
         public float Hit;
 
+        /// <summary>闘技場に現れたときに、空から降りてきて着地する動き</summary>
+        public float Drop;
+
         public bool Defeated;
         public float Defeat;
 
         public float Blink;
         public float Time;
 
-        public static BigBossPose Idle => new BigBossPose { Strike = 1f, Emerge = 1f, Hit = 1f, Blink = 1f };
+        public static BigBossPose Idle => new BigBossPose { Strike = 1f, Emerge = 1f, Hit = 1f, Drop = 1f, Blink = 1f };
     }
 }

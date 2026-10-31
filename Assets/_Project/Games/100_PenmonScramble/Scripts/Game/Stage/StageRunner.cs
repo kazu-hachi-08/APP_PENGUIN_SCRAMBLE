@@ -41,11 +41,14 @@ namespace PenmonScramble.Game
         private float _resultShownAt = -1f;
         private bool _leaving;
         private MusicTrack? _music;
+        // 毎フレーム渡すので、メソッドから作る関数を使い回す
+        private System.Func<int, Color> _seatColor;
 
         private StageSnapshot Latest => _host != null ? _host.Latest : _guest?.Latest;
 
         private void Start()
         {
+            _seatColor = _view.SeatColor;
             _hud.RetryRequested += Retry;
             _hud.TitleRequested += ReturnToTitle;
             _menu.RestartRequested += Retry;
@@ -195,6 +198,7 @@ namespace PenmonScramble.Game
             }
 
             _hud.SetProgress(snapshot);
+            _hud.SetEdgeMarkers(snapshot, _localSeat, _seatColor);
             // 自分の3体が届くまでは中身が空なので出さない（ゲストは最初のスナップショットまで）
             _hud.SetShown(_lastPlayerState != null);
         }

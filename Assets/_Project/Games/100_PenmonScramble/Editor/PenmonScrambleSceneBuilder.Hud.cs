@@ -15,6 +15,17 @@ namespace PenmonScramble.Editor
     {
         // HUD の板や文字の縁取りの濃い紺
         private static readonly Color HudBackColor = new Color(0.08f, 0.11f, 0.22f, 0.85f);
+
+        // 画面の端の印: 大ボス1・仲間3・予告がいくつか出ても足りる数。大きさはスマホでも指の先くらい
+        private const int EdgeMarkerCount = 8;
+        private const float EdgeMarkerSize = 120f;
+        private const float EdgeMarkerRimRatio = 1.14f;
+        // 顔の丸は、とがった丸の丸い所（絵の半分の 0.6）に収まる大きさ（AddPortraitFace はこの 0.76 倍で描く）
+        private const float EdgeMarkerFaceRatio = 0.72f;
+        private const int EdgeMarkerSignFontSize = 52;
+        private const int EdgeMarkerLabelFontSize = 26;
+        private static readonly Vector2 EdgeMarkerLabelPosition = new Vector2(0f, -64f);
+        private static readonly Vector2 EdgeMarkerLabelSize = new Vector2(120f, 36f);
         private const float BannerY = 200f;
         private static readonly Vector2 BannerSize = new Vector2(1400f, 160f);
         private const int BannerFontSize = 104;
@@ -55,6 +66,7 @@ namespace PenmonScramble.Editor
             CreatePlayerPlate(safe.transform, so);
             CreateProgressPlate(safe.transform, so);
             CreateBossPlate(safe.transform, so);
+            so.FindProperty("_edgeMarkers").objectReferenceValue = CreateEdgeMarkers(safe.transform);
             // タイトルの間は隠しておき、ステージが始まったら StageHud が出す
             safe.SetActive(false);
             so.FindProperty("_plates").objectReferenceValue = safe;
@@ -67,6 +79,55 @@ namespace PenmonScramble.Editor
             so.FindProperty("_titleButton").objectReferenceValue = toTitle;
             so.ApplyModifiedProperties();
             return hud;
+        }
+
+        /// <summary>
+        /// 画面の外の大ボス・仲間・予告を指す端の印（EdgeMarkers）。セーフエリアいっぱいに広げた入れ物に、決まった数だけ作っておく。
+        /// 印は、外を指すとがった丸（暗い縁の上に色）・丸の中の顔か「！」・丸の下の名前
+        /// </summary>
+        private static EdgeMarkers CreateEdgeMarkers(Transform safe)
+        {
+            var area = CreateHudRect(safe, "EdgeMarkers", Middle, Vector2.zero, Vector2.zero);
+            UIDialogBuilder.SetStretchAll(area);
+            var markers = area.gameObject.AddComponent<EdgeMarkers>();
+            var so = new SerializedObject(markers);
+            so.FindProperty("_area").objectReferenceValue = area;
+            var list = so.FindProperty("_markers");
+            list.arraySize = EdgeMarkerCount;
+            for (var i = 0; i < EdgeMarkerCount; i++)
+            {
+                list.GetArrayElementAtIndex(i).objectReferenceValue = CreateEdgeMarker(area, i);
+            }
+
+            so.ApplyModifiedProperties();
+            return markers;
+        }
+
+        private static EdgeMarkerView CreateEdgeMarker(RectTransform area, int index)
+        {
+            var size = Vector2.one * EdgeMarkerSize;
+            var root = CreateHudRect(area, $"Marker{index}", Middle, Vector2.zero, size);
+            var pivot = CreateHudRect(root, "PointerPivot", Middle, Vector2.zero, size);
+            CreateHudImage(pivot, "Rim", HudMarkerPinPath, HudRimColor, Middle, Vector2.zero, size * EdgeMarkerRimRatio);
+            var pointer = CreateHudImage(pivot, "Pointer", HudMarkerPinPath, Color.white, Middle, Vector2.zero, size);
+            var faceGroup = CreateHudRect(root, "FaceGroup", Middle, Vector2.zero, size);
+            var (_, face) = AddPortraitFace(faceGroup, EdgeMarkerSize * EdgeMarkerFaceRatio);
+            var sign = CreateHudLabel(root, "Sign", EdgeMarkerSignFontSize, TextAnchor.MiddleCenter, 0f, 0f);
+            var labelRect = CreateHudRect(root, "LabelArea", Middle, EdgeMarkerLabelPosition, EdgeMarkerLabelSize);
+            var label = CreateHudLabel(labelRect, "Label", EdgeMarkerLabelFontSize, TextAnchor.MiddleCenter, 0f, 0f);
+
+            var view = root.gameObject.AddComponent<EdgeMarkerView>();
+            var so = new SerializedObject(view);
+            so.FindProperty("_root").objectReferenceValue = root;
+            so.FindProperty("_pointerPivot").objectReferenceValue = pivot;
+            so.FindProperty("_pointer").objectReferenceValue = pointer;
+            so.FindProperty("_faceGroup").objectReferenceValue = faceGroup.gameObject;
+            so.FindProperty("_face").objectReferenceValue = face;
+            so.FindProperty("_sign").objectReferenceValue = sign;
+            so.FindProperty("_label").objectReferenceValue = label;
+            so.ApplyModifiedProperties();
+            root.gameObject.SetActive(false);
+            return view;
         }
 
         /// <summary>画面の真ん中を横切る帯。出す間だけ有効にする（SpecialCutIn）</summary>

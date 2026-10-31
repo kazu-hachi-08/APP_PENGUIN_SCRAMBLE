@@ -134,6 +134,7 @@ namespace PenmonScramble.Game
             _effects.Clear();
             _warnings.Clear();
             _telegraphs.Clear();
+            StopAllCoroutines();
             CreateGround(snapshot);
         }
 
@@ -150,8 +151,13 @@ namespace PenmonScramble.Game
                     continue;
                 }
 
-                _units.Add(unit.Id, CreateUnitView(unit));
-                if (showSpawn)
+                var created = CreateUnitView(unit);
+                _units.Add(unit.Id, created);
+                if (showSpawn && created.IsBigBoss)
+                {
+                    DropInBigBoss(created);
+                }
+                else if (showSpawn)
                 {
                     BurstFx.SpawnOnFloor(transform, DecalSprites.Ring, _materials.Decal, Color.white, unit.Position.ToVector2(), unit.Radius, unit.Radius * 2.5f, SpawnPoofSeconds);
                 }
