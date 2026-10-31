@@ -122,15 +122,18 @@ namespace PenmonScramble.Core
             }
         }
 
-        /// <summary>一番近いプレイヤーがいる側（上半分か下半分）を、エリアの端から端まで帯で知らせる。闘技場では、帯の高さで柵から柵まで</summary>
+        /// <summary>
+        /// 一番近いプレイヤーの高さを中心にした帯を、エリアの端から端まで知らせる。
+        /// 帯の長さは、帯がかかる中で一番広い高さの柵から柵まで（楕円の上の方でも、帯の下側の端まで届くように）
+        /// </summary>
         private void StartWave(Unit boss, BigBossBrain brain, Unit target)
         {
-            var centerY = Area.Center.Y;
-            var quarter = Area.Height * 0.25f;
-            var y = target.Position.Y >= centerY ? centerY + quarter : centerY - quarter;
-            var (minX, maxX) = Area.SpanX(y, 0f);
+            var y = target.Position.Y;
+            var halfWidth = Balance.BigBossWaveHalfWidth;
+            var widestY = Math.Clamp(Area.Center.Y, y - halfWidth, y + halfWidth);
+            var (minX, maxX) = Area.SpanX(widestY, 0f);
             brain.Direction = HorizontalToward(boss, target);
-            AddWarning(brain, new Vec2(minX, y), new Vec2(maxX, y), quarter);
+            AddWarning(brain, new Vec2(minX, y), new Vec2(maxX, y), halfWidth);
         }
 
         private void ExecuteBossAttack(Unit boss, BigBossBrain brain)

@@ -82,7 +82,7 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
-        public void Wave_HitsOnlyTheHalfThePlayerWasIn()
+        public void Wave_HitsOnlyTheBandAtThePlayersHeight()
         {
             var world = Create();
             AddBoss(world, BigBossTable.OrcaNo, new Vec2(8f, 0f));

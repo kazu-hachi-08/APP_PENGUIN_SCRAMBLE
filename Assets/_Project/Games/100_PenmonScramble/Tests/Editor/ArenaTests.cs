@@ -240,7 +240,7 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
-        public void Wave_RunsFenceToFence_OnThePlayersHalf()
+        public void Wave_RunsFenceToFence_AtThePlayersHeight()
         {
             var arena = CenteredArena();
             var world = new StageWorld(arena, seed: 1);
@@ -249,11 +249,43 @@ namespace PenmonScramble.Tests
 
             WaitForWarning(world);
 
+            // 帯の下側の端（楕円の中で一番広い高さ）で、柵から柵まで
             var band = world.Warnings[0];
-            var (minX, maxX) = arena.SpanX(band.From.Y, 0f);
-            Assert.That(band.From.Y, Is.GreaterThan(0f));
+            var (minX, maxX) = arena.SpanX(band.From.Y - band.HalfWidth, 0f);
+            Assert.That(band.From.Y, Is.EqualTo(5f).Within(0.2f));
             Assert.That(band.From.X, Is.EqualTo(minX).Within(Tolerance));
             Assert.That(band.To.X, Is.EqualTo(maxX).Within(Tolerance));
+        }
+
+        [Test]
+        public void Wave_CanBeEscaped_FromTheFenceAtTheTop()
+        {
+            // 一番遅いペンモンが、柵ぎわで予告を見て少し遅れて逃げ出しても間に合う
+            const float reactionSeconds = 0.25f;
+            var arena = CenteredArena();
+            var world = new StageWorld(arena, seed: 1);
+            AddBoss(world, BigBossTable.OrcaNo, new Vec2(8f, 0f), attackIndex: 0);
+            var stats = Stats(Melee());
+            stats.MoveSpeed = SlowestSpeciesSpeed();
+            var player = world.AddUnit(Team.Player, stats, new Vec2(0f, arena.Max.Y - 0.5f), seat: 0);
+
+            WaitForWarning(world);
+            TickFor(world, Seconds(reactionSeconds));
+            world.SetInput(player.Id, new PlayerInput(new Vec2(0f, -1f), false, false));
+            TickFor(world, Seconds(BigBossTable.Get(BigBossTable.OrcaNo).Attacks[0].TelegraphSeconds));
+
+            Assert.That(player.Hp, Is.EqualTo(player.MaxHp));
+        }
+
+        private static float SlowestSpeciesSpeed()
+        {
+            var slowest = float.MaxValue;
+            foreach (var species in SpeciesTable.Species)
+            {
+                slowest = System.MathF.Min(slowest, species.MoveSpeed);
+            }
+
+            return slowest;
         }
 
         [Test]

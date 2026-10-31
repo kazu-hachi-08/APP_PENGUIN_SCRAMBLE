@@ -25,6 +25,12 @@ namespace PenmonScramble.Core
         public const float BigBossKnockbackScale = 0.1f;
         /// <summary>攻撃と攻撃の間は、一番近いプレイヤーからこれだけ離れた所まで寄る（マス）。くっついて押し合いにならないように</summary>
         public const float BigBossKeepDistance = 3f;
+        /// <summary>
+        /// 波の帯の幅の半分（マス）。帯は狙ったプレイヤーの高さを中心にする。
+        /// 闘技場の上半分・下半分を丸ごと流すと、柵ぎわにいたときに予告の間に逃げきれないため、どこにいても 2.5 マスほど歩けば抜けられる太さにする
+        /// </summary>
+        public const float BigBossWaveHalfWidth = 2f;
+
         /// <summary>最初の攻撃までの秒数。出てきてすぐ襲ってこないように</summary>
         public const float BigBossFirstAttackDelay = 2f;
     }
