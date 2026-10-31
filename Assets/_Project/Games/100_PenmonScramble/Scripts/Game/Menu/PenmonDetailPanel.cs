@@ -6,7 +6,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ペンモン画面の右側の、選んだ子の図鑑カード:顔・★・名前・属性・個性・パワーと HP・体力／攻撃／速さの棒・
-    /// 技の実演の小窓・技2つのカード。技のカードを押すと、小窓の実演がその技に替わる
+    /// 技の実演の小窓・技2つと必殺技のカード。カードを押すと、小窓の実演がその技に替わる
     /// </summary>
     public class PenmonDetailPanel : MonoBehaviour
     {
@@ -26,7 +26,8 @@ namespace PenmonScramble.Game
 
         private OwnedPenguin _penguin;
         private SpeciesDef _species;
-        // 別の子を選んでも、見ている技（技1か技2か）はそのままにする（技2どうしを見比べやすいように）
+        // 別の子を選んでも、見ている技（技1・技2・必殺技のどれか）はそのままにする（技2どうしを見比べやすいように）。
+        // カードの並びの番号が、そのまま SkillPractice の slot（最後が SpecialSlot）になる
         private int _slot;
 
         private void Awake()

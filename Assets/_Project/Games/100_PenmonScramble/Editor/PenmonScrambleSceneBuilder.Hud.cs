@@ -36,6 +36,7 @@ namespace PenmonScramble.Editor
         private const float CutInFaceSize = 240f;
         private const float CutInFaceX = 360f;
         private const int CutInFontSize = 64;
+        private const int CutInNameFontSize = 96;
 
         // 右上のメニューボタン。指で押しやすい大きさにして、進み具合はその左へずらす
         private const float HudMenuButtonSize = 120f;
@@ -117,16 +118,40 @@ namespace PenmonScramble.Editor
             return view;
         }
 
+        /// <summary>カットインの帯の大きさ。ステージの画面いっぱいの帯と、ペンモン画面の実演の小窓の帯で変える</summary>
+        private readonly struct CutInLayout
+        {
+            public readonly float Height;
+            public readonly float FaceSize;
+            public readonly float FaceX;
+            public readonly int FontSize;
+            public readonly int NameFontSize;
+
+            public CutInLayout(float height, float faceSize, float faceX, int fontSize, int nameFontSize)
+            {
+                Height = height;
+                FaceSize = faceSize;
+                FaceX = faceX;
+                FontSize = fontSize;
+                NameFontSize = nameFontSize;
+            }
+        }
+
         /// <summary>画面の真ん中を横切る帯。出す間だけ有効にする（SpecialCutIn）</summary>
         private static SpecialCutIn CreateCutIn(Transform canvas)
         {
-            var root = CreateStretchGroup(canvas, "SpecialCutIn");
+            return CreateCutIn(canvas, new CutInLayout(CutInHeight, CutInFaceSize, CutInFaceX, CutInFontSize, CutInNameFontSize));
+        }
+
+        private static SpecialCutIn CreateCutIn(Transform parent, CutInLayout layout)
+        {
+            var root = CreateStretchGroup(parent, "SpecialCutIn");
 
             var band = UIDialogBuilder.CreateUIObject("Band", root.transform);
             var bandRect = band.GetComponent<RectTransform>();
             bandRect.anchorMin = new Vector2(0f, 0.5f);
             bandRect.anchorMax = new Vector2(1f, 0.5f);
-            bandRect.sizeDelta = new Vector2(0f, CutInHeight);
+            bandRect.sizeDelta = new Vector2(0f, layout.Height);
             var bandImage = band.AddComponent<Image>();
             // 帯の下のボタンを押せなくしない
             bandImage.raycastTarget = false;
@@ -134,13 +159,13 @@ namespace PenmonScramble.Editor
             var face = UIDialogBuilder.CreateUIObject("Face", band.transform);
             var faceRect = face.GetComponent<RectTransform>();
             faceRect.anchorMin = faceRect.anchorMax = new Vector2(0f, 0.5f);
-            faceRect.anchoredPosition = new Vector2(CutInFaceX, 0f);
-            faceRect.sizeDelta = Vector2.one * CutInFaceSize;
+            faceRect.anchoredPosition = new Vector2(layout.FaceX, 0f);
+            faceRect.sizeDelta = Vector2.one * layout.FaceSize;
             var faceImage = face.AddComponent<Image>();
             faceImage.raycastTarget = false;
 
             var textObj = CreateStretchGroup(band.transform, "Text");
-            var text = AddText(textObj, string.Empty, CutInFontSize);
+            var text = AddText(textObj, string.Empty, layout.FontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
             text.raycastTarget = false;
@@ -151,6 +176,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_bandImage").objectReferenceValue = bandImage;
             so.FindProperty("_face").objectReferenceValue = faceImage;
             so.FindProperty("_text").objectReferenceValue = text;
+            so.FindProperty("_nameFontSize").intValue = layout.NameFontSize;
             so.ApplyModifiedProperties();
             root.SetActive(false);
             return cutIn;

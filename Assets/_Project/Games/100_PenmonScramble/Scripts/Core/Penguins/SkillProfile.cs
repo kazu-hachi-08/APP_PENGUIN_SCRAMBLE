@@ -69,6 +69,15 @@ namespace PenmonScramble.Core
             return feature.Length > 0 ? $"{ShapeName(skill.Shape)}・{feature}" : ShapeName(skill.Shape);
         }
 
+        /// <summary>
+        /// 必殺技の届く範囲の短い言葉。必殺技は形の数値どおりではなく画面全体に効くもの（氷・水・雷）があるので、
+        /// CoverArea の段階では表さず、言葉で出す
+        /// </summary>
+        public static string SpecialReach(Element element)
+        {
+            return element == Element.Wind ? $"半径{SpecialMoves.WindTornado.Range:0}" : "全体";
+        }
+
         public static int PowerRating(SkillDef skill) => Rate(HitPower(skill), PowerRating2, PowerRating3);
 
         /// <summary>待ち時間が短いほど高い</summary>

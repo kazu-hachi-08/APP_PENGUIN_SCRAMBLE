@@ -88,30 +88,39 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 StatLabelSize = new Vector2(230f, 36f);
         private static readonly Vector2 StatBarSize = new Vector2(230f, 20f);
         private const int StatLabelFontSize = 26;
-        private static readonly Vector2 DemoPosition = new Vector2(0f, 40f);
-        private static readonly Vector2 DemoSize = new Vector2(760f, 250f);
+        // 技1・技2・必殺技の3枚のカードが下のボタンの上に収まるよう、小窓は少し低くして上へ寄せる
+        private static readonly Vector2 DemoPosition = new Vector2(0f, 55f);
+        private static readonly Vector2 DemoSize = new Vector2(760f, 216f);
         private const float DemoFrameWidth = 6f;
-        private static readonly float[] SkillCardY = { -160f, -290f };
-        private static readonly Vector2 SkillCardSize = new Vector2(760f, 120f);
+        private static readonly string[] SkillCardNames = { "Skill1", "Skill2", "Special" };
+        private static readonly float[] SkillCardY = { -113f, -213f, -313f };
+        private static readonly Vector2 SkillCardSize = new Vector2(760f, 92f);
         private static readonly float[] DetailButtonX = { -190f, 190f };
         private const float DetailButtonY = -415f;
         private static readonly Vector2 DetailButtonSize = new Vector2(360f, 96f);
         private static readonly Vector2 EmptyTextSize = new Vector2(700f, 100f);
 
         // 技のカードの中身（カードの中心から）
-        private static readonly Vector2 SkillIconPosition = new Vector2(-320f, 0f);
-        private const float SkillIconSize = 96f;
-        private static readonly Vector2 SkillNamePosition = new Vector2(-37f, 32f);
-        private static readonly Vector2 SkillNameSize = new Vector2(465f, 44f);
-        private const int SkillNameFontSize = 32;
-        private static readonly Vector2 SkillTextPosition = new Vector2(-37f, -22f);
-        private static readonly Vector2 SkillTextSize = new Vector2(465f, 60f);
-        private const int SkillTextFontSize = 24;
+        private static readonly Vector2 SkillIconPosition = new Vector2(-325f, 0f);
+        private const float SkillIconSize = 78f;
+        private static readonly Vector2 SkillNamePosition = new Vector2(-37f, 24f);
+        private static readonly Vector2 SkillNameSize = new Vector2(475f, 38f);
+        private const int SkillNameFontSize = 30;
+        private static readonly Vector2 SkillTextPosition = new Vector2(-37f, -18f);
+        private static readonly Vector2 SkillTextSize = new Vector2(475f, 52f);
+        private const int SkillTextFontSize = 22;
         private static readonly Vector2 RatingLabelPosition = new Vector2(262f, 0f);
-        private static readonly Vector2 RatingLabelSize = new Vector2(110f, 108f);
+        private static readonly Vector2 RatingLabelSize = new Vector2(110f, 84f);
         private static readonly Vector2 RatingPipsPosition = new Vector2(352f, 0f);
-        private static readonly Vector2 RatingPipsSize = new Vector2(70f, 108f);
-        private const int RatingFontSize = 22;
+        private static readonly Vector2 RatingPipsSize = new Vector2(70f, 84f);
+        private const int RatingFontSize = 20;
+
+        // 実演の小窓の中の、必殺技のカットインの帯（小窓の高さ 216 に合わせて縮めたもの）
+        private const float DemoCutInHeight = 120f;
+        private const float DemoCutInFaceSize = 100f;
+        private const float DemoCutInFaceX = 90f;
+        private const int DemoCutInFontSize = 24;
+        private const int DemoCutInNameFontSize = 44;
 
         private static PenguinListScreen CreatePenguinListScreen(Transform canvas)
         {
@@ -270,10 +279,11 @@ namespace PenmonScramble.Editor
             var attackBar = CreateStatBar(content, "攻撃", StatBarX[1]);
             var speedBar = CreateStatBar(content, "速さ", StatBarX[2]);
             var demo = CreateSkillDemo(content);
+            // 並びの番号が SkillPractice の slot になる（最後が必殺技 = SpecialSlot）
             var skillCards = new SkillCardView[SkillCardY.Length];
             for (var i = 0; i < skillCards.Length; i++)
             {
-                skillCards[i] = CreateSkillCard(content, $"Skill{i + 1}", new Vector2(0f, SkillCardY[i]));
+                skillCards[i] = CreateSkillCard(content, SkillCardNames[i], new Vector2(0f, SkillCardY[i]));
             }
 
             // ボタンは何も選んでいないときも出しておく（押せない状態で）ので、中身の外に置く
@@ -315,7 +325,7 @@ namespace PenmonScramble.Editor
             return fill;
         }
 
-        /// <summary>技1つ分のカード: 左にアイコン、まん中に名前と説明、右に威力・出しやすさ・範囲の●</summary>
+        /// <summary>技1つ分のカード: 左にアイコン、まん中に名前と説明、右に威力・出しやすさ・範囲の●（見出しの文は SkillCardView が入れる）</summary>
         private static SkillCardView CreateSkillCard(Transform parent, string name, Vector2 position)
         {
             var frame = CreatePanel(parent, name, position, SkillCardSize, CardFrameColor);
@@ -332,7 +342,7 @@ namespace PenmonScramble.Editor
 
             var nameText = CreatePlainText(obj.transform, "Name", string.Empty, SkillNameFontSize, SkillNamePosition, SkillNameSize, TextAnchor.MiddleLeft, Color.white);
             var description = CreatePlainText(obj.transform, "Text", string.Empty, SkillTextFontSize, SkillTextPosition, SkillTextSize, TextAnchor.UpperLeft, SubTextColor);
-            CreatePlainText(obj.transform, "RatingLabels", "威力\n出しやすさ\n範囲", RatingFontSize, RatingLabelPosition, RatingLabelSize, TextAnchor.MiddleLeft, SubTextColor);
+            var ratingLabels = CreatePlainText(obj.transform, "RatingLabels", string.Empty, RatingFontSize, RatingLabelPosition, RatingLabelSize, TextAnchor.MiddleLeft, SubTextColor);
             var ratings = CreatePlainText(obj.transform, "Ratings", string.Empty, RatingFontSize, RatingPipsPosition, RatingPipsSize, TextAnchor.MiddleLeft, Color.white);
 
             var card = obj.AddComponent<SkillCardView>();
@@ -342,6 +352,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_icon").objectReferenceValue = icon;
             so.FindProperty("_nameText").objectReferenceValue = nameText;
             so.FindProperty("_descriptionText").objectReferenceValue = description;
+            so.FindProperty("_ratingLabelsText").objectReferenceValue = ratingLabels;
             so.FindProperty("_ratingsText").objectReferenceValue = ratings;
             so.ApplyModifiedProperties();
             return card;
@@ -358,6 +369,9 @@ namespace PenmonScramble.Editor
             PlaceCenter(screenObj.GetComponent<RectTransform>(), DemoPosition, DemoSize);
             var screen = screenObj.AddComponent<RawImage>();
             screen.raycastTarget = false;
+            // 帯は横から滑り込むので、小窓からはみ出さないように切る
+            screenObj.AddComponent<RectMask2D>();
+            var cutIn = CreateCutIn(screenObj.transform, new CutInLayout(DemoCutInHeight, DemoCutInFaceSize, DemoCutInFaceX, DemoCutInFontSize, DemoCutInNameFontSize));
 
             // 実演のカメラはタイトルのジオラマと同じく、近くだけを描く
             var camera = CreateStandbyCamera("SkillDemoCamera", TitleCameraFarClip);
@@ -375,6 +389,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_screen").objectReferenceValue = screen;
             so.FindProperty("_camera").objectReferenceValue = camera;
             so.FindProperty("_view").objectReferenceValue = view;
+            so.FindProperty("_cutIn").objectReferenceValue = cutIn;
             so.ApplyModifiedProperties();
             return demo;
         }

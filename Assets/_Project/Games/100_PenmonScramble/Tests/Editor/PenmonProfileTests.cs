@@ -99,6 +99,43 @@ namespace PenmonScramble.Tests
             }
         }
 
+        /// <summary>どの属性の必殺技も、実演でくり返し出て、的3体すべてに当たる。的は倒れない</summary>
+        [Test]
+        public void Practice_EverySpecialHitsAllDummiesRepeatedly()
+        {
+            foreach (Element element in System.Enum.GetValues(typeof(Element)))
+            {
+                var species = System.Linq.Enumerable.First(SpeciesTable.Species, s => s.Element == element);
+                var practice = new SkillPractice(SpeciesTable.PlayerStats(species, Balance.TrialPower), SkillPractice.SpecialSlot);
+                var used = 0;
+                var hitTargets = new System.Collections.Generic.HashSet<int>();
+                practice.World.SpecialUsed += _ => used++;
+                practice.World.Hit += e =>
+                {
+                    if (e.TargetId != practice.Player.Id) hitTargets.Add(e.TargetId);
+                };
+                for (var i = 0; i < PracticeSeconds / Balance.TickSeconds; i++)
+                {
+                    practice.Tick();
+                }
+
+                var name = SpecialMoves.For(element).Name;
+                Assert.That(used, Is.GreaterThanOrEqualTo(2), name);
+                Assert.That(hitTargets.Count, Is.EqualTo(3), name);
+                Assert.That(practice.World.CountAlive(Team.Enemy), Is.EqualTo(3), name);
+            }
+        }
+
+        [Test]
+        public void Texts_EverySpecialHasTextAndReach()
+        {
+            foreach (Element element in System.Enum.GetValues(typeof(Element)))
+            {
+                Assert.That(SpeciesTexts.Special(element), Is.Not.Empty, element.ToString());
+                Assert.That(SkillProfile.SpecialReach(element), Is.Not.Empty, element.ToString());
+            }
+        }
+
         [Test]
         public void Practice_PlayerComesBackHomeAfterDash()
         {
