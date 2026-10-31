@@ -48,6 +48,19 @@ namespace PenmonScramble.Core
             return slot == 0 ? BossWindUpSeconds : BossSkill2WindUpSeconds;
         }
 
+        // 攻撃の順番待ち。囲まれても一度に殴ってくるのは数体だけにして、構えを見てよけられるようにする
+        /// <summary>プレイヤー1人に、同時に構え・技を出してよい雑魚の数（ステージのボスは数えない）</summary>
+        public const int AttackersPerPlayer = 2;
+
+        /// <summary>順番待ちの敵は、技が届く距離よりこれだけ離れた所で待つ</summary>
+        public const float AttackWaitExtraDistance = 1.5f;
+
+        /// <summary>順番待ちの敵が、待つ距離からこれだけずれるまでは前後に動かない（細かく行ったり来たりしないため）</summary>
+        public const float AttackWaitSlack = 0.3f;
+
+        /// <summary>順番待ちの敵が横へ回り込む速さ（歩く速さに対する割合）。止まって並ぶと間が抜けて見えるため、ゆっくり動かす</summary>
+        public const float AttackWaitCircleSpeedRatio = 0.3f;
+
         /// <summary>協力の最大人数</summary>
         public const int MaxPlayers = 4;
 

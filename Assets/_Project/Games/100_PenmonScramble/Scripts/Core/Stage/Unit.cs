@@ -94,6 +94,11 @@ namespace PenmonScramble.Core
         /// <summary>技を出す前の構え（雑魚とステージのボスだけ）。構えていなければ null</summary>
         internal WindUpState WindUp { get; set; }
 
+        /// <summary>攻撃してよい権利を持っているとき、その相手のプレイヤーの Id。持っていなければ NoAttackTarget（雑魚だけ）</summary>
+        internal int AttackRightTargetId { get; set; } = NoAttackTarget;
+        internal const int NoAttackTarget = 0;
+        public bool HasAttackRight => AttackRightTargetId != NoAttackTarget;
+
         /// <summary>大ボスの攻撃の進み具合。大ボスでなければ null</summary>
         internal BigBossBrain Brain { get; set; }
 

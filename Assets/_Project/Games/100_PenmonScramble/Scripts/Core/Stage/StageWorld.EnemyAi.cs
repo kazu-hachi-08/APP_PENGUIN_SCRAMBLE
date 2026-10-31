@@ -1,7 +1,8 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 敵の動き: 一番近いプレイヤーへ近づき、届く距離に入ったら構えてから技1で殴る。ボスは技2も使う。大ボスは StageWorld.BigBoss
+    /// 敵の動き: 一番近いプレイヤーへ近づき、届く距離に入ったら構えてから技1で殴る。ボスは技2も使う。大ボスは StageWorld.BigBoss。
+    /// 雑魚は攻撃の権利（StageWorld.AttackRights）が無ければ、少し離れて回り込むだけ
     /// </summary>
     public sealed partial class StageWorld
     {
@@ -33,8 +34,14 @@ namespace PenmonScramble.Core
                 return;
             }
 
-            var toTarget = target.Position - unit.Position;
             var skill = unit.Skills[EnemySkillSlot];
+            if (UsesAttackRight(unit) && !unit.HasAttackRight)
+            {
+                CircleWhileWaiting(unit, target, skill, dt);
+                return;
+            }
+
+            var toTarget = target.Position - unit.Position;
             var attackDistance = target.Radius + skill.Range * Balance.EnemyAttackRangeRatio;
             if (toTarget.LengthSquared > attackDistance * attackDistance)
             {

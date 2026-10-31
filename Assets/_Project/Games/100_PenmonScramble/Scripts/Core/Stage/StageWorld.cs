@@ -130,6 +130,7 @@ namespace PenmonScramble.Core
             const float dt = Balance.TickSeconds;
             FirePendingSpecials();
             UpdateTimers(dt);
+            AssignAttackRights();
             UpdateActions(dt);
             ApplyKnockback(dt);
             ResolveChains();
