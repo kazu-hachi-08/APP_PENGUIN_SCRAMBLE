@@ -19,6 +19,13 @@ namespace PenmonScramble.Game
             }
         }
 
+        /// <summary>種類の属性の色（HUD の顔の丸）。種類の無い番号（大ボスなど）は灰色</summary>
+        public static Color SpeciesElementColor(int speciesNo)
+        {
+            var species = SpeciesTable.Get(speciesNo);
+            return species != null ? ElementColor(species.Element) : new Color(0.55f, 0.57f, 0.62f);
+        }
+
         public static string SpeciesName(int speciesNo)
         {
             var bigBoss = BigBossTable.Get(speciesNo);

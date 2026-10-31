@@ -5,18 +5,30 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// エリアの進み具合（右上の文字・画面の真ん中の知らせ）とボスの HP（§6.1）
+    /// エリアの進み具合（右上のつぶと残りの敵・画面の真ん中の知らせ）とボスの HP（§6.1・§9.8）
     /// </summary>
     public partial class StageHud
     {
         private const float BannerSeconds = 1.5f;
         // 消える前のこの時間で薄くする
         private const float BannerFadeSeconds = 0.4f;
+        // 出た瞬間に大きく出て、この時間で元の大きさへ縮む
+        private const float BannerPopSeconds = 0.18f;
+        private const float BannerPopScale = 0.35f;
+        private const string GateOpenMessage = "すすめ →";
+        // 残りの敵のアイコンは、雑魚と同じく暗くしたペンモンの顔（§4.7「20種類の絵を暗い色にして使い回す」）
+        private const int EnemyIconSpecies = 1;
+        private static readonly Color WildFaceColor = Color.Lerp(Color.white, Color.black, UnitView.EnemyDarkness);
 
-        [SerializeField] private Text _progressText;
+        [SerializeField] private HudAreaPips _areaPips;
+        [SerializeField] private Image _enemyIcon;
+        [SerializeField] private Text _enemyText;
+        [SerializeField] private Color _enemyTextColor = Color.white;
+        [SerializeField] private Color _gateTextColor = new Color(1f, 0.85f, 0.25f);
         [SerializeField] private Text _bannerText;
-        [SerializeField] private GameObject _bossBar;
-        [SerializeField] private RectTransform _bossFill;
+        [SerializeField] private GameObject _bossPlate;
+        [SerializeField] private HudBar _bossBar;
+        [SerializeField] private Image _bossFace;
         [SerializeField] private Text _bossText;
 
         private float _bannerTimer;
@@ -24,13 +36,22 @@ namespace PenmonScramble.Game
         private int _announcedArea = -1;
         private bool _announcedGate;
         private StageSnapshot _comboSnapshot;
+        private int _bossId = -1;
+
+        private void Start()
+        {
+            CreatureArt.ShowFace(_enemyIcon, EnemyIconSpecies);
+            _enemyIcon.color = WildFaceColor;
+        }
 
         public void SetProgress(StageSnapshot snapshot)
         {
-            var isBossArea = snapshot.IsBossArea;
-            var area = isBossArea ? "ボスエリア" : $"エリア {snapshot.AreaIndex + 1} / {snapshot.AreaCount}";
-            _progressText.text = snapshot.IsGateOpen ? "すすめ →" : $"{area}　のこり {snapshot.CountAlive(Team.Enemy)} 体";
-            Announce(snapshot, isBossArea);
+            _areaPips.Set(snapshot.AreaIndex, snapshot.AreaCount);
+            var gateOpen = snapshot.IsGateOpen;
+            _enemyIcon.gameObject.SetActive(!gateOpen);
+            _enemyText.text = gateOpen ? GateOpenMessage : $"のこり {snapshot.CountAlive(Team.Enemy)}";
+            _enemyText.color = gateOpen ? _gateTextColor : _enemyTextColor;
+            Announce(snapshot, snapshot.IsBossArea);
             AnnounceCombos(snapshot);
             SetBoss(snapshot);
         }
@@ -50,7 +71,7 @@ namespace PenmonScramble.Game
             if (snapshot.IsGateOpen && !_announcedGate)
             {
                 _announcedGate = true;
-                ShowBanner("すすめ →");
+                ShowBanner(GateOpenMessage);
             }
         }
 
@@ -79,24 +100,39 @@ namespace PenmonScramble.Game
 
         private void UpdateBanner()
         {
-            _bannerTimer -= Time.deltaTime;
+            _bannerTimer -= Time.unscaledDeltaTime;
             var color = _bannerText.color;
             color.a = Mathf.Clamp01(_bannerTimer / BannerFadeSeconds);
             _bannerText.color = color;
+            var pop = Mathf.Clamp01((_bannerTimer - (BannerSeconds - BannerPopSeconds)) / BannerPopSeconds);
+            _bannerText.rectTransform.localScale = Vector3.one * (1f + BannerPopScale * pop * pop);
         }
 
+        /// <summary>ボスが出たら、上から板が滑り込む（UiSlideIn。出し直すたびに動く）</summary>
         private void SetBoss(StageSnapshot snapshot)
         {
             var hasBoss = snapshot.TryGetBoss(out var boss);
-            _bossBar.SetActive(hasBoss);
             if (!hasBoss)
             {
+                _bossId = -1;
+                _bossPlate.SetActive(false);
                 return;
             }
 
             var ratio = boss.MaxHp > 0 ? (float)boss.Hp / boss.MaxHp : 0f;
-            _bossFill.anchorMax = new Vector2(ratio, 1f);
-            _bossText.text = $"ボス  {PenguinPalette.SpeciesName(boss.SpeciesNo)}";
+            if (boss.Id != _bossId)
+            {
+                _bossId = boss.Id;
+                _bossPlate.SetActive(true);
+                CreatureArt.ShowFace(_bossFace, boss.SpeciesNo);
+                // ステージのボスは野生のペンモンなので暗く、大ボスはそのままの色
+                _bossFace.color = BigBossTable.Get(boss.SpeciesNo) == null ? WildFaceColor : Color.white;
+                _bossText.text = $"BOSS  {PenguinPalette.SpeciesName(boss.SpeciesNo)}";
+                _bossBar.Snap(ratio);
+                return;
+            }
+
+            _bossBar.SetRatio(ratio);
         }
     }
 }

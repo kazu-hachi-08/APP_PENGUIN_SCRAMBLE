@@ -61,11 +61,13 @@ namespace PenmonScramble.Editor
             WriteUiSprite(CoinIconPath, DrawIcon(CoinPixel), 0);
             WriteUiSprite(CapsuleIconPath, DrawIcon(CapsulePixel), 0);
             CreateTouchArt();
+            CreateHudArt();
         }
 
         private static Sprite UiSprite(string path) => AssetDatabase.LoadAssetAtPath<Sprite>(path);
 
-        private static void WriteUiSprite(string path, Texture2D texture, int border)
+        /// <param name="horizontalOnly">9スライスの境目を左右だけにする（HUD の斜めの板）</param>
+        private static void WriteUiSprite(string path, Texture2D texture, int border, bool horizontalOnly = false)
         {
             var png = texture.EncodeToPNG();
             UnityEngine.Object.DestroyImmediate(texture);
@@ -76,7 +78,8 @@ namespace PenmonScramble.Editor
             }
 
             var importer = (TextureImporter)AssetImporter.GetAtPath(path);
-            var spriteBorder = Vector4.one * border;
+            // Vector4 は 左・下・右・上
+            var spriteBorder = horizontalOnly ? new Vector4(border, 0f, border, 0f) : Vector4.one * border;
             if (importer.textureType == TextureImporterType.Sprite && importer.spriteBorder == spriteBorder && !importer.mipmapEnabled)
             {
                 return;

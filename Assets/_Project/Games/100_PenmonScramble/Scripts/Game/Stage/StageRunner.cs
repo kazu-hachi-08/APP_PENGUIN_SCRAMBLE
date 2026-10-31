@@ -195,6 +195,8 @@ namespace PenmonScramble.Game
             }
 
             _hud.SetProgress(snapshot);
+            // 自分の3体が届くまでは中身が空なので出さない（ゲストは最初のスナップショットまで）
+            _hud.SetShown(_lastPlayerState != null);
         }
 
         private void UpdateResult(StageSnapshot snapshot, InputManager input)
