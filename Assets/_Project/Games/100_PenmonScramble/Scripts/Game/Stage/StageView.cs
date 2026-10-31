@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using PenmonScramble.Common.Profile;
 using PenmonScramble.Core;
 using UnityEngine;
 
@@ -164,7 +165,8 @@ namespace PenmonScramble.Game
             return UnitView.Create(transform, _materials, unit, SeatColor(unit.Seat), SeatLabel(unit.Seat));
         }
 
-        public static string SeatLabel(int seat) => $"P{seat + 1}";
+        /// <summary>頭の上・HUD に出す名前。名前の無い席は「P1」など（SeatNames）</summary>
+        public static string SeatLabel(int seat) => SeatNames.Get(seat);
 
         private void SyncProjectiles(StageSnapshot snapshot)
         {

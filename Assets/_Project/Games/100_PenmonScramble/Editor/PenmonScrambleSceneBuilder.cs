@@ -56,6 +56,8 @@ namespace PenmonScramble.Editor
             // 空のシーンで撮る（ほかの物が写り込まないように）
             CapturePortraits();
             CaptureAppIcons();
+            // メニューの部品の絵（ボタン・アイコン）。UI を組む前に描いておく
+            CreateUiArt();
             var (shake, stageCamera) = CreateCamera();
             CreateSun();
             CreateEventSystem();

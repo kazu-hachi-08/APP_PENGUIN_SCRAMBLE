@@ -1,5 +1,4 @@
 using PenmonScramble.Common.Editor;
-using PenmonScramble.Common.Online;
 using PenmonScramble.Game;
 using UnityEditor;
 using UnityEngine;
@@ -8,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// タイトルに足すメニュー（コイン・ステージの選択・ガチャ・ペンモン・遊び方）と、ガチャ画面（§2・§7）。ペンモン画面は PenmonScrambleSceneBuilder.PenmonScreen.cs
+    /// ガチャ画面（§7）と、タイトルの上に開く画面の共通の下地。タイトルのロビーは PenmonScrambleSceneBuilder.TitleLobby.cs、ペンモン画面は PenmonScrambleSceneBuilder.PenmonScreen.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
@@ -22,17 +21,11 @@ namespace PenmonScramble.Editor
         private const int MenuFontSize = 44;
         private const int SmallFontSize = 36;
 
-        // タイトル（ModeSelectPanel の Menu の中。接続待ちの間は一緒に隠れる）
+        // コインの表示（ガチャ・ペンモン画面の右上）
         private static readonly Vector2 CoinPosition = new Vector2(680f, 480f);
         private static readonly Vector2 CoinSize = new Vector2(480f, 70f);
-        // ステージの選択は下の帯の上の段、ガチャ・ペンモンは左上（ロゴと遊ぶボタンの邪魔をしない所）
-        private const float StageRowY = -190f;
-        private const float StageArrowX = 440f;
+        // ◀ ▶（遊び方のページ送り）
         private static readonly Vector2 StageArrowSize = new Vector2(110f, 90f);
-        private static readonly Vector2 StageTextSize = new Vector2(760f, 90f);
-        private static readonly Vector2 GachaButtonPosition = new Vector2(-790f, 470f);
-        private static readonly Vector2 PenguinsButtonPosition = new Vector2(-510f, 470f);
-        private static readonly Vector2 MenuButtonSize = new Vector2(260f, 100f);
 
         // ガチャ画面
         private static readonly Vector2 ScreenTitlePosition = new Vector2(0f, 460f);
@@ -52,35 +45,6 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 PullSize = new Vector2(460f, 200f);
         private static readonly Vector2 BackPosition = new Vector2(-760f, 460f);
         private static readonly Vector2 BackSize = new Vector2(260f, 100f);
-
-        /// <summary>タイトルの Menu の中にメニューを置き、TitleMenu をタイトルに付ける</summary>
-        private static TitleMenu CreateTitleMenu(ModeSelectPanel title, GachaScreen gacha, PenguinListScreen penguins, HowToPlayScreen howToPlay)
-        {
-            var menu = title.transform.Find("Menu");
-            var coin = CreateLabel(menu, "Coins", string.Empty, MenuFontSize, CoinPosition, CoinSize);
-            coin.alignment = TextAnchor.MiddleRight;
-            var stage = CreateLabel(menu, "Stage", string.Empty, MenuFontSize, new Vector2(0f, StageRowY), StageTextSize);
-            var prev = CreateTitleButton(menu, "PrevStage", "◀", new Vector2(-StageArrowX, StageRowY), StageArrowSize, ArrowColor, MenuFontSize);
-            var next = CreateTitleButton(menu, "NextStage", "▶", new Vector2(StageArrowX, StageRowY), StageArrowSize, ArrowColor, MenuFontSize);
-            var gachaButton = CreateTitleButton(menu, "Gacha", "ガチャ", GachaButtonPosition, MenuButtonSize, GachaColor, MenuFontSize);
-            var penguinsButton = CreateTitleButton(menu, "Penguins", "ペンモン", PenguinsButtonPosition, MenuButtonSize, PenguinsColor, MenuFontSize);
-            var howToPlayButton = CreateTitleButton(menu, "HowToPlay", "遊び方", HowToPlayButtonPosition, MenuButtonSize, HowToPlayColor, MenuFontSize);
-
-            var titleMenu = title.gameObject.AddComponent<TitleMenu>();
-            var so = new SerializedObject(titleMenu);
-            so.FindProperty("_coinText").objectReferenceValue = coin;
-            so.FindProperty("_stageText").objectReferenceValue = stage;
-            so.FindProperty("_prevStageButton").objectReferenceValue = prev;
-            so.FindProperty("_nextStageButton").objectReferenceValue = next;
-            so.FindProperty("_gachaButton").objectReferenceValue = gachaButton;
-            so.FindProperty("_penguinsButton").objectReferenceValue = penguinsButton;
-            so.FindProperty("_howToPlayButton").objectReferenceValue = howToPlayButton;
-            so.FindProperty("_gacha").objectReferenceValue = gacha;
-            so.FindProperty("_penguins").objectReferenceValue = penguins;
-            so.FindProperty("_howToPlay").objectReferenceValue = howToPlay;
-            so.ApplyModifiedProperties();
-            return titleMenu;
-        }
 
         /// <summary>画面全体をふさぐ下地（後ろのタイトルを押せないように）と、上の見出し</summary>
         private static GameObject CreateScreen(Transform canvas, string name, string heading)

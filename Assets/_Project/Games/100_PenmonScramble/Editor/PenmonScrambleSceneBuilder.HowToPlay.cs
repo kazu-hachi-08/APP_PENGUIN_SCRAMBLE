@@ -13,8 +13,6 @@ namespace PenmonScramble.Editor
     public static partial class PenmonScrambleSceneBuilder
     {
         private static readonly Color HowToPlayColor = new Color(0.60f, 0.45f, 0.85f);
-        // ガチャの下（右隣はロゴの「乱戦！」とぶつかるため）
-        private static readonly Vector2 HowToPlayButtonPosition = new Vector2(-790f, 350f);
 
         private const float TabY = 330f;
         private const float TabSpacing = 340f;

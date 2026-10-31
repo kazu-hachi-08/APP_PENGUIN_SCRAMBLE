@@ -1,5 +1,6 @@
 using PenmonScramble.Common.Input;
 using PenmonScramble.Common.Online;
+using PenmonScramble.Common.Profile;
 using PenmonScramble.Common.Scene;
 using PenmonScramble.Core;
 using UnityEngine;
@@ -68,6 +69,8 @@ namespace PenmonScramble.Game
 
         private void StartSolo()
         {
+            // 協力の名前は OnlineSession が配る。ひとりのときは自分の名前だけ
+            SeatNames.UseSolo(UserProfile.Name);
             _menu.Bind(solo: true, canRestart: true);
             StartHost(1, null);
         }

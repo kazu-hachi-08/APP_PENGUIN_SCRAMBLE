@@ -17,6 +17,23 @@ namespace PenmonScramble.Common.UI
 
         private static Font _font;
 
+        /// <summary>
+        /// 同梱の丸ゴシック。UI の Text 以外（3D の TextMesh など）で日本語を出すときに使う。
+        /// 見つからなければ標準フォント（日本語は出ない）
+        /// </summary>
+        public static Font Font
+        {
+            get
+            {
+                if (_font == null)
+                {
+                    _font = Resources.Load<Font>(FontPath);
+                }
+
+                return _font != null ? _font : Resources.GetBuiltinResource<Font>(BuiltinFontName + ".ttf");
+            }
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Initialize()
         {

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ユニットの体以外の目印: 足元の席の色の輪・頭の上の「P1」「BOSS」・ダウン中の復活の範囲とたまり具合（§4.5）・
+    /// ユニットの体以外の目印: 足元の席の色の輪・頭の上の名前（無ければ「P1」）「BOSS」・ダウン中の復活の範囲とたまり具合（§4.5）・
     /// 協力でメニューを開いている人の「MENU」（§3.2）
     /// </summary>
     public partial class UnitView
@@ -15,8 +15,12 @@ namespace PenmonScramble.Game
         // 頭のてっぺんから文字までのすき間（マス）
         private const float LabelGap = 0.3f;
         private const float LabelCharacterSize = 0.09f;
+        // 名前（6文字まで）が長いと頭の上で横に広がって隣の子にかぶるので、この幅（全角の字数）を超える分は小さくする
+        private const float LabelMaxEms = 3.2f;
+        // 半角の英数字は全角の字のおよそこの幅
+        private const float HalfWidthEm = 0.6f;
         private static readonly Color BossLabelColor = new Color(0.9f, 0.15f, 0.15f);
-        // 頭の上の文字は標準フォントの英数字で描くので、日本語ではなく英語で出す（BillboardText）
+        // 名前のあとに付けるので、短く目立つ英語にする
         private const string InMenuSuffix = " MENU";
 
         private SpriteRenderer _seatRing;
@@ -47,8 +51,19 @@ namespace PenmonScramble.Game
         private void CreateLabel(string label, Color color)
         {
             _labelText = label;
-            _label = BillboardText.Create(transform, "Label", _materials, label, color, LabelCharacterSize);
+            _label = BillboardText.Create(transform, "Label", _materials, label, color, LabelSize(label));
             PlaceLabel();
+        }
+
+        private static float LabelSize(string label)
+        {
+            var ems = 0f;
+            foreach (var c in label)
+            {
+                ems += c < 0x80 ? HalfWidthEm : 1f;
+            }
+
+            return ems > LabelMaxEms ? LabelCharacterSize * LabelMaxEms / ems : LabelCharacterSize;
         }
 
         /// <summary>種類で背の高さが違うので、組み直すたびに置き直す</summary>

@@ -16,7 +16,7 @@ namespace PenmonScramble.Game
         public const float CameraPitch = 38f;
         public const float CameraFieldOfView = 30f;
         public const float CameraDistance = 12.5f;
-        // カメラが見る床の点。乱戦の中心より少し奥を見て、乱戦がロゴの下・ボタンの帯の上に来るようにする
+        // カメラが見る床の点。乱戦の中心より少し奥を見て、乱戦がロゴの下・ロビーの右下のボタンの左に来るようにする
         private static readonly Vector3 CameraTarget = new Vector3(0f, 0f, 0.6f);
         private static readonly Color BackgroundColor = new Color(0.35f, 0.65f, 0.85f);
 

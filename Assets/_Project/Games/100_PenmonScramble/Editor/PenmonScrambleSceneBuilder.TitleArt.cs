@@ -21,7 +21,10 @@ namespace PenmonScramble.Editor
 
         private const string LogoSmallLine = "乱戦！";
         private const string LogoMainLine = "ペンモンスクランブル";
-        private static readonly Vector2 LogoPosition = new Vector2(0f, 270f);
+        // スタートの画面では大きくまん中より上に、ロビーでは小さく上の札の間に置く（TitleLogoMotion.SetPose）
+        private static readonly Vector2 LogoPosition = new Vector2(0f, 190f);
+        private static readonly Vector2 LogoLobbyPosition = new Vector2(0f, 410f);
+        private const float LogoLobbyScale = 0.48f;
         private static readonly Vector2 LogoSize = new Vector2(1300f, 420f);
         private static readonly Vector2 LogoSmallPosition = new Vector2(-380f, 110f);
         private static readonly Vector2 LogoSmallSize = new Vector2(500f, 140f);
@@ -36,14 +39,14 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 LogoOutlineDistance = new Vector2(6f, -6f);
         private static readonly Vector2 LogoShadowDistance = new Vector2(10f, -14f);
 
-        // 下の帯: ボタンと文字を絵の上でも読めるようにする
-        private const float TitleBandHeight = 430f;
-        private static readonly Color TitleBandColor = new Color(0.05f, 0.08f, 0.18f, 0.55f);
+        // 画面の上下のぼかし: 上の札・ロゴの下と、下の「タップしてスタート」・ボタンの下を暗くして読めるようにする
+        private const float TitleTopFadeHeight = 300f;
+        private const float TitleBottomFadeHeight = 420f;
+        private static readonly Color TitleFadeColor = new Color(0.03f, 0.06f, 0.18f, 0.6f);
 
         private static readonly Color LabelOutlineColor = new Color(0.05f, 0.08f, 0.18f, 0.9f);
         private static readonly Vector2 LabelOutlineDistance = new Vector2(3f, -3f);
         private static readonly Color ButtonShadowColor = new Color(0f, 0f, 0f, 0.45f);
-        private static readonly Vector2 ButtonShadowDistance = new Vector2(0f, -10f);
 
         /// <summary>
         /// ジオラマの役者と床は実行時に TitleDiorama が組む（ステージと同じく、シーンには保存しない）。
@@ -67,17 +70,10 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        private static void CreateTitleBand(Transform root)
+        private static void CreateTitleFades(Transform root)
         {
-            var obj = UIDialogBuilder.CreateUIObject("Band", root);
-            var rect = obj.GetComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = new Vector2(1f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.sizeDelta = new Vector2(0f, TitleBandHeight);
-            var image = obj.AddComponent<Image>();
-            image.color = TitleBandColor;
-            image.raycastTarget = false;
+            CreateEdgeFade(root, "TopFade", top: true, TitleTopFadeHeight, TitleFadeColor);
+            CreateEdgeFade(root, "BottomFade", top: false, TitleBottomFadeHeight, TitleFadeColor);
         }
 
         /// <summary>ロゴの絵があればそれを、無ければ「乱戦！」を斜めに小さく・「ペンモンスクランブル」を大きく文字で組む</summary>

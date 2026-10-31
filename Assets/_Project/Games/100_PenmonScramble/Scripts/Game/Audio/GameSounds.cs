@@ -20,6 +20,10 @@ namespace PenmonScramble.Game
         Fail,
         /// <summary>ガチャで★が1つ出た</summary>
         Star,
+        /// <summary>メニューのボタンを押した</summary>
+        Click,
+        /// <summary>タイトルで「タップしてスタート」を押した</summary>
+        TitleStart,
     }
 
     /// <summary>
@@ -45,6 +49,8 @@ namespace PenmonScramble.Game
             { GameSound.Clear, 0.55f },
             { GameSound.Fail, 0.55f },
             { GameSound.Star, 0.45f },
+            { GameSound.Click, 0.35f },
+            { GameSound.TitleStart, 0.5f },
         };
 
         public static void Play(GameSound sound)
@@ -76,6 +82,8 @@ namespace PenmonScramble.Game
                 case GameSound.BossDefeat: return Impact("Se_BossDefeat", 0.6f, 55f);
                 case GameSound.Clear: return Jingle("Se_Clear", new[] { 523f, 659f, 784f, 1047f, 784f, 1047f });
                 case GameSound.Star: return Tone("Se_Star", 0.08f, 1568f);
+                case GameSound.Click: return Tone("Se_Click", 0.05f, 1047f);
+                case GameSound.TitleStart: return Jingle("Se_TitleStart", new[] { 784f, 1175f, 1568f });
                 default: return Jingle("Se_Fail", new[] { 392f, 330f, 262f, 196f });
             }
         }
