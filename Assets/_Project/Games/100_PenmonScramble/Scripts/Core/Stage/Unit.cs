@@ -116,6 +116,9 @@ namespace PenmonScramble.Core
         public bool IsInvincible => InvincibleSeconds > 0f || IsSubmerged;
         public bool IsSpecialReady => SpecialGauge >= 1f;
 
+        /// <summary>このプレイヤーがメニューを開いている（見た目だけ。計算には使わない）</summary>
+        public bool IsInMenu => Input.InMenu;
+
         public float GetCooldown(int slot) => Cooldowns[slot];
 
         /// <summary>1→2→3→1 の順で、倒れた子を飛ばして次の子を出す。いなければ false</summary>

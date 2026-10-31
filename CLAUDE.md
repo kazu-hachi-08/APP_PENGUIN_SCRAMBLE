@@ -38,6 +38,7 @@
 - **迷ったら止まる:** 記録が読めなくなるかもしれない変更は、実装する前にユーザーに説明して確認を取る。
 
 ## 4. リリース
+- ビルド: Unity の `Tools > PenmonScramble > Release > Windows / Web`（bat が読むリポジトリの隣のフォルダへ出力する）。
 - Windows 版: `Tools/Release/release-windows-test.bat`（テスト版）/ `release-windows.ps1 -Version vX.Y`。配った版は `UpdateNotice` / `PenmonScramble_Start.bat` から自動で更新される。
 - ブラウザ版: `Tools/Release/release-web.bat`（GitHub Pages の `penmon-scramble-web` に公開）。
 - 詳しくは各スクリプトの先頭コメントを参照。

@@ -9,6 +9,9 @@ namespace PenmonScramble.Game
         private static readonly Color Star1Color = new Color(0.85f, 0.85f, 0.85f);
         private static readonly Color Star2Color = new Color(0.55f, 0.80f, 1.00f);
         private static readonly Color Star3Color = new Color(1.00f, 0.80f, 0.20f);
+        private const string PipOnColor = "#FFD24D";
+        private const string PipOffColor = "#FFFFFF40";
+        private const char Pip = '●';
 
         public static string Stars(int stars) => new string('★', Mathf.Clamp(stars, 1, Balance.MaxStars));
 
@@ -32,6 +35,13 @@ namespace PenmonScramble.Game
         public static string Title(SpeciesDef species)
         {
             return $"{Stars(species.Stars)} {species.Name}（{ElementName(species.Element)}）";
+        }
+
+        /// <summary>3段階の目安を「●●○」のように出す（消えている所は薄く）</summary>
+        public static string Pips(int rating, int max)
+        {
+            var on = Mathf.Clamp(rating, 0, max);
+            return $"<color={PipOnColor}>{new string(Pip, on)}</color><color={PipOffColor}>{new string(Pip, max - on)}</color>";
         }
 
         /// <summary>カードに出す2行。知らない種類（新しい版で増えた子）は「？」</summary>

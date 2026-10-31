@@ -3,8 +3,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 宙に浮かべる英数字（頭の上の「P1」「BOSS」・ダメージ数字）。いつもカメラの方を向き、ほかの物に隠れない。
-    /// 英数字だけなので、日本語フォントの要らない標準フォントの TextMesh で描く
+    /// 宙に浮かべる文字（頭の上の名前・「BOSS」・ダメージ数字）。いつもカメラの方を向き、ほかの物に隠れない。
+    /// 名前は日本語もあるので、フォントは StageMaterials の丸ゴシック
     /// </summary>
     public static class BillboardText
     {

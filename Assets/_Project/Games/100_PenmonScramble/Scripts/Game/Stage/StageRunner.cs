@@ -1,5 +1,6 @@
 using PenmonScramble.Common.Input;
 using PenmonScramble.Common.Online;
+using PenmonScramble.Common.Profile;
 using PenmonScramble.Common.Scene;
 using PenmonScramble.Core;
 using UnityEngine;
@@ -11,7 +12,9 @@ namespace PenmonScramble.Game
     /// タイトル（ひとりで / 部屋を作る / コードで参加）からステージを始め、入力・HUD・結果をつなぐ。
     /// 計算はソロとホストが StageHost、ゲストは StageGuest で、どちらもスナップショットを StageView に渡して描く。
     /// ステージはホストがタイトルで選んだもの、連れていくのは各自の記録の編成（§8）。報酬は各自の記録に書く。
-    /// BGM はタイトル・ステージ・ボスエリアで切り替え、結果で止めてジングルを鳴らす
+    /// BGM はタイトル・ステージ・ボスエリアで切り替え、結果で止めてジングルを鳴らす。
+    /// 遊んでいる間はメニュー（StageMenu）を開ける。開いている間は自分の入力を「メニュー中」にする。
+    /// スマホのボタンは遊んでいる間だけ出し、場に出ている子の技・待ち・ゲージを映す（TouchControlsView）
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に読む
     [DefaultExecutionOrder(100)]
@@ -26,6 +29,8 @@ namespace PenmonScramble.Game
         [SerializeField] private OnlineSession _session;
         [SerializeField] private ModeSelectPanel _modeSelect;
         [SerializeField] private TitleMenu _titleMenu;
+        [SerializeField] private StageMenu _menu;
+        [SerializeField] private TouchControlsView _touch;
 
         private readonly LocalInputSampler _input = new LocalInputSampler();
         private StageLink _link;
@@ -43,6 +48,8 @@ namespace PenmonScramble.Game
         {
             _hud.RetryRequested += Retry;
             _hud.TitleRequested += ReturnToTitle;
+            _menu.RestartRequested += Retry;
+            _menu.TitleRequested += ReturnToTitle;
             // ゲストが1人抜けても、残りで遊び続ける（§8）
             _session.ContinueWhenMemberLeaves = true;
             _modeSelect.ShowMultiplayer(StartSolo, StartOnline, Balance.MaxPlayers);
@@ -53,6 +60,8 @@ namespace PenmonScramble.Game
         {
             _hud.RetryRequested -= Retry;
             _hud.TitleRequested -= ReturnToTitle;
+            _menu.RestartRequested -= Retry;
+            _menu.TitleRequested -= ReturnToTitle;
             _session.OnPeerDisconnected -= ReturnToTitle;
             _session.OnConnectionLost -= ReturnToTitle;
             _session.OnMemberLeft -= OnMemberLeft;
@@ -62,6 +71,9 @@ namespace PenmonScramble.Game
 
         private void StartSolo()
         {
+            // 協力の名前は OnlineSession が配る。ひとりのときは自分の名前だけ
+            SeatNames.UseSolo(UserProfile.Name);
+            _menu.Bind(solo: true, canRestart: true);
             StartHost(1, null);
         }
 
@@ -74,6 +86,8 @@ namespace PenmonScramble.Game
             _session.OnPeerDisconnected += ReturnToTitle;
             _session.OnConnectionLost += ReturnToTitle;
 
+            // 「やり直し」は全員の挑戦を始め直すので、ホストだけが押せる（§8）
+            _menu.Bind(solo: false, canRestart: seat == StageHost.LocalSeat);
             if (seat == StageHost.LocalSeat)
             {
                 _session.OnMemberLeft += OnMemberLeft;
@@ -132,6 +146,7 @@ namespace PenmonScramble.Game
             }
 
             var input = InputManager.Instance;
+            _input.InMenu = _menu.IsOpen;
             _input.Sample(input);
             _host?.Update(Time.deltaTime, _input);
             _guest?.Update(Time.deltaTime, _input);
@@ -143,6 +158,8 @@ namespace PenmonScramble.Game
             }
 
             UpdateHud(latest);
+            _menu.SetAvailable(latest.Result == StageResult.Playing);
+            _touch.SetShown(latest.Result == StageResult.Playing);
             UpdateResult(latest, input);
             if (latest.Result == StageResult.Playing)
             {
@@ -174,9 +191,12 @@ namespace PenmonScramble.Game
             if (_lastPlayerState != null)
             {
                 _hud.SetParty(_lastPlayerState, fallen: state == null);
+                _touch.Show(_lastPlayerState, fallen: state == null);
             }
 
             _hud.SetProgress(snapshot);
+            // 自分の3体が届くまでは中身が空なので出さない（ゲストは最初のスナップショットまで）
+            _hud.SetShown(_lastPlayerState != null);
         }
 
         private void UpdateResult(StageSnapshot snapshot, InputManager input)

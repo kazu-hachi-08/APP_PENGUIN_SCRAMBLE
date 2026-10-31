@@ -27,7 +27,8 @@ namespace PenmonScramble.Core
                 _latest.Skill1 || _skill1Pressed,
                 _latest.Skill2 || _skill2Pressed,
                 _latest.Special || _specialPressed,
-                _latest.Switch || _switchPressed);
+                _latest.Switch || _switchPressed,
+                _latest.InMenu);
             _skill1Pressed = false;
             _skill2Pressed = false;
             _specialPressed = false;

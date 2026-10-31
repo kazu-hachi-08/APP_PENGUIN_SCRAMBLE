@@ -33,6 +33,12 @@ namespace PenmonScramble.Game
             Store.Save(Record.Data);
         }
 
+        /// <summary>記録を消して初めからにする（名前と音量は共通基盤の別のキーなので残る）</summary>
+        public static void Reset()
+        {
+            _record = new PlayerRecord(Store.Reset());
+        }
+
         private sealed class PlayerPrefsStorage : ISaveStorage
         {
             public string Read(string key)

@@ -34,6 +34,8 @@ namespace PenmonScramble.Tests
             player.Members.Add(new MemberState(1, 0, 120));
             player.Members.Add(new MemberState(5, 80, 170));
             player.Members.Add(new MemberState(9, 135, 135));
+            player.SkillCooldowns.Add(0f);
+            player.SkillCooldowns.Add(0.6f);
             snapshot.Players.Add(player);
             snapshot.SpecialsUsed.Add(new SpecialUsedEvent(1, 5, Element.Ice));
             snapshot.Bursts.Add(new BurstEvent(BurstShape.Ring, Element.Wind, new Vec2(1f, 1f), 5f, true));
@@ -95,6 +97,10 @@ namespace PenmonScramble.Tests
             Assert.That(player.Members[1].SpeciesNo, Is.EqualTo(5));
             Assert.That(player.Members[1].Hp, Is.EqualTo(80));
             Assert.That(player.Members[1].MaxHp, Is.EqualTo(170));
+            // 待ちは 1 バイトに丸めて送る
+            Assert.That(player.SkillCooldowns.Count, Is.EqualTo(2));
+            Assert.That(player.SkillCooldowns[0], Is.EqualTo(0f));
+            Assert.That(player.SkillCooldowns[1], Is.EqualTo(0.6f).Within(0.01f));
 
             Assert.That(decoded.SpecialsUsed[0].SpeciesNo, Is.EqualTo(5));
             Assert.That(decoded.SpecialsUsed[0].Element, Is.EqualTo(Element.Ice));
@@ -162,6 +168,45 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
+        public void Input_RoundTripsInMenu()
+        {
+            Assert.That(StageCodec.TryDecodeInput(StageCodec.EncodeInput(PlayerInput.MenuOpen), out var decoded), Is.True);
+            Assert.That(decoded.InMenu, Is.True);
+            Assert.That(decoded.Move, Is.EqualTo(Vec2.Zero));
+            Assert.That(decoded.Skill1 || decoded.Skill2 || decoded.Special || decoded.Switch, Is.False);
+        }
+
+        [Test]
+        public void InputLatch_KeepsLatestInMenu()
+        {
+            var latch = new InputLatch();
+            latch.Receive(PlayerInput.MenuOpen);
+
+            Assert.That(latch.Consume().InMenu, Is.True);
+            // メニューを開いたままなら、届いた最後の入力のまま「メニュー中」が続く
+            Assert.That(latch.Consume().InMenu, Is.True);
+
+            latch.Receive(new PlayerInput(Vec2.Zero, false, false));
+            Assert.That(latch.Consume().InMenu, Is.False);
+        }
+
+        [Test]
+        public void Recorder_MarksPlayerInMenu()
+        {
+            var players = TrialStage.Create(seed: 5, new[] { 0, 1 }, round: 1, out var world);
+            var recorder = new StageRecorder(world, round: 1);
+            world.SetInput(players[1].Id, PlayerInput.MenuOpen);
+            world.Tick();
+
+            var snapshot = StageCodec.DecodeSnapshot(StageCodec.EncodeSnapshot(recorder.Capture()));
+
+            Assert.That(snapshot.TryGetPlayer(0, out var open), Is.True);
+            Assert.That(open.Has(UnitFlags.InMenu), Is.False);
+            Assert.That(snapshot.TryGetPlayer(1, out var inMenu), Is.True);
+            Assert.That(inMenu.Has(UnitFlags.InMenu), Is.True);
+        }
+
+        [Test]
         public void InputLatch_KeepsSwitchTapUntilConsumed()
         {
             var latch = new InputLatch();
@@ -210,6 +255,26 @@ namespace PenmonScramble.Tests
             Assert.That(first.AreaCount, Is.EqualTo(StageTable.Stage1.Areas.Count));
             Assert.That(first.Result, Is.EqualTo(StageResult.Playing));
             Assert.That(first.FindPlayerState(0).Members.Count, Is.EqualTo(Balance.PartySize));
+            // 技1を出したばかりなので、技1の待ちはほぼ満タン・技2は出せる
+            var skills = first.FindPlayerState(0).SkillCooldowns;
+            Assert.That(skills.Count, Is.EqualTo(2));
+            Assert.That(skills[0], Is.GreaterThan(0.9f));
+            Assert.That(skills[1], Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void PlayerState_NextAliveIndex_SkipsFallen()
+        {
+            var state = new PlayerState { ActiveIndex = 0 };
+            state.Members.Add(new MemberState(1, 50, 100));
+            state.Members.Add(new MemberState(2, 0, 100));
+            state.Members.Add(new MemberState(3, 70, 100));
+
+            Assert.That(state.NextAliveIndex(), Is.EqualTo(2));
+            state.ActiveIndex = 2;
+            Assert.That(state.NextAliveIndex(), Is.EqualTo(0));
+            state.Members[0] = new MemberState(1, 0, 100);
+            Assert.That(state.NextAliveIndex(), Is.EqualTo(-1));
         }
 
         [Test]

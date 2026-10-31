@@ -20,6 +20,18 @@ namespace PenmonScramble.Game
         Fail,
         /// <summary>ガチャで★が1つ出た</summary>
         Star,
+        /// <summary>メニューのボタンを押した</summary>
+        Click,
+        /// <summary>タイトルで「タップしてスタート」を押した</summary>
+        TitleStart,
+        /// <summary>ガチャのレバーが 1/4 回った（カチッ）</summary>
+        GachaLever,
+        /// <summary>ガチャのカプセルが落ちた・揺れた（コトン）</summary>
+        GachaDrop,
+        /// <summary>ガチャのカプセルが割れて、中の子が出てきた</summary>
+        GachaOpen,
+        /// <summary>ガチャで★3 の光の柱が立った</summary>
+        GachaRare,
     }
 
     /// <summary>
@@ -45,6 +57,12 @@ namespace PenmonScramble.Game
             { GameSound.Clear, 0.55f },
             { GameSound.Fail, 0.55f },
             { GameSound.Star, 0.45f },
+            { GameSound.Click, 0.35f },
+            { GameSound.TitleStart, 0.5f },
+            { GameSound.GachaLever, 0.5f },
+            { GameSound.GachaDrop, 0.55f },
+            { GameSound.GachaOpen, 0.5f },
+            { GameSound.GachaRare, 0.55f },
         };
 
         public static void Play(GameSound sound)
@@ -76,6 +94,12 @@ namespace PenmonScramble.Game
                 case GameSound.BossDefeat: return Impact("Se_BossDefeat", 0.6f, 55f);
                 case GameSound.Clear: return Jingle("Se_Clear", new[] { 523f, 659f, 784f, 1047f, 784f, 1047f });
                 case GameSound.Star: return Tone("Se_Star", 0.08f, 1568f);
+                case GameSound.Click: return Tone("Se_Click", 0.05f, 1047f);
+                case GameSound.TitleStart: return Jingle("Se_TitleStart", new[] { 784f, 1175f, 1568f });
+                case GameSound.GachaLever: return Impact("Se_GachaLever", 0.05f, 600f);
+                case GameSound.GachaDrop: return Impact("Se_GachaDrop", 0.12f, 260f);
+                case GameSound.GachaOpen: return Sweep("Se_GachaOpen", 0.25f, 500f, 1400f);
+                case GameSound.GachaRare: return Jingle("Se_GachaRare", new[] { 1047f, 1319f, 1568f, 2093f });
                 default: return Jingle("Se_Fail", new[] { 392f, 330f, 262f, 196f });
             }
         }

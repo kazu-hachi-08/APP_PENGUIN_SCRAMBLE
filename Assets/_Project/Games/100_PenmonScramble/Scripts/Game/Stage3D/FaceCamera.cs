@@ -9,11 +9,22 @@ namespace PenmonScramble.Game
     {
         private static Camera _camera;
 
+        /// <summary>
+        /// Camera.main の代わりに向くカメラ。ペンモン画面の技の実演（SkillDemoView）は別のカメラで映すので、開いている間だけ置く
+        /// </summary>
+        public static Camera Override { get; set; }
+
         // 出た最初のフレームから向いているようにする
         private void OnEnable() => LateUpdate();
 
         private void LateUpdate()
         {
+            if (Override != null)
+            {
+                transform.rotation = Override.transform.rotation;
+                return;
+            }
+
             if (_camera == null)
             {
                 // Camera.main は毎回探すと重いので、見つけたら覚えておく（シーンを作り直したら探し直す）

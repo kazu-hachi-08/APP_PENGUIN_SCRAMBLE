@@ -1,5 +1,7 @@
+using PenmonScramble.Common.AppUpdate;
 using PenmonScramble.Common.Editor;
 using PenmonScramble.Common.Online;
+using PenmonScramble.Game;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,20 +9,26 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// タイトル: 「ひとりで遊ぶ」「部屋を作る」「コードで参加」。
-    /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る（§2）。
-    /// 上半分は後ろで動く乱戦のジオラマとロゴを見せ、ボタンは下の帯にまとめる。ジオラマとロゴは PenmonScrambleSceneBuilder.TitleArt.cs、
-    /// コイン・ステージの選択・ガチャ・ペンギン一覧は PenmonScrambleSceneBuilder.Menu.cs
+    /// タイトル（§2・§9.6）: 後ろで動く乱戦のジオラマとロゴの上に、「タップしてスタート」の画面とロビーの2段を重ねる。
+    /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る。
+    /// ここではタイトルの土台・スタートの画面・接続待ちの窓・「みんなで遊ぶ」の窓を作る。ロビーの中身と画面どうしのつなぎは
+    /// PenmonScrambleSceneBuilder.TitleLobby.cs、ジオラマとロゴは TitleArt.cs、設定と名前の入力は Settings.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private const string SoloLabel = "ひとりで遊ぶ";
-        private const string HostLabel = "部屋を作る\n<size=32>最大4人で協力</size>";
+        private const string MenuGroupName = "Menu";
+        private const string LobbyName = "Lobby";
+        private const string SplashName = "Splash";
+
+        private const string HostLabel = "部屋を作る\n<size=34>コードを友だちに送って\n最大4人で協力</size>";
+        private const string JoinCaption = "コードで参加";
         private const string JoinLabel = "参加する";
         private const string CodePlaceholder = "参加コード";
         private const string CopyLabel = "コードをコピー";
         private const string StartLabel = "開始";
         private const string CancelLabel = "キャンセル";
+        private const string OnlineHeading = "みんなで遊ぶ";
+        private const string CloseGlyph = "×";
         // Relay の参加コードは英数字で、これより長くはならない
         private const int RoomCodeLimit = 12;
 
@@ -30,27 +38,50 @@ namespace PenmonScramble.Editor
         private static readonly Color StartColor = new Color(0.30f, 0.75f, 0.40f);
         private static readonly Color CancelColor = new Color(0.45f, 0.50f, 0.60f);
         private static readonly Color PlaceholderColor = new Color(0.55f, 0.55f, 0.60f);
+        private static readonly Color InputFrameColor = new Color(0.96f, 0.97f, 1f);
 
-        private static readonly Vector2 CardSize = new Vector2(520f, 160f);
-        private static readonly Vector2 SoloPosition = new Vector2(-600f, -350f);
-        private static readonly Vector2 HostPosition = new Vector2(-40f, -350f);
-        private static readonly Vector2 CodeInputPosition = new Vector2(430f, -350f);
-        private static readonly Vector2 CodeInputSize = new Vector2(340f, 110f);
-        private static readonly Vector2 JoinPosition = new Vector2(730f, -350f);
-        private static readonly Vector2 JoinSize = new Vector2(200f, 110f);
-        // 接続待ちの文面はロゴと重ならないよう、下の帯の中に出す
-        private static readonly Vector2 StatusPosition = new Vector2(0f, -230f);
-        private static readonly Vector2 StatusSize = new Vector2(1400f, 260f);
-        private const float WaitButtonsY = -440f;
-        private const float WaitButtonsSpacing = 460f;
-        private static readonly Vector2 WaitButtonSize = new Vector2(400f, 120f);
+        // 「タップしてスタート」の文字。ロゴの下・ジオラマの乱戦の手前に置く
+        private static readonly Vector2 StartPromptPosition = new Vector2(0f, -360f);
+        private static readonly Vector2 StartPromptSize = new Vector2(1400f, 110f);
+        private const int StartPromptFontSize = 64;
+        private static readonly Color StartPromptOutlineColor = new Color(0.05f, 0.08f, 0.25f);
+        private static readonly Vector2 StartPromptOutlineDistance = new Vector2(4f, -4f);
+
+        // 「みんなで遊ぶ」の窓: 左に「部屋を作る」の大きなボタン、右にコードの入力と「参加する」
+        private static readonly Vector2 OnlinePanelSize = new Vector2(1180f, 600f);
+        private static readonly Vector2 HostPosition = new Vector2(-280f, -40f);
+        private static readonly Vector2 HostSize = new Vector2(480f, 340f);
+        private const int HostFontSize = 58;
+        private static readonly Vector2 JoinCaptionPosition = new Vector2(280f, 95f);
+        private static readonly Vector2 JoinCaptionSize = new Vector2(480f, 60f);
+        private const int JoinCaptionFontSize = 40;
+        private static readonly Vector2 CodeInputPosition = new Vector2(280f, -10f);
+        private static readonly Vector2 CodeInputSize = new Vector2(480f, 120f);
+        private static readonly Vector2 JoinPosition = new Vector2(280f, -150f);
+        private static readonly Vector2 JoinSize = new Vector2(480f, 120f);
+        private const int JoinFontSize = 52;
+        private const float CloseButtonSize = 90f;
+        private const float CloseButtonInset = 20f;
+
+        // 接続待ちの窓: 上に状態と参加コード（文面は ModeSelectPanel が入れる）、下に「コピー」「開始」「キャンセル」
+        private static readonly Vector2 WaitingPanelSize = new Vector2(1180f, 560f);
+        private static readonly Vector2 WaitingPanelPosition = new Vector2(0f, -30f);
+        private static readonly Vector2 StatusPosition = new Vector2(0f, 60f);
+        private static readonly Vector2 StatusSize = new Vector2(1100f, 380f);
+        private const float WaitButtonsY = -195f;
+        private const float WaitButtonsSpacing = 390f;
+        private static readonly Vector2 WaitButtonSize = new Vector2(360f, 120f);
 
         private const int CardFontSize = 56;
         private const int CodeFontSize = 52;
         private const int StatusFontSize = 44;
         private const int WaitButtonFontSize = 48;
-        private const float CodeInputPadding = 16f;
+        private const float InputPadding = 16f;
 
+        /// <summary>
+        /// タイトルの土台。ModeSelectPanel の接続待ちの部品はここでつなぎ、メニューの部品（ひとりで・部屋を作る・参加）は
+        /// ロビーを作るときにつなぐ（CreateTitleMenu）
+        /// </summary>
         private static ModeSelectPanel CreateTitlePanel(Transform canvas, OnlineSession session, Camera stageCamera)
         {
             var root = UIDialogBuilder.CreateUIObject("Title", canvas);
@@ -58,20 +89,20 @@ namespace PenmonScramble.Editor
             // 後ろの HUD やボタンを押せないよう、画面全体をふさぐ（透明なので後ろのジオラマは見える）
             root.AddComponent<Image>().color = Color.clear;
             CreateTitleDiorama(root, stageCamera);
-            CreateTitleBand(root.transform);
+            CreateTitleFades(root.transform);
             CreateTitleLogo(root.transform);
+            CreateTitleSplash(root.transform);
 
-            var menu = CreateTitleMenu(root.transform, out var solo, out var host, out var join, out var codeInput);
+            var menu = UIDialogBuilder.CreateUIObject(MenuGroupName, root.transform);
+            UIDialogBuilder.SetStretchAll(menu.GetComponent<RectTransform>());
+            var lobby = UIDialogBuilder.CreateUIObject(LobbyName, menu.transform);
+            UIDialogBuilder.SetStretchAll(lobby.GetComponent<RectTransform>());
             var waiting = CreateTitleWaiting(root.transform, out var status, out var copy, out var start, out var cancel);
 
             var panel = root.AddComponent<ModeSelectPanel>();
             var so = new SerializedObject(panel);
             so.FindProperty("_session").objectReferenceValue = session;
             so.FindProperty("_menuGroup").objectReferenceValue = menu;
-            so.FindProperty("_npcButton").objectReferenceValue = solo;
-            so.FindProperty("_hostButton").objectReferenceValue = host;
-            so.FindProperty("_joinButton").objectReferenceValue = join;
-            so.FindProperty("_codeInput").objectReferenceValue = codeInput;
             so.FindProperty("_waitingGroup").objectReferenceValue = waiting;
             so.FindProperty("_statusText").objectReferenceValue = status;
             so.FindProperty("_cancelButton").objectReferenceValue = cancel;
@@ -82,27 +113,50 @@ namespace PenmonScramble.Editor
             return panel;
         }
 
-        private static GameObject CreateTitleMenu(Transform parent, out Button solo, out Button host, out Button join, out InputField codeInput)
+        /// <summary>
+        /// Windows 版の「新しい版が あります」。タイトルの子の最後に置いてメニューや窓より手前に出し、
+        /// タイトルを離れたら一緒に消えるようにする
+        /// </summary>
+        private static void AddUpdateNotice(GameObject title)
         {
-            var menu = UIDialogBuilder.CreateUIObject("Menu", parent);
-            UIDialogBuilder.SetStretchAll(menu.GetComponent<RectTransform>());
-            solo = CreateTitleButton(menu.transform, "Solo", SoloLabel, SoloPosition, CardSize, SoloColor, CardFontSize);
-            host = CreateTitleButton(menu.transform, "Host", HostLabel, HostPosition, CardSize, OnlineColor, CardFontSize);
-            codeInput = CreateCodeInput(menu.transform);
-            join = CreateTitleButton(menu.transform, "Join", JoinLabel, JoinPosition, JoinSize, JoinColor, WaitButtonFontSize);
-            return menu;
+            var dialog = UIDialogBuilder.CreateCommonDialog(title.transform);
+            var notice = title.AddComponent<UpdateNotice>();
+            var so = new SerializedObject(notice);
+            so.FindProperty("_dialog").objectReferenceValue = dialog;
+            so.ApplyModifiedProperties();
         }
 
-        /// <summary>接続待ち。まん中に状態と参加コード（文面は ModeSelectPanel が入れる）、下に「コピー」「開始」「キャンセル」</summary>
+        /// <summary>
+        /// 起動したときの「タップしてスタート」。画面全体が透明なボタンで、どこを押しても始まる（キーとコントローラーは TitleFlow が見る）
+        /// </summary>
+        private static GameObject CreateTitleSplash(Transform parent)
+        {
+            var splash = UIDialogBuilder.CreateUIObject(SplashName, parent);
+            UIDialogBuilder.SetStretchAll(splash.GetComponent<RectTransform>());
+            splash.AddComponent<Image>().color = Color.clear;
+            splash.AddComponent<Button>().transition = Selectable.Transition.None;
+
+            var prompt = CreateLabel(splash.transform, "Prompt", string.Empty, StartPromptFontSize, StartPromptPosition, StartPromptSize);
+            prompt.fontStyle = FontStyle.Bold;
+            var outline = prompt.GetComponent<Outline>();
+            outline.effectColor = StartPromptOutlineColor;
+            outline.effectDistance = StartPromptOutlineDistance;
+            prompt.gameObject.AddComponent<CanvasGroup>();
+            prompt.gameObject.AddComponent<UiPulse>();
+            return splash;
+        }
+
+        /// <summary>接続待ち。ロビーは隠れて、ロゴとジオラマの上に窓だけが出る</summary>
         private static GameObject CreateTitleWaiting(Transform parent, out Text status, out Button copy, out Button start, out Button cancel)
         {
             var waiting = UIDialogBuilder.CreateUIObject("Waiting", parent);
             UIDialogBuilder.SetStretchAll(waiting.GetComponent<RectTransform>());
-            status = CreateLabel(waiting.transform, "Status", string.Empty, StatusFontSize, StatusPosition, StatusSize);
+            var panel = CreatePanel(waiting.transform, "Panel", WaitingPanelPosition, WaitingPanelSize).transform;
+            status = CreateLabel(panel, "Status", string.Empty, StatusFontSize, StatusPosition, StatusSize);
 
-            copy = CreateTitleButton(waiting.transform, "Copy", CopyLabel, new Vector2(-WaitButtonsSpacing, WaitButtonsY), WaitButtonSize, OnlineColor, WaitButtonFontSize);
-            start = CreateTitleButton(waiting.transform, "Start", StartLabel, new Vector2(0f, WaitButtonsY), WaitButtonSize, StartColor, WaitButtonFontSize);
-            cancel = CreateTitleButton(waiting.transform, "Cancel", CancelLabel, new Vector2(WaitButtonsSpacing, WaitButtonsY), WaitButtonSize, CancelColor, WaitButtonFontSize);
+            copy = CreateTitleButton(panel, "Copy", CopyLabel, new Vector2(-WaitButtonsSpacing, WaitButtonsY), WaitButtonSize, OnlineColor, WaitButtonFontSize);
+            start = CreateTitleButton(panel, "Start", StartLabel, new Vector2(0f, WaitButtonsY), WaitButtonSize, StartColor, WaitButtonFontSize);
+            cancel = CreateTitleButton(panel, "Cancel", CancelLabel, new Vector2(WaitButtonsSpacing, WaitButtonsY), WaitButtonSize, CancelColor, WaitButtonFontSize);
             copy.gameObject.SetActive(false);
             start.gameObject.SetActive(false);
 
@@ -110,25 +164,43 @@ namespace PenmonScramble.Editor
             return waiting;
         }
 
-        /// <summary>参加コードの入力欄。白い枠に大きな文字で、スマホでも押しやすくする</summary>
-        private static InputField CreateCodeInput(Transform parent)
+        /// <summary>「みんなで遊ぶ」の窓。ModeSelectPanel の Menu の中に置くので、接続待ちになると一緒に隠れる</summary>
+        private static GameObject CreateOnlinePopup(Transform parent, out Button host, out Button join, out InputField codeInput, out Button close)
         {
-            var frame = UIDialogBuilder.CreateUIObject("CodeInput", parent);
-            PlaceCenter(frame.GetComponent<RectTransform>(), CodeInputPosition, CodeInputSize);
-            var image = frame.AddComponent<Image>();
-            image.color = Color.white;
+            var popup = CreateModal(parent, "Online", OnlinePanelSize, OnlineHeading, out var panel, out _);
+            host = CreateTitleButton(panel, "Host", HostLabel, HostPosition, HostSize, OnlineColor, HostFontSize);
+            CreateLabel(panel, "JoinCaption", JoinCaption, JoinCaptionFontSize, JoinCaptionPosition, JoinCaptionSize).fontStyle = FontStyle.Bold;
+            codeInput = CreateInputField(panel, "CodeInput", CodePlaceholder, CodeInputPosition, CodeInputSize);
+            codeInput.characterValidation = InputField.CharacterValidation.Alphanumeric;
+            codeInput.characterLimit = RoomCodeLimit;
+            join = CreateTitleButton(panel, "Join", JoinLabel, JoinPosition, JoinSize, JoinColor, JoinFontSize);
+            close = CreateCloseButton(panel, OnlinePanelSize);
+            return popup;
+        }
 
-            var placeholder = CreateInputText(frame.transform, "Placeholder", CodePlaceholder, PlaceholderColor);
+        /// <summary>窓の右上の ×</summary>
+        private static Button CreateCloseButton(Transform panel, Vector2 panelSize)
+        {
+            var offset = panelSize * 0.5f - Vector2.one * (CloseButtonSize * 0.5f + CloseButtonInset);
+            return CreateTitleButton(panel, "Close", CloseGlyph, offset, Vector2.one * CloseButtonSize, CancelColor, WaitButtonFontSize);
+        }
+
+        /// <summary>文字の入力欄。白い枠に大きな文字で、スマホでも押しやすくする</summary>
+        private static InputField CreateInputField(Transform parent, string name, string placeholderText, Vector2 position, Vector2 size)
+        {
+            var frame = UIDialogBuilder.CreateUIObject(name, parent);
+            PlaceCenter(frame.GetComponent<RectTransform>(), position, size);
+            var image = AddSliced(frame, RoundRectPath, InputFrameColor, CornerScale(PanelCornerRadius * 0.6f));
+
+            var placeholder = CreateInputText(frame.transform, "Placeholder", placeholderText, PlaceholderColor);
             var text = CreateInputText(frame.transform, "Text", string.Empty, TextColor);
             text.fontStyle = FontStyle.Bold;
-            text.supportRichText = false;
 
             var input = frame.AddComponent<InputField>();
             input.targetGraphic = image;
             input.textComponent = text;
             input.placeholder = placeholder;
-            input.characterValidation = InputField.CharacterValidation.Alphanumeric;
-            input.characterLimit = RoomCodeLimit;
+            input.lineType = InputField.LineType.SingleLine;
             return input;
         }
 
@@ -137,26 +209,12 @@ namespace PenmonScramble.Editor
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             var rect = obj.GetComponent<RectTransform>();
             UIDialogBuilder.SetStretchAll(rect);
-            rect.offsetMin = new Vector2(CodeInputPadding, 0f);
-            rect.offsetMax = new Vector2(-CodeInputPadding, 0f);
+            rect.offsetMin = new Vector2(InputPadding, 0f);
+            rect.offsetMax = new Vector2(-InputPadding, 0f);
             var text = AddText(obj, value, CodeFontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.color = color;
             return text;
-        }
-
-        private static Button CreateTitleButton(Transform parent, string name, string label, Vector2 position, Vector2 size, Color color, int fontSize)
-        {
-            var obj = UIDialogBuilder.CreateButton(parent, name, label, size.x, size.y, color);
-            PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
-            var text = obj.GetComponentInChildren<Text>();
-            text.fontSize = fontSize;
-            text.fontStyle = FontStyle.Bold;
-            // 下に影を落として、色の板ではなく押せる物に見せる
-            var shadow = obj.AddComponent<Shadow>();
-            shadow.effectColor = ButtonShadowColor;
-            shadow.effectDistance = ButtonShadowDistance;
-            return obj.GetComponent<Button>();
         }
 
         private static Text CreateLabel(Transform parent, string name, string value, int fontSize, Vector2 position, Vector2 size)

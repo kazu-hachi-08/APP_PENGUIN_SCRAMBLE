@@ -48,17 +48,17 @@ Tools/Release/                        # Windows版・ブラウザ版のリリー
 
 ### Windows版（GitHub Releases + 自動更新）
 
-1. Unity で Windows 向けに `..\APP_PENGUIN_SCRAMBLE_EXE`（リポジトリの隣）へビルド
+1. Unity で `Tools > PenmonScramble > Release > Windows`（リポジトリの隣の `..\APP_PENGUIN_SCRAMBLE_EXE` へビルドする）
 2. `Tools/Release/release-windows-test.bat` をダブルクリック（テスト版。`test-日時` タグで公開し、古いテスト版は消す）
-   - 正式版は `.\Tools\Release\release-windows.ps1 -Version v0.1 -BuildDir ..\APP_PENGUIN_SCRAMBLE_EXE`
+   - 正式版は `.\Tools\Release\release-windows.ps1 -Version v0.1`
 3. zip には `version.txt`・`update.ps1`・`PenmonScramble_Start.bat` が入る。配った版は次から自動で更新できる
-   - ゲーム内: タイトル画面に `UpdateNotice`（Common/Scripts/AppUpdate）を置き、`CommonDialog` を割り当てる
+   - ゲーム内: タイトル画面に「新しい版が あります → 更新する」が出る（`UpdateNotice`。SceneBuilder がタイトルに置く）
    - 起動前: `PenmonScramble_Start.bat` から起動すると更新してから起動する
 
 ### ブラウザ版（GitHub Pages）
 
 1. 初回だけ `Tools/Release/release-web.bat` を実行（公開用リポジトリ `penmon-scramble-web` の作成と clone を `..\penmon-scramble-web` に行う）
-2. Unity で Web 向けに `..\penmon-scramble-web` へビルド
+2. Unity で `Tools > PenmonScramble > Release > Web`（`..\penmon-scramble-web` へビルドする。1 の clone が無いときはビルドせずに止まる）
 3. もう一度 `release-web.bat` を実行 → https://kazu-hachi-08.github.io/penmon-scramble-web/
 
 前提: `gh` CLI をインストールし `gh auth login` 済み。

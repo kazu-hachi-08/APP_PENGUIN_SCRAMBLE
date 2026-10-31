@@ -3,7 +3,8 @@ using UnityEngine;
 namespace PenmonScramble.Common.Profile
 {
     /// <summary>
-    /// 端末に保存するユーザー名。一度決めたら変更できない仕様なので、保存は TrySave の1か所だけにしている。
+    /// 端末に保存するユーザー名。協力プレイで頭の上に出す。設定からいつでも変えられる。
+    /// キー名は一度配ったら変えない（変えると名前が消える）
     /// </summary>
     public static class UserProfile
     {
@@ -41,7 +42,7 @@ namespace PenmonScramble.Common.Profile
             return true;
         }
 
-        /// <summary>動作確認用。通常のゲーム中からは呼ばない（名前は変更不可の仕様）</summary>
+        /// <summary>動作確認用（初回の名前入力をもう一度見る）。通常のゲーム中からは呼ばない</summary>
         public static void ResetForDebug()
         {
             PlayerPrefs.DeleteKey(NameKey);

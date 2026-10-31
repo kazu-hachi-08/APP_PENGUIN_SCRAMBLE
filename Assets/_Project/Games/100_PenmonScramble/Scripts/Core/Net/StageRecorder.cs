@@ -133,6 +133,11 @@ namespace PenmonScramble.Core
                 flags |= UnitFlags.Submerged;
             }
 
+            if (unit.IsInMenu)
+            {
+                flags |= UnitFlags.InMenu;
+            }
+
             return flags;
         }
 
@@ -148,6 +153,12 @@ namespace PenmonScramble.Core
             foreach (var member in unit.Members)
             {
                 state.Members.Add(new MemberState(member.Stats.SpeciesNo, member.Hp, member.MaxHp));
+            }
+
+            for (var slot = 0; slot < unit.Skills.Length; slot++)
+            {
+                var full = unit.Skills[slot].Cooldown * unit.CooldownScale;
+                state.SkillCooldowns.Add(full > 0f ? unit.GetCooldown(slot) / full : 0f);
             }
 
             return state;

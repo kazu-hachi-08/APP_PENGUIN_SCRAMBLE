@@ -27,6 +27,9 @@ namespace PenmonScramble.Core
 
         /// <summary>大ボスがもぐっている（攻撃が効かない。影だけ描く）</summary>
         Submerged = 32,
+
+        /// <summary>協力プレイで、このプレイヤーがメニューを開いている（頭の上に「メニュー中」）</summary>
+        InMenu = 64,
     }
 
     /// <summary>描くのに要るユニット1体分の値（場に出ている子の値）</summary>
@@ -137,7 +140,7 @@ namespace PenmonScramble.Core
         }
     }
 
-    /// <summary>プレイヤー1人分の、場に出ている子以外の値（3体・ゲージ・交代の待ち）</summary>
+    /// <summary>プレイヤー1人分の、場に出ている子以外の値（3体・ゲージ・交代の待ち・技の待ち）</summary>
     public sealed class PlayerState
     {
         public int Seat { get; set; }
@@ -145,6 +148,24 @@ namespace PenmonScramble.Core
         public float SpecialGauge { get; set; }
         public float SwitchCooldown { get; set; }
         public List<MemberState> Members { get; } = new List<MemberState>();
+
+        /// <summary>場に出ている子の技の待ちの残り（技の番号ごとに 0〜1。1 は出したばかり、0 で出せる）。スマホのボタンに出す</summary>
+        public List<float> SkillCooldowns { get; } = new List<float>();
+
+        /// <summary>交代したら出る子（1→2→3→1 の順で、倒れた子は飛ばす。§4.1）。いなければ -1</summary>
+        public int NextAliveIndex()
+        {
+            for (var i = 1; i < Members.Count; i++)
+            {
+                var index = (ActiveIndex + i) % Members.Count;
+                if (Members[index].Hp > 0)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
     }
 
     /// <summary>

@@ -7,14 +7,14 @@
 #   .\Tools\Release\release-windows.ps1 -Version v0.2 -Notes "第4章を追加"
 #
 # 前提:
-#   - UnityでWindows向けに Builds/Windows/ へビルド済みであること
+#   - Unity の Tools > PenmonScramble > Release > Windows で <repo>\..\APP_PENGUIN_SCRAMBLE_EXE へビルド済みであること
 #   - gh CLI がインストール済みで `gh auth login` 済みであること
 #     （未導入ならzip作成までで止まり、手動アップロード手順を表示する）
 
 param(
     [string]$Version,
     [string]$Notes = "zipを展開して exe を起動してください。`n初回に「WindowsによってPCが保護されました」と出たら「詳細情報 → 実行」で起動できます。`n新しい版が出たら、タイトル画面の「更新する」（または PenmonScramble_Start.bat から起動）で自動で入れ替わります。",
-    [string]$BuildDir = "Builds/Windows",
+    [string]$BuildDir = "../APP_PENGUIN_SCRAMBLE_EXE",
     [string]$ZipBaseName = "APP_PENGUIN_SCRAMBLE_Windows"
 )
 

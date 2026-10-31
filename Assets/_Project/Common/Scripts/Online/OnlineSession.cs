@@ -280,6 +280,19 @@ namespace PenmonScramble.Common.Online
         }
 
         /// <summary>
+        /// Unity のサービスを使う準備ができていない（プロジェクトが Project ID にリンクされていない・Relay が無効など）ために失敗したか。
+        /// コード違いや通信なしとは違って、プレイヤーには直せない。案内を出し分けるため、ほかの失敗と区別する
+        /// </summary>
+        public static bool IsServicesSetupError(Exception e)
+        {
+            for (var inner = e; inner != null; inner = inner.InnerException)
+            {
+                if (inner is ServicesInitializationException) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// NetworkManager はシーンに置かず実行時に1つだけ作る。
         /// Scene に置くとオフライン（NPC戦）でも常に存在してしまい、2人開発での Scene 差分も増えるため。
         /// NetworkManager 自身が DontDestroyOnLoad になるので、再戦時は作り直さず使い回す。

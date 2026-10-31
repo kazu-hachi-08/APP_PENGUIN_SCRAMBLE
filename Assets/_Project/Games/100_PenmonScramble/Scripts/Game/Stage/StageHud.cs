@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using PenmonScramble.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,33 +6,33 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージ中の画面表示: 場に出ている子の HP・3体の様子・必殺技のゲージ・結果。
-    /// エリアの進み具合・ボスの HP は StageHud.Progress.cs
+    /// ステージ中の画面表示（§9.8）: 左上の自分のプレート（場に出ている子の顔・必殺技のゲージ・名札・HP・3体の小さな顔）と結果。
+    /// エリアの進み具合・ボスの HP・画面の真ん中の知らせは StageHud.Progress.cs
     /// </summary>
     public partial class StageHud : MonoBehaviour
     {
-        // ゲージ満タンのときに光らせる速さ（§3「ゲージ満タンで光る」）
-        private const float ReadyPulsePerSecond = 3f;
-        private const float IdleButtonAlpha = 0.35f;
+        private const string DownMessage = "ダウン… 仲間が近くにいると復活";
+        private static readonly Color DownDiscColor = new Color(0.35f, 0.37f, 0.42f);
+        private static readonly Color DownFaceColor = new Color(0.4f, 0.4f, 0.4f);
 
-        [SerializeField] private RectTransform _hpFill;
-        [SerializeField] private Image _hpFillImage;
+        [Tooltip("プレートをまとめた入れ物。タイトルの間は隠す")]
+        [SerializeField] private GameObject _plates;
+        [SerializeField] private Image _namePlate;
+        [SerializeField] private Text _nameText;
+        [SerializeField] private HudBar _hpBar;
         [SerializeField] private Text _hpText;
-        [SerializeField] private Text _partyText;
-        [SerializeField] private RectTransform _gaugeFill;
-        [SerializeField] private Image _gaugeFillImage;
-        [SerializeField] private Text _gaugeText;
-        [SerializeField] private Color _gaugeColor = new Color(1f, 0.6f, 0.2f);
-        [SerializeField] private Color _gaugeReadyColor = new Color(1f, 0.95f, 0.4f);
-        [SerializeField] private Image _specialButtonImage;
+        [SerializeField] private Image _activeDisc;
+        [SerializeField] private Image _activeFace;
+        [SerializeField] private HudSpecialRing _special;
+        [SerializeField] private HudMemberSlot[] _slots;
         [SerializeField] private GameObject _resultPanel;
         [SerializeField] private Text _resultText;
         [SerializeField] private Button _retryButton;
         [SerializeField] private Button _titleButton;
 
-        private readonly StringBuilder _builder = new StringBuilder();
         private string _playerLabel = string.Empty;
-        private bool _specialReady;
+        private int _shownIndex = -1;
+        private int _shownSpecies = -1;
 
         public event Action RetryRequested;
         public event Action TitleRequested;
@@ -44,10 +43,19 @@ namespace PenmonScramble.Game
             _titleButton.onClick.AddListener(() => TitleRequested?.Invoke());
         }
 
-        /// <summary>バーを自分のペンギンと同じ色にして、協力のときにどれが自分か分かるようにする</summary>
+        /// <summary>タイトルの間（ステージが始まる前）は出さない。ステージから戻るときはシーンを読み直すので、隠し直さなくてよい</summary>
+        public void SetShown(bool shown)
+        {
+            if (_plates.activeSelf != shown)
+            {
+                _plates.SetActive(shown);
+            }
+        }
+
+        /// <summary>名札を自分のペンギンの足元の輪と同じ色にして、協力のときにどれが自分か分かるようにする</summary>
         public void SetPlayer(string label, Color color)
         {
-            _hpFillImage.color = color;
+            _namePlate.color = color;
             _playerLabel = label;
         }
 
@@ -56,59 +64,57 @@ namespace PenmonScramble.Game
         {
             var active = state.Members[state.ActiveIndex];
             var hp = fallen ? 0 : active.Hp;
-            var ratio = active.MaxHp > 0 ? (float)hp / active.MaxHp : 0f;
-            _hpFill.anchorMax = new Vector2(ratio, 1f);
-            // 3体とも倒れた（ダウン）ときは、何をすれば戻れるかを出す（§4.5）
-            _hpText.text = hp > 0
-                ? $"{_playerLabel}  {PenguinPalette.SpeciesName(active.SpeciesNo)}  HP {hp} / {active.MaxHp}"
-                : $"{_playerLabel}  ダウン… 仲間が近くにいると復活";
-            _partyText.text = PartyLine(state, fallen);
-            SetGauge(fallen ? 0f : state.SpecialGauge);
+            ShowActive(state.ActiveIndex, active, hp);
+            _special.SetGauge(fallen ? 0f : state.SpecialGauge);
+            ShowSlots(state, fallen);
         }
 
-        /// <summary>「▶アデリン 120 ｜ ヒゲジイ 130 ｜ ×ジェンツ　交代OK」のように、3体の HP と交代できるかを1行で出す</summary>
-        private string PartyLine(PlayerState state, bool fallen)
+        private void ShowActive(int index, MemberState active, int hp)
         {
-            _builder.Clear();
-            for (var i = 0; i < state.Members.Count; i++)
+            var ratio = active.MaxHp > 0 ? (float)hp / active.MaxHp : 0f;
+            if (index != _shownIndex || active.SpeciesNo != _shownSpecies)
             {
-                var member = state.Members[i];
-                var hp = fallen ? 0 : member.Hp;
-                if (i > 0)
+                // 交代した: 前の子の HP から減ったように見せない
+                _shownIndex = index;
+                _shownSpecies = active.SpeciesNo;
+                CreatureArt.ShowFace(_activeFace, active.SpeciesNo);
+                _hpBar.Snap(ratio);
+            }
+            else
+            {
+                _hpBar.SetRatio(ratio);
+            }
+
+            var down = hp <= 0;
+            _activeDisc.color = down ? DownDiscColor : PenguinPalette.SpeciesElementColor(active.SpeciesNo);
+            _activeFace.color = down ? DownFaceColor : Color.white;
+            _nameText.text = $"{_playerLabel}  {PenguinPalette.SpeciesName(active.SpeciesNo)}";
+            // 3体とも倒れた（ダウン）ときは、何をすれば戻れるかを出す（§4.5）
+            _hpText.text = down ? DownMessage : $"{hp} / {active.MaxHp}";
+        }
+
+        private void ShowSlots(PlayerState state, bool fallen)
+        {
+            var next = fallen ? -1 : state.NextAliveIndex();
+            var cooldown = state.SwitchCooldown / Balance.SwitchCooldownSeconds;
+            for (var i = 0; i < _slots.Length; i++)
+            {
+                if (i >= state.Members.Count)
                 {
-                    _builder.Append(" ｜ ");
+                    _slots[i].Hide();
+                    continue;
                 }
 
-                _builder.Append(i == state.ActiveIndex ? "▶" : hp <= 0 ? "×" : "　");
-                _builder.Append(PenguinPalette.SpeciesName(member.SpeciesNo)).Append(' ').Append(hp);
+                var member = state.Members[i];
+                var hp = fallen ? 0 : member.Hp;
+                var ratio = member.MaxHp > 0 ? (float)hp / member.MaxHp : 0f;
+                _slots[i].Show(member.SpeciesNo, ratio, i == state.ActiveIndex && !fallen, i == next, cooldown);
             }
-
-            if (!fallen)
-            {
-                _builder.Append(state.SwitchCooldown > 0f ? $"　交代 {state.SwitchCooldown:0.0}" : "　交代OK");
-            }
-
-            return _builder.ToString();
-        }
-
-        private void SetGauge(float gauge)
-        {
-            _gaugeFill.anchorMax = new Vector2(Mathf.Clamp01(gauge), 1f);
-            _specialReady = gauge >= 1f;
-            _gaugeText.text = _specialReady ? "必殺技 OK！" : "必殺技";
         }
 
         private void Update()
         {
             UpdateBanner();
-            var pulse = _specialReady ? 0.5f + 0.5f * Mathf.Sin(Time.time * ReadyPulsePerSecond * Mathf.PI * 2f) : 0f;
-            _gaugeFillImage.color = _specialReady ? Color.Lerp(_gaugeReadyColor, Color.white, pulse) : _gaugeColor;
-            if (_specialButtonImage != null)
-            {
-                var color = _specialButtonImage.color;
-                color.a = _specialReady ? Mathf.Lerp(0.7f, 1f, pulse) : IdleButtonAlpha;
-                _specialButtonImage.color = color;
-            }
         }
 
         /// <param name="canRetry">「もう一度」を押せるのはホストだけ（ゲストはホストが始め直すのを待つ）</param>

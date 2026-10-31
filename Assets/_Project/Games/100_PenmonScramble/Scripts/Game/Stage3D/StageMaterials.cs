@@ -1,3 +1,4 @@
+using PenmonScramble.Common.UI;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -23,7 +24,7 @@ namespace PenmonScramble.Game
             Toon = new ToonMaterials(toon, blobShadow);
             Decal = CreateFx(fx, "FxDecal", BlendMode.SrcAlpha, BlendMode.OneMinusSrcAlpha, CompareFunction.LessEqual);
             Glow = CreateFx(fx, "FxGlow", BlendMode.SrcAlpha, BlendMode.One, CompareFunction.LessEqual);
-            Font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            Font = GameFontApplier.Font;
             OverlayText = CreateFx(fx, "FxOverlayText", BlendMode.SrcAlpha, BlendMode.OneMinusSrcAlpha, CompareFunction.Always);
             // 文字は TextMesh（頂点の色）で描くので、SpriteRenderer の色は使わない
             OverlayText.SetFloat(AlphaOnlyId, 1f);
@@ -41,10 +42,10 @@ namespace PenmonScramble.Game
         /// <summary>足して光らせる（弾の光・合体技の光）</summary>
         public Material Glow { get; }
 
-        /// <summary>頭の上の「P1」・ダメージ数字。ほかのペンギンの後ろに隠れて読めなくならないよう、いつも手前に描く</summary>
+        /// <summary>頭の上の名前・ダメージ数字。ほかのペンギンの後ろに隠れて読めなくならないよう、いつも手前に描く</summary>
         public Material OverlayText { get; }
 
-        /// <summary>英数字だけなので、日本語フォントの要らない標準フォントで描く</summary>
+        /// <summary>頭の上にプレイヤーの名前（日本語）を出すので、UI と同じ同梱の丸ゴシックで描く</summary>
         public Font Font { get; }
 
         public void DestroyAll()
