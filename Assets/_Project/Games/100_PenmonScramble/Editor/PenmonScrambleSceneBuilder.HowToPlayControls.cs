@@ -36,16 +36,17 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 SpaceSize = new Vector2(400f, 100f);
         private const float KeyLabelGap = 85f;
 
-        // コントローラー: 左右2列に「ボタンの絵 + 何をするか」を並べる
+        // PS5 コントローラー: 左右2列に「ボタンの絵 + 何をするか」を並べる。記号の色は PS の記号の色に寄せる
         private static readonly float[] PadColumnX = { -640f, 120f };
         private static readonly float[] PadRowY = { 110f, -30f, -170f };
         private const float PadGlyphSize = 110f;
-        private static readonly Vector2 PadWideGlyphSize = new Vector2(170f, 90f);
+        private static readonly Vector2 PadWideGlyphSize = new Vector2(200f, 90f);
+        private const int PadWideFontSize = 28;
         private const float PadLabelOffset = 140f;
         private static readonly Vector2 PadLabelSize = new Vector2(520f, 80f);
-        private static readonly Color PadSouthColor = new Color(0.35f, 0.75f, 0.40f);
-        private static readonly Color PadEastColor = new Color(0.90f, 0.35f, 0.35f);
-        private static readonly Color PadNorthColor = new Color(0.95f, 0.78f, 0.25f);
+        private static readonly Color PadCrossColor = new Color(0.40f, 0.60f, 0.95f);
+        private static readonly Color PadCircleColor = new Color(0.90f, 0.35f, 0.35f);
+        private static readonly Color PadTriangleColor = new Color(0.30f, 0.75f, 0.60f);
         private static readonly Color PadNeutralColor = new Color(0.55f, 0.60f, 0.70f);
 
         // スマホ: 横長の画面の絵に、ステージ中の配置を縮めて置く
@@ -104,25 +105,27 @@ namespace PenmonScramble.Editor
             var panel = CreateStretchGroup(parent, "Gamepad");
             var root = panel.transform;
             // 左の列: 移動・交代・メニュー / 右の列: 技（よく押すボタンを右手側にまとめる）
-            CreatePadRow(root, 0, 0, "L", new[] { "leftStick", "dpad" }, PadNeutralColor, true, "移動（左スティック / 十字）");
-            CreatePadRow(root, 0, 1, "LB", new[] { "leftShoulder" }, PadNeutralColor, false, "交代");
-            CreatePadRow(root, 0, 2, "START", new[] { "start" }, PadNeutralColor, false, "メニュー");
-            CreatePadRow(root, 1, 0, "A", new[] { "buttonSouth" }, PadSouthColor, true, "技1（下のボタン）");
-            CreatePadRow(root, 1, 1, "B", new[] { "buttonEast" }, PadEastColor, true, "技2（右のボタン）");
-            CreatePadRow(root, 1, 2, "Y", new[] { "buttonNorth" }, PadNorthColor, true, "必殺技（上のボタン）");
-            CreateControlTip(root, "ボタンの名前は Xbox の並び。押したボタンが光ります");
+            // 記号は全角の × ○ △（同梱の日本語フォントに字がある）。光る判定は場所（buttonSouth など）なので、ほかのコントローラーでも同じ場所が光る
+            CreatePadRow(root, 0, 0, "LStick", "L", new[] { "leftStick", "dpad" }, PadNeutralColor, true, "移動（左スティック / 方向キー）");
+            CreatePadRow(root, 0, 1, "L1", "L1", new[] { "leftShoulder" }, PadNeutralColor, false, "交代");
+            CreatePadRow(root, 0, 2, "Options", "OPTIONS", new[] { "start" }, PadNeutralColor, false, "メニュー");
+            CreatePadRow(root, 1, 0, "Cross", "×", new[] { "buttonSouth" }, PadCrossColor, true, "技1");
+            CreatePadRow(root, 1, 1, "Circle", "○", new[] { "buttonEast" }, PadCircleColor, true, "技2");
+            CreatePadRow(root, 1, 2, "Triangle", "△", new[] { "buttonNorth" }, PadTriangleColor, true, "必殺技");
+            CreateControlTip(root, "PS5 コントローラーのボタン。押したボタンが光ります");
             return panel;
         }
 
-        private static void CreatePadRow(Transform parent, int column, int row, string glyph, string[] controls, Color color, bool round, string action)
+        private static void CreatePadRow(Transform parent, int column, int row, string name, string glyph, string[] controls, Color color, bool round, string action)
         {
             var position = new Vector2(PadColumnX[column], PadRowY[row]);
             var size = round ? Vector2.one * PadGlyphSize : PadWideGlyphSize;
-            var key = CreateKeyCap(parent, glyph, position, size, KeyWordFontSize, new Key[0], controls, round);
+            var fontSize = round ? KeyWordFontSize : PadWideFontSize;
+            var key = CreateKeyCap(parent, glyph, position, size, fontSize, new Key[0], controls, round, name);
             key.GetComponentInChildren<Text>().color = Color.white;
             key.transform.Find("Face").GetComponent<Image>().color = color;
             var labelPosition = position + Vector2.right * (PadLabelOffset + PadLabelSize.x * 0.5f - PadGlyphSize * 0.5f);
-            var label = CreateLabel(parent, $"{glyph}Label", action, KeyWordFontSize, labelPosition, PadLabelSize);
+            var label = CreateLabel(parent, $"{name}Label", action, KeyWordFontSize, labelPosition, PadLabelSize);
             label.alignment = TextAnchor.MiddleLeft;
         }
 
@@ -177,11 +180,12 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>
-        /// キー1つ: 影・丸い角の面・文字。round はコントローラーの丸いボタン。押すと光る（HowToPlayKey）
+        /// キー1つ: 影・丸い角の面・文字。round はコントローラーの丸いボタン。押すと光る（HowToPlayKey）。
+        /// name は記号（× など）をオブジェクト名に入れないためのもので、省くと label を使う
         /// </summary>
-        private static HowToPlayKey CreateKeyCap(Transform parent, string label, Vector2 position, Vector2 size, int fontSize, Key[] keys, string[] padControls = null, bool round = false)
+        private static HowToPlayKey CreateKeyCap(Transform parent, string label, Vector2 position, Vector2 size, int fontSize, Key[] keys, string[] padControls = null, bool round = false, string name = null)
         {
-            var obj = UIDialogBuilder.CreateUIObject($"Key_{label}", parent);
+            var obj = UIDialogBuilder.CreateUIObject($"Key_{name ?? label}", parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
             var sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(round ? KnobSpritePath : RoundedSpritePath);
             var shadow = CreateRoundedBox(obj.transform, "Shadow", KeyCapShadowOffset, size, ShadowColor, sprite);

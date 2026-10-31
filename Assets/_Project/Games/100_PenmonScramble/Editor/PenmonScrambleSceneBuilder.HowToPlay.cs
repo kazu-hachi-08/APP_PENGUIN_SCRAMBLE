@@ -68,10 +68,10 @@ namespace PenmonScramble.Editor
             return screen;
         }
 
-        /// <summary>キーボード・コントローラー・スマホの切り替えと、それぞれの絵（並びは HowToPlayScreen の定数と同じ）</summary>
+        /// <summary>キーボード・PS5 コントローラー・スマホの切り替えと、それぞれの絵（並びは HowToPlayScreen の定数と同じ）</summary>
         private static (Button[] buttons, GameObject[] panels) CreateDeviceTabs(Transform parent)
         {
-            var labels = new[] { "キーボード", "コントローラー", "スマホ" };
+            var labels = new[] { "キーボード", "PS5", "スマホ" };
             var buttons = new Button[labels.Length];
             for (var i = 0; i < labels.Length; i++)
             {

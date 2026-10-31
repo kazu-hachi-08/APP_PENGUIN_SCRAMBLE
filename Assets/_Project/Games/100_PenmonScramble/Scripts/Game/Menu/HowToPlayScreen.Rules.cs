@@ -6,7 +6,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// 遊び方の「ルール」タブ: 1ページに1つのことを、短い文と顔の絵で見せる（HowToPlayPages）。
-    /// ◀ ▶ のボタンのほか、キーボードの ← → / A D とコントローラーの十字でもめくれる
+    /// ◀ ▶ のボタンのほか、キーボードの ← → / A D とコントローラーの方向キーでもめくれる
     /// </summary>
     public partial class HowToPlayScreen
     {
