@@ -51,6 +51,9 @@ namespace PenmonScramble.Game
 
         public bool Frozen { get; set; }
 
+        /// <summary>大ボスは赤い範囲で予告するので、雑魚の構えは使わない（受け取るだけ）</summary>
+        public bool WindingUp { get; set; }
+
         public bool IsDefeatFinished => _pose.Defeated && _pose.Defeat >= 1f;
 
         /// <summary>攻撃の予告の構え。null で構えを解く（攻撃が出たら PlayStrike）</summary>

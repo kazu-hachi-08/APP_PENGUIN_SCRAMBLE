@@ -91,6 +91,9 @@ namespace PenmonScramble.Core
 
         internal DashState Dash { get; set; }
 
+        /// <summary>技を出す前の構え（雑魚とステージのボスだけ）。構えていなければ null</summary>
+        internal WindUpState WindUp { get; set; }
+
         /// <summary>大ボスの攻撃の進み具合。大ボスでなければ null</summary>
         internal BigBossBrain Brain { get; set; }
 
@@ -112,6 +115,7 @@ namespace PenmonScramble.Core
         /// <summary>強く飛ばされている間は、歩くことも技を出すこともできない</summary>
         public bool IsStunned => KnockbackVelocity.Length > Balance.StunSpeed;
         public bool IsDashing => Dash != null;
+        public bool IsWindingUp => WindUp != null;
         public bool IsFrozen => FrozenSeconds > 0f;
         public bool IsInvincible => InvincibleSeconds > 0f || IsSubmerged;
         public bool IsSpecialReady => SpecialGauge >= 1f;

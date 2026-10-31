@@ -15,6 +15,8 @@ namespace PenmonScramble.Game
         Combo,
         /// <summary>大ボスの攻撃の予告（赤い範囲）が出た</summary>
         Warning,
+        /// <summary>雑魚・ステージのボスが技を出す前に構えた</summary>
+        WindUp,
         BossDefeat,
         Clear,
         Fail,
@@ -53,6 +55,8 @@ namespace PenmonScramble.Game
             { GameSound.Special, 0.6f },
             { GameSound.Combo, 0.6f },
             { GameSound.Warning, 0.45f },
+            // 何体も構えるので、技の音と同じくらい控えめにする
+            { GameSound.WindUp, 0.2f },
             { GameSound.BossDefeat, 0.7f },
             { GameSound.Clear, 0.55f },
             { GameSound.Fail, 0.55f },
@@ -91,6 +95,8 @@ namespace PenmonScramble.Game
                 case GameSound.Special: return Sweep("Se_Special", 0.5f, 300f, 1600f);
                 case GameSound.Combo: return Jingle("Se_Combo", new[] { 784f, 988f, 1175f, 1568f });
                 case GameSound.Warning: return Alarm("Se_Warning");
+                // 上がっていく短い音で「ためている」感じを出す（警報より軽く、技の音とも違う高さ）
+                case GameSound.WindUp: return Sweep("Se_WindUp", 0.1f, 500f, 1100f);
                 case GameSound.BossDefeat: return Impact("Se_BossDefeat", 0.6f, 55f);
                 case GameSound.Clear: return Jingle("Se_Clear", new[] { 523f, 659f, 784f, 1047f, 784f, 1047f });
                 case GameSound.Star: return Tone("Se_Star", 0.08f, 1568f);

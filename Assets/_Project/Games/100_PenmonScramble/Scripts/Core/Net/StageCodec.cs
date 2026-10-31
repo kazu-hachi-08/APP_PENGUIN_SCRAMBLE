@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えて変な画面になるより無視する方がよい
         /// </summary>
-        public const byte FormatVersion = 8;
+        public const byte FormatVersion = 9;
 
         private const byte Skill1Flag = 1;
         private const byte Skill2Flag = 2;
@@ -101,6 +101,25 @@ namespace PenmonScramble.Core
                 Write(writer, warning.To);
                 writer.Write(warning.HalfWidth);
                 writer.Write(ToByte(warning.Progress));
+            }
+
+            WriteTelegraphs(writer, snapshot);
+        }
+
+        private static void WriteTelegraphs(BinaryWriter writer, StageSnapshot snapshot)
+        {
+            writer.Write(snapshot.Telegraphs.Count);
+            foreach (var telegraph in snapshot.Telegraphs)
+            {
+                writer.Write(telegraph.UnitId);
+                writer.Write((byte)telegraph.Shape);
+                Write(writer, telegraph.Origin);
+                Write(writer, telegraph.Facing);
+                writer.Write(telegraph.Reach);
+                writer.Write(telegraph.HalfAngleDegrees);
+                writer.Write(telegraph.HalfWidth);
+                writer.Write(telegraph.Seconds);
+                writer.Write(ToByte(telegraph.Progress));
             }
         }
 
@@ -231,6 +250,25 @@ namespace PenmonScramble.Core
                 var to = ReadVec2(reader);
                 var halfWidth = reader.ReadSingle();
                 snapshot.Warnings.Add(new WarningState(id, from, to, halfWidth, FromByte(reader.ReadByte())));
+            }
+
+            ReadTelegraphs(reader, snapshot);
+        }
+
+        private static void ReadTelegraphs(BinaryReader reader, StageSnapshot snapshot)
+        {
+            var count = reader.ReadInt32();
+            for (var i = 0; i < count; i++)
+            {
+                var unitId = reader.ReadInt32();
+                var shape = (SkillShape)reader.ReadByte();
+                var origin = ReadVec2(reader);
+                var facing = ReadVec2(reader);
+                var reach = reader.ReadSingle();
+                var halfAngle = reader.ReadSingle();
+                var halfWidth = reader.ReadSingle();
+                var seconds = reader.ReadSingle();
+                snapshot.Telegraphs.Add(new TelegraphState(unitId, shape, origin, facing, reach, halfAngle, halfWidth, seconds, FromByte(reader.ReadByte())));
             }
         }
 

@@ -29,6 +29,11 @@ namespace PenmonScramble.Game
         private const float KnockWeakHop = 0.15f;
         private const float KnockTilt = 35f;
 
+        // 構え: 膨らむ大きさと、力をためて小刻みに震える速さ・幅（割合）
+        private const float WindUpPuff = 0.14f;
+        private const float WindUpShakeSpeed = 45f;
+        private const float WindUpShake = 0.025f;
+
         // 足元の丸い影: 高く上がるほど小さく、倒れると体の長さに合わせて前後に伸ばす
         private const float ShadowFadeHeight = 1.5f;
         private const float ShadowMinScale = 0.4f;
@@ -60,7 +65,7 @@ namespace PenmonScramble.Game
             Lie(pose, center, ref position, ref rotation);
             var height = SpecialJump(pose, ref position, ref rotation);
             height += Tumble(pose, center, ref position, ref rotation);
-            var scale = 1f;
+            var scale = WindUpScale(pose);
             height += Vanish(pose, ref position, ref rotation, ref scale);
             return new FigurePose(position, rotation, scale, height);
         }
@@ -123,6 +128,16 @@ namespace PenmonScramble.Game
             position = roll * (position - center) + center + Vector3.up * height;
             rotation = roll * rotation;
             return height;
+        }
+
+        private static float WindUpScale(PenguinPose pose)
+        {
+            if (pose.WindUp <= 0f)
+            {
+                return 1f;
+            }
+
+            return 1f + pose.WindUp * (WindUpPuff + Mathf.Sin(pose.Time * WindUpShakeSpeed) * WindUpShake);
         }
 
         private static float Vanish(PenguinPose pose, ref Vector3 position, ref Quaternion rotation, ref float scale)

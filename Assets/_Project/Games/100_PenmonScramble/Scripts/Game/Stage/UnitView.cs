@@ -134,6 +134,7 @@ namespace PenmonScramble.Game
             _motion.Facing = unit.Facing.ToFloor();
             _motion.Sliding = unit.Has(UnitFlags.Dashing);
             _motion.Down = unit.Has(UnitFlags.Down);
+            _motion.WindingUp = unit.Has(UnitFlags.WindingUp);
             if (_bigBoss != null)
             {
                 _bigBoss.Submerged = unit.Has(UnitFlags.Submerged);
@@ -205,6 +206,7 @@ namespace PenmonScramble.Game
             _motion.Velocity = Vector3.zero;
             _motion.Down = false;
             _motion.Sliding = false;
+            _motion.WindingUp = false;
             _motion.PlayDefeat();
             HideMarks();
             // 凍ったまま倒れたら、氷が砕けてから飛んでいく

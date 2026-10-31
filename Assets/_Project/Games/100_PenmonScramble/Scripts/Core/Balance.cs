@@ -31,6 +31,23 @@ namespace PenmonScramble.Core
         /// <summary>敵は技が届く距離のこの割合まで近づいてから殴る（届くか届かないかの境目で空振りしないため）</summary>
         public const float EnemyAttackRangeRatio = 0.8f;
 
+        // 構え。技が届く距離に入った敵は、この秒数だけ止まって光ってから技を出す。見てから一歩ずれればよけられる長さにする
+        public const float EnemyWindUpSeconds = 0.4f;
+        public const float BossWindUpSeconds = 0.5f;
+        /// <summary>ボスの技2は派手で痛いので、少し長く構えて見切りやすくする</summary>
+        public const float BossSkill2WindUpSeconds = 0.7f;
+
+        /// <summary>構えの秒数。slot は技の番号（0 が技1）</summary>
+        public static float WindUpSeconds(bool isBoss, int slot)
+        {
+            if (!isBoss)
+            {
+                return EnemyWindUpSeconds;
+            }
+
+            return slot == 0 ? BossWindUpSeconds : BossSkill2WindUpSeconds;
+        }
+
         /// <summary>協力の最大人数</summary>
         public const int MaxPlayers = 4;
 

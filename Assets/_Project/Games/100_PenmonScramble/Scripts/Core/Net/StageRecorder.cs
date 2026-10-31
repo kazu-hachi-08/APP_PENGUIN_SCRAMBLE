@@ -63,6 +63,11 @@ namespace PenmonScramble.Core
                 {
                     snapshot.Players.Add(PlayerStateOf(unit));
                 }
+
+                if (unit.WindUp != null)
+                {
+                    snapshot.Telegraphs.Add(TelegraphOf(unit, unit.WindUp));
+                }
             }
 
             foreach (var projectile in _world.Projectiles)
@@ -110,7 +115,41 @@ namespace PenmonScramble.Core
             if (unit.IsBoss) flags |= UnitFlags.Boss;
             if (unit.IsSubmerged) flags |= UnitFlags.Submerged;
             if (unit.IsInMenu) flags |= UnitFlags.InMenu;
+            if (unit.IsWindingUp) flags |= UnitFlags.WindingUp;
             return flags;
+        }
+
+        /// <summary>構えている技が当たる所。弾・突進は体の縁から出るので、届く先は半径の分だけ遠い</summary>
+        private static TelegraphState TelegraphOf(Unit unit, WindUpState windUp)
+        {
+            var skill = unit.Skills[windUp.Slot];
+            var reach = skill.Range;
+            var halfAngle = 0f;
+            var halfWidth = 0f;
+            switch (skill.Shape)
+            {
+                case SkillShape.Melee:
+                    halfAngle = skill.HalfAngleDegrees;
+                    break;
+                case SkillShape.Projectile:
+                    reach += unit.Radius;
+                    halfWidth = skill.ProjectileRadius;
+                    break;
+                case SkillShape.Spread:
+                    reach += unit.Radius;
+                    halfAngle = skill.SpreadDegrees * 0.5f;
+                    halfWidth = skill.ProjectileRadius;
+                    break;
+                case SkillShape.Dash:
+                    reach += unit.Radius;
+                    halfWidth = unit.Radius + skill.AreaRadius;
+                    break;
+                case SkillShape.Zone:
+                    halfWidth = skill.AreaRadius;
+                    break;
+            }
+
+            return new TelegraphState(unit.Id, skill.Shape, unit.Position, unit.Facing, reach, halfAngle, halfWidth, windUp.TotalSeconds, windUp.Progress);
         }
 
         private static PlayerState PlayerStateOf(Unit unit)

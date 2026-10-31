@@ -5,7 +5,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ユニットの状態の見た目: 野生のペンギンは暗い色・被弾で一瞬白く光る・凍ると水色で氷に包まれる・ダウンは灰色・
-    /// 無敵は点滅・突進は残像・交代は煙が出て、新しい子がぽんと出てくる
+    /// 無敵は点滅・突進は残像・交代は煙が出て、新しい子がぽんと出てくる・技の前の構えは白く脈打つ
     /// </summary>
     public partial class UnitView
     {
@@ -23,6 +23,12 @@ namespace PenmonScramble.Game
         // 無敵の間は点滅させて、攻撃が効かないことを分かるようにする
         private const float InvincibleBlinkPerSecond = 12f;
 
+        // 構えている敵は白く脈打たせて「攻撃の合図」にする。色ごとに素材が増えるので、明るさは数段に丸める
+        private const float WindUpGlowMin = 0.35f;
+        private const float WindUpGlowMax = 0.7f;
+        private const float WindUpPulsePerSecond = 6f;
+        private const int WindUpGlowSteps = 3;
+
         // 交代で出てきた子は、小さく出てから一度はみ出して元の大きさに落ち着く
         private const float PopSeconds = 0.3f;
         private const float PopStart = 0.5f;
@@ -38,6 +44,7 @@ namespace PenmonScramble.Game
         private bool IsFrozen => (_flags & UnitFlags.Frozen) != 0 && !IsDefeated;
         private bool IsDashing => (_flags & UnitFlags.Dashing) != 0 && !IsDefeated;
         private bool IsInvincible => (_flags & UnitFlags.Invincible) != 0 && !IsDefeated;
+        private bool IsWindingUp => (_flags & UnitFlags.WindingUp) != 0 && !IsDefeated;
 
         /// <summary>状態の見た目を dt 秒進める（毎フレーム。テストからも呼ぶ）</summary>
         public void TickStatus(float dt)
@@ -76,7 +83,7 @@ namespace PenmonScramble.Game
             UpdateAfterimage();
         }
 
-        /// <summary>白く光る ＞ ダウンの灰色 ＞ 凍った水色 の順に優先する（同時になったら、より新しい出来事を見せる）</summary>
+        /// <summary>白く光る ＞ ダウンの灰色 ＞ 凍った水色 ＞ 構えの光 の順に優先する（同時になったら、より新しい出来事を見せる）</summary>
         private PenguinTint CurrentTint()
         {
             var tint = PenguinTint.Dark(_darkness);
@@ -90,7 +97,20 @@ namespace PenmonScramble.Game
                 return tint.Toward(DownTint, DownTintAmount);
             }
 
-            return IsFrozen ? tint.Toward(FrozenTint, FrozenTintAmount) : tint;
+            if (IsFrozen)
+            {
+                return tint.Toward(FrozenTint, FrozenTintAmount);
+            }
+
+            return IsWindingUp ? tint.Toward(Color.white, WindUpGlow(_statusTime)) : tint;
+        }
+
+        /// <summary>構えの光の強さ。なめらかに脈打たせると素材が無数に増えるので、WindUpGlowSteps 段に丸める</summary>
+        public static float WindUpGlow(float time)
+        {
+            var wave = 0.5f - 0.5f * Mathf.Cos(time * WindUpPulsePerSecond * 2f * Mathf.PI);
+            var step = Mathf.Round(wave * (WindUpGlowSteps - 1)) / (WindUpGlowSteps - 1);
+            return Mathf.Lerp(WindUpGlowMin, WindUpGlowMax, step);
         }
 
         private bool IsFigureVisible()

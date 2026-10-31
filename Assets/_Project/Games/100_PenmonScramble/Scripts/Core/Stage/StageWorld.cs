@@ -175,6 +175,7 @@ namespace PenmonScramble.Core
                 var switchPressed = unit.Team == Team.Player && unit.ConsumeSwitchPress();
                 if (!unit.IsAlive || unit.IsFrozen)
                 {
+                    InterruptWindUp(unit);
                     continue;
                 }
 
@@ -182,6 +183,7 @@ namespace PenmonScramble.Core
                 {
                     // 突進中に飛ばされたら、突進は止まる
                     unit.Dash = null;
+                    InterruptWindUp(unit);
                     continue;
                 }
 
