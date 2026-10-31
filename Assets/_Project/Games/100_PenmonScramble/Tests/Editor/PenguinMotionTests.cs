@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>3D のペンギンの動き（PLAN_3D フェーズ2）。見た目の良し悪しはスクショで人が決めるので、ここでは壊れ方だけを見る</summary>
+    /// <summary>3D のペンギンの動き。見た目の良し悪しはスクショで人が決めるので、ここでは壊れ方だけを見る</summary>
     public class PenguinMotionTests
     {
         private const float Step = 1f / 60f;

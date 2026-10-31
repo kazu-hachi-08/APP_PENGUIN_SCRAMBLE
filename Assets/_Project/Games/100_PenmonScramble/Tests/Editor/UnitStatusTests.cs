@@ -6,7 +6,7 @@ using UnityEngine;
 namespace PenmonScramble.Tests
 {
     /// <summary>
-    /// ユニットの状態の見た目（PLAN_3D フェーズ4）: 敵は暗く・被弾で白く・凍ると水色と氷・ダウンは灰色・無敵は点滅・突進の残像・交代の煙。
+    /// ユニットの状態の見た目: 敵は暗く・被弾で白く・凍ると水色と氷・ダウンは灰色・無敵は点滅・突進の残像・交代の煙。
     /// 見た目の良し悪しはスクショで人が決めるので、ここでは状態が見た目に出ているかだけを見る
     /// </summary>
     public class UnitStatusTests

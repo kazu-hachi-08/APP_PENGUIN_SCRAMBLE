@@ -8,7 +8,7 @@ using static PenmonScramble.Tests.TestWorld;
 namespace PenmonScramble.Tests
 {
     /// <summary>
-    /// 3D の大ボス（PLAN_3D フェーズ5）: 3体とも組み立てられる・赤い範囲から攻撃の構えを読み取れる・どの動きでも床にめり込まない・
+    /// 3D の大ボス: 3体とも組み立てられる・赤い範囲から攻撃の構えを読み取れる・どの動きでも床にめり込まない・
     /// もぐると床の下に隠れて飛び出す。見た目の良し悪しはスクショで人が決めるので、ここでは壊れ方だけを見る
     /// </summary>
     public class BigBoss3DTests

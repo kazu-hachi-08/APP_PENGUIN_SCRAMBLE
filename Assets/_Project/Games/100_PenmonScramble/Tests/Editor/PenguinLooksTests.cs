@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>3D のペンギンの見た目の定義表（PLAN_3D フェーズ1）と、そこから組み立てた形</summary>
+    /// <summary>3D のペンギンの見た目の定義表と、そこから組み立てた形</summary>
     public class PenguinLooksTests
     {
         // 頭の寝ぐせの部品の数
