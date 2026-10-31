@@ -30,6 +30,9 @@ namespace PenmonScramble.Core
 
         /// <summary>協力プレイで、このプレイヤーがメニューを開いている（頭の上に「メニュー中」）</summary>
         InMenu = 64,
+
+        /// <summary>雑魚・ステージのボスが技を出す前に構えている（体が膨らんで光る）</summary>
+        WindingUp = 128,
     }
 
     /// <summary>描くのに要るユニット1体分の値（場に出ている子の値）</summary>
@@ -125,6 +128,48 @@ namespace PenmonScramble.Core
         }
     }
 
+    /// <summary>
+    /// 構えている敵の、地面のうすい予告（大ボスの赤い範囲 WarningState とは別）。
+    /// 形ごとに描き方が違うので、技の形と大きさをそのまま送る
+    /// </summary>
+    public readonly struct TelegraphState
+    {
+        public readonly int UnitId;
+        public readonly SkillShape Shape;
+        public readonly Vec2 Origin;
+        public readonly Vec2 Facing;
+
+        /// <summary>
+        /// 近接: 扇の半径 / 周囲: 円の半径 / 弾・拡散・突進: 中心から届く先までの長さ / 設置: 置く場所までの距離
+        /// </summary>
+        public readonly float Reach;
+
+        /// <summary>近接: 扇の半分の角度 / 拡散: 弾が広がる扇の半分の角度（度）。ほかは 0</summary>
+        public readonly float HalfAngleDegrees;
+
+        /// <summary>弾・拡散・突進: 帯の半分の幅 / 設置: 置く円の半径（マス）。ほかは 0</summary>
+        public readonly float HalfWidth;
+
+        /// <summary>構えの長さ（秒）。毎秒15回しか届かないので、描く側はこれで間を進める</summary>
+        public readonly float Seconds;
+
+        /// <summary>構え始めてからの割合（0〜1。1 で技が出る）</summary>
+        public readonly float Progress;
+
+        public TelegraphState(int unitId, SkillShape shape, Vec2 origin, Vec2 facing, float reach, float halfAngleDegrees, float halfWidth, float seconds, float progress)
+        {
+            UnitId = unitId;
+            Shape = shape;
+            Origin = origin;
+            Facing = facing;
+            Reach = reach;
+            HalfAngleDegrees = halfAngleDegrees;
+            HalfWidth = halfWidth;
+            Seconds = seconds;
+            Progress = progress;
+        }
+    }
+
     /// <summary>連れている1体分（HUD の控えの表示に使う）</summary>
     public readonly struct MemberState
     {
@@ -187,6 +232,7 @@ namespace PenmonScramble.Core
         public List<ProjectileState> Projectiles { get; } = new List<ProjectileState>();
         public List<EffectState> Effects { get; } = new List<EffectState>();
         public List<WarningState> Warnings { get; } = new List<WarningState>();
+        public List<TelegraphState> Telegraphs { get; } = new List<TelegraphState>();
         public List<PlayerState> Players { get; } = new List<PlayerState>();
         public List<HitEvent> Hits { get; } = new List<HitEvent>();
         public List<DefeatedEvent> Defeats { get; } = new List<DefeatedEvent>();

@@ -19,7 +19,7 @@ namespace PenmonScramble.Editor
         // 文字のまわりの重なりは、この大きさを超えたら知らせる（縁取りが触れる程度は見逃す）
         private const float OverlapTolerance = 6f;
 
-        [MenuItem("Tools/PenmonScramble/Check UI Text Layout")]
+        [MenuItem(EditorMenu.Check + "UI Text Layout", priority = EditorMenu.CheckPriority)]
         private static void Run()
         {
             var font = GameFontApplier.Font;

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 3D の試作の場（Tools/PenmonScramble/3D Preview）。床とペンギンを実行時に組み立てる。
+    /// 3D の試作の場（Tools/PenmonScramble/Capture/Open 3D Preview）。床とペンギンを実行時に組み立てる。
     /// 組み立てた物はシーンに保存しない（メッシュと素材がアセットではないため）。編集中も見えるよう ExecuteAlways にしている
     /// </summary>
     [ExecuteAlways]

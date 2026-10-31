@@ -24,6 +24,12 @@ namespace PenmonScramble.Game
         private const float EmergeNod = 25f;
         private const float EmergeLandSquash = 0.2f;
 
+        // 空から降りてくる: 画面の上の外から落ちてきて、着地で大きくつぶれる。落ちる間は少し回って、おもちゃを置いたように見せる
+        private const float DropAirShare = 0.6f;
+        private const float DropHeight = 14f;
+        private const float DropSpin = 180f;
+        private const float DropLandSquash = 0.35f;
+
         // 足元の丸い影: 高く上がるほど小さく
         private const float ShadowFadeHeight = 1.5f;
         private const float ShadowMinScale = 0.4f;
@@ -49,11 +55,14 @@ namespace PenmonScramble.Game
         {
             HitRecoil(pose, ref f);
             f.Squash += EmergeLandSquash * Bell(pose.Emerge, EmergeAirShare - 0.05f, EmergeAirShare + 0.08f, 1f);
-            var yaw = Quaternion.Euler(0f, pose.Yaw, 0f);
+            f.Squash += DropLandSquash * Bell(pose.Drop, DropAirShare - 0.02f, DropAirShare + 0.08f, 1f);
+            var yaw = Quaternion.Euler(0f, pose.Yaw + DropTurn(pose), 0f);
             var tilt = Quaternion.Euler(f.Pitch, 0f, f.Roll);
             var position = yaw * (new Vector3(0f, f.Lift, f.Forward) + f.Pivot - tilt * f.Pivot);
             var rotation = yaw * tilt;
-            var height = f.Lift + Dive(pose, ref position, ref rotation);
+            var drop = DropLift(pose);
+            position += Vector3.up * drop;
+            var height = f.Lift + drop + Dive(pose, ref position, ref rotation);
             var scale = 1f;
             if (pose.Defeated)
             {
@@ -104,6 +113,24 @@ namespace PenmonScramble.Game
             position += Vector3.up * height;
             rotation *= Quaternion.Euler(Mathf.Lerp(EmergePitch, 0f, air) + EmergeNod * Bell(air, 0.5f, 0.8f, 1f), 0f, 0f);
             return Mathf.Max(0f, height);
+        }
+
+        /// <summary>空から降りてくる間の高さ。止まった所から落とすように、着地へ向けて速くする</summary>
+        private static float DropLift(BigBossPose pose)
+        {
+            if (pose.Drop >= DropAirShare)
+            {
+                return 0f;
+            }
+
+            var air = pose.Drop / DropAirShare;
+            return DropHeight * (1f - air * air);
+        }
+
+        /// <summary>落ちる間に回る角度。着地したときに今の向きにそろう</summary>
+        private static float DropTurn(BigBossPose pose)
+        {
+            return pose.Drop >= DropAirShare ? 0f : DropSpin * (1f - Mathf.SmoothStep(0f, 1f, pose.Drop / DropAirShare));
         }
 
         private void ApplyShadow(BigBossPose pose, float height, float scale)

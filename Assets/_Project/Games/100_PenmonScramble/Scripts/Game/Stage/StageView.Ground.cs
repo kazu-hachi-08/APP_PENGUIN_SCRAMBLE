@@ -5,7 +5,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージの床・エリアの出入口・カメラ。床はワールドごとの地面の絵を貼った板
+    /// ステージの床とエリアの出入口。床はワールドごとの地面の絵を貼った板。
+    /// 大ボスの闘技場は、楕円に切った床（闘技場の絵）と、楕円に沿った柵（ArenaFence）
     /// </summary>
     public partial class StageView
     {
@@ -21,17 +22,23 @@ namespace PenmonScramble.Game
         private const float OutsideDepth = 6f;
         // エリアの外の床は少し下げて、エリアの床と同じ高さでちらつかないようにする
         private const float OutsideFloorHeight = -0.02f;
+        // 闘技場の外の床は、前のエリアの外の床と重なる（引いて全体を見せたときに左の奥まで埋めるため）ので、さらに下げる
+        private const float ArenaOutsideFloorHeight = -0.03f;
+        // 闘技場への通り道の床。前のエリアと闘技場の床の下に隠れ、楕円の左端のすき間だけ見えるよう、少し下げる
+        private const float DoorwayFloorHeight = -0.01f;
         // 技の実演の床は、最初のワールドの地面（どのステージにも属さない場なので、いちばん見慣れた絵にする）
         public const int PreviewWorld = 1;
 
-        [SerializeField] private StageCamera _stageCamera;
-
         private readonly List<(float x, GameObject obj)> _gates = new List<(float x, GameObject obj)>();
+        // 闘技場の柵の、入口にかかる柱と、入口（楕円の左端）の横の位置。null なら闘技場の無いステージ
+        private GameObject _arenaDoor;
+        private float _arenaDoorX;
 
         /// <summary>エリアを1枚ずつ敷き、エリアの境目に出入口を置く。1つおきに少し色を変え、ボスエリアは赤っぽくする</summary>
         private void CreateGround(StageSnapshot snapshot)
         {
             _gates.Clear();
+            _arenaDoor = null;
             if (_preview)
             {
                 CreatePreviewGround(snapshot);
@@ -47,10 +54,18 @@ namespace PenmonScramble.Game
                 Camera.main.backgroundColor = theme.Background;
             }
 
+            var stage = StageTable.Get(snapshot.StageNo);
             for (var i = 0; i < snapshot.AreaCount; i++)
             {
-                var min = StageLayout.AreaMin(i).ToVector2();
-                var max = StageLayout.AreaMax(i).ToVector2();
+                var area = StageLayout.Area(stage, i);
+                var min = area.Min.ToVector2();
+                var max = area.Max.ToVector2();
+                if (area.IsEllipse)
+                {
+                    CreateArena(i, area, world, theme, texture);
+                    continue;
+                }
+
                 var isBossArea = snapshot.AreaCount > 1 && i == snapshot.AreaCount - 1;
                 CreateOutside(i, snapshot.AreaCount, texture, min, max);
                 CreateFloor($"Area{i}", _materials.Toon.Floor(texture, StageTheme.AreaTintOf(i, isBossArea)), min, max, 0f);
@@ -59,6 +74,33 @@ namespace PenmonScramble.Game
                     _gates.Add((max.x, CreateGate(i, max.x, min.y, max.y, theme.Gate)));
                 }
             }
+        }
+
+        /// <summary>
+        /// 闘技場: 楕円を囲む四角より広く暗い床を敷き、その上に楕円の床と柵を置く。
+        /// 闘技場の絵が無ければ、ワールドの地面をボスエリアの色にして敷く
+        /// </summary>
+        private void CreateArena(int index, AreaShape arena, int world, StageTheme theme, Texture worldTexture)
+        {
+            var min = arena.Min.ToVector2();
+            var max = arena.Max.ToVector2();
+            var outside = new Vector2(OutsideWidth, OutsideDepth);
+            CreateFloor($"Outside{index}", _materials.Toon.Floor(worldTexture, StageTheme.OutsideTint), min - outside, max + outside, ArenaOutsideFloorHeight);
+
+            var art = CreatureArt.ArenaGround(world);
+            var floor = art != null
+                ? _materials.Toon.Floor(art.texture, Color.white)
+                : _materials.Toon.Floor(worldTexture, StageTheme.AreaTintOf(index, true));
+            var size = max - min;
+            var disc = ToyParts.AddMesh(new GameObject($"Area{index}"), ToyMeshes.FloorDisc, floor);
+            disc.transform.SetParent(transform, false);
+            disc.transform.localPosition = arena.Center.ToFloor();
+            disc.transform.localScale = new Vector3(size.x, 1f, size.y);
+
+            var doorway = StageLayout.Doorway(arena);
+            CreateFloor("Doorway", floor, doorway.Min.ToVector2(), doorway.Max.ToVector2(), DoorwayFloorHeight);
+            _arenaDoor = ArenaFence.Build(transform, arena, _materials.Toon, theme);
+            _arenaDoorX = min.x;
         }
 
         /// <summary>技の実演: 動ける範囲（エリア1枚分）にワールド1の地面を敷き、外を暗い床で囲む。出入口は無い</summary>
@@ -108,33 +150,15 @@ namespace PenmonScramble.Game
         {
             foreach (var (x, obj) in _gates)
             {
-                var isOpen = snapshot.AreaMin.X + GateEpsilon < x && x < snapshot.AreaMax.X - GateEpsilon;
-                obj.SetActive(!isOpen);
+                obj.SetActive(!IsGateOpenAt(snapshot, x));
             }
-        }
 
-        /// <summary>
-        /// 動ける範囲が画面より広い（出入口が開いている）間は、元気なプレイヤーの真ん中を追う。
-        /// 閉じているときは範囲がちょうど1エリアなので、エリアの真ん中に止まる
-        /// </summary>
-        private void FollowCamera(StageSnapshot snapshot, bool snap)
-        {
-            var half = Balance.AreaWidth * 0.5f;
-            var minX = snapshot.AreaMin.X + half;
-            var maxX = Mathf.Max(minX, snapshot.AreaMax.X - half);
-            var sum = 0f;
-            var count = 0;
-            foreach (var unit in snapshot.Units)
+            if (_arenaDoor != null)
             {
-                if (unit.Team == Team.Player && !unit.Has(UnitFlags.Down))
-                {
-                    sum += unit.Position.X;
-                    count++;
-                }
+                _arenaDoor.SetActive(!IsGateOpenAt(snapshot, _arenaDoorX));
             }
-
-            var x = count > 0 ? sum / count : minX;
-            _stageCamera.Follow(Mathf.Clamp(x, minX, maxX), snap);
         }
+
+        private static bool IsGateOpenAt(StageSnapshot snapshot, float x) => snapshot.AreaMin.X + GateEpsilon < x && x < snapshot.AreaMax.X - GateEpsilon;
     }
 }

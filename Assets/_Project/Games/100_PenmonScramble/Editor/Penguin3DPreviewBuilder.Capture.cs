@@ -60,7 +60,7 @@ namespace PenmonScramble.Editor
             return pose;
         }
 
-        [MenuItem("Tools/PenmonScramble/3D Preview Capture")]
+        [MenuItem(EditorMenu.Capture + "Penguin Poses", priority = EditorMenu.CapturePriority + 1)]
         public static void Capture()
         {
             var stage = FindOrOpenPreviewStage();

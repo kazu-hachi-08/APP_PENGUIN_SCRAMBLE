@@ -74,7 +74,7 @@ namespace PenmonScramble.Editor
             new BossRow("撃破", BigBossMotion.DefeatSeconds, m => m.PlayDefeat()),
         };
 
-        [MenuItem("Tools/PenmonScramble/3D Preview Boss Capture")]
+        [MenuItem(EditorMenu.Capture + "Boss Motions", priority = EditorMenu.CapturePriority + 4)]
         public static void CaptureBosses()
         {
             var stage = FindOrOpenPreviewStage();

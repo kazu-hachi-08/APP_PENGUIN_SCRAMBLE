@@ -13,6 +13,8 @@ namespace PenmonScramble.Game
         private const int Segments = 24;
         private const int Rings = 16;
         private const int TubeSegments = 10;
+        // 床の円の分割数。闘技場（横32マス）に引き伸ばしても縁の角が目立たない細かさ
+        private const int DiscSegments = 96;
 
         // 卵形の下側の膨らみ。おもちゃのペンギンは下が太い
         private const float EggBulge = 0.18f;
@@ -32,6 +34,7 @@ namespace PenmonScramble.Game
         private static Mesh _hemisphere;
         private static Mesh _torus;
         private static Mesh _quad;
+        private static Mesh _disc;
         private static Mesh _star;
         private static Mesh _ice;
 
@@ -60,6 +63,9 @@ namespace PenmonScramble.Game
 
         /// <summary>上を向いた1x1の板（床・丸い影）</summary>
         public static Mesh FloorQuad => _quad != null ? _quad : _quad = CreateFloorQuad();
+
+        /// <summary>上を向いた直径1の円の板。絵は円を囲む四角いっぱいに貼る（闘技場の楕円の床）</summary>
+        public static Mesh FloorDisc => _disc != null ? _disc : _disc = CreateFloorDisc();
 
         /// <summary>外側の直径1の、ふくらんだ五角の星。厚みは Z。撃破のときに飛び散る星に使う</summary>
         public static Mesh Star => _star != null ? _star : _star = CreateStar();
@@ -208,6 +214,34 @@ namespace PenmonScramble.Game
                 uv = new[] { new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(1f, 0f) },
                 triangles = new[] { 0, 1, 2, 0, 2, 3 },
             };
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        /// <summary>まん中から縁へ扇を並べた円。縁の点は床の上の位置と同じ割合で絵を引く</summary>
+        private static Mesh CreateFloorDisc()
+        {
+            var vertices = new Vector3[DiscSegments + 1];
+            var uvs = new Vector2[DiscSegments + 1];
+            var normals = new Vector3[DiscSegments + 1];
+            var triangles = new int[DiscSegments * 3];
+            uvs[0] = new Vector2(0.5f, 0.5f);
+            normals[0] = Vector3.up;
+            for (var i = 0; i < DiscSegments; i++)
+            {
+                var angle = i * Mathf.PI * 2f / DiscSegments;
+                var x = Mathf.Cos(angle) * 0.5f;
+                var z = Mathf.Sin(angle) * 0.5f;
+                vertices[i + 1] = new Vector3(x, 0f, z);
+                uvs[i + 1] = new Vector2(x + 0.5f, z + 0.5f);
+                normals[i + 1] = Vector3.up;
+                // 上から見て時計回り（表が上を向く）
+                triangles[i * 3] = 0;
+                triangles[i * 3 + 1] = (i + 1) % DiscSegments + 1;
+                triangles[i * 3 + 2] = i + 1;
+            }
+
+            var mesh = new Mesh { name = "ToyFloorDisc", vertices = vertices, normals = normals, uv = uvs, triangles = triangles };
             mesh.RecalculateBounds();
             return mesh;
         }

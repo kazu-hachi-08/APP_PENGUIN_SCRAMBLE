@@ -75,27 +75,71 @@ namespace PenmonScramble.Core
         {
             foreach (var unit in _units)
             {
-                var (x, vx) = Bounce(unit.Position.X, unit.KnockbackVelocity.X, AreaMin.X + unit.Radius, AreaMax.X - unit.Radius);
-                var (y, vy) = Bounce(unit.Position.Y, unit.KnockbackVelocity.Y, AreaMin.Y + unit.Radius, AreaMax.Y - unit.Radius);
-                unit.Position = new Vec2(x, y);
-                unit.KnockbackVelocity = new Vec2(vx, vy);
+                var shape = WallFor(unit.Position, unit.Radius);
+                (unit.Position, unit.KnockbackVelocity) = shape.Confine(unit.Position, unit.KnockbackVelocity, unit.Radius, Balance.WallRestitution);
             }
         }
 
-        /// <summary>1軸ぶんの壁。外へ向かって飛んでいたら跳ね返す</summary>
-        private static (float position, float velocity) Bounce(float position, float velocity, float min, float max)
+        /// <summary>
+        /// 押し戻しに使う形。範囲が1つならそれ。いくつかを合わせた範囲では、どれかの中にいればその形（押し戻さない）、
+        /// どれにも入っていなければ一番近い形へ戻す（闘技場が始まったときに外にいた人は、楕円の中へ引き寄せられる）
+        /// </summary>
+        private AreaShape WallFor(Vec2 position, float margin)
         {
-            if (position < min)
+            if (_bounds.Count == 1)
             {
-                return (min, velocity < 0f ? -velocity * Balance.WallRestitution : velocity);
+                return _bounds[0];
             }
 
-            if (position > max)
+            var nearest = _bounds[0];
+            var nearestSq = float.MaxValue;
+            foreach (var shape in _bounds)
             {
-                return (max, velocity > 0f ? -velocity * Balance.WallRestitution : velocity);
+                if (shape.Contains(position, margin))
+                {
+                    return shape;
+                }
+
+                var sq = (shape.ClosestInside(position, margin) - position).LengthSquared;
+                if (sq < nearestSq)
+                {
+                    nearestSq = sq;
+                    nearest = shape;
+                }
             }
 
-            return (position, velocity);
+            return nearest;
+        }
+
+        /// <summary>動ける範囲を置き換える。最初の形を「いまのエリア」とする</summary>
+        private void SetBounds(params AreaShape[] shapes)
+        {
+            _bounds.Clear();
+            _bounds.AddRange(shapes);
+            var min = shapes[0].Min;
+            var max = shapes[0].Max;
+            foreach (var shape in shapes)
+            {
+                min = new Vec2(MathF.Min(min.X, shape.Min.X), MathF.Min(min.Y, shape.Min.Y));
+                max = new Vec2(MathF.Max(max.X, shape.Max.X), MathF.Max(max.Y, shape.Max.Y));
+            }
+
+            AreaMin = min;
+            AreaMax = max;
+        }
+
+        /// <summary>動ける範囲の中か（弾が外へ出たら消すのに使う）</summary>
+        private bool IsInsideArea(Vec2 position)
+        {
+            foreach (var shape in _bounds)
+            {
+                if (shape.Contains(position, 0f))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

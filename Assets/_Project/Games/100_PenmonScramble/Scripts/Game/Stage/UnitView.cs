@@ -32,6 +32,7 @@ namespace PenmonScramble.Game
         private float _defeatTimer = -1f;
 
         public Team Team { get; private set; }
+        public float Radius => _radius;
         public int SpeciesNo { get; private set; }
         public bool IsBoss => (_flags & UnitFlags.Boss) != 0;
         private bool IsDown => (_flags & UnitFlags.Down) != 0;
@@ -134,6 +135,7 @@ namespace PenmonScramble.Game
             _motion.Facing = unit.Facing.ToFloor();
             _motion.Sliding = unit.Has(UnitFlags.Dashing);
             _motion.Down = unit.Has(UnitFlags.Down);
+            _motion.WindingUp = unit.Has(UnitFlags.WindingUp);
             if (_bigBoss != null)
             {
                 _bigBoss.Submerged = unit.Has(UnitFlags.Submerged);
@@ -195,6 +197,9 @@ namespace PenmonScramble.Game
 
         public void PlayAttack(SkillShape shape) => _motion.PlayAttack(shape);
 
+        /// <summary>大ボスが闘技場に現れたとき、空から降りてくる（ほかのユニットは何もしない）</summary>
+        public void PlayDropIn() => _bigBoss?.PlayDropIn();
+
         public void PlaySpecial() => _motion.PlaySpecial();
 
         /// <summary>倒れたら回りながら昇って消える。Core からは消えているので、ここからは見た目だけで動く</summary>
@@ -205,6 +210,7 @@ namespace PenmonScramble.Game
             _motion.Velocity = Vector3.zero;
             _motion.Down = false;
             _motion.Sliding = false;
+            _motion.WindingUp = false;
             _motion.PlayDefeat();
             HideMarks();
             // 凍ったまま倒れたら、氷が砕けてから飛んでいく

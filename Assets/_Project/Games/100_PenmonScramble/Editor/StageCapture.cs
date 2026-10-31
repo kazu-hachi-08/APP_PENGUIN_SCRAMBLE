@@ -24,7 +24,7 @@ namespace PenmonScramble.Editor
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
         }
 
-        [MenuItem("Tools/PenmonScramble/3D Stage Capture")]
+        [MenuItem(EditorMenu.Capture + "Stage", priority = EditorMenu.CapturePriority)]
         public static void Run() => Start(quit: false);
 
         public static void RunBatch() => Start(quit: true);

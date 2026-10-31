@@ -15,6 +15,8 @@ namespace PenmonScramble.Game
         Combo,
         /// <summary>大ボスの攻撃の予告（赤い範囲）が出た</summary>
         Warning,
+        /// <summary>雑魚・ステージのボスが技を出す前に構えた</summary>
+        WindUp,
         BossDefeat,
         Clear,
         Fail,
@@ -32,6 +34,8 @@ namespace PenmonScramble.Game
         GachaOpen,
         /// <summary>ガチャで★3 の光の柱が立った</summary>
         GachaRare,
+        /// <summary>大ボスが空から闘技場へ降りてきて、床に着いた</summary>
+        BossLand,
     }
 
     /// <summary>
@@ -53,6 +57,8 @@ namespace PenmonScramble.Game
             { GameSound.Special, 0.6f },
             { GameSound.Combo, 0.6f },
             { GameSound.Warning, 0.45f },
+            // 何体も構えるので、技の音と同じくらい控えめにする
+            { GameSound.WindUp, 0.2f },
             { GameSound.BossDefeat, 0.7f },
             { GameSound.Clear, 0.55f },
             { GameSound.Fail, 0.55f },
@@ -63,6 +69,7 @@ namespace PenmonScramble.Game
             { GameSound.GachaDrop, 0.55f },
             { GameSound.GachaOpen, 0.5f },
             { GameSound.GachaRare, 0.55f },
+            { GameSound.BossLand, 0.75f },
         };
 
         public static void Play(GameSound sound)
@@ -91,6 +98,8 @@ namespace PenmonScramble.Game
                 case GameSound.Special: return Sweep("Se_Special", 0.5f, 300f, 1600f);
                 case GameSound.Combo: return Jingle("Se_Combo", new[] { 784f, 988f, 1175f, 1568f });
                 case GameSound.Warning: return Alarm("Se_Warning");
+                // 上がっていく短い音で「ためている」感じを出す（警報より軽く、技の音とも違う高さ）
+                case GameSound.WindUp: return Sweep("Se_WindUp", 0.1f, 500f, 1100f);
                 case GameSound.BossDefeat: return Impact("Se_BossDefeat", 0.6f, 55f);
                 case GameSound.Clear: return Jingle("Se_Clear", new[] { 523f, 659f, 784f, 1047f, 784f, 1047f });
                 case GameSound.Star: return Tone("Se_Star", 0.08f, 1568f);
@@ -100,6 +109,8 @@ namespace PenmonScramble.Game
                 case GameSound.GachaDrop: return Impact("Se_GachaDrop", 0.12f, 260f);
                 case GameSound.GachaOpen: return Sweep("Se_GachaOpen", 0.25f, 500f, 1400f);
                 case GameSound.GachaRare: return Jingle("Se_GachaRare", new[] { 1047f, 1319f, 1568f, 2093f });
+                // 撃破（BossDefeat）よりさらに低く、地面が鳴るような重い音
+                case GameSound.BossLand: return Impact("Se_BossLand", 0.5f, 42f);
                 default: return Jingle("Se_Fail", new[] { 392f, 330f, 262f, 196f });
             }
         }

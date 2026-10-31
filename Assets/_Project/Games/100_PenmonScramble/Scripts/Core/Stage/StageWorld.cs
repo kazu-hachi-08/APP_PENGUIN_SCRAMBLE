@@ -12,19 +12,25 @@ namespace PenmonScramble.Core
         private readonly List<Unit> _units = new List<Unit>();
         private readonly List<Projectile> _projectiles = new List<Projectile>();
         private readonly List<AreaEffect> _areaEffects = new List<AreaEffect>();
+        // 動ける範囲。ふつうは今のエリア1つ。闘技場の手前で出入口が開いている間だけ、前のエリア・通り道・闘技場を合わせた範囲
+        private readonly List<AreaShape> _bounds = new List<AreaShape>();
         private readonly Random _random;
         private int _nextId = 1;
 
         public StageWorld(Vec2 areaMin, Vec2 areaMax, int seed)
+            : this(AreaShape.Rect(areaMin, areaMax), seed)
         {
-            AreaMin = areaMin;
-            AreaMax = areaMax;
+        }
+
+        public StageWorld(AreaShape area, int seed)
+        {
+            SetBounds(area);
             _random = new Random(seed);
         }
 
         /// <summary>ステージ定義どおりにエリアを順に進める。敵は波ごとに出し、HP は人数で増やす</summary>
         public StageWorld(StageDef stage, int playerCount, int seed)
-            : this(StageLayout.AreaMin(0), StageLayout.AreaMax(0), seed)
+            : this(StageLayout.Area(stage, 0), seed)
         {
             _stage = stage;
             _playerCount = playerCount;
@@ -38,9 +44,12 @@ namespace PenmonScramble.Core
         public event Action<BurstEvent> Burst;
         public event Action<ComboEvent> Combo;
 
-        /// <summary>いま動ける範囲。出入口が開いている間は、次のエリアまで広がる</summary>
+        /// <summary>いま動ける範囲を囲む四角。出入口が開いている間は、次のエリアまで広がる</summary>
         public Vec2 AreaMin { get; private set; }
         public Vec2 AreaMax { get; private set; }
+
+        /// <summary>いまのエリアの形。敵・大ボスの攻撃はこの中に出す。四角のエリアの出入口が開いている間は、次のエリアまで広げた四角</summary>
+        public AreaShape Area => _bounds[0];
         public IReadOnlyList<Unit> Units => _units;
         public IReadOnlyList<Projectile> Projectiles => _projectiles;
         public IReadOnlyList<AreaEffect> AreaEffects => _areaEffects;
@@ -130,6 +139,7 @@ namespace PenmonScramble.Core
             const float dt = Balance.TickSeconds;
             FirePendingSpecials();
             UpdateTimers(dt);
+            AssignAttackRights();
             UpdateActions(dt);
             ApplyKnockback(dt);
             ResolveChains();
@@ -160,6 +170,7 @@ namespace PenmonScramble.Core
                 unit.SwitchCooldown = MathF.Max(0f, unit.SwitchCooldown - dt);
                 unit.FrozenSeconds = MathF.Max(0f, unit.FrozenSeconds - dt);
                 unit.InvincibleSeconds = MathF.Max(0f, unit.InvincibleSeconds - dt);
+                unit.HitInvincibleSeconds = MathF.Max(0f, unit.HitInvincibleSeconds - dt);
                 unit.SlowSeconds = MathF.Max(0f, unit.SlowSeconds - dt);
                 unit.ComboWindowSeconds = MathF.Max(0f, unit.ComboWindowSeconds - dt);
                 unit.ComboCooldownSeconds = MathF.Max(0f, unit.ComboCooldownSeconds - dt);
@@ -175,6 +186,7 @@ namespace PenmonScramble.Core
                 var switchPressed = unit.Team == Team.Player && unit.ConsumeSwitchPress();
                 if (!unit.IsAlive || unit.IsFrozen)
                 {
+                    InterruptWindUp(unit);
                     continue;
                 }
 
@@ -182,6 +194,7 @@ namespace PenmonScramble.Core
                 {
                     // 突進中に飛ばされたら、突進は止まる
                     unit.Dash = null;
+                    InterruptWindUp(unit);
                     continue;
                 }
 

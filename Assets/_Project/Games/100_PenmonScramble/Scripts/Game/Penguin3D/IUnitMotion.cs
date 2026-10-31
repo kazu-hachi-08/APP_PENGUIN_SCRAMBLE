@@ -24,6 +24,9 @@ namespace PenmonScramble.Game
         /// <summary>凍っている（姿勢をその場で止める）</summary>
         bool Frozen { get; set; }
 
+        /// <summary>技を出す前に構えている（雑魚・ステージのボス）</summary>
+        bool WindingUp { get; set; }
+
         bool IsDefeatFinished { get; }
 
         void SnapFacing(Vector3 direction);

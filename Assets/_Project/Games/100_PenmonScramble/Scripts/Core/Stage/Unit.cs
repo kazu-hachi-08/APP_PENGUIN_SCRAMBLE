@@ -73,6 +73,9 @@ namespace PenmonScramble.Core
         public float FrozenSeconds { get; internal set; }
         public float InvincibleSeconds { get; internal set; }
 
+        /// <summary>攻撃を受けた直後の無敵の残り（秒）。必殺技・復活の無敵（InvincibleSeconds）と分けて持ち、交代で出てきた子には引き継がない</summary>
+        public float HitInvincibleSeconds { get; internal set; }
+
         /// <summary>ダウン中に、近くに仲間がいた時間の合計（秒）。離れてもためた分は残る</summary>
         public float ReviveSeconds { get; internal set; }
 
@@ -90,6 +93,14 @@ namespace PenmonScramble.Core
         internal HashSet<int> ChainHitIds { get; } = new HashSet<int>();
 
         internal DashState Dash { get; set; }
+
+        /// <summary>技を出す前の構え（雑魚とステージのボスだけ）。構えていなければ null</summary>
+        internal WindUpState WindUp { get; set; }
+
+        /// <summary>攻撃してよい権利を持っているとき、その相手のプレイヤーの Id。持っていなければ NoAttackTarget（雑魚だけ）</summary>
+        internal int AttackRightTargetId { get; set; } = NoAttackTarget;
+        internal const int NoAttackTarget = 0;
+        public bool HasAttackRight => AttackRightTargetId != NoAttackTarget;
 
         /// <summary>大ボスの攻撃の進み具合。大ボスでなければ null</summary>
         internal BigBossBrain Brain { get; set; }
@@ -112,8 +123,9 @@ namespace PenmonScramble.Core
         /// <summary>強く飛ばされている間は、歩くことも技を出すこともできない</summary>
         public bool IsStunned => KnockbackVelocity.Length > Balance.StunSpeed;
         public bool IsDashing => Dash != null;
+        public bool IsWindingUp => WindUp != null;
         public bool IsFrozen => FrozenSeconds > 0f;
-        public bool IsInvincible => InvincibleSeconds > 0f || IsSubmerged;
+        public bool IsInvincible => InvincibleSeconds > 0f || HitInvincibleSeconds > 0f || IsSubmerged;
         public bool IsSpecialReady => SpecialGauge >= 1f;
 
         /// <summary>このプレイヤーがメニューを開いている（見た目だけ。計算には使わない）</summary>
@@ -132,6 +144,8 @@ namespace PenmonScramble.Core
 
             ActiveIndex = next;
             Dash = null;
+            // 交代して無敵のまま逃げる遊びにしないため
+            HitInvincibleSeconds = 0f;
             return true;
         }
 

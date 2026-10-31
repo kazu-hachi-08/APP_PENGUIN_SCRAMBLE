@@ -32,6 +32,9 @@ namespace PenmonScramble.Game
         public float Slide;
         public float Down;
 
+        /// <summary>技の前の構えで膨らんでいる（0〜1。切り替えはなめらかに）</summary>
+        public float WindUp;
+
         public bool Defeated;
         public float Defeat;
 

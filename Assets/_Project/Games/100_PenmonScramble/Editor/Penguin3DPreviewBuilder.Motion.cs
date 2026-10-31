@@ -65,7 +65,7 @@ namespace PenmonScramble.Editor
 
         private static MotionRow AttackRow(string name, SkillShape shape) => new MotionRow(name, PenguinMotion.AttackSeconds, m => m.PlayAttack(shape));
 
-        [MenuItem("Tools/PenmonScramble/3D Preview Motion Capture")]
+        [MenuItem(EditorMenu.Capture + "Penguin Motions", priority = EditorMenu.CapturePriority + 3)]
         public static void CaptureMotions()
         {
             var stage = FindOrOpenPreviewStage();

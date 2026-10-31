@@ -18,6 +18,8 @@ namespace PenmonScramble.Game
         private const float WalkBlendRate = 6f;
         private const float SlideBlendRate = 10f;
         private const float DownBlendRate = 5f;
+        // 構えの 0.4 秒のうちに膨らみきって見えるよう速めにする
+        private const float WindUpBlendRate = 10f;
         private const float MovingThreshold = 0.05f;
         // 1マス進むあいだの歩数（左右で1周）。速く歩くほど揺れも速くなる
         private const float CyclesPerUnit = 0.9f;
@@ -57,6 +59,9 @@ namespace PenmonScramble.Game
 
         /// <summary>凍っている。姿勢をその場で止める（呼吸・まばたきも止めて、氷の中で固まって見せる）</summary>
         public bool Frozen { get; set; }
+
+        /// <summary>技を出す前に構えている（体がぷくっと膨らんで震える）</summary>
+        public bool WindingUp { get; set; }
 
         public bool IsDefeatFinished => _pose.Defeated && _pose.Defeat >= 1f;
 
@@ -121,6 +126,7 @@ namespace PenmonScramble.Game
             Sliding = false;
             Down = false;
             Frozen = false;
+            WindingUp = false;
             Velocity = Vector3.zero;
             _blinkTimer = NextBlinkInterval(BlinkIntervalMin, BlinkIntervalMax);
             Apply(_pose);
@@ -161,6 +167,7 @@ namespace PenmonScramble.Game
             _pose.WalkPhase = Mathf.Repeat(_pose.WalkPhase + speed * CyclesPerUnit * dt, 1f);
             _pose.Slide = Mathf.MoveTowards(_pose.Slide, Sliding && !Down ? 1f : 0f, SlideBlendRate * dt);
             _pose.Down = Mathf.MoveTowards(_pose.Down, Down ? 1f : 0f, DownBlendRate * dt);
+            _pose.WindUp = Mathf.MoveTowards(_pose.WindUp, WindingUp ? 1f : 0f, WindUpBlendRate * dt);
             _pose.Attack = Advance(_pose.Attack, dt, AttackSeconds);
             _pose.Special = Advance(_pose.Special, dt, SpecialSeconds);
             _pose.Hit = Advance(_pose.Hit, dt, HitSeconds);

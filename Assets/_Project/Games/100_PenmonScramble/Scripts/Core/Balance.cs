@@ -16,6 +16,13 @@ namespace PenmonScramble.Core
         public const float AreaWidth = 16f;
         public const float AreaHeight = 9f;
 
+        /// <summary>大ボスの闘技場（横長の楕円）の幅と高さ（マス）。人数では変えない</summary>
+        public const float ArenaWidth = 32f;
+        public const float ArenaHeight = 18f;
+
+        /// <summary>闘技場へ入る通り道の幅の半分（マス）。協力の4人が詰まらずに通れる広さ</summary>
+        public const float ArenaDoorHalfWidth = 1.5f;
+
         /// <summary>吹っ飛びの減速（マス/秒²）。大きいほどすぐ止まる</summary>
         public const float KnockbackDeceleration = 18f;
 
@@ -30,6 +37,36 @@ namespace PenmonScramble.Core
 
         /// <summary>敵は技が届く距離のこの割合まで近づいてから殴る（届くか届かないかの境目で空振りしないため）</summary>
         public const float EnemyAttackRangeRatio = 0.8f;
+
+        // 構え。技が届く距離に入った敵は、この秒数だけ止まって光ってから技を出す。見てから一歩ずれればよけられる長さにする
+        public const float EnemyWindUpSeconds = 0.4f;
+        public const float BossWindUpSeconds = 0.5f;
+        /// <summary>ボスの技2は派手で痛いので、少し長く構えて見切りやすくする</summary>
+        public const float BossSkill2WindUpSeconds = 0.7f;
+
+        /// <summary>構えの秒数。slot は技の番号（0 が技1）</summary>
+        public static float WindUpSeconds(bool isBoss, int slot)
+        {
+            if (!isBoss)
+            {
+                return EnemyWindUpSeconds;
+            }
+
+            return slot == 0 ? BossWindUpSeconds : BossSkill2WindUpSeconds;
+        }
+
+        // 攻撃の順番待ち。囲まれても一度に殴ってくるのは数体だけにして、構えを見てよけられるようにする
+        /// <summary>プレイヤー1人に、同時に構え・技を出してよい雑魚の数（ステージのボスは数えない）</summary>
+        public const int AttackersPerPlayer = 2;
+
+        /// <summary>順番待ちの敵は、技が届く距離よりこれだけ離れた所で待つ</summary>
+        public const float AttackWaitExtraDistance = 1.5f;
+
+        /// <summary>順番待ちの敵が、待つ距離からこれだけずれるまでは前後に動かない（細かく行ったり来たりしないため）</summary>
+        public const float AttackWaitSlack = 0.3f;
+
+        /// <summary>順番待ちの敵が横へ回り込む速さ（歩く速さに対する割合）。止まって並ぶと間が抜けて見えるため、ゆっくり動かす</summary>
+        public const float AttackWaitCircleSpeedRatio = 0.3f;
 
         /// <summary>協力の最大人数</summary>
         public const int MaxPlayers = 4;
@@ -102,6 +139,9 @@ namespace PenmonScramble.Core
         public const float ReviveHpRatio = 0.3f;
         /// <summary>復活した直後の無敵（秒）。囲まれたまま起きて、すぐまた倒れる、を防ぐ</summary>
         public const float ReviveInvincibleSeconds = 2f;
+
+        /// <summary>プレイヤーのペンモンが敵の攻撃を受けた直後の無敵（秒）。囲まれて同時に何発も当たり、一瞬で倒れないようにする。長いとごり押しで勝ててしまうので短く</summary>
+        public const float HitInvincibleSeconds = 0.4f;
 
         // 吹っ飛びの連鎖
         /// <summary>この速さ以上で飛んでいる敵だけが、ほかの敵にぶつかってダメージを与える（マス/秒）。弱い技で押しただけでは連鎖させない</summary>

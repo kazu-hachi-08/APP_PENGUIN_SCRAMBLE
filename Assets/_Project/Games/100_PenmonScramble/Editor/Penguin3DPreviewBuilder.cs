@@ -21,7 +21,7 @@ namespace PenmonScramble.Editor
         private static readonly Vector3 SunAngles = new Vector3(50f, -35f, 0f);
         private const float FarClip = 300f;
 
-        [MenuItem("Tools/PenmonScramble/3D Preview")]
+        [MenuItem(EditorMenu.Capture + "Open 3D Preview", priority = EditorMenu.CaptureOpenPriority)]
         public static void Open()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())

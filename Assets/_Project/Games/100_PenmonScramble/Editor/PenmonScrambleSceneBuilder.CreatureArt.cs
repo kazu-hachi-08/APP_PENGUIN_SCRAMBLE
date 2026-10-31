@@ -6,8 +6,8 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// UI の顔とワールドの地面の絵を CreatureArt に入れる。
-    /// 顔は3Dのモデルを撮った絵（PenmonScrambleSceneBuilder.Portraits.cs）、地面は Art/Stage/ の絵（Tools/Art/gen.py）
+    /// UI の顔とワールドの地面・闘技場の床の絵を CreatureArt に入れる。
+    /// 顔は3Dのモデルを撮った絵（PenmonScrambleSceneBuilder.Portraits.cs）、地面と闘技場の床は Art/Stage/ の絵（Tools/Art/gen.py）
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
@@ -23,6 +23,7 @@ namespace PenmonScramble.Editor
             FillSprites(so.FindProperty("_penguins"), SpeciesTable.Count, i => PenguinPortraitPath(i + 1), CreatureArtMaxSize);
             FillSprites(so.FindProperty("_bigBosses"), Balance.WorldCount, i => BossPortraitPath(BigBossTable.SkuaNo + i), CreatureArtMaxSize);
             FillSprites(so.FindProperty("_grounds"), Balance.WorldCount, i => $"{ArtFolder}Stage/World{i + 1}.png", GroundArtMaxSize);
+            FillSprites(so.FindProperty("_arenaGrounds"), Balance.WorldCount, i => $"{ArtFolder}Stage/Arena{i + 1}.png", GroundArtMaxSize);
             so.ApplyModifiedProperties();
         }
 

@@ -82,7 +82,7 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
-        public void Wave_HitsOnlyTheHalfThePlayerWasIn()
+        public void Wave_HitsOnlyTheBandAtThePlayersHeight()
         {
             var world = Create();
             AddBoss(world, BigBossTable.OrcaNo, new Vec2(8f, 0f));
@@ -99,7 +99,8 @@ namespace PenmonScramble.Tests
         [Test]
         public void Rain_WarnsAtEveryPlayerAndExtraSpots()
         {
-            var world = Create();
+            // ばらばらの円の数は広さで変わるので、ふつうのエリアの広さで数える
+            var world = new StageWorld(StageLayout.Area(null, 0), seed: 1);
             AddBoss(world, BigBossTable.SkuaNo, new Vec2(0f, 0f), attackIndex: 1);
             AddPlayer(world, new Vec2(4f, 3f));
             AddPlayer(world, new Vec2(-4f, -3f));

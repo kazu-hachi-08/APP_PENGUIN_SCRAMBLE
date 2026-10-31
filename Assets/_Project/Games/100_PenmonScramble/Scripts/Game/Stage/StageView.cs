@@ -39,16 +39,20 @@ namespace PenmonScramble.Game
         private const int DefeatCoins = 3;
         private const int BossDefeatCoins = 10;
         private const float BossDefeatSpread = 1.8f;
+        // 構えの音は雑魚が次々に構えると鳴りっぱなしになるので、この間隔（秒）より詰めて鳴らさない
+        private const float WindUpSoundInterval = 0.25f;
 
         private readonly Dictionary<int, UnitView> _units = new Dictionary<int, UnitView>();
         private readonly Dictionary<int, ProjectileView> _projectiles = new Dictionary<int, ProjectileView>();
         private readonly Dictionary<int, EffectView> _effects = new Dictionary<int, EffectView>();
         private readonly Dictionary<int, WarningView> _warnings = new Dictionary<int, WarningView>();
+        private readonly Dictionary<int, TelegraphView> _telegraphs = new Dictionary<int, TelegraphView>();
         private readonly HashSet<int> _aliveIds = new HashSet<int>();
         private readonly List<int> _removeIds = new List<int>();
         private StageMaterials _materials;
         private int _round;
         private int _lastTick = -1;
+        private float _lastWindUpSoundTime = float.NegativeInfinity;
 
         // 前のスナップショットからの時間（秒）。ゲストは2回に1回しか届かないので、ユニットの歩く速さを出すのに要る
         private float _sinceLastSnapshot = Balance.TickSeconds;
@@ -93,6 +97,7 @@ namespace PenmonScramble.Game
             SyncProjectiles(snapshot);
             SyncEffects(snapshot);
             SyncWarnings(snapshot);
+            SyncTelegraphs(snapshot);
             PushBossWarnings(snapshot);
             PlayEvents(snapshot);
             UpdateGates(snapshot);
@@ -128,6 +133,8 @@ namespace PenmonScramble.Game
             _projectiles.Clear();
             _effects.Clear();
             _warnings.Clear();
+            _telegraphs.Clear();
+            StopAllCoroutines();
             CreateGround(snapshot);
         }
 
@@ -144,8 +151,13 @@ namespace PenmonScramble.Game
                     continue;
                 }
 
-                _units.Add(unit.Id, CreateUnitView(unit));
-                if (showSpawn)
+                var created = CreateUnitView(unit);
+                _units.Add(unit.Id, created);
+                if (showSpawn && created.IsBigBoss)
+                {
+                    DropInBigBoss(created);
+                }
+                else if (showSpawn)
                 {
                     BurstFx.SpawnOnFloor(transform, DecalSprites.Ring, _materials.Decal, Color.white, unit.Position.ToVector2(), unit.Radius, unit.Radius * 2.5f, SpawnPoofSeconds);
                 }
@@ -196,6 +208,20 @@ namespace PenmonScramble.Game
             if (appeared && !_preview)
             {
                 GameSounds.Play(GameSound.Warning);
+            }
+        }
+
+        /// <summary>構えている敵の地面の予告。構えに入った瞬間に小さな音を鳴らす（同時にいくつ構えても1回、続けて鳴らしすぎない）</summary>
+        private void SyncTelegraphs(StageSnapshot snapshot)
+        {
+            var appeared = SyncViews(snapshot.Telegraphs, _telegraphs,
+                telegraph => telegraph.UnitId,
+                telegraph => TelegraphView.Create(transform, _materials, telegraph),
+                (view, telegraph) => view.PushState(telegraph));
+            if (appeared && !_preview && Time.time - _lastWindUpSoundTime >= WindUpSoundInterval)
+            {
+                _lastWindUpSoundTime = Time.time;
+                GameSounds.Play(GameSound.WindUp);
             }
         }
 

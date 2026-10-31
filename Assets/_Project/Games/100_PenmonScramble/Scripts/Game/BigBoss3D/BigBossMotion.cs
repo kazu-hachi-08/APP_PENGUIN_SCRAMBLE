@@ -23,6 +23,9 @@ namespace PenmonScramble.Game
         public const float EmergeSeconds = 0.75f;
         public const float SubmergeSeconds = 0.4f;
         public const float HitSeconds = 0.35f;
+        public const float DropSeconds = 1f;
+        /// <summary>降りてきて床に着くまでの秒数（着いた瞬間に床を揺らす）。残りは着地でつぶれて戻る間</summary>
+        public const float DropFallSeconds = DropSeconds * DropAirShare;
         // 大ボスの最期は、ペンギン（0.6秒）より長く見せる
         public const float DefeatSeconds = 0.9f;
         private const float BlinkSeconds = 0.18f;
@@ -50,6 +53,9 @@ namespace PenmonScramble.Game
         public bool Down { get; set; }
 
         public bool Frozen { get; set; }
+
+        /// <summary>大ボスは赤い範囲で予告するので、雑魚の構えは使わない（受け取るだけ）</summary>
+        public bool WindingUp { get; set; }
 
         public bool IsDefeatFinished => _pose.Defeated && _pose.Defeat >= 1f;
 
@@ -87,6 +93,9 @@ namespace PenmonScramble.Game
 
         public BigBossPose Pose => _pose;
 
+        /// <summary>空から降りてくる途中（まだ床に着いていない）</summary>
+        public bool IsDroppingIn => _pose.Drop < DropAirShare;
+
         /// <summary>攻撃が出た瞬間。構えから一気に動く（羽を打ち下ろす・波を起こす・かみつく）</summary>
         public void PlayStrike(BossAttackKind kind)
         {
@@ -107,6 +116,13 @@ namespace PenmonScramble.Game
         public void PlaySpecial() => PlayStrike(BossAttackKind.Charge);
 
         public void PlayHit() => _pose.Hit = 0f;
+
+        /// <summary>闘技場に現れた: 空から降りてくる</summary>
+        public void PlayDropIn()
+        {
+            _pose.Drop = 0f;
+            Apply(_pose);
+        }
 
         /// <summary>大ボスは飛ばされる強さが 1/10 で転がるほど飛ばないので、のけぞるだけにする</summary>
         public void PlayKnockback(Vector3 velocity) => PlayHit();
@@ -196,6 +212,7 @@ namespace PenmonScramble.Game
             _pose.Strike = Advance(_pose.Strike, dt, StrikeSeconds);
             _pose.Emerge = Advance(_pose.Emerge, dt, EmergeSeconds);
             _pose.Hit = Advance(_pose.Hit, dt, HitSeconds);
+            _pose.Drop = Advance(_pose.Drop, dt, DropSeconds);
             _pose.Blink = Advance(_pose.Blink, dt, BlinkSeconds);
             if (_pose.Defeated)
             {

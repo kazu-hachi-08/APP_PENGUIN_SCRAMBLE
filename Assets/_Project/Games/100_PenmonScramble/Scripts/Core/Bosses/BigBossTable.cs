@@ -21,10 +21,10 @@ namespace PenmonScramble.Core
             new BigBossDef(LeopardSealNo, "ヒョウアザラシ", Element.Ice, 1.2f, 1.0f, 1.8f, 1.5f,
                 new BossAttackDef(BossAttackKind.Charge, 0.8f, Dash(32f, 10f, 7f, 13f, 0.2f)),
                 new BossAttackDef(BossAttackKind.Ambush, 1.1f, Circles(38f, 10f, 1.6f, 0))),
-            // 波と、画面を横切る突進。一番硬く、休みが短い
+            // 波と、闘技場を柵まで横切る突進（走る距離は柵で決まるので 0）。一番硬く、休みが短い
             new BigBossDef(OrcaNo, "シャチ", Element.Water, 1.4f, 1.2f, 2.0f, 1.3f,
                 new BossAttackDef(BossAttackKind.Wave, 1.0f, Circles(30f, 8f, 0f, 0)),
-                new BossAttackDef(BossAttackKind.Charge, 1.0f, Dash(40f, 12f, Balance.AreaWidth, 20f, 0.3f), crossScreen: true),
+                new BossAttackDef(BossAttackKind.Charge, 1.0f, Dash(40f, 12f, 0f, 20f, 0.3f), crossScreen: true),
                 new BossAttackDef(BossAttackKind.Charge, 0.8f, Dash(34f, 10f, 7f, 15f, 0.3f))),
         };
 

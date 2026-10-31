@@ -75,16 +75,16 @@ namespace PenmonScramble.Tests
 
             DefeatEnemies(world);
             Assert.That(world.IsGateOpen, Is.True);
-            Assert.That(world.AreaMax, Is.EqualTo(StageLayout.AreaMax(1)));
+            Assert.That(world.AreaMax, Is.EqualTo(StageLayout.Area(null, 1).Max));
             Assert.That(world.Result, Is.EqualTo(StageResult.Playing));
 
-            player.Position = new Vec2(StageLayout.AreaMin(1).X + Balance.AreaEnterDepth + 0.5f, 0f);
+            player.Position = new Vec2(StageLayout.Area(null, 1).Min.X + Balance.AreaEnterDepth + 0.5f, 0f);
             world.Tick();
 
             Assert.That(world.AreaIndex, Is.EqualTo(1));
             Assert.That(world.IsGateOpen, Is.False);
-            Assert.That(world.AreaMin, Is.EqualTo(StageLayout.AreaMin(1)));
-            Assert.That(world.AreaMax, Is.EqualTo(StageLayout.AreaMax(1)));
+            Assert.That(world.AreaMin, Is.EqualTo(StageLayout.Area(null, 1).Min));
+            Assert.That(world.AreaMax, Is.EqualTo(StageLayout.Area(null, 1).Max));
         }
 
         [Test]
@@ -95,7 +95,7 @@ namespace PenmonScramble.Tests
             WaitFirstWave(world);
             DefeatEnemies(world);
 
-            player.Position = new Vec2(StageLayout.AreaMin(1).X + Balance.AreaEnterDepth * 0.5f, 0f);
+            player.Position = new Vec2(StageLayout.Area(null, 1).Min.X + Balance.AreaEnterDepth * 0.5f, 0f);
             world.Tick();
 
             Assert.That(world.AreaIndex, Is.EqualTo(0));
@@ -111,10 +111,10 @@ namespace PenmonScramble.Tests
             WaitFirstWave(world);
             DefeatEnemies(world);
 
-            leader.Position = new Vec2(StageLayout.AreaMin(1).X + Balance.AreaEnterDepth + 0.5f, 1f);
+            leader.Position = new Vec2(StageLayout.Area(null, 1).Min.X + Balance.AreaEnterDepth + 0.5f, 1f);
             TickFor(world, 2);
 
-            Assert.That(lagger.Position.X, Is.GreaterThanOrEqualTo(StageLayout.AreaMin(1).X + lagger.Radius - Tolerance));
+            Assert.That(lagger.Position.X, Is.GreaterThanOrEqualTo(StageLayout.Area(null, 1).Min.X + lagger.Radius - Tolerance));
         }
 
         [Test]

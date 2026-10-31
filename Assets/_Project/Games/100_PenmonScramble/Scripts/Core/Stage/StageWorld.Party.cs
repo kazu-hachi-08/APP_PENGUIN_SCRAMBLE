@@ -112,10 +112,14 @@ namespace PenmonScramble.Core
         {
             var toRight = user.Facing.X >= 0f;
             var direction = toRight ? Vec2.Right : -Vec2.Right;
-            var x = toRight ? AreaMin.X + skill.ProjectileRadius : AreaMax.X - skill.ProjectileRadius;
-            for (var y = AreaMin.Y + SpecialMoves.WaterWaveSpacing * 0.5f; y < AreaMax.Y; y += SpecialMoves.WaterWaveSpacing)
+            for (var y = Area.Min.Y + SpecialMoves.WaterWaveSpacing * 0.5f; y < Area.Max.Y; y += SpecialMoves.WaterWaveSpacing)
             {
-                SpawnProjectile(user, skill, new Vec2(x, y), direction);
+                // 闘技場では、その高さの柵から出す（楕円の上下の端は細いので、柵の外から出さないように）
+                var (minX, maxX) = Area.SpanX(y, skill.ProjectileRadius);
+                if (minX < maxX)
+                {
+                    SpawnProjectile(user, skill, new Vec2(toRight ? minX : maxX, y), direction);
+                }
             }
         }
 

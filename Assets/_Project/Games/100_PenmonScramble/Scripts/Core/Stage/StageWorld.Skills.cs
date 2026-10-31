@@ -142,13 +142,18 @@ namespace PenmonScramble.Core
 
         private void ApplyHit(int attackerId, Unit target, int damage, float knockback, Vec2 direction, SkillDef skill)
         {
-            // 必殺技のあいだ、出した本人は無敵
+            // 必殺技・復活・当たった直後は無敵
             if (target.IsInvincible)
             {
                 return;
             }
 
             target.Hp = Math.Max(0, target.Hp - damage);
+            if (target.Team == Team.Player)
+            {
+                target.HitInvincibleSeconds = Balance.HitInvincibleSeconds;
+            }
+
             // 足すと連打で飛びすぎるので、新しい吹っ飛びで置き換える
             target.KnockbackVelocity = direction * (knockback * target.KnockbackScale);
             ApplyStatus(target, skill);
@@ -171,11 +176,5 @@ namespace PenmonScramble.Core
             {
                 target.SlowSeconds = MathF.Max(target.SlowSeconds, skill.SlowSeconds);
             }
-        }
-
-        private bool IsInsideArea(Vec2 position)
-        {
-            return position.X >= AreaMin.X && position.X <= AreaMax.X && position.Y >= AreaMin.Y && position.Y <= AreaMax.Y;
-        }
-    }
+        }    }
 }
