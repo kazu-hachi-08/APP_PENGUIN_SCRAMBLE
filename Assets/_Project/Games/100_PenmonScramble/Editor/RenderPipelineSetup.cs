@@ -39,13 +39,7 @@ namespace PenmonScramble.Editor
         private static readonly Tier Mobile = new Tier(msaa: 2, outline: true);
         private static readonly Tier Pc = new Tier(msaa: 4, outline: true);
 
-        [MenuItem("Tools/PenmonScramble/Setup URP")]
-        public static void SetupMenu()
-        {
-            Ensure();
-            Debug.Log("[RenderPipelineSetup] URP（Universal Renderer）の設定をそろえました");
-        }
-
+        // Rebuild・Release・試作の場を開くときに必ず呼ぶので、手で押すメニューは置かない
         public static void Ensure()
         {
             Directory.CreateDirectory(Folder);

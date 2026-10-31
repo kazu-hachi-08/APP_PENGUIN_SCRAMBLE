@@ -37,7 +37,7 @@ namespace PenmonScramble.Editor
         private static readonly Color SunColor = new Color(1f, 0.97f, 0.92f);
         private const float SunIntensity = 1.1f;
 
-        [MenuItem("Tools/PenmonScramble/Rebuild")]
+        [MenuItem(EditorMenu.Rebuild, priority = EditorMenu.RebuildPriority)]
         public static void Rebuild()
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())

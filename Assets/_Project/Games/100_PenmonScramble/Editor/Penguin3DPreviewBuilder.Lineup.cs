@@ -22,7 +22,7 @@ namespace PenmonScramble.Editor
         private const float LineupCameraDistance = 5.8f;
         private static readonly Vector3 LineupCameraTarget = new Vector3(0f, 0.95f, 0f);
 
-        [MenuItem("Tools/PenmonScramble/3D Preview Lineup Capture")]
+        [MenuItem(EditorMenu.Capture + "Penguin Lineup", priority = EditorMenu.CapturePriority + 2)]
         public static void CaptureLineup()
         {
             var stage = FindOrOpenPreviewStage();
