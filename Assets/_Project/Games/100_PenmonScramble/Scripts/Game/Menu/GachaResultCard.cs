@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ガチャで出てきた子のカード（§7）: ★・名前・属性・個性・パワーと HP・技2つ。初めて手に入れた種類なら「NEW!」の札。
+    /// ガチャで出てきた子のカード: ★・名前・属性・個性・パワーと HP・技2つ。初めて手に入れた種類なら「NEW!」の札。
     /// 出すたびに右からすべり込む（UiSlideIn）。技のカードはペンモン画面と同じ見た目（押しても何もしない）
     /// </summary>
     public class GachaResultCard : MonoBehaviour

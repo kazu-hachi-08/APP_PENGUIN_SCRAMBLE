@@ -2,7 +2,7 @@ using System;
 
 namespace PenmonScramble.Core
 {
-    /// <summary>ワールドごとの敵の強さと、大ボス（§6.2）の調整値</summary>
+    /// <summary>ワールドごとの敵の強さと、大ボスの調整値</summary>
     public static partial class Balance
     {
         public const int WorldCount = 3;
@@ -16,7 +16,7 @@ namespace PenmonScramble.Core
             return WorldEnemyScales[Math.Clamp(world, 1, WorldCount) - 1];
         }
 
-        // 大ボス（§6.2）
+        // 大ボス
         /// <summary>大ボスの HP ＝ 種類の HP の倍率 × EnemyPower × これ × 人数の倍率 × ワールドの倍率。ステージのボス（BossHpScale）より硬い</summary>
         public const float BigBossHpScale = 30f;
         /// <summary>大ボスの攻撃 ＝ これ × ワールドの倍率。技の威力に掛ける</summary>

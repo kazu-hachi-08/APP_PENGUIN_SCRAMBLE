@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 記録（SaveData）への操作: 編成・売る・ステージの報酬と解放（§6.3・§7）。ガチャは PlayerRecord.Gacha.cs。
-    /// 保存はしない（呼んだ側が、ガチャの後・結果の後・売った後に保存する。§10）
+    /// 記録（SaveData）への操作: 編成・売る・ステージの報酬と解放。ガチャは PlayerRecord.Gacha.cs。
+    /// 保存はしない（呼んだ側が、ガチャの後・結果の後・売った後に保存する）
     /// </summary>
     public sealed partial class PlayerRecord
     {
@@ -44,7 +44,7 @@ namespace PenmonScramble.Core
             return true;
         }
 
-        /// <summary>売ってコインに換える。編成の子は売れない（§7）</summary>
+        /// <summary>売ってコインに換える。編成の子は売れない</summary>
         public bool Sell(int id)
         {
             var penguin = Find(id);
@@ -64,7 +64,7 @@ namespace PenmonScramble.Core
             return Balance.SellPrice(species?.Stars ?? 1);
         }
 
-        /// <summary>ステージの1番目か、1つ前をクリアしていれば遊べる（§6.3）</summary>
+        /// <summary>ステージの1番目か、1つ前をクリアしていれば遊べる</summary>
         public bool IsUnlocked(int stageNo)
         {
             return stageNo == 1 || Data.clearedStages.Contains(stageNo - 1);
@@ -87,7 +87,7 @@ namespace PenmonScramble.Core
             }
         }
 
-        /// <summary>ステージの結果を記録し、もらったコインを返す（§6.3。協力ではホストの結果を各自の端末で記録する。§8）</summary>
+        /// <summary>ステージの結果を記録し、もらったコインを返す（協力ではホストの結果を各自の端末で記録する）</summary>
         public int RecordStage(int stageNo, bool cleared, int enemiesDefeated)
         {
             var coins = cleared ? Balance.ClearCoins : Math.Max(0, enemiesDefeated) * Balance.FailCoinsPerEnemy;

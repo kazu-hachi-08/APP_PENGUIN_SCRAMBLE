@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ガチャ（§7）。後ろの3D（GachaStage）でレバーを回してカプセルを出し、割れて出てきた子の★と結果のカードを出す。
+    /// ガチャ。後ろの3D（GachaStage）でレバーを回してカプセルを出し、割れて出てきた子の★と結果のカードを出す。
     /// 演出の間は画面のどこを押してもとばせる。初回は無料の3回を引き終わるまで「もどる」を出さない（3体そろえてから始めるため）。
     /// 確率の窓は GachaScreen.Rates.cs
     /// </summary>

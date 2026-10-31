@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// HUD の顔のまわりの必殺技のゲージ（§4.3・§9.8）。5つに区切った輪が、敵1体分ずつたまる。
+    /// HUD の顔のまわりの必殺技のゲージ。5つに区切った輪が、敵1体分ずつたまる。
     /// 満タンになったら、スマホの必殺技のボタン（TouchSpecialButton）と同じく、後ろの光が脈打ち、外の輪が回り、「必殺OK」の札が弾む
     /// </summary>
     public class HudSpecialRing : MonoBehaviour

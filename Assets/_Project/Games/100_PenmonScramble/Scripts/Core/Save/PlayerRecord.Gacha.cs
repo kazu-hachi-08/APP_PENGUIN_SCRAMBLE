@@ -10,7 +10,7 @@ namespace PenmonScramble.Core
         Full,
     }
 
-    /// <summary>ガチャ（§7）: ★を確率で決め、その★の種類から1つ選び、パワーを解放したワールドの範囲で決める</summary>
+    /// <summary>ガチャ: ★を確率で決め、その★の種類から1つ選び、パワーを解放したワールドの範囲で決める</summary>
     public sealed partial class PlayerRecord
     {
         public int FreePullsLeft => Math.Max(0, Balance.FreePulls - Data.freePullsUsed);

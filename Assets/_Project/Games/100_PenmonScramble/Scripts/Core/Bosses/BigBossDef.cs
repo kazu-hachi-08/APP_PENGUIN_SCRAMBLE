@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace PenmonScramble.Core
 {
-    /// <summary>大ボスの攻撃の種類（§6.2）。どれも出る前に地面へ赤い範囲を出して知らせる</summary>
+    /// <summary>大ボスの攻撃の種類。どれも出る前に地面へ赤い範囲を出して知らせる</summary>
     public enum BossAttackKind : byte
     {
         /// <summary>赤い帯の上をまっすぐ突っ込む（急降下・体当たり・画面を横切る突進）</summary>
@@ -44,7 +44,7 @@ namespace PenmonScramble.Core
         public bool CrossScreen { get; }
     }
 
-    /// <summary>大ボス1体分（§6.2）。ペンギンの天敵なので、ペンギンの種類表とは分けて持つ</summary>
+    /// <summary>大ボス1体分。ペンギンの天敵なので、ペンギンの種類表とは分けて持つ</summary>
     public sealed class BigBossDef
     {
         public BigBossDef(int no, string name, Element element, float hpRate, float radius, float moveSpeed, float restSeconds, params BossAttackDef[] attacks)

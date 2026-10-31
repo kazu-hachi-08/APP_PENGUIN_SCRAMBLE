@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンモン画面（§7）。左上に編成の帯（3枠）、左下に持っている子の一覧、右に選んだ子の図鑑カード（PenmonDetailPanel）。
+    /// ペンモン画面。左上に編成の帯（3枠）、左下に持っている子の一覧、右に選んだ子の図鑑カード（PenmonDetailPanel）。
     /// 一覧か枠の子を選ぶ → 「編成に入れる」 → 光った枠から入れたい所を押す、の順で編成する。
     /// 編成にいない子は「売る」（2回押しで確定）
     /// </summary>

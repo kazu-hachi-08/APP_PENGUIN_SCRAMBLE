@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンモン画面の技の実演の小窓（§7）。本番と同じ計算の練習場（SkillPractice）を進め、
+    /// ペンモン画面の技の実演の小窓。本番と同じ計算の練習場（SkillPractice）を進め、
     /// 実演用の StageView（_preview）で描いたものを専用のカメラで撮って、RawImage に映す。音は出さない。
     /// 練習場は3Dの空間の離れた所にあるので、タイトルのジオラマとは映り合わない
     /// </summary>

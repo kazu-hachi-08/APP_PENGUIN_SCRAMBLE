@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンモン画面の右側の、選んだ子の図鑑カード（§7）: 顔・★・名前・属性・個性・パワーと HP・体力／攻撃／速さの棒・
+    /// ペンモン画面の右側の、選んだ子の図鑑カード:顔・★・名前・属性・個性・パワーと HP・体力／攻撃／速さの棒・
     /// 技の実演の小窓・技2つのカード。技のカードを押すと、小窓の実演がその技に替わる
     /// </summary>
     public class PenmonDetailPanel : MonoBehaviour

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// スマホ用の仮想スティック（左）と技ボタン（右）。§3 の配置。
+    /// スマホ用の仮想スティック（左）と技ボタン（右）。
     /// ボタンは押すと沈む厚みのある丸で、中に技の形・待ちの扇・必殺技のゲージのリング・次に出る子の顔を出す（TouchControlsView）。絵は TouchArt
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -26,7 +26,7 @@ namespace PenmonScramble.Editor
         private const float Skill1Size = 240f;
         private static readonly Vector2 Skill2Position = new Vector2(-600f, 200f);
         private const float Skill2Size = 180f;
-        // §3: 必殺技は技1の上、交代は技2の上の小ボタン（どれも親指を少し動かせば届く範囲）
+        // 必殺技は技1の上、交代は技2の上の小ボタン（どれも親指を少し動かせば届く範囲）
         private static readonly Vector2 SpecialPosition = new Vector2(-330f, 570f);
         private const float SpecialSize = 170f;
         private static readonly Vector2 SwitchPosition = new Vector2(-610f, 420f);

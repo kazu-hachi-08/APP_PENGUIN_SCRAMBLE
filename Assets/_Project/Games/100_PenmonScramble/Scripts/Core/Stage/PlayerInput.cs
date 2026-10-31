@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 1人分の入力。オンラインではゲストがこれだけをホストへ送る（§8）ので、小さく保つ
+    /// 1人分の入力。オンラインではゲストがこれだけをホストへ送るので、小さく保つ
     /// </summary>
     public readonly struct PlayerInput
     {

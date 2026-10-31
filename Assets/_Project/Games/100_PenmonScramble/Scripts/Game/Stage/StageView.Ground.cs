@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージの床・エリアの出入口・カメラ（§6.1）。床はワールドごとの地面の絵（§6.2）を貼った板
+    /// ステージの床・エリアの出入口・カメラ。床はワールドごとの地面の絵を貼った板
     /// </summary>
     public partial class StageView
     {

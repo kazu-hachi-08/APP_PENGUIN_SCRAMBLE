@@ -36,7 +36,7 @@ namespace PenmonScramble.Game
         private const float Headroom = StageCamera.Headroom;
         private const float Margin = StageCamera.Margin;
 
-        /// <summary>フェーズ0で決めたカメラ（透視 55°）。ステージのカメラ（StageCamera）と同じ構え</summary>
+        /// <summary>カメラ（透視 55°）。ステージのカメラ（StageCamera）と同じ構え</summary>
         public const int Chosen = 1;
 
         public static int Count => Presets.Length;

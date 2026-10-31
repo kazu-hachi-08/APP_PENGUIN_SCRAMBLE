@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 大ボス3体のスクショ（PLAN_3D フェーズ5。形と動きを人が確かめる）。試作の場に一時的に組んで撮り、撮り終えたら消す。
+    /// 大ボス3体のスクショ（形と動きを人が確かめる）。試作の場に一時的に組んで撮り、撮り終えたら消す。
     /// boss_skua.png / boss_seal.png / boss_orca.png: 縦に動き、横にその動きの始めから終わりまでを6枚。
     /// bosses_area.png: ゲームのカメラでエリア全体（ペンギンと並べた大きさ）
     /// </summary>

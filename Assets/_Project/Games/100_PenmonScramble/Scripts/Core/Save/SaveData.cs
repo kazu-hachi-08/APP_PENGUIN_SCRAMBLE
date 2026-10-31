@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 端末に保存する記録（§10）。JSON にそのまま書くので、項目名と型は一度配ったら変えない（CLAUDE.md §3.5）。
+    /// 端末に保存する記録。JSON にそのまま書くので、項目名と型は一度配ったら変えない（CLAUDE.md §3.5）。
     /// 項目を足すときは CurrentVersion を上げ、SaveStore.Upgrade に「古い記録に無かったときの値」を書く
     /// </summary>
     [Serializable]
@@ -31,7 +31,7 @@ namespace PenmonScramble.Core
         }
     }
 
-    /// <summary>持っている1体。同じ種類でも引くたびに別の個体になる（§7）</summary>
+    /// <summary>持っている1体。同じ種類でも引くたびに別の個体になる</summary>
     [Serializable]
     public sealed class OwnedPenguin
     {

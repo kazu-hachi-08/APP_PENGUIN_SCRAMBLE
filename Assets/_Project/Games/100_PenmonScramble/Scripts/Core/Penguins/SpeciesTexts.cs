@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// ペンモン画面に出す文（§5.3 の個性と、技ごとの一言の説明）。
+    /// ペンモン画面に出す文（個性と、技ごとの一言の説明）。
     /// 数値の表（SpeciesTable）と分けて、文だけを直しやすくしている。説明は技の数値と食い違わないように書く
     /// </summary>
     public static class SpeciesTexts

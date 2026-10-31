@@ -66,7 +66,7 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>もぐっている（§6.2 の飛び出し）。もぐると床の下へ沈み、出てくると飛び出す</summary>
+        /// <summary>もぐっている（飛び出し）。もぐると床の下へ沈み、出てくると飛び出す</summary>
         public bool Submerged
         {
             get => _submerged;

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ステージの HUD の絵（§9.8）: 斜めに切った板（面・縁）と、5つに区切った必殺技のゲージの輪。
+    /// ステージの HUD の絵:斜めに切った板（面・縁）と、5つに区切った必殺技のゲージの輪。
     /// メニューの部品（UiArt）と同じく、Rebuild のたびにコードで描いて Art/UI/ に置く。白で描いて Image の色で塗る
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder

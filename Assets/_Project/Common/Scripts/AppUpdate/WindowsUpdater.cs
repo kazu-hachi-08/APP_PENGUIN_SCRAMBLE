@@ -16,7 +16,7 @@ namespace PenmonScramble.Common.AppUpdate
         private const string VersionFileName = "version.txt";
         private const string ScriptFileName = "update.ps1";
         private const int TimeoutSeconds = 10;
-        // ヘッダーには ASCII しか入らないので、日本語の productNameは使えない
+        // ヘッダーには ASCII しか入らないので、日本語の productName は使えない
         private const string UserAgent = "PenmonScramble";
 
         [Serializable]
@@ -43,7 +43,7 @@ namespace PenmonScramble.Common.AppUpdate
             }
         }
 
-        /// <summary>最新のタグが手元と違えばそのタグを、同じか確かめられなければ null を返す</summary>
+        /// <summary>最新のタグが手元と違えばそのタグを返す。同じ・取得できなかったときは null</summary>
         public static IEnumerator FetchNewVersion(string latestReleaseApi, Action<string> onFetched)
         {
             using var request = UnityWebRequest.Get(latestReleaseApi);

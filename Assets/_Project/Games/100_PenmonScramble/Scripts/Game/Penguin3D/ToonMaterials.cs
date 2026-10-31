@@ -5,12 +5,12 @@ using UnityEngine.Rendering;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// トゥーンの素材を色ごとに1つだけ作って使い回す。同じ素材の部品はまとめて描かれるので、色の数だけ素材があればよい。
+    /// トゥーンの素材を色とつやの組ごとに1つだけ作って使い回す。同じ素材の部品はまとめて描かれるので、色の数だけ素材があればよい。
     /// シェーダーはシーンの参照から受け取る（Shader.Find だとビルドに入らないことがあるため）
     /// </summary>
     public sealed class ToonMaterials
     {
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        internal static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
         private static readonly int GlossId = Shader.PropertyToID("_Gloss");
         private static readonly int GlossSizeId = Shader.PropertyToID("_GlossSize");

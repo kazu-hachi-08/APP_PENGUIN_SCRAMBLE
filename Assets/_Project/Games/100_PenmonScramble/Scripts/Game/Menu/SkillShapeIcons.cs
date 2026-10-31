@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 技の形（§4.2）のアイコン。白で描くので、Image の色で属性の色に染めて使う。
+    /// 技の形のアイコン。白で描くので、Image の色で属性の色に染めて使う。
     /// 7枚しかなく形も単純なので、絵を用意せずに実行時に描く（左の点が自分、右へ技が出る）
     /// </summary>
     public static class SkillShapeIcons

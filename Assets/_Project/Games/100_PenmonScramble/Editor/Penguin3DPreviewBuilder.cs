@@ -6,7 +6,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 3D の試作の場のシーンを作る（PLAN_3D フェーズ0）。ゲームのビルドには入れない。
+    /// 3D の試作の場のシーンを作る。ゲームのビルドには入れない。
     /// 床とペンギンはシーンに保存せず、PenguinPreviewStage が開くたびに組み立てる
     /// </summary>
     public static partial class Penguin3DPreviewBuilder

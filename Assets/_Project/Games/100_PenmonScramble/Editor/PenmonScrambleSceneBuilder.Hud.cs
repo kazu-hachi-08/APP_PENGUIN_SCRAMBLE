@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ステージ中の HUD（§9.8）の土台・画面の真ん中の知らせ・結果・右上のメニューボタンと、必殺技のカットイン。
+    /// ステージ中の HUDの土台・画面の真ん中の知らせ・結果・右上のメニューボタンと、必殺技のカットイン。
     /// 自分のプレート・エリアの進み具合・ボスの HP は PenmonScrambleSceneBuilder.HudPlates.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -35,7 +35,7 @@ namespace PenmonScramble.Editor
         private const int RetryFontSize = 48;
         private static readonly Color RetryButtonColor = new Color(0.18f, 0.55f, 0.9f);
 
-        // 右上のメニューボタン（§3.2）。指で押しやすい大きさにして、進み具合はその左へずらす
+        // 右上のメニューボタン。指で押しやすい大きさにして、進み具合はその左へずらす
         private const float HudMenuButtonSize = 120f;
         private const float MenuButtonGap = 24f;
         private const float MenuBarWidthRatio = 0.14f;

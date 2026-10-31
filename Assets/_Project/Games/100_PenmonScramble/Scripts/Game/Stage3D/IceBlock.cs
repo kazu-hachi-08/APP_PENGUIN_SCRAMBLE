@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 凍ったペンギンを包む半透明の氷の塊（§9）。凍るとぽんと現れ、溶けると砕けて飛び散る（IceShatter）。
+    /// 凍ったペンギンを包む半透明の氷の塊。凍るとぽんと現れ、溶けると砕けて飛び散る（IceShatter）。
     /// 氷はペンギンの体ではなくユニットに付ける。凍ったまま飛ばされたときは、塊ごとすべって見える
     /// </summary>
     public sealed class IceBlock : MonoBehaviour

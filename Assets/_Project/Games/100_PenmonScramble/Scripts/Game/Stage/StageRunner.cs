@@ -11,7 +11,7 @@ namespace PenmonScramble.Game
     /// <summary>
     /// タイトル（ひとりで / 部屋を作る / コードで参加）からステージを始め、入力・HUD・結果をつなぐ。
     /// 計算はソロとホストが StageHost、ゲストは StageGuest で、どちらもスナップショットを StageView に渡して描く。
-    /// ステージはホストがタイトルで選んだもの、連れていくのは各自の記録の編成（§8）。報酬は各自の記録に書く。
+    /// ステージはホストがタイトルで選んだもの、連れていくのは各自の記録の編成。報酬は各自の記録に書く。
     /// BGM はタイトル・ステージ・ボスエリアで切り替え、結果で止めてジングルを鳴らす。
     /// 遊んでいる間はメニュー（StageMenu）を開ける。開いている間は自分の入力を「メニュー中」にする。
     /// スマホのボタンは遊んでいる間だけ出し、場に出ている子の技・待ち・ゲージを映す（TouchControlsView）
@@ -50,7 +50,7 @@ namespace PenmonScramble.Game
             _hud.TitleRequested += ReturnToTitle;
             _menu.RestartRequested += Retry;
             _menu.TitleRequested += ReturnToTitle;
-            // ゲストが1人抜けても、残りで遊び続ける（§8）
+            // ゲストが1人抜けても、残りで遊び続ける
             _session.ContinueWhenMemberLeaves = true;
             _modeSelect.ShowMultiplayer(StartSolo, StartOnline, Balance.MaxPlayers);
             PlayMusic(MusicTrack.Title);
@@ -82,11 +82,11 @@ namespace PenmonScramble.Game
             // ホストは開始直後から送ってくるので、このコールバックの中ですぐに受け取れるようにする
             _link = new StageLink();
             _link.Open();
-            // ゲストにとってはホストが抜けた、ホストにとっては自分の通信が止まった。どちらも続けられないのでタイトルへ（§8）
+            // ゲストにとってはホストが抜けた、ホストにとっては自分の通信が止まった。どちらも続けられないのでタイトルへ
             _session.OnPeerDisconnected += ReturnToTitle;
             _session.OnConnectionLost += ReturnToTitle;
 
-            // 「やり直し」は全員の挑戦を始め直すので、ホストだけが押せる（§8）
+            // 「やり直し」は全員の挑戦を始め直すので、ホストだけが押せる
             _menu.Bind(solo: false, canRestart: seat == StageHost.LocalSeat);
             if (seat == StageHost.LocalSeat)
             {
@@ -231,7 +231,7 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>結果を自分の記録に書いて保存する。協力ではホストのクリアが全員の記録に付く（§6.3）</summary>
+        /// <summary>結果を自分の記録に書いて保存する。協力ではホストのクリアが全員の記録に付く</summary>
         private static int RecordResult(StageSnapshot snapshot, bool cleared)
         {
             var coins = GameSave.Record.RecordStage(snapshot.StageNo, cleared, snapshot.EnemiesDefeated);

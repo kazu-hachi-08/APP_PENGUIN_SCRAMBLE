@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// ダウンと復活（§4.5）。3体とも倒れたプレイヤーはその場に残り、仲間が近くに合計3秒いると起き上がる
+    /// ダウンと復活。3体とも倒れたプレイヤーはその場に残り、仲間が近くに合計3秒いると起き上がる
     /// </summary>
     public sealed partial class StageWorld
     {

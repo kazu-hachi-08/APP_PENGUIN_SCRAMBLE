@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// オンラインのゲスト側。計算はせず、入力をホストへ送り、届いたスナップショットの間を補間して描くだけ（§8）
+    /// オンラインのゲスト側。計算はせず、入力をホストへ送り、届いたスナップショットの間を補間して描くだけ
     /// </summary>
     public sealed class StageGuest
     {

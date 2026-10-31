@@ -10,7 +10,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// アプリのアイコン（§9.6）。Rebuild のたびに、ゲーム中と同じ3Dのアデリンを寄りで撮り、コードで描いた背景に重ねて作る。
+    /// アプリのアイコン。Rebuild のたびに、ゲーム中と同じ3Dのアデリンを寄りで撮り、コードで描いた背景に重ねて作る。
     /// Windows / Linux（デスクトップ共通）・Android（前と背景を分けたアダプティブ。Unity 6.6 からは Android はこれだけ）・ブラウザ（favicon）に入れる。
     /// 生成物なので手で直さない（見た目は PenguinLooks とここの定数を直す）
     /// </summary>

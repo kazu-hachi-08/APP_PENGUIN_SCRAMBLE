@@ -7,7 +7,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ステージの3Dの見た目のスクショ（PLAN_3D フェーズ3。見た目を人が確かめる）。
+    /// ステージの3Dの見た目のスクショ（見た目を人が確かめる）。
     /// ゲームのシーンを作り直して Play し、StageCaptureDriver が台本どおりに戦わせて、決めた時刻にカメラを撮る。
     /// 実際の Update で動くので、ゲーム中と同じ見た目になる（HUD などの UI は写らない）。
     /// バッチモードからは -executeMethod PenmonScramble.Editor.StageCapture.RunBatch で撮って終わる

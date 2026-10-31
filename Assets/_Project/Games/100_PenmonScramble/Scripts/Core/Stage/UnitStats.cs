@@ -18,7 +18,7 @@ namespace PenmonScramble.Core
         /// <summary>技1・技2（敵は技1だけ）</summary>
         public SkillDef[] Skills { get; set; }
 
-        /// <summary>技の待ち時間に掛ける倍率。敵は同じ技でも間をあけて使う（§4.7）</summary>
+        /// <summary>技の待ち時間に掛ける倍率。敵は同じ技でも間をあけて使う</summary>
         public float CooldownScale { get; set; } = 1f;
 
         /// <summary>ステージのボス。大きく描き、HUD に HP を出す</summary>
@@ -27,7 +27,7 @@ namespace PenmonScramble.Core
         /// <summary>飛ばされる強さに掛ける倍率。ボスは飛ばされにくい</summary>
         public float KnockbackScale { get; set; } = 1f;
 
-        /// <summary>大ボス（§6.2）。技の代わりに、予告つきの攻撃を順に出す。それ以外は null</summary>
+        /// <summary>大ボス。技の代わりに、予告つきの攻撃を順に出す。それ以外は null</summary>
         public BigBossDef BigBoss { get; set; }
     }
 }

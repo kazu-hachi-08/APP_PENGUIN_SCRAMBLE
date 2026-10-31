@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンギンの部品に使う形（球・卵形・しずく・丸い円柱・輪・氷の塊）。縦の輪郭を回して作る。形ごとに1つだけ作って全部の部品で使い回す。
+    /// ペンギンの部品に使う形（球・卵形・しずく・丸い円柱・輪・氷の塊・半球・星・床の板）。縦の輪郭を回して作る。形ごとに1つだけ作って全部の部品で使い回す。
     /// Unity の Primitive を使わないのは、Collider が付くのと、面の数を自分で決めたいため（スマホで重いときに減らせる）
     /// </summary>
     public static class ToyMeshes

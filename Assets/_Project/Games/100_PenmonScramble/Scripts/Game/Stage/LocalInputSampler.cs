@@ -9,7 +9,7 @@ namespace PenmonScramble.Game
     /// </summary>
     public sealed class LocalInputSampler
     {
-        // InputManager の Action1〜4 = 技1・技2・必殺技・交代（§3。J/K/L/Space、南/東/北/LB）
+        // InputManager の Action1〜4 = 技1・技2・必殺技・交代（J/K/L/Space、南/東/北/LB）
         private const int Skill1Action = 0;
         private const int Skill2Action = 1;
         private const int SpecialAction = 2;

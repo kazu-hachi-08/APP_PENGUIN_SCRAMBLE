@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 交代・ダウン・起き上がりの「ぽん」という煙（§9）。白い玉がぱっとふくらみ、外へ広がりながらしぼんで消える。
+    /// 交代・ダウン・起き上がりの「ぽん」という煙。白い玉がぱっとふくらみ、外へ広がりながらしぼんで消える。
     /// 煙が一瞬ペンギンを隠すので、組み直した瞬間の入れ替わりが目立たない。見た目だけなので物理演算は使わない
     /// </summary>
     public sealed class SmokePuff : MonoBehaviour
@@ -13,7 +13,7 @@ namespace PenmonScramble.Game
         private const int Puffs = 9;
         private const float LifeSeconds = 0.42f;
 
-        // 大きさ・位置・速さは、ユニットの当たりの半径に対する倍率（大きいボスほど大きな煙になる）
+        // 大きさ・速さ・横の位置は当たりの半径に対する倍率（大きいボスほど大きな煙になる）。高さは背の高さに対する割合
         private const float PuffSizeMin = 0.9f;
         private const float PuffSizeMax = 1.4f;
         private const float StartSpread = 0.5f;

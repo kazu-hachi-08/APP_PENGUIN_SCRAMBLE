@@ -3,12 +3,12 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ワールドごとの色（§6.2）と、地面の絵（CreatureArt.Ground）に掛ける色。
+    /// ワールドごとの色と、地面の絵（CreatureArt.Ground）に掛ける色。
     /// ワールドらしさは絵が受け持つので、絵に掛ける色はエリアの区別だけにする
     /// </summary>
     public sealed class StageTheme
     {
-        // 1つおきに少し暗く、ボスエリアは赤っぽく。エリアの外は暗くして、動ける範囲との境目を見せる
+        // 1つおきに少し暗く、ボスエリアは赤っぽく
         private static readonly Color AreaTint = Color.white;
         private static readonly Color AreaAltTint = new Color(0.92f, 0.92f, 0.92f);
         private static readonly Color BossAreaTint = new Color(1f, 0.85f, 0.85f);
@@ -23,6 +23,7 @@ namespace PenmonScramble.Game
         public Color Background { get; }
         public Color Gate { get; }
 
+        // エリアの外は暗くして、動ける範囲との境目を見せる
         /// <summary>エリアの外に敷く床（同じ絵を暗くする色）</summary>
         public static Color OutsideTint { get; } = new Color(0.55f, 0.55f, 0.6f);
 

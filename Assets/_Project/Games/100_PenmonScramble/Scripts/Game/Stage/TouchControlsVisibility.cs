@@ -5,7 +5,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// 仮想スティック・ボタンは、タッチできる端末でだけ出す（PC では画面が狭くなるだけなので）。
-    /// 出すのはステージで遊んでいる間だけ（§3。タイトル・ロビー・結果では隠す）。出し入れは短くフェードする
+    /// 出すのはステージで遊んでいる間だけ（タイトル・ロビー・結果では隠す）。出し入れは短くフェードする
     /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
     public class TouchControlsVisibility : MonoBehaviour

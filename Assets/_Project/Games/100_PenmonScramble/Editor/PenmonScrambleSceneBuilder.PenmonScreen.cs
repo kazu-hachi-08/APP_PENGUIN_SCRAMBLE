@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ペンモン画面（§7）: 左上に編成の帯、左下に持っている子の一覧、右に選んだ子の図鑑カード（技の実演の小窓つき）。
+    /// ペンモン画面: 左上に編成の帯、左下に持っている子の一覧、右に選んだ子の図鑑カード（技の実演の小窓つき）。
     /// 実演は、離れた所に置いた練習場を専用のカメラで撮って小窓に映す（SkillDemoView）
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -112,9 +112,6 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 RatingPipsPosition = new Vector2(352f, 0f);
         private static readonly Vector2 RatingPipsSize = new Vector2(70f, 108f);
         private const int RatingFontSize = 22;
-
-        // 実演のカメラはタイトルのジオラマと同じく、近くだけを描く
-        private const float SkillDemoFarClip = 60f;
 
         private static PenguinListScreen CreatePenguinListScreen(Transform canvas)
         {
@@ -375,7 +372,8 @@ namespace PenmonScramble.Editor
 
             var cameraObj = new GameObject("SkillDemoCamera");
             var camera = cameraObj.AddComponent<Camera>();
-            camera.farClipPlane = SkillDemoFarClip;
+            // 実演のカメラはタイトルのジオラマと同じく、近くだけを描く
+            camera.farClipPlane = TitleCameraFarClip;
             camera.enabled = false;
 
             var stageObj = new GameObject("SkillDemoStage");

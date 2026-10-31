@@ -19,7 +19,7 @@ namespace PenmonScramble.Common.Audio
 
     /// <summary>
     /// SE識別子。ゲーム固有の音はここに足さず、ゲーム側で AudioManager.PlaySeClip に直接渡す。
-    /// 番号はインスペクタに保存されるので、値を消しても残りの番号は詰めない
+    /// SE も BGM と同じく、値を消しても番号を詰めない（インスペクタに保存されるため）
     /// </summary>
     public enum SeId
     {

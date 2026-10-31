@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ペンギンの動きを並べたスクショ（PLAN_3D フェーズ2。動きを人が確かめる）。
+    /// ペンギンの動きを並べたスクショ（動きを人が確かめる）。
     /// motions.png: 縦に動き（MotionRows の順）、横にその動きの始めから終わりまでを等間隔に撮った姿勢。
     /// PenguinMotion.Tick で時刻を進めて撮るので、ゲーム中と同じ流れになる
     /// </summary>

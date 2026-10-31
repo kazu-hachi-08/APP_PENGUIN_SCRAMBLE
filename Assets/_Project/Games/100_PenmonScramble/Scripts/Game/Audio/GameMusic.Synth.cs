@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace PenmonScramble.Game
 {
-    /// <summary>楽譜をチップチューンの音にする（ペンモンの GameMusic.Synth と同じ作り）</summary>
+    /// <summary>楽譜をチップチューンの音にする</summary>
     public static partial class GameMusic
     {
         // チップチューンなら低めのサンプリングで十分。メモリと生成時間を半分にできる

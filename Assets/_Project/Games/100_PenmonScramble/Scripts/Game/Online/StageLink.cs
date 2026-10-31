@@ -15,7 +15,7 @@ namespace PenmonScramble.Game
         private const string InputMessage = "scramble.input";
         private const string PartyMessage = "scramble.party";
         private const int InitialMessageSize = 1024;
-        // 敵や弾が多い瞬間でも数KB。MTU を超える分は分割して送る
+        // 敵や弾が多い瞬間でも数KB。スナップショットは MTU を超える分を分割して送る（入力と編成は ReliableSequenced で送る）
         private const int MaxMessageSize = 64 * 1024;
 
         private readonly List<ulong> _guestIds = new List<ulong>();

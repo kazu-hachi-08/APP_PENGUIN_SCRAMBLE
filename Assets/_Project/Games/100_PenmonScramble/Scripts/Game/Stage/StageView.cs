@@ -28,7 +28,7 @@ namespace PenmonScramble.Game
         [SerializeField] private Shader _toonShader;
         [SerializeField] private Shader _blobShadowShader;
         [SerializeField] private Shader _fxShader;
-        // ペンモン画面の技の実演（SkillDemoView）で使う。床は1枚だけ敷き、カメラの追従・揺れ・カットイン・音・席の印を出さない
+        // ペンモン画面の技の実演（SkillDemoView）で使う。床は動ける範囲の1枚とその外を囲む床だけにし、カメラの追従・揺れ・カットイン・音・席の印を出さない
         [SerializeField] private bool _preview;
 
         // ボスが倒れたときの揺れ（マス・秒）
@@ -288,7 +288,7 @@ namespace PenmonScramble.Game
             view.PlayDefeat();
             if (e.Team == Team.Enemy)
             {
-                // 倒したらコインと星が飛び散る（§9）。ボスは多く、広く
+                // 倒したらコインと星が飛び散る。ボスは多く、広く
                 DefeatSparkle.Spawn(transform, _materials, e.Position.ToVector2(), view.IsBoss ? BossDefeatCoins : DefeatCoins, view.IsBoss ? BossDefeatSpread : 1f);
             }
 

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 遊び方の「操作」の絵（§3 の表を絵にしたもの）。キーボードはキーの並びどおりに置き、押したキーが光る（HowToPlayKey）。
+    /// 遊び方の「操作」の絵。キーボードはキーの並びどおりに置き、押したキーが光る（HowToPlayKey）。
     /// スマホはステージ中の仮想スティック・ボタンの配置（TouchControls の定数）を縮めて描く
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -42,7 +42,7 @@ namespace PenmonScramble.Editor
         private const float PadGlyphSize = 110f;
         private static readonly Vector2 PadWideGlyphSize = new Vector2(200f, 90f);
         private const int PadWideFontSize = 28;
-        // 絵の右端から文字の左端まで（丸いボタンでは以前と同じ位置になる）
+        // 絵の右端から文字の左端まで
         private const float PadLabelGap = 30f;
         private static readonly Vector2 PadLabelSize = new Vector2(520f, 80f);
         private static readonly Color PadCrossColor = new Color(0.40f, 0.60f, 0.95f);

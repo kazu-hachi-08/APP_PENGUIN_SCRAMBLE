@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 重さの計測（PLAN_3D フェーズ7）。4人をボット（StageBot）で戦わせ、場面ごとに fps と描画の回数を測って画面に出す。
+    /// 重さの計測。4人をボット（StageBot）で戦わせ、場面ごとに fps と描画の回数を測って画面に出す。
     /// 場面は「1エリアの敵が一番多い所」と「最後の大ボス戦」。タイトルの流れ（StageRunner）は使わず、ここで直接 Core を進める。
     /// 計測用のビルド（PENMON_BENCHMARK。Tools/PenmonScramble/Build/Benchmark）と、Editor の Tools/PenmonScramble/Benchmark で動く。
     /// 配る版では何もしない

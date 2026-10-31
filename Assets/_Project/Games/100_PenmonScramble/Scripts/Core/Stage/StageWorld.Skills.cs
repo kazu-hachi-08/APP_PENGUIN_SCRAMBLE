@@ -3,7 +3,7 @@ using System;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 技の発動と当たり。技は「形」ごとの処理を使い回す（§4.2）
+    /// 技の発動と当たり。技は「形」ごとの処理を使い回す
     /// </summary>
     public sealed partial class StageWorld
     {
@@ -61,7 +61,7 @@ namespace PenmonScramble.Core
             }
         }
 
-        /// <summary>止まったまま技を出したとき、狙いをつけなくても敵へ向くようにする（§3）</summary>
+        /// <summary>止まったまま技を出したとき、狙いをつけなくても敵へ向くようにする</summary>
         private void FaceNearestOpponent(Unit unit)
         {
             var nearest = FindNearestOpponent(unit);
@@ -142,7 +142,7 @@ namespace PenmonScramble.Core
 
         private void ApplyHit(int attackerId, Unit target, int damage, float knockback, Vec2 direction, SkillDef skill)
         {
-            // 必殺技のあいだ、出した本人は無敵（§4.3）
+            // 必殺技のあいだ、出した本人は無敵
             if (target.IsInvincible)
             {
                 return;

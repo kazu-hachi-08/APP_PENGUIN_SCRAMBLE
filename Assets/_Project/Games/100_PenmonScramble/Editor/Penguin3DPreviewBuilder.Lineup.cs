@@ -6,7 +6,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 20種類を並べたスクショ（PLAN_3D フェーズ1。どれがどの種類か見分けられるかを人が確かめる）。
+    /// 20種類を並べたスクショ（どれがどの種類か見分けられるかを人が確かめる）。
     /// lineup.png: 1体ずつ斜め前から（横に5種類・縦は属性の4列。左上が No.1）。
     /// lineup_back.png: 同じ並びで斜め後ろから（マント・リュックなど背中の飾り）。
     /// lineup_area.png: ゲームのカメラでエリア全体（ゲーム中の大きさで見分けられるか）

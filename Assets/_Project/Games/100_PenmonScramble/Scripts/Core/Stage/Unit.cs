@@ -64,7 +64,7 @@ namespace PenmonScramble.Core
         /// <summary>吹っ飛びの速さ。減速しながら0に戻る</summary>
         public Vec2 KnockbackVelocity { get; internal set; }
 
-        /// <summary>必殺技のゲージ（0〜1）。プレイヤーごとに1本で、交代しても引き継ぐ（§4.3）</summary>
+        /// <summary>必殺技のゲージ（0〜1）。プレイヤーごとに1本で、交代しても引き継ぐ</summary>
         public float SpecialGauge { get; internal set; }
 
         /// <summary>次に交代できるまでの秒数</summary>
@@ -73,20 +73,20 @@ namespace PenmonScramble.Core
         public float FrozenSeconds { get; internal set; }
         public float InvincibleSeconds { get; internal set; }
 
-        /// <summary>ダウン中に、近くに仲間がいた時間の合計（秒）。離れてもためた分は残る（§4.5）</summary>
+        /// <summary>ダウン中に、近くに仲間がいた時間の合計（秒）。離れてもためた分は残る</summary>
         public float ReviveSeconds { get; internal set; }
 
         /// <summary>足が遅くなっている残りの秒数（合体技「吹雪」）</summary>
         public float SlowSeconds { get; internal set; }
         public bool IsSlowed => SlowSeconds > 0f;
 
-        // 合体技（§4.6）: この敵に最後に技を当てたプレイヤーと、その属性。窓が開いている間に別の人が当てると起きる
+        // 合体技: この敵に最後に技を当てたプレイヤーと、その属性。窓が開いている間に別の人が当てると起きる
         internal int ComboAttackerId { get; set; }
         internal Element ComboElement { get; set; }
         internal float ComboWindowSeconds { get; set; }
         internal float ComboCooldownSeconds { get; set; }
 
-        /// <summary>今の吹っ飛びで、もうぶつかった相手。1回飛ぶ間に同じ相手へ何度も当たらないようにする（§4.4）</summary>
+        /// <summary>今の吹っ飛びで、もうぶつかった相手。1回飛ぶ間に同じ相手へ何度も当たらないようにする</summary>
         internal HashSet<int> ChainHitIds { get; } = new HashSet<int>();
 
         internal DashState Dash { get; set; }
@@ -106,7 +106,7 @@ namespace PenmonScramble.Core
         public bool IsAlive => Hp > 0;
         public bool HasAliveMember => FindNextAlive() >= 0 || IsAlive;
 
-        /// <summary>3体とも倒れて、その場で仲間の助けを待っている（§4.5）。敵は倒れたら場から消えるので、プレイヤーだけ</summary>
+        /// <summary>3体とも倒れて、その場で仲間の助けを待っている。敵は倒れたら場から消えるので、プレイヤーだけ</summary>
         public bool IsDown => Team == Team.Player && !HasAliveMember;
 
         /// <summary>強く飛ばされている間は、歩くことも技を出すこともできない</summary>
@@ -135,7 +135,7 @@ namespace PenmonScramble.Core
             return true;
         }
 
-        /// <summary>ダウンから起き上がる。先頭の子を、最大 HP の hpRatio で出す（§4.5）</summary>
+        /// <summary>ダウンから起き上がる。先頭の子を、最大 HP の hpRatio で出す</summary>
         internal void ReviveFirstMember(float hpRatio)
         {
             ActiveIndex = 0;

@@ -180,7 +180,7 @@ namespace PenmonScramble.Game
             Apply(_pose);
         }
 
-        /// <summary>Facing があればそちらへ、無ければ進む向きへ回る。吹っ飛び中・ダウン中は向きを変えない</summary>
+        /// <summary>Facing があればそちらへ、無ければ進む向きへ回る。吹っ飛び中・ダウン中・撃破中は向きを変えない</summary>
         private void Turn(Vector3 localVelocity, bool moving, float dt)
         {
             if (_pose.Knock < 1f || Down || _pose.Defeated)

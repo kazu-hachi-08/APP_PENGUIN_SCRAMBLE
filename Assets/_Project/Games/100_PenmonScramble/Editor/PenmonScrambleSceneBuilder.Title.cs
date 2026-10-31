@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// タイトル（§2・§9.6）: 後ろで動く乱戦のジオラマとロゴの上に、「タップしてスタート」の画面とロビーの2段を重ねる。
+    /// タイトル: 後ろで動く乱戦のジオラマとロゴの上に、「タップしてスタート」の画面とロビーの2段を重ねる。
     /// 接続の流れは共通基盤の ModeSelectPanel をそのまま使い、見た目だけここで作る。
     /// ここではタイトルの土台・スタートの画面・接続待ちの窓・「みんなで遊ぶ」の窓を作る。ロビーの中身と画面どうしのつなぎは
     /// PenmonScrambleSceneBuilder.TitleLobby.cs、ジオラマとロゴは TitleArt.cs、設定と名前の入力は Settings.cs

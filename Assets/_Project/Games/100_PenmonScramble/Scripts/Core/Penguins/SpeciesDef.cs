@@ -1,6 +1,6 @@
 namespace PenmonScramble.Core
 {
-    /// <summary>ペンギン1種類分の値（§5.1）。個体ごとの違いはパワーだけ</summary>
+    /// <summary>ペンギン1種類分の値。個体ごとの違いはパワーだけ</summary>
     public sealed class SpeciesDef
     {
         public SpeciesDef(int no, string name, Element element, int stars, float hpRate, float attackRate, float moveSpeed, SkillDef skill1, SkillDef skill2)

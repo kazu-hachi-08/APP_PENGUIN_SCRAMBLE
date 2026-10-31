@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージ中の画面表示（§9.8）: 左上の自分のプレート（場に出ている子の顔・必殺技のゲージ・名札・HP・3体の小さな顔）と結果。
+    /// ステージ中の画面表示: 左上の自分のプレート（場に出ている子の顔・必殺技のゲージ・名札・HP・3体の小さな顔）と結果。
     /// エリアの進み具合・ボスの HP・画面の真ん中の知らせは StageHud.Progress.cs
     /// </summary>
     public partial class StageHud : MonoBehaviour
@@ -89,7 +89,7 @@ namespace PenmonScramble.Game
             _activeDisc.color = down ? DownDiscColor : PenguinPalette.SpeciesElementColor(active.SpeciesNo);
             _activeFace.color = down ? DownFaceColor : Color.white;
             _nameText.text = $"{_playerLabel}  {PenguinPalette.SpeciesName(active.SpeciesNo)}";
-            // 3体とも倒れた（ダウン）ときは、何をすれば戻れるかを出す（§4.5）
+            // 3体とも倒れた（ダウン）ときは、何をすれば戻れるかを出す
             _hpText.text = down ? DownMessage : $"{hp} / {active.MaxHp}";
         }
 

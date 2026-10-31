@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// HUD の右上のエリアの進み具合（§6.1・§9.8）: エリアをつぶの列で出す（済み＝金・今＝白で脈打つ・まだ＝暗い）。
+    /// HUD の右上のエリアの進み具合: エリアをつぶの列で出す（済み＝金・今＝白で脈打つ・まだ＝暗い）。
     /// エリアが2つ以上あれば最後はボスエリアなので、最後のつぶの代わりに赤い「ボス」の札を出す
     /// </summary>
     public class HudAreaPips : MonoBehaviour

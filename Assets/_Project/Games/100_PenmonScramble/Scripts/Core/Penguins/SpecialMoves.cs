@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 属性ごとの必殺技（§4.3）。新しい処理を増やさないよう、技の形（落下・弾・周囲）を組み合わせて作る
+    /// 属性ごとの必殺技。新しい処理を増やさないよう、技の形（落下・弾・周囲）を組み合わせて作る
     /// </summary>
     public static class SpecialMoves
     {

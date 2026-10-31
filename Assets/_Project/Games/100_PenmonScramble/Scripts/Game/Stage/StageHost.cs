@@ -6,7 +6,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ステージの計算を進める側（ソロ・オンラインのホスト）。全員の入力を Core に入れて固定の時間刻みで更新し、
-    /// 結果のスナップショットを自分の画面に描いて、ゲストへも送る（§8）。ソロは link が null なだけで同じ流れ。
+    /// 結果のスナップショットを自分の画面に描いて、ゲストへも送る。ソロは link が null なだけで同じ流れ。
     /// 最初の挑戦は、ゲスト全員の編成が届いてから始める
     /// </summary>
     public sealed class StageHost
@@ -101,7 +101,7 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>ゲストが抜けた。その人のペンギンを消して、残りで続ける（§8）</summary>
+        /// <summary>ゲストが抜けた。その人のペンギンを消して、残りで続ける</summary>
         public void RemovePlayer(int seat)
         {
             _seats.Remove(seat);

@@ -115,7 +115,7 @@ namespace PenmonScramble.Editor
             return (cameraObj.AddComponent<CameraShake>(), rig);
         }
 
-        /// <summary>影は足元の丸い影で出すので、光の影は切る（フェーズ0で決めた）</summary>
+        /// <summary>影は足元の丸い影で出すので、光の影は切る</summary>
         private static void CreateSun()
         {
             var obj = new GameObject("Sun");
@@ -129,7 +129,7 @@ namespace PenmonScramble.Editor
 
         private static void CreateEventSystem()
         {
-            // Input System のみの設定なので、旧 StandaloneInputModule ではなくこちらを使う
+            // Input System のみの設定なので、StandaloneInputModule ではなくこちらを使う
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
         }
 

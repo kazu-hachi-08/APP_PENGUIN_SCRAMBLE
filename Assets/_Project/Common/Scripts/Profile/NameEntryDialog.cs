@@ -73,7 +73,7 @@ namespace PenmonScramble.Common.Profile
             string result = WebNamePrompt.Prompt(WebPromptMessage, _inputField.text);
             if (result == null) return;
 
-            // prompt には文字数制限を掛けられないため、ここで6文字に切り詰める
+            // prompt には文字数制限を掛けられないため、ここで文字数上限（UserProfile.MaxNameLength）に切り詰める
             string name = UserProfile.Sanitize(result);
             if (name.Length > UserProfile.MaxNameLength)
             {

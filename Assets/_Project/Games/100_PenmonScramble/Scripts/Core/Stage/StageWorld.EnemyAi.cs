@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 敵の動き: 一番近いプレイヤーへ近づいて、技1で殴るだけ（§4.7）。ボスは技2も使う。大ボスは StageWorld.BigBoss
+    /// 敵の動き: 一番近いプレイヤーへ近づいて、技1で殴るだけ。ボスは技2も使う。大ボスは StageWorld.BigBoss
     /// </summary>
     public sealed partial class StageWorld
     {

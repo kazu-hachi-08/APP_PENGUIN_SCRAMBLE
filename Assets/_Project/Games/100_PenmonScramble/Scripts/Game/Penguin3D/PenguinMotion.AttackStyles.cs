@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PenmonScramble.Game
 {
-    /// <summary>技の形（§4.2）ごとの体とヒレの使い方</summary>
+    /// <summary>技の形ごとの体とヒレの使い方</summary>
     public sealed partial class PenguinMotion
     {
         /// <summary>

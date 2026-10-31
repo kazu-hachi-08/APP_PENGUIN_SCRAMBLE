@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ユニットの状態の見た目（§9）: 野生のペンギンは暗い色・被弾で一瞬白く光る・凍ると水色で氷に包まれる・ダウンは灰色・
+    /// ユニットの状態の見た目: 野生のペンギンは暗い色・被弾で一瞬白く光る・凍ると水色で氷に包まれる・ダウンは灰色・
     /// 無敵は点滅・突進は残像・交代は煙が出て、新しい子がぽんと出てくる
     /// </summary>
     public partial class UnitView

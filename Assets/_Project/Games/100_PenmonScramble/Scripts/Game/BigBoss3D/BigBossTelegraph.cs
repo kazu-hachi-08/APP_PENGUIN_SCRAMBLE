@@ -6,7 +6,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// スナップショットの赤い範囲（WarningState）から、大ボスがどの攻撃を構えているかを読み取る。
-    /// どの攻撃かはスナップショットに無い（オンラインの形を変えないため）ので、範囲の形から見分ける（§6.2）
+    /// どの攻撃かはスナップショットに無い（オンラインの形を変えないため）ので、範囲の形から見分ける
     /// </summary>
     public static class BigBossTelegraph
     {

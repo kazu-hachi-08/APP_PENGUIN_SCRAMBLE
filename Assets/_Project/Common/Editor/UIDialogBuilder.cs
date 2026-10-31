@@ -76,7 +76,7 @@ namespace PenmonScramble.Common.Editor
         }
 
         // スマホで指で操作しやすいサイズ。ボタンは2列に並べて、横画面の低い高さに収める（合計で高さは約710）
-        private const float PausePanelWidth = 820f;
+        private const float PausePanelWidth = CommonPanelWidth;
         private const int PausePanelPadding = 30;
         private const float PauseItemSpacing = 20f;
         private const float PauseTitleHeight = 90f;
@@ -178,7 +178,7 @@ namespace PenmonScramble.Common.Editor
         }
 
         // リザルトも全ゲーム共通で毎回目にするため、確認ダイアログと同じ基準で大きくする
-        private const float ResultPanelWidth = 820f;
+        private const float ResultPanelWidth = CommonPanelWidth;
         private const float ResultPanelHeight = 600f;
         private const int ResultTitleFontSize = 48;
         private const int ResultScoreFontSize = 52;
@@ -187,7 +187,7 @@ namespace PenmonScramble.Common.Editor
         private const float ResultButtonHeight = 100f;
         private const int ResultButtonFontSize = 36;
 
-        // 3つのダイアログで同じ作り方のパネル（中央基準・固定サイズ）を1か所にまとめる
+        // 確認・ポーズのダイアログで同じ作り方のパネル（中央基準・固定サイズ）を1か所にまとめる
         private static GameObject CreateCenteredPanel(Transform parent, Vector2 size, Color color)
         {
             var panelObj = CreateUIObject("Panel", parent);
@@ -210,7 +210,7 @@ namespace PenmonScramble.Common.Editor
             rect.offsetMax = Vector2.zero;
         }
 
-        // ラベル系の太字・中央寄せ文字。設定順は呼び出し前と同じ（text → fontSize → 太字 → 中央 → color）
+        // ラベル系の太字・中央寄せ文字。設定順は text → fontSize → 太字 → 中央 → color
         private static Text AddBoldCenteredText(GameObject obj, string content, int fontSize, Color color)
         {
             var text = obj.AddComponent<Text>();

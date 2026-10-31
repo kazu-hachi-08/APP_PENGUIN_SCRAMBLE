@@ -4,7 +4,7 @@ using System.IO;
 
 namespace PenmonScramble.Core
 {
-    /// <summary>ゲストが参加したときにホストへ送る、自分の編成（種類とパワー。§8）</summary>
+    /// <summary>ゲストが参加したときにホストへ送る、自分の編成（種類とパワー）</summary>
     public static partial class StageCodec
     {
         // 壊れた値や改造した値が届いても、ありえない強さにならないようにする

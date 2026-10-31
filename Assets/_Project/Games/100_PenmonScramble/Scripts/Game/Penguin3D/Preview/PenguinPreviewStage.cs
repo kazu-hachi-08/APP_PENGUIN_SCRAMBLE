@@ -16,7 +16,7 @@ namespace PenmonScramble.Game
         private const float OutsideSize = 60f;
         private const float OutsideDepth = -0.01f;
 
-        // 20種類を属性ごとの4列（奥から氷・水・風・雷）× 5体に並べる（エリアの中心からのマス）
+        // 20種類を属性ごとの行（奥から氷・水・風・雷の4行）に5体ずつ並べる（エリアの中心からのマス）
         private const int LineupColumns = 5;
         private const float LineupSpacingX = 3.2f;
         private const float LineupSpacingZ = 2.2f;
@@ -136,7 +136,7 @@ namespace PenmonScramble.Game
             floor.AddComponent<MeshRenderer>().sharedMaterial = material;
         }
 
-        /// <summary>番号 no のペンギンの並ぶ位置。列は属性（5種類ずつ）、奥の列ほど上</summary>
+        /// <summary>番号 no のペンギンの並ぶ位置。行は属性（5種類ずつ）、奥の行ほど上</summary>
         private static Vector2 LineupSpot(int no)
         {
             var column = (no - 1) % LineupColumns;

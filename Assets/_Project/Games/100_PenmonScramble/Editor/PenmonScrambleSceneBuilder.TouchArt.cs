@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// スマホの仮想スティック・ボタンの絵（§3・§9.6）。メニューのボタン（UiArt）と同じく、Rebuild のたびにコードで描いて Art/UI/ に置く。
+    /// スマホの仮想スティック・ボタンの絵。メニューのボタン（UiArt）と同じく、Rebuild のたびにコードで描いて Art/UI/ に置く。
     /// 丸・面・つや・光・リングは白で描いて Image の色で塗る（属性の色でも同じ絵を使えるように）。スティックの台だけは色付きで描く
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder

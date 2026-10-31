@@ -44,7 +44,7 @@ namespace PenmonScramble.Game
             return $"<color={PipOnColor}>{new string(Pip, on)}</color><color={PipOffColor}>{new string(Pip, max - on)}</color>";
         }
 
-        /// <summary>カードに出す2行。知らない種類（新しい版で増えた子）は「？」</summary>
+        /// <summary>カードに出す3行。知らない種類（新しい版で増えた子）は「？」</summary>
         public static string Card(OwnedPenguin penguin)
         {
             var species = SpeciesTable.Get(penguin.speciesNo);

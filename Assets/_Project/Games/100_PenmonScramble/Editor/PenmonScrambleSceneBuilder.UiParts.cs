@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// メニューの部品（§9.6）: 押せる物に見えるボタン（色の面・上のつや・白い縁・下の影・押すと縮む）、角の丸い板、
+    /// メニューの部品: 押せる物に見えるボタン（色の面・上のつや・白い縁・下の影・押すと縮む）、角の丸い板、
     /// 画面をふさぐ窓、丸いアイコンのボタン、画面の上下のぼかし。絵は PenmonScrambleSceneBuilder.UiArt.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder

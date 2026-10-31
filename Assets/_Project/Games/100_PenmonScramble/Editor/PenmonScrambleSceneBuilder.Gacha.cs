@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ガチャ画面（§7）: 画面いっぱいに3Dのガチャの部屋（GachaStage を専用のカメラで撮ったもの）を映し、その上に
+    /// ガチャ画面:画面いっぱいに3Dのガチャの部屋（GachaStage を専用のカメラで撮ったもの）を映し、その上に
     /// 左上のもどる・見出し、右上の持っている数・コイン、右に結果のカード、右下の「確率」と「引く」を置く
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder

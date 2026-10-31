@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 大ボス3体（§6.2）を球・卵形・しずく形で組み立てる。形がペンギンと違うので、ペンギンの組み立て役とは分ける。
+    /// 大ボス3体を球・卵形・しずく形で組み立てる。形がペンギンと違うので、ペンギンの組み立て役とは分ける。
     /// 寸法は当たりの半径を 1 とした値（全体の大きさは根元の scale = 当たりの半径）。前は +Z、足元が原点。
     /// 体ごとの組み立ては BigBossModelBuilder.Skua.cs / .Seal.cs / .Orca.cs。当たり判定（Collider）は付けない
     /// </summary>

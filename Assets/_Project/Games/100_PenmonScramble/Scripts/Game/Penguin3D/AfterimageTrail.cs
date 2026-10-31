@@ -4,14 +4,12 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 突進の残像（§9）。出している間、少しおきにペンギン・大ボスの今の形を写して置き、薄くしながら消す。
+    /// 突進の残像。出している間、少しおきにペンギン・大ボスの今の形を写して置き、薄くしながら消す。
     /// 写しは体全体（ToyModel.Figure）を複製したものを使い回し、部品の位置・向き・大きさだけを写す
     /// （毎回作ると、突進のたびに部品の数だけ物が増えて重いため）
     /// </summary>
     public sealed class AfterimageTrail : MonoBehaviour
     {
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-
         private const float IntervalSeconds = 0.04f;
         // 前の写しからこれだけ動いていなければ置かない（止まったまま重なると、本体が白くかすんで見えるため）
         private const float MinSpacing = 0.2f;
@@ -118,7 +116,7 @@ namespace PenmonScramble.Game
 
             for (var i = 0; i < _sourceRenderers.Length; i++)
             {
-                var color = _sourceRenderers[i].sharedMaterial.GetColor(BaseColorId);
+                var color = _sourceRenderers[i].sharedMaterial.GetColor(ToonMaterials.BaseColorId);
                 ghost.Colors[i] = Color.Lerp(color, Color.white, Whiten);
             }
 
@@ -186,7 +184,7 @@ namespace PenmonScramble.Game
             {
                 var color = ghost.Colors[i];
                 color.a = alpha;
-                _block.SetColor(BaseColorId, color);
+                _block.SetColor(ToonMaterials.BaseColorId, color);
                 ghost.Renderers[i].SetPropertyBlock(_block);
             }
         }

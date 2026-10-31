@@ -111,7 +111,7 @@ namespace PenmonScramble.Game
             p.OpenFlippers((FlipperOpen + Mathf.Sin(angle * 2f) * FlipperFlap) * weight);
         }
 
-        /// <summary>技は「かがむ（予備動作）→ 出す → 戻る」。技の形（§4.2）ごとの体とヒレの使い方は PenguinMotion.AttackStyles.cs</summary>
+        /// <summary>技は「かがむ（予備動作）→ 出す → 戻る」。技の形ごとの体とヒレの使い方は PenguinMotion.AttackStyles.cs</summary>
         private static void Attack(PenguinPose pose, float weight, ref PartPose p)
         {
             if (pose.Attack >= 1f || weight <= 0f)

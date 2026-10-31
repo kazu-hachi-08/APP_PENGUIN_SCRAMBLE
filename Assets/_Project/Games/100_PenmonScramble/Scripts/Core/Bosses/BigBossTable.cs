@@ -3,7 +3,7 @@ using System;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 大ボス3体の定義表（§6.2）。各ワールドの3ステージ目の最後に出る。数値を変えるときはここを直す
+    /// 大ボス3体の定義表。各ワールドの3ステージ目の最後に出る。数値を変えるときはここを直す
     /// </summary>
     public static class BigBossTable
     {

@@ -6,9 +6,9 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// タイトルの2段（§2）: 起動したら大きなロゴと「タップしてスタート」だけを見せ、押すとロビー（TitleMenu）へ移る。
+    /// タイトルの2段: 起動したら大きなロゴと「タップしてスタート」だけを見せ、押すとロビー（TitleMenu）へ移る。
     /// ステージから戻ったときは、もう一度押させずにロビーから始める。
-    /// ロビーに入ったら、名前がまだ無ければ名前を決めてもらい、そのあと無料ガチャがあれば開く（§7）
+    /// ロビーに入ったら、名前がまだ無ければ名前を決めてもらい、そのあと無料ガチャがあれば開く
     /// </summary>
     public class TitleFlow : MonoBehaviour
     {
@@ -111,7 +111,7 @@ namespace PenmonScramble.Game
             OpenFreeGacha();
         }
 
-        /// <summary>初回は無料ガチャを3回引くまで閉じられない。引いた3体がそのまま編成になる（§7）</summary>
+        /// <summary>初回は無料ガチャを3回引くまで閉じられない。引いた3体がそのまま編成になる</summary>
         private void OpenFreeGacha()
         {
             if (GameSave.Record.FreePullsLeft > 0)

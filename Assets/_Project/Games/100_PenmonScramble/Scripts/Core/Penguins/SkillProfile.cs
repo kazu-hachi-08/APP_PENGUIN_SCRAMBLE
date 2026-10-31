@@ -23,7 +23,7 @@ namespace PenmonScramble.Core
         private const float AreaRating2 = 3f;
         private const float AreaRating3 = 9f;
 
-        // 設置は敵がずっと中にいるとは限らないので、当たる回数の半分ほどを目安にする
+        // 設置は敵がずっと中にいるとは限らないので、当たる回数の3分の1強ほどを目安にする
         private const float ZoneStayRatio = 0.35f;
         // 割り算の誤差で回数が1つ減らないようにする（3 / 0.3 が 9.999… になる）
         private const float CountEpsilon = 0.0001f;
@@ -87,7 +87,7 @@ namespace PenmonScramble.Core
                 return skill.Power;
             }
 
-            // 置いた瞬間と、その後の間隔ごとに当たる（§4.2）
+            // 置いた瞬間と、その後の間隔ごとに当たる
             var hits = MathF.Floor(skill.Duration / skill.Interval + CountEpsilon) + 1f;
             return skill.Power * hits * ZoneStayRatio;
         }

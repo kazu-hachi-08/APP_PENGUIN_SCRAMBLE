@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// エリアの進み具合（右上のつぶと残りの敵・画面の真ん中の知らせ）とボスの HP（§6.1・§9.8）
+    /// エリアの進み具合（右上のつぶと残りの敵・画面の真ん中の知らせ）とボスの HP
     /// </summary>
     public partial class StageHud
     {
@@ -16,7 +16,7 @@ namespace PenmonScramble.Game
         private const float BannerPopSeconds = 0.18f;
         private const float BannerPopScale = 0.35f;
         private const string GateOpenMessage = "すすめ →";
-        // 残りの敵のアイコンは、雑魚と同じく暗くしたペンモンの顔（§4.7「20種類の絵を暗い色にして使い回す」）
+        // 残りの敵のアイコンは、雑魚と同じく暗くしたペンモンの顔
         private const int EnemyIconSpecies = 1;
         private static readonly Color WildFaceColor = Color.Lerp(Color.white, Color.black, UnitView.EnemyDarkness);
 

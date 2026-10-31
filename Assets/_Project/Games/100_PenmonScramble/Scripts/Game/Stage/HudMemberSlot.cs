@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// HUD の3体の小さな顔1つ（§4.1・§9.8）: 属性の色の丸に顔・下に HP の細いバー。
+    /// HUD の3体の小さな顔1つ: 属性の色の丸に顔・下に HP の細いバー。
     /// 場に出ている子は金の輪、次に出る子は白い輪。交代を待つ間は次の子の顔に暗い扇がかかって時計回りに晴れ、明けたら1回弾む。倒れた子は灰色に×
     /// </summary>
     public class HudMemberSlot : MonoBehaviour

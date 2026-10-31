@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ガチャ画面の3D（§7）: ガラスの丸い窓にカプセルが詰まったガチャマシンと、引いた子が立つ台。
+    /// ガチャ画面の3D:ガラスの丸い窓にカプセルが詰まったガチャマシンと、引いた子が立つ台。
     /// 3Dの空間の離れた所に組み、専用のカメラで撮って画面いっぱいの RawImage に映す（後ろのタイトルを隠して、押せないようにする）。
     /// 引く流れは GachaStage.Reveal.cs、マシンの組み立ては GachaStage.Machine.cs。
     /// 見た目だけなので Core のステージは使わず、乱数も UnityEngine.Random

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 種類ごとの飾りを組み立てる。顔・頭の上の飾りは頭に付けて頭と一緒に動かし、体の飾りは胴に、持ち物はヒレに付ける
+    /// 種類ごとの飾りを組み立てる。顔・頭の上の飾りは頭に付けて頭と一緒に動かし、体の飾りは胴に、持ち物はヒレに付ける（杖だけは体全体に付ける）
     /// </summary>
     public static partial class PenguinModelBuilder
     {

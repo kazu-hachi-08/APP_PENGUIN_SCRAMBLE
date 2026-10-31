@@ -9,9 +9,9 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// UI の顔（一覧・ガチャ・カットイン）の絵を、ゲーム中と同じ3Dのペンギン・大ボスを撮って作る（PLAN_3D フェーズ6）。
+    /// UI の顔（一覧・ガチャ・カットイン）の絵を、ゲーム中と同じ3Dのペンギン・大ボスを撮って作る。
     /// Rebuild のたびに Art/Portraits/ へ撮り直すので、定義表の見た目を変えれば UI の顔も一緒に変わる。
-    /// 少し斜め前から・背景は透過・右向き（AI の絵と同じ構図）
+    /// 少し斜め前から・背景は透過・右向き
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {

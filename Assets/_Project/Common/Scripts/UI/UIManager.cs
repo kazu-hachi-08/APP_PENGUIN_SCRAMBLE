@@ -82,7 +82,7 @@ namespace PenmonScramble.Common.UI
             }
         }
 
-        // 参照未設定の警告文を1か所にまとめる（出る文字列はダイアログごとに従来どおり）
+        // 参照未設定の警告文を1か所にまとめる（出る文字列はダイアログごとに別）
         private static void WarnMissingDialog(string dialogName)
         {
             Debug.LogWarning($"[UIManager] {dialogName}参照が設定されていません。");

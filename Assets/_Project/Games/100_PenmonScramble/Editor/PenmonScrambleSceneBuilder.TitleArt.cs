@@ -7,12 +7,12 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// タイトルの見た目: 後ろで動く乱戦のジオラマ（TitleDiorama）とロゴ（§9.6）。
+    /// タイトルの見た目: 後ろで動く乱戦のジオラマ（TitleDiorama）とロゴ。
     /// ロゴの絵は Art/Title に置く。無ければ縁取りした文字で作る（絵を待たずに Rebuild できるように）
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private const string TitleArtFolder = "Assets/_Project/Games/100_PenmonScramble/Art/Title/";
+        private const string TitleArtFolder = ArtFolder + "Title/";
         private const string TitleLogoPath = TitleArtFolder + "TitleLogo.png";
         // 1920x1080 の画面に足りる大きさ。これ以上はブラウザ版のダウンロードが重くなるだけ
         private const int TitleArtMaxSize = 2048;

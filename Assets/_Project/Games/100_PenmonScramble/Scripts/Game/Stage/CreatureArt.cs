@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// UI の顔（ペンギン・大ボス）とワールドの地面の絵（§9）。SceneBuilder が Art/ にある PNG をここへ入れる。
+    /// UI の顔（ペンギン・大ボス）とワールドの地面の絵。SceneBuilder が Art/ にある PNG をここへ入れる。
     /// 顔は、Rebuild のときに3Dのモデルを撮って作る（UI の顔がゲーム中の見た目とそろうように）
     /// </summary>
     // 画面の部品が Start で絵を引くより先に、居場所を知らせておく

@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 連れている3体のうちの1体。HP と技の待ち時間は1体ずつ持つ（§4.1）
+    /// 連れている3体のうちの1体。HP と技の待ち時間は1体ずつ持つ
     /// </summary>
     public sealed class PartyMember
     {

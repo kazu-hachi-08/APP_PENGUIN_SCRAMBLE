@@ -3,11 +3,11 @@ using System;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 移動・吹っ飛び・押し合い・壁。Unity の物理は使わず、円同士で計算する（§4.4）
+    /// 移動・吹っ飛び・押し合い・壁。Unity の物理は使わず、円同士で計算する
     /// </summary>
     public sealed partial class StageWorld
     {
-        /// <summary>move は長さ 0〜1。向きは最後に動いた方向（§3）</summary>
+        /// <summary>move は長さ 0〜1。向きは最後に動いた方向</summary>
         private static void MoveBy(Unit unit, Vec2 move, float dt)
         {
             if (move.IsNearlyZero)
@@ -82,7 +82,7 @@ namespace PenmonScramble.Core
             }
         }
 
-        /// <summary>1軸ぶんの壁。外へ向かって飛んでいたら跳ね返す（§4.4）</summary>
+        /// <summary>1軸ぶんの壁。外へ向かって飛んでいたら跳ね返す</summary>
         private static (float position, float velocity) Bounce(float position, float velocity, float min, float max)
         {
             if (position < min)

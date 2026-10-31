@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 試作の場で、1体にペンギンの動きを順に全部やらせる（PLAN_3D フェーズ2の確認用）。歩くのは別（試作の場で歩かせる）
+    /// 試作の場で、1体にペンギンの動きを順に全部やらせる。歩くのは別（試作の場で歩かせる）
     /// </summary>
     public sealed class PenguinMotionDemo
     {

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 敵を倒したときに飛び散るコインと星（§9）。上へはじけて弧を描いて落ち、床で1回はねて小さくなって消える。
+    /// 敵を倒したときに飛び散るコインと星。上へはじけて弧を描いて落ち、床で1回はねて小さくなって消える。
     /// 見た目だけなので物理演算は使わず、1回分のかけらをこのコンポーネント1つでまとめて動かす
     /// </summary>
     public sealed class DefeatSparkle : MonoBehaviour

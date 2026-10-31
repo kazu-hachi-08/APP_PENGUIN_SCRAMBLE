@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 大ボスの動き（§6.2）: 休みの間は一番近いプレイヤーへ寄り、時間が来たら赤い範囲で予告 → 攻撃、を順に繰り返す。
+    /// 大ボスの動き: 休みの間は一番近いプレイヤーへ寄り、時間が来たら赤い範囲で予告 → 攻撃、を順に繰り返す。
     /// 予告が出ている間は動かない（予告の場所と攻撃の場所がずれないように）
     /// </summary>
     public sealed partial class StageWorld

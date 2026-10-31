@@ -25,7 +25,7 @@ namespace PenmonScramble.Game
         private static readonly Vector3 SkuaHeadPivot = new Vector3(0f, 0.3f, 0.62f);
         private static readonly Vector3 SkuaHeadCenter = new Vector3(0f, 0.1f, 0.08f);
 
-        // 翼の付け根から先の関節までの長さ。広げた幅（左右の先から先まで）は当たりの円の 1.8 倍ほど
+        // 翼の付け根の横の位置と、内側の翼の長さ。広げた幅（左右の先から先まで）は当たりの円の 1.8 倍ほど
         private const float SkuaShoulderX = 0.4f;
         private const float SkuaInnerWing = 0.68f;
 
