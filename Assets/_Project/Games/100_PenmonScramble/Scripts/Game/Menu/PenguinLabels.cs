@@ -31,12 +31,6 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>「★★ マゼラ（水）」</summary>
-        public static string Title(SpeciesDef species)
-        {
-            return $"{Stars(species.Stars)} {species.Name}（{ElementName(species.Element)}）";
-        }
-
         /// <summary>3段階の目安を「●●○」のように出す（消えている所は薄く）</summary>
         public static string Pips(int rating, int max)
         {

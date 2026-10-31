@@ -231,25 +231,6 @@ namespace PenmonScramble.Common.Online
             return _seats.TryGetValue(clientId, out seat);
         }
 
-        /// <summary>1対1なので、ホストから見た相手は唯一の接続クライアント、クライアントから見た相手はホスト</summary>
-        public static bool TryGetPeerId(out ulong peerId)
-        {
-            var network = NetworkManager.Singleton;
-            peerId = NetworkManager.ServerClientId;
-            if (network == null) return false;
-            if (!network.IsServer) return true;
-
-            foreach (ulong id in network.ConnectedClientsIds)
-            {
-                if (id == network.LocalClientId) continue;
-
-                peerId = id;
-                return true;
-            }
-
-            return false;
-        }
-
         private async Task PrepareAsync()
         {
             // 相手を待つ間に画面が消えるとアプリが止まり、Relay の無通信タイムアウト（約10秒）で切断されるため

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Common.Editor
 {
     /// <summary>
-    /// 共通ダイアログ（確認・ポーズ・リザルト）のUIをシーンへ生成するエディタユーティリティ
+    /// 共通ダイアログ（確認・ポーズ）のUIをシーンへ生成するエディタユーティリティ
     /// タイトルと各ゲームのSceneBuilderから共有して使う
     /// </summary>
     public static class UIDialogBuilder
@@ -176,16 +176,6 @@ namespace PenmonScramble.Common.Editor
             btnObj.GetComponentInChildren<Text>().fontSize = PauseButtonFontSize;
             return btnObj;
         }
-
-        // リザルトも全ゲーム共通で毎回目にするため、確認ダイアログと同じ基準で大きくする
-        private const float ResultPanelWidth = CommonPanelWidth;
-        private const float ResultPanelHeight = 600f;
-        private const int ResultTitleFontSize = 48;
-        private const int ResultScoreFontSize = 52;
-        private const int ResultDetailFontSize = 36;
-        private const float ResultButtonWidth = 340f;
-        private const float ResultButtonHeight = 100f;
-        private const int ResultButtonFontSize = 36;
 
         // 確認・ポーズのダイアログで同じ作り方のパネル（中央基準・固定サイズ）を1か所にまとめる
         private static GameObject CreateCenteredPanel(Transform parent, Vector2 size, Color color)

@@ -1,6 +1,4 @@
 using System.IO;
-using PenmonScramble.Core;
-using PenmonScramble.Game;
 using UnityEditor;
 using UnityEngine;
 

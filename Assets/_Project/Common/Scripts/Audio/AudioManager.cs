@@ -19,7 +19,6 @@ namespace PenmonScramble.Common.Audio
         [Header("Audio Sources")]
         [SerializeField] private AudioSource _bgmSourceA;
         [SerializeField] private AudioSource _bgmSourceB;
-        [SerializeField] private AudioSource _seSourceTemplate;
         [SerializeField] private int _seSourcePoolSize = 6;
 
         [Header("Sound Data Lists")]
