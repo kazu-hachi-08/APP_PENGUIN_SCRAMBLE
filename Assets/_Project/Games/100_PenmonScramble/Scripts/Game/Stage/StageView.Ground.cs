@@ -47,10 +47,13 @@ namespace PenmonScramble.Game
                 Camera.main.backgroundColor = theme.Background;
             }
 
+            var stage = StageTable.Get(snapshot.StageNo);
             for (var i = 0; i < snapshot.AreaCount; i++)
             {
-                var min = StageLayout.AreaMin(i).ToVector2();
-                var max = StageLayout.AreaMax(i).ToVector2();
+                // 闘技場の楕円も、いまは囲む四角の床を敷く
+                var area = StageLayout.Area(stage, i);
+                var min = area.Min.ToVector2();
+                var max = area.Max.ToVector2();
                 var isBossArea = snapshot.AreaCount > 1 && i == snapshot.AreaCount - 1;
                 CreateOutside(i, snapshot.AreaCount, texture, min, max);
                 CreateFloor($"Area{i}", _materials.Toon.Floor(texture, StageTheme.AreaTintOf(i, isBossArea)), min, max, 0f);
@@ -114,27 +117,27 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>
-        /// 動ける範囲が画面より広い（出入口が開いている）間は、元気なプレイヤーの真ん中を追う。
-        /// 閉じているときは範囲がちょうど1エリアなので、エリアの真ん中に止まる
+        /// 動ける範囲が画面より広い（出入口が開いている・闘技場）間は、元気なプレイヤーの真ん中を追う。
+        /// ふつうのエリアで閉じているときは範囲がちょうど1エリアなので、エリアの真ん中に止まる
         /// </summary>
         private void FollowCamera(StageSnapshot snapshot, bool snap)
         {
-            var half = Balance.AreaWidth * 0.5f;
-            var minX = snapshot.AreaMin.X + half;
-            var maxX = Mathf.Max(minX, snapshot.AreaMax.X - half);
-            var sum = 0f;
+            var half = new Vector2(Balance.AreaWidth, Balance.AreaHeight) * 0.5f;
+            var min = snapshot.AreaMin.ToVector2() + half;
+            var max = Vector2.Max(min, snapshot.AreaMax.ToVector2() - half);
+            var sum = Vector2.zero;
             var count = 0;
             foreach (var unit in snapshot.Units)
             {
                 if (unit.Team == Team.Player && !unit.Has(UnitFlags.Down))
                 {
-                    sum += unit.Position.X;
+                    sum += unit.Position.ToVector2();
                     count++;
                 }
             }
 
-            var x = count > 0 ? sum / count : minX;
-            _stageCamera.Follow(Mathf.Clamp(x, minX, maxX), snap);
+            var center = count > 0 ? sum / count : (min + max) * 0.5f;
+            _stageCamera.Follow(new Vector2(Mathf.Clamp(center.x, min.x, max.x), Mathf.Clamp(center.y, min.y, max.y)), snap);
         }
     }
 }

@@ -6,11 +6,17 @@ namespace PenmonScramble.Core
     internal sealed class DashState
     {
         public DashState(SkillDef skill, Vec2 direction, int damage)
+            : this(skill, direction, damage, skill.Range)
+        {
+        }
+
+        /// <param name="distance">すべる距離。大ボスは予告の道の長さ（柵まで）にそろえる</param>
+        public DashState(SkillDef skill, Vec2 direction, int damage, float distance)
         {
             Skill = skill;
             Direction = direction;
             Damage = damage;
-            RemainingDistance = skill.Range;
+            RemainingDistance = distance;
         }
 
         public SkillDef Skill { get; }

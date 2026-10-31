@@ -16,6 +16,13 @@ namespace PenmonScramble.Core
         public const float AreaWidth = 16f;
         public const float AreaHeight = 9f;
 
+        /// <summary>大ボスの闘技場（横長の楕円）の幅と高さ（マス）。人数では変えない</summary>
+        public const float ArenaWidth = 32f;
+        public const float ArenaHeight = 18f;
+
+        /// <summary>闘技場へ入る通り道の幅の半分（マス）。協力の4人が詰まらずに通れる広さ</summary>
+        public const float ArenaDoorHalfWidth = 1.5f;
+
         /// <summary>吹っ飛びの減速（マス/秒²）。大きいほどすぐ止まる</summary>
         public const float KnockbackDeceleration = 18f;
 

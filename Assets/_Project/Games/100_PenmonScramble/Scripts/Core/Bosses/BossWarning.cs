@@ -63,6 +63,9 @@ namespace PenmonScramble.Core
 
         /// <summary>突進・波の向き</summary>
         public Vec2 Direction { get; set; }
+
+        /// <summary>突進ですべる距離（予告の道の長さ）</summary>
+        public float DashDistance { get; set; }
         public List<BossWarning> Warnings { get; } = new List<BossWarning>();
     }
 }

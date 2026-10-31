@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 斜め上から見下ろすカメラを、今のエリアへ動かす。土台（これ）は床の上を横にだけ動き、
+    /// 斜め上から見下ろすカメラを、今のエリアへ動かす。土台（これ）は床の上を縦横に動き（縦は画面より高い闘技場だけ）、
     /// 腕（_arm）がエリア（16×9マス）がちょうど画面に収まる位置・角度にカメラを構える。
     /// 揺れ（CameraShake）は腕の先のカメラが自分の位置をずらして出すので、ここは土台と腕だけを持つ
     /// </summary>
@@ -24,18 +24,19 @@ namespace PenmonScramble.Game
         [SerializeField] private Transform _arm;
         [SerializeField] private Camera _camera;
 
-        private float _targetX;
-        private float _velocity;
+        private Vector2 _target;
+        private Vector2 _velocity;
         private float _fittedAspect;
 
+        /// <param name="target">床の上の、画面の真ん中に映す点</param>
         /// <param name="snap">挑戦の始めは、前の挑戦の位置から流れてこないよう、すぐに合わせる</param>
-        public void Follow(float x, bool snap)
+        public void Follow(Vector2 target, bool snap)
         {
-            _targetX = x;
+            _target = target;
             if (snap)
             {
-                _velocity = 0f;
-                SetX(x);
+                _velocity = Vector2.zero;
+                SetFloorPosition(target);
             }
         }
 
@@ -49,7 +50,8 @@ namespace PenmonScramble.Game
                 FitArea();
             }
 
-            SetX(Mathf.SmoothDamp(transform.position.x, _targetX, ref _velocity, _smoothSeconds));
+            var current = new Vector2(transform.position.x, transform.position.z);
+            SetFloorPosition(Vector2.SmoothDamp(current, _target, ref _velocity, _smoothSeconds));
         }
 
         private void FitArea()
@@ -63,10 +65,11 @@ namespace PenmonScramble.Game
             _arm.localRotation = rotation;
         }
 
-        private void SetX(float x)
+        private void SetFloorPosition(Vector2 point)
         {
             var position = transform.position;
-            position.x = x;
+            position.x = point.x;
+            position.z = point.y;
             transform.position = position;
         }
     }

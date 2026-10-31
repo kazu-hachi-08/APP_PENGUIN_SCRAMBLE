@@ -4,7 +4,7 @@ namespace PenmonScramble.Core
 {
     /// <summary>
     /// ステージの進み方: エリアに入ると出入口が閉じ、敵が何回かに分けて出る。全部倒すと開き、次のエリアへ入るとまた閉じる。
-    /// 出入口は「動ける範囲（AreaMin〜AreaMax）」を次のエリアまで広げる・縮めるだけで表す
+    /// 出入口は「動ける範囲」を次のエリアまで広げる・縮めるだけで表す。次が闘技場なら、前のエリア・通り道・闘技場を合わせた範囲にする
     /// </summary>
     public sealed partial class StageWorld
     {
@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
         private const int SpawnTries = 8;
         // 敵はエリアの左からこの割合より右に出す（プレイヤーは左の入口から入ってくるため）
         private const float SpawnMinXRatio = 0.35f;
-        // ボスは右の壁からエリアの幅のこの割合だけ内側に出す（入ってきたプレイヤーの正面に見えるように）
+        // ボスは右の壁からエリアの幅のこの割合だけ内側に出す（入ってきたプレイヤーの正面に見えるように）。闘技場では真ん中
         private const float BossXFromRightRatio = 0.25f;
 
         // null はテスト用の1エリアだけの場（敵は自分で置く）
@@ -72,13 +72,21 @@ namespace PenmonScramble.Core
         private void OpenGate()
         {
             IsGateOpen = true;
-            AreaMax = StageLayout.AreaMax(AreaIndex + 1);
+            var next = StageLayout.Area(_stage, AreaIndex + 1);
+            if (next.IsEllipse)
+            {
+                SetBounds(Area, StageLayout.Doorway(next), next);
+            }
+            else
+            {
+                SetBounds(AreaShape.Rect(Area.Min, next.Max));
+            }
         }
 
         /// <summary>誰か1人でも次のエリアへ入ったら始める。遅れた人は、閉じた出入口の内側へ押し出される（KeepInsideArea）</summary>
         private void TryEnterNextArea()
         {
-            var entrance = StageLayout.AreaMin(AreaIndex + 1).X + Balance.AreaEnterDepth;
+            var entrance = StageLayout.Area(_stage, AreaIndex + 1).Min.X + Balance.AreaEnterDepth;
             foreach (var unit in _units)
             {
                 if (unit.Team == Team.Player && unit.IsAlive && unit.Position.X >= entrance)
@@ -94,8 +102,7 @@ namespace PenmonScramble.Core
             AreaIndex = index;
             WaveIndex = 0;
             IsGateOpen = false;
-            AreaMin = StageLayout.AreaMin(index);
-            AreaMax = StageLayout.AreaMax(index);
+            SetBounds(StageLayout.Area(_stage, index));
             _waveDelay = Balance.FirstWaveDelaySeconds;
         }
 
@@ -115,7 +122,7 @@ namespace PenmonScramble.Core
 
         private void SpawnBoss(int speciesNo)
         {
-            var position = new Vec2(AreaMax.X - Balance.AreaWidth * BossXFromRightRatio, (AreaMin.Y + AreaMax.Y) * 0.5f);
+            var position = Area.IsEllipse ? Area.Center : new Vec2(Area.Max.X - Area.Width * BossXFromRightRatio, Area.Center.Y);
             var bigBoss = BigBossTable.Get(speciesNo);
             var stats = bigBoss != null ? BigBossTable.Stats(bigBoss, _playerCount, World) : SpeciesTable.BossStats(SpeciesTable.Get(speciesNo), _playerCount, World);
             AddUnit(Team.Enemy, stats, position);
@@ -124,14 +131,11 @@ namespace PenmonScramble.Core
         /// <summary>エリアの右寄りで、プレイヤーから離れた場所</summary>
         private Vec2 FindSpawnPoint()
         {
-            var minX = AreaMin.X + (AreaMax.X - AreaMin.X) * SpawnMinXRatio;
-            var maxX = AreaMax.X - Balance.SpawnWallMargin;
-            var minY = AreaMin.Y + Balance.SpawnWallMargin;
-            var maxY = AreaMax.Y - Balance.SpawnWallMargin;
+            var minX = Area.Min.X + Area.Width * SpawnMinXRatio;
             var point = Vec2.Zero;
             for (var i = 0; i < SpawnTries; i++)
             {
-                point = new Vec2(minX + (float)_random.NextDouble() * (maxX - minX), minY + (float)_random.NextDouble() * (maxY - minY));
+                point = Area.RandomPointRightOf(_random, minX, Balance.SpawnWallMargin);
                 if (IsFarFromPlayers(point))
                 {
                     break;

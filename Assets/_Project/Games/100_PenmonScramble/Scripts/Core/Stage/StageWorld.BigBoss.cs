@@ -79,9 +79,10 @@ namespace PenmonScramble.Core
                 case BossAttackKind.Charge:
                     brain.Direction = attack.CrossScreen ? HorizontalToward(boss, target) : AwayFrom(boss.Position, target, boss.Facing);
                     boss.Facing = brain.Direction;
-                    // 壁で止まるので、予告も壁までにする
-                    var end = ClampInsideArea(boss.Position + brain.Direction * skill.Range, boss.Radius);
-                    AddWarning(brain, boss.Position, end, boss.Radius + skill.AreaRadius);
+                    // 柵に当たったら止まる。予告の道と実際に走る道をそろえ、柵に沿って予告の外へすべり込まないようにする
+                    var wall = Area.DistanceToWall(boss.Position, brain.Direction, boss.Radius);
+                    brain.DashDistance = attack.CrossScreen ? wall : MathF.Min(skill.Range, wall);
+                    AddWarning(brain, boss.Position, boss.Position + brain.Direction * brain.DashDistance, boss.Radius + skill.AreaRadius);
                     break;
                 case BossAttackKind.Rain:
                     StartRain(brain, skill);
@@ -98,7 +99,11 @@ namespace PenmonScramble.Core
             }
         }
 
-        /// <summary>元気なプレイヤー全員の足元と、エリアのばらばらの場所に円を出す（ソロでもよける所が分かりにくくならない数）</summary>
+        /// <summary>
+        /// 元気なプレイヤー全員の足元と、エリアのばらばらの場所に円を出す（ソロでもよける所が分かりにくくならない数）。
+        /// ばらばらの円は広い場ほど増やす。広さの比の平方根にして、闘技場（ふつうのエリアの約3倍）で 3 → 5 くらいにとどめる
+        /// （広さどおりに増やすと、円だらけで逃げ場が読めなくなるため）
+        /// </summary>
         private void StartRain(BigBossBrain brain, SkillDef skill)
         {
             foreach (var unit in _units)
@@ -109,21 +114,23 @@ namespace PenmonScramble.Core
                 }
             }
 
-            for (var i = 0; i < skill.Count; i++)
+            var count = (int)MathF.Round(skill.Count * MathF.Sqrt(Area.Size / (Balance.AreaWidth * Balance.AreaHeight)));
+            for (var i = 0; i < count; i++)
             {
                 var point = RandomPointInArea(skill.AreaRadius);
                 AddWarning(brain, point, point, skill.AreaRadius);
             }
         }
 
-        /// <summary>一番近いプレイヤーがいる側（上半分か下半分）を、エリアの端から端まで帯で知らせる</summary>
+        /// <summary>一番近いプレイヤーがいる側（上半分か下半分）を、エリアの端から端まで帯で知らせる。闘技場では、帯の高さで柵から柵まで</summary>
         private void StartWave(Unit boss, BigBossBrain brain, Unit target)
         {
-            var centerY = (AreaMin.Y + AreaMax.Y) * 0.5f;
-            var quarter = (AreaMax.Y - AreaMin.Y) * 0.25f;
+            var centerY = Area.Center.Y;
+            var quarter = Area.Height * 0.25f;
             var y = target.Position.Y >= centerY ? centerY + quarter : centerY - quarter;
+            var (minX, maxX) = Area.SpanX(y, 0f);
             brain.Direction = HorizontalToward(boss, target);
-            AddWarning(brain, new Vec2(AreaMin.X, y), new Vec2(AreaMax.X, y), quarter);
+            AddWarning(brain, new Vec2(minX, y), new Vec2(maxX, y), quarter);
         }
 
         private void ExecuteBossAttack(Unit boss, BigBossBrain brain)
@@ -133,7 +140,7 @@ namespace PenmonScramble.Core
             switch (brain.Current.Kind)
             {
                 case BossAttackKind.Charge:
-                    boss.Dash = new DashState(skill, brain.Direction, damage);
+                    boss.Dash = new DashState(skill, brain.Direction, damage, brain.DashDistance);
                     break;
                 case BossAttackKind.Rain:
                     foreach (var warning in brain.Warnings)
@@ -200,16 +207,6 @@ namespace PenmonScramble.Core
             return new Vec2(target.Position.X >= from.Position.X ? 1f : -1f, 0f);
         }
 
-        private Vec2 ClampInsideArea(Vec2 point, float margin)
-        {
-            return new Vec2(Math.Clamp(point.X, AreaMin.X + margin, AreaMax.X - margin), Math.Clamp(point.Y, AreaMin.Y + margin, AreaMax.Y - margin));
-        }
-
-        private Vec2 RandomPointInArea(float margin)
-        {
-            var x = AreaMin.X + margin + (float)_random.NextDouble() * (AreaMax.X - AreaMin.X - margin * 2f);
-            var y = AreaMin.Y + margin + (float)_random.NextDouble() * (AreaMax.Y - AreaMin.Y - margin * 2f);
-            return new Vec2(x, y);
-        }
+        private Vec2 RandomPointInArea(float margin) => Area.RandomPoint(_random, margin);
     }
 }

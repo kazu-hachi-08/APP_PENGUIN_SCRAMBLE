@@ -40,7 +40,7 @@ namespace PenmonScramble.Core
         /// </summary>
         public SkillDef Skill { get; }
 
-        /// <summary>突進: プレイヤーの方ではなく、横一直線にエリアの端から端まで突っ込む（シャチ）</summary>
+        /// <summary>突進: プレイヤーの方ではなく、横一直線に柵まで突っ込む（シャチ）。Range は使わない</summary>
         public bool CrossScreen { get; }
     }
 

@@ -176,11 +176,5 @@ namespace PenmonScramble.Core
             {
                 target.SlowSeconds = MathF.Max(target.SlowSeconds, skill.SlowSeconds);
             }
-        }
-
-        private bool IsInsideArea(Vec2 position)
-        {
-            return position.X >= AreaMin.X && position.X <= AreaMax.X && position.Y >= AreaMin.Y && position.Y <= AreaMax.Y;
-        }
-    }
+        }    }
 }
