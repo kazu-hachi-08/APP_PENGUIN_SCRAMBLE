@@ -29,6 +29,7 @@ namespace PenmonScramble.Game
         private static Mesh _egg;
         private static Mesh _drop;
         private static Mesh _puck;
+        private static Mesh _hemisphere;
         private static Mesh _torus;
         private static Mesh _quad;
         private static Mesh _star;
@@ -50,6 +51,9 @@ namespace PenmonScramble.Game
 
         /// <summary>直径1・高さ1の、角の丸い円柱。軸は Y。帽子・太鼓・レンズに使う</summary>
         public static Mesh Puck => _puck != null ? _puck : _puck = Lathe("ToyPuck", PuckProfile);
+
+        /// <summary>底の直径1・高さ0.5の半球。底（平ら）が原点で、丸い方が +Y。ガチャのカプセルの殻に使う</summary>
+        public static Mesh Hemisphere => _hemisphere != null ? _hemisphere : _hemisphere = Lathe("ToyHemisphere", HemisphereProfile);
 
         /// <summary>外側の直径1の輪（ドーナツ）。軸は Y。帯・マフラー・メガネに使う</summary>
         public static Mesh Torus => _torus != null ? _torus : _torus = CreateTorus();
@@ -77,6 +81,19 @@ namespace PenmonScramble.Game
         {
             var radius = 0.5f * Mathf.Sin(theta) * Mathf.Pow(Mathf.Cos(theta * 0.5f), DropTaper) / DropMaxWidth;
             return new Vector2(radius, -0.5f * Mathf.Cos(theta));
+        }
+
+        /// <summary>前半は底の平らな円（中心から縁へ）、後半は縁から頂点へ回る四分円。殻を割ったときに底がふさがって見えるように</summary>
+        private static Vector2 HemisphereProfile(float theta)
+        {
+            var t = theta / Mathf.PI;
+            if (t <= 0.5f)
+            {
+                return new Vector2(t, 0f);
+            }
+
+            var angle = (t - 0.5f) * Mathf.PI;
+            return new Vector2(0.5f * Mathf.Cos(angle), 0.5f * Mathf.Sin(angle));
         }
 
         /// <summary>超楕円の輪郭。sin・cos を小さい指数で持ち上げると、平らな面と丸い角になる</summary>
