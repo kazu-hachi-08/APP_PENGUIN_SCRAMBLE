@@ -5,7 +5,7 @@ using static PenmonScramble.Game.ToyMotionMath;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 3D のペンギンの部品を動かす（立つ・歩く・技・必殺技・被弾・吹っ飛び・すべる・ダウン・撃破）。
+    /// 3D のペンギンの部品を動かす（立つ・歩く・技・必殺技・被弾・吹っ飛び・すべる・ダウン・撃破・結果で喜ぶ）。
     /// 状態は外（UnitView・試作の場）から受け取り、部品と体全体（Figure）だけを動かす。根元の位置・回転・大きさは呼び出し側のもの。
     /// 毎フレームの姿勢は PenguinPose だけから決まる（Apply）。部品ごとの動きは PenguinMotion.Parts.cs、体全体の動きは PenguinMotion.Figure.cs
     /// </summary>
@@ -127,6 +127,7 @@ namespace PenmonScramble.Game
             Down = false;
             Frozen = false;
             WindingUp = false;
+            Cheering = false;
             Velocity = Vector3.zero;
             _blinkTimer = NextBlinkInterval(BlinkIntervalMin, BlinkIntervalMax);
             Apply(_pose);
@@ -168,6 +169,7 @@ namespace PenmonScramble.Game
             _pose.Slide = Mathf.MoveTowards(_pose.Slide, Sliding && !Down ? 1f : 0f, SlideBlendRate * dt);
             _pose.Down = Mathf.MoveTowards(_pose.Down, Down ? 1f : 0f, DownBlendRate * dt);
             _pose.WindUp = Mathf.MoveTowards(_pose.WindUp, WindingUp ? 1f : 0f, WindUpBlendRate * dt);
+            TickCheer(dt);
             _pose.Attack = Advance(_pose.Attack, dt, AttackSeconds);
             _pose.Special = Advance(_pose.Special, dt, SpecialSeconds);
             _pose.Hit = Advance(_pose.Hit, dt, HitSeconds);

@@ -18,12 +18,8 @@ namespace PenmonScramble.Game
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に読む
     [DefaultExecutionOrder(100)]
-    public class StageRunner : MonoBehaviour
+    public partial class StageRunner : MonoBehaviour
     {
-        // 結果が出た直後の連打で、すぐやり直しにならないようにする
-        private const float RetryInputDelaySeconds = 1f;
-        private const int RetryAction = 0;
-
         [SerializeField] private StageView _view;
         [SerializeField] private StageHud _hud;
         [SerializeField] private OnlineSession _session;
@@ -38,7 +34,6 @@ namespace PenmonScramble.Game
         private StageGuest _guest;
         private int _localSeat;
         private PlayerState _lastPlayerState;
-        private float _resultShownAt = -1f;
         private bool _leaving;
         private MusicTrack? _music;
         // 毎フレーム渡すので、メソッドから作る関数を使い回す
@@ -61,6 +56,7 @@ namespace PenmonScramble.Game
 
         private void OnDestroy()
         {
+            EndSlowMotion();
             _hud.RetryRequested -= Retry;
             _hud.TitleRequested -= ReturnToTitle;
             _menu.RestartRequested -= Retry;
@@ -203,49 +199,10 @@ namespace PenmonScramble.Game
             _hud.SetShown(_lastPlayerState != null);
         }
 
-        private void UpdateResult(StageSnapshot snapshot, InputManager input)
-        {
-            if (snapshot.Result == StageResult.Playing)
-            {
-                // ゲストは、ホストが「もう一度」を押したら新しい挑戦のスナップショットが届いてここに来る
-                if (_resultShownAt >= 0f)
-                {
-                    _resultShownAt = -1f;
-                    _hud.HideResult();
-                }
-
-                return;
-            }
-
-            if (_resultShownAt < 0f)
-            {
-                _resultShownAt = Time.time;
-                var cleared = snapshot.Result == StageResult.Cleared;
-                var coins = RecordResult(snapshot, cleared);
-                _music = null;
-                GameMusic.Stop();
-                GameSounds.Play(cleared ? GameSound.Clear : GameSound.Fail);
-                _hud.ShowResult(cleared, canRetry: _host != null, snapshot.EnemiesDefeated, coins);
-                return;
-            }
-
-            if (Time.time - _resultShownAt >= RetryInputDelaySeconds && input.IsActionDown(RetryAction))
-            {
-                Retry();
-            }
-        }
-
-        /// <summary>結果を自分の記録に書いて保存する。協力ではホストのクリアが全員の記録に付く</summary>
-        private static int RecordResult(StageSnapshot snapshot, bool cleared)
-        {
-            var coins = GameSave.Record.RecordStage(snapshot.StageNo, cleared, snapshot.EnemiesDefeated);
-            GameSave.Save();
-            return coins;
-        }
-
         private void Retry()
         {
             _lastPlayerState = null;
+            EndSlowMotion();
             _host?.StartRound();
         }
 
@@ -258,6 +215,7 @@ namespace PenmonScramble.Game
             }
 
             _leaving = true;
+            EndSlowMotion();
             if (SceneLoader.HasInstance)
             {
                 SceneLoader.Instance.LoadTitleScene();

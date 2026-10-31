@@ -60,6 +60,7 @@ namespace PenmonScramble.Game
             Walk(pose, pose.Walk * standing, ref p);
             Attack(pose, standing, ref p);
             SpecialParts(pose, ref p);
+            CheerParts(pose, ref p);
             Hit(pose, ref p);
             KnockParts(pose, ref p);
             SlideParts(pose, ref p);

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ステージ中の画面表示: 左上の自分のプレート（場に出ている子の顔・必殺技のゲージ・名札・HP・3体の小さな顔）と結果。
+    /// ステージ中の画面表示: 左上の自分のプレート（場に出ている子の顔・必殺技のゲージ・名札・HP・3体の小さな顔）と結果（ResultScreen）。
     /// エリアの進み具合・ボスの HP・画面の真ん中の知らせは StageHud.Progress.cs
     /// </summary>
     public partial class StageHud : MonoBehaviour
@@ -25,10 +25,7 @@ namespace PenmonScramble.Game
         [SerializeField] private Image _activeFace;
         [SerializeField] private HudSpecialRing _special;
         [SerializeField] private HudMemberSlot[] _slots;
-        [SerializeField] private GameObject _resultPanel;
-        [SerializeField] private Text _resultText;
-        [SerializeField] private Button _retryButton;
-        [SerializeField] private Button _titleButton;
+        [SerializeField] private ResultScreen _result;
 
         private string _playerLabel = string.Empty;
         private int _shownIndex = -1;
@@ -37,15 +34,25 @@ namespace PenmonScramble.Game
         public event Action RetryRequested;
         public event Action TitleRequested;
 
+        /// <summary>結果の演出が出そろった（ボタンまで出た）</summary>
+        public bool IsResultSettled => _result.IsSettled;
+
+        /// <summary>出そろってからの秒。出そろう前は負</summary>
+        public float ResultSettledFor => _result.SettledFor;
+
         private void Awake()
         {
-            _retryButton.onClick.AddListener(() => RetryRequested?.Invoke());
-            _titleButton.onClick.AddListener(() => TitleRequested?.Invoke());
+            _result.RetryRequested += () => RetryRequested?.Invoke();
+            _result.TitleRequested += () => TitleRequested?.Invoke();
         }
 
-        /// <summary>タイトルの間（ステージが始まる前）は出さない。ステージから戻るときはシーンを読み直すので、隠し直さなくてよい</summary>
+        /// <summary>
+        /// タイトルの間（ステージが始まる前）と結果の間は出さない（結果ではペンモンと結果の札だけを見せる）。
+        /// ステージから戻るときはシーンを読み直すので、隠し直さなくてよい
+        /// </summary>
         public void SetShown(bool shown)
         {
+            shown &= !_result.IsShown;
             if (_plates.activeSelf != shown)
             {
                 _plates.SetActive(shown);
@@ -120,19 +127,22 @@ namespace PenmonScramble.Game
             UpdateBanner();
         }
 
-        /// <param name="canRetry">「もう一度」を押せるのはホストだけ（ゲストはホストが始め直すのを待つ）</param>
-        public void ShowResult(bool cleared, bool canRetry, int enemiesDefeated, int coins)
+        public void ShowResult(ResultInfo info)
         {
-            var title = cleared ? "クリア！" : "やられた…";
-            title = $"{title}\n<size=56>倒した数 {enemiesDefeated} 体　コイン +{coins}</size>";
-            _resultText.text = canRetry ? title : $"{title}\n<size=48>ホストが「もう一度」を押すと始まります</size>";
-            _retryButton.gameObject.SetActive(canRetry);
-            _resultPanel.SetActive(true);
+            // 出ている途中の「すすめ →」などは消して、結果の見出しと重ねない
+            _bannerTimer = 0f;
+            _result.Show(info);
         }
 
         public void HideResult()
         {
-            _resultPanel.SetActive(false);
+            _result.Hide();
+        }
+
+        /// <summary>結果の演出を最後まで飛ばす</summary>
+        public void SkipResult()
+        {
+            _result.Skip();
         }
     }
 }

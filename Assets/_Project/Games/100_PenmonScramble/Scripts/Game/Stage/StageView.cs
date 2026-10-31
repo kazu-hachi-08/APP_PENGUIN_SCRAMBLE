@@ -101,7 +101,8 @@ namespace PenmonScramble.Game
             PushBossWarnings(snapshot);
             PlayEvents(snapshot);
             UpdateGates(snapshot);
-            if (!_preview)
+            // 結果の舞台を映している間は、カメラを結果の構えのままにする（ShowResultStage）
+            if (!_preview && !_showingResult)
             {
                 FollowCamera(snapshot, snap: isNewRound);
             }
@@ -124,6 +125,7 @@ namespace PenmonScramble.Game
         private void Rebuild(StageSnapshot snapshot)
         {
             _round = snapshot.Round;
+            _showingResult = false;
             foreach (Transform child in transform)
             {
                 Destroy(child.gameObject);

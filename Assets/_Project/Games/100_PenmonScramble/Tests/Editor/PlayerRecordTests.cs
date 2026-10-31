@@ -134,12 +134,31 @@ namespace PenmonScramble.Tests
             Assert.That(record.IsUnlocked(1), Is.True);
             Assert.That(record.IsUnlocked(2), Is.False);
 
-            Assert.That(record.RecordStage(1, cleared: true, enemiesDefeated: 30), Is.EqualTo(Balance.ClearCoins + Balance.FirstClearBonusCoins));
+            var first = record.RecordStage(1, cleared: true, enemiesDefeated: 30);
+            Assert.That(first.Coins, Is.EqualTo(Balance.ClearCoins));
+            Assert.That(first.FirstClearBonus, Is.EqualTo(Balance.FirstClearBonusCoins));
+            Assert.That(first.Total, Is.EqualTo(Balance.ClearCoins + Balance.FirstClearBonusCoins));
+            Assert.That(first.UnlockedStageNo, Is.EqualTo(2));
+            Assert.That(record.Coins, Is.EqualTo(first.Total));
             Assert.That(record.IsCleared(1), Is.True);
             Assert.That(record.IsUnlocked(2), Is.True);
 
-            Assert.That(record.RecordStage(1, cleared: true, enemiesDefeated: 30), Is.EqualTo(Balance.ClearCoins));
+            var again = record.RecordStage(1, cleared: true, enemiesDefeated: 30);
+            Assert.That(again.Total, Is.EqualTo(Balance.ClearCoins));
+            Assert.That(again.FirstClearBonus, Is.EqualTo(0));
+            Assert.That(again.UnlockedStageNo, Is.EqualTo(0));
             Assert.That(record.Data.clearedStages.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void RecordStage_LastStage_UnlocksNothing()
+        {
+            var record = NewRecord();
+
+            var reward = record.RecordStage(StageTable.Count, cleared: true, enemiesDefeated: 30);
+
+            Assert.That(reward.FirstClearBonus, Is.EqualTo(Balance.FirstClearBonusCoins));
+            Assert.That(reward.UnlockedStageNo, Is.EqualTo(0));
         }
 
         [Test]
@@ -147,7 +166,11 @@ namespace PenmonScramble.Tests
         {
             var record = NewRecord();
 
-            Assert.That(record.RecordStage(1, cleared: false, enemiesDefeated: 12), Is.EqualTo(12 * Balance.FailCoinsPerEnemy));
+            var reward = record.RecordStage(1, cleared: false, enemiesDefeated: 12);
+
+            Assert.That(reward.Total, Is.EqualTo(12 * Balance.FailCoinsPerEnemy));
+            Assert.That(reward.FirstClearBonus, Is.EqualTo(0));
+            Assert.That(reward.UnlockedStageNo, Is.EqualTo(0));
             Assert.That(record.IsCleared(1), Is.False);
         }
 
