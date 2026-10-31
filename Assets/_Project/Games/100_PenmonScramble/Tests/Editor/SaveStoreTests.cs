@@ -125,5 +125,24 @@ namespace PenmonScramble.Tests
             Assert.That(data.penguins.Count, Is.EqualTo(1));
             Assert.That(data.party, Is.Empty);
         }
+
+        /// <summary>初期化したら、次に読んだときも初めから（無料ガチャが3回に戻る）。前に退避した記録は残す</summary>
+        [Test]
+        public void Reset_StartsOverAndKeepsBrokenBackups()
+        {
+            _storage.Write(SaveStore.Key, "{\"version\":1,\"coins\":500,\"freePullsUsed\":3,\"penguins\":[{\"id\":1,\"speciesNo\":1,\"power\":80}],\"party\":[1],\"clearedStages\":[1]}");
+            _storage.Write(SaveStore.BrokenKeyPrefix + 1, "old");
+
+            var reset = _store.Reset();
+            var data = _store.Load();
+
+            Assert.That(reset.version, Is.EqualTo(SaveData.CurrentVersion));
+            Assert.That(data.coins, Is.Zero);
+            Assert.That(data.penguins, Is.Empty);
+            Assert.That(data.party, Is.Empty);
+            Assert.That(data.clearedStages, Is.Empty);
+            Assert.That(new PlayerRecord(data).FreePullsLeft, Is.EqualTo(Balance.FreePulls));
+            Assert.That(_storage.Read(SaveStore.BrokenKeyPrefix + 1), Is.EqualTo("old"));
+        }
     }
 }

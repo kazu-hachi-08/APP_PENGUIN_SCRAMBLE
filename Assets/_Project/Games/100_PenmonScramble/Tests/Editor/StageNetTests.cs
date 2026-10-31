@@ -34,6 +34,8 @@ namespace PenmonScramble.Tests
             player.Members.Add(new MemberState(1, 0, 120));
             player.Members.Add(new MemberState(5, 80, 170));
             player.Members.Add(new MemberState(9, 135, 135));
+            player.SkillCooldowns.Add(0f);
+            player.SkillCooldowns.Add(0.6f);
             snapshot.Players.Add(player);
             snapshot.SpecialsUsed.Add(new SpecialUsedEvent(1, 5, Element.Ice));
             snapshot.Bursts.Add(new BurstEvent(BurstShape.Ring, Element.Wind, new Vec2(1f, 1f), 5f, true));
@@ -95,6 +97,10 @@ namespace PenmonScramble.Tests
             Assert.That(player.Members[1].SpeciesNo, Is.EqualTo(5));
             Assert.That(player.Members[1].Hp, Is.EqualTo(80));
             Assert.That(player.Members[1].MaxHp, Is.EqualTo(170));
+            // 待ちは 1 バイトに丸めて送る
+            Assert.That(player.SkillCooldowns.Count, Is.EqualTo(2));
+            Assert.That(player.SkillCooldowns[0], Is.EqualTo(0f));
+            Assert.That(player.SkillCooldowns[1], Is.EqualTo(0.6f).Within(0.01f));
 
             Assert.That(decoded.SpecialsUsed[0].SpeciesNo, Is.EqualTo(5));
             Assert.That(decoded.SpecialsUsed[0].Element, Is.EqualTo(Element.Ice));
@@ -249,6 +255,26 @@ namespace PenmonScramble.Tests
             Assert.That(first.AreaCount, Is.EqualTo(StageTable.Stage1.Areas.Count));
             Assert.That(first.Result, Is.EqualTo(StageResult.Playing));
             Assert.That(first.FindPlayerState(0).Members.Count, Is.EqualTo(Balance.PartySize));
+            // 技1を出したばかりなので、技1の待ちはほぼ満タン・技2は出せる
+            var skills = first.FindPlayerState(0).SkillCooldowns;
+            Assert.That(skills.Count, Is.EqualTo(2));
+            Assert.That(skills[0], Is.GreaterThan(0.9f));
+            Assert.That(skills[1], Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void PlayerState_NextAliveIndex_SkipsFallen()
+        {
+            var state = new PlayerState { ActiveIndex = 0 };
+            state.Members.Add(new MemberState(1, 50, 100));
+            state.Members.Add(new MemberState(2, 0, 100));
+            state.Members.Add(new MemberState(3, 70, 100));
+
+            Assert.That(state.NextAliveIndex(), Is.EqualTo(2));
+            state.ActiveIndex = 2;
+            Assert.That(state.NextAliveIndex(), Is.EqualTo(0));
+            state.Members[0] = new MemberState(1, 0, 100);
+            Assert.That(state.NextAliveIndex(), Is.EqualTo(-1));
         }
 
         [Test]

@@ -72,6 +72,17 @@ namespace PenmonScramble.Core
             _storage.Write(Key, _format.Write(data));
         }
 
+        /// <summary>
+        /// 設定の「初期化」（§3.3。最初の3体を引き直したい人向け）。新しい記録を作って保存し、それを返す。
+        /// 読めなかった記録の退避（Broken）には触らない（プレイヤーが消したのは今の記録だけなので）
+        /// </summary>
+        public SaveData Reset()
+        {
+            var data = SaveData.CreateNew();
+            Save(data);
+            return data;
+        }
+
         private SaveData TryRead(string text)
         {
             try

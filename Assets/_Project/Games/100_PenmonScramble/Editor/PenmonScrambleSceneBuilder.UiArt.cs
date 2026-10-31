@@ -60,6 +60,7 @@ namespace PenmonScramble.Editor
             WriteUiSprite(GearIconPath, DrawIcon(GearPixel), 0);
             WriteUiSprite(CoinIconPath, DrawIcon(CoinPixel), 0);
             WriteUiSprite(CapsuleIconPath, DrawIcon(CapsulePixel), 0);
+            CreateTouchArt();
         }
 
         private static Sprite UiSprite(string path) => AssetDatabase.LoadAssetAtPath<Sprite>(path);

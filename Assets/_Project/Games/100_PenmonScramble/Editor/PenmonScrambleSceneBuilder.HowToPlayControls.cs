@@ -142,7 +142,7 @@ namespace PenmonScramble.Editor
             CreatePhoneControl(screen, "移動", Vector2.zero, JoystickPosition, JoystickSize, JoystickBackColor, scale);
             CreatePhoneControl(screen, "技1", Vector2.right, Skill1Position, Skill1Size, Skill1Color, scale);
             CreatePhoneControl(screen, "技2", Vector2.right, Skill2Position, Skill2Size, Skill2Color, scale);
-            CreatePhoneControl(screen, "必殺", Vector2.right, SpecialPosition, SpecialSize, new Color(SpecialColor.r, SpecialColor.g, SpecialColor.b, 1f), scale);
+            CreatePhoneControl(screen, "必殺", Vector2.right, SpecialPosition, SpecialSize, SpecialColor, scale);
             CreatePhoneControl(screen, "交代", Vector2.right, SwitchPosition, SwitchSize, SwitchColor, scale);
             CreatePhoneMenuIcon(screen);
 
@@ -153,8 +153,7 @@ namespace PenmonScramble.Editor
         /// <summary>ステージ中のボタン1つを、画面の絵の中の同じ角から同じ割合の位置に置く</summary>
         private static void CreatePhoneControl(Transform screen, string label, Vector2 corner, Vector2 position, float size, Color color, float scale)
         {
-            var knob = AssetDatabase.GetBuiltinExtraResource<Sprite>(KnobSpritePath);
-            var obj = CreateCircle(screen, label, knob, color, size * scale);
+            var obj = CreateTouchImage(screen, label, TouchFacePath, color, size * scale).gameObject;
             var rect = obj.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = corner;
             rect.anchoredPosition = position * scale;

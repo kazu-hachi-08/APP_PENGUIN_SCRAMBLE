@@ -14,7 +14,6 @@ namespace PenmonScramble.Game
     {
         // ゲージ満タンのときに光らせる速さ（§3「ゲージ満タンで光る」）
         private const float ReadyPulsePerSecond = 3f;
-        private const float IdleButtonAlpha = 0.35f;
 
         [SerializeField] private RectTransform _hpFill;
         [SerializeField] private Image _hpFillImage;
@@ -25,7 +24,6 @@ namespace PenmonScramble.Game
         [SerializeField] private Text _gaugeText;
         [SerializeField] private Color _gaugeColor = new Color(1f, 0.6f, 0.2f);
         [SerializeField] private Color _gaugeReadyColor = new Color(1f, 0.95f, 0.4f);
-        [SerializeField] private Image _specialButtonImage;
         [SerializeField] private GameObject _resultPanel;
         [SerializeField] private Text _resultText;
         [SerializeField] private Button _retryButton;
@@ -103,12 +101,6 @@ namespace PenmonScramble.Game
             UpdateBanner();
             var pulse = _specialReady ? 0.5f + 0.5f * Mathf.Sin(Time.time * ReadyPulsePerSecond * Mathf.PI * 2f) : 0f;
             _gaugeFillImage.color = _specialReady ? Color.Lerp(_gaugeReadyColor, Color.white, pulse) : _gaugeColor;
-            if (_specialButtonImage != null)
-            {
-                var color = _specialButtonImage.color;
-                color.a = _specialReady ? Mathf.Lerp(0.7f, 1f, pulse) : IdleButtonAlpha;
-                _specialButtonImage.color = color;
-            }
         }
 
         /// <param name="canRetry">「もう一度」を押せるのはホストだけ（ゲストはホストが始め直すのを待つ）</param>

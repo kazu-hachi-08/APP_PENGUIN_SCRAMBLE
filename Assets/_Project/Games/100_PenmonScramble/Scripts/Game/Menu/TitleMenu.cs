@@ -68,6 +68,7 @@ namespace PenmonScramble.Game
             _gacha.Closed += Refresh;
             _penguins.Closed += Refresh;
             _settings.Closed += Refresh;
+            _settings.RecordReset += OnRecordReset;
             _onlinePanel.SetActive(false);
         }
 
@@ -76,6 +77,7 @@ namespace PenmonScramble.Game
             _gacha.Closed -= Refresh;
             _penguins.Closed -= Refresh;
             _settings.Closed -= Refresh;
+            _settings.RecordReset -= OnRecordReset;
         }
 
         private void Start()
@@ -98,12 +100,20 @@ namespace PenmonScramble.Game
             }
             else if (_settings.IsOpen)
             {
-                _settings.Close();
+                _settings.Back();
             }
             else if (_onlinePanel.activeSelf)
             {
                 _onlinePanel.SetActive(false);
             }
+        }
+
+        /// <summary>初期化したら、初回と同じく無料ガチャを3回引くまで閉じられない（名前は残っているので聞かない）</summary>
+        private void OnRecordReset()
+        {
+            SelectedStageNo = LatestUnlockedStage();
+            Refresh();
+            _gacha.Open();
         }
 
         private static int LatestUnlockedStage()

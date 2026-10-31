@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えて変な画面になるより無視する方がよい
         /// </summary>
-        public const byte FormatVersion = 7;
+        public const byte FormatVersion = 8;
 
         private const byte Skill1Flag = 1;
         private const byte Skill2Flag = 2;
@@ -110,6 +110,12 @@ namespace PenmonScramble.Core
                     writer.Write((byte)member.SpeciesNo);
                     writer.Write(member.Hp);
                     writer.Write(member.MaxHp);
+                }
+
+                writer.Write((byte)player.SkillCooldowns.Count);
+                foreach (var cooldown in player.SkillCooldowns)
+                {
+                    writer.Write(ToByte(cooldown));
                 }
             }
         }
@@ -221,6 +227,12 @@ namespace PenmonScramble.Core
                     var species = (int)reader.ReadByte();
                     var hp = reader.ReadInt32();
                     player.Members.Add(new MemberState(species, hp, reader.ReadInt32()));
+                }
+
+                var skills = reader.ReadByte();
+                for (var s = 0; s < skills; s++)
+                {
+                    player.SkillCooldowns.Add(FromByte(reader.ReadByte()));
                 }
 
                 snapshot.Players.Add(player);

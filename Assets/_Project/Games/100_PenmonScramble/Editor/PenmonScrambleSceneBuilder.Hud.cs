@@ -54,7 +54,7 @@ namespace PenmonScramble.Editor
         private const float MenuBarSpacingRatio = 0.24f;
         private const string MenuHeading = "メニュー";
 
-        private static StageHud CreateHud(Transform canvas, Image specialButton)
+        private static StageHud CreateHud(Transform canvas)
         {
             var hudObj = UIDialogBuilder.CreateUIObject("Hud", canvas);
             UIDialogBuilder.SetStretchAll(hudObj.GetComponent<RectTransform>());
@@ -76,7 +76,6 @@ namespace PenmonScramble.Editor
             so.FindProperty("_gaugeFill").objectReferenceValue = gaugeFill;
             so.FindProperty("_gaugeFillImage").objectReferenceValue = gaugeFill.GetComponent<Image>();
             so.FindProperty("_gaugeText").objectReferenceValue = gaugeText;
-            so.FindProperty("_specialButtonImage").objectReferenceValue = specialButton;
             so.FindProperty("_progressText").objectReferenceValue = progressText;
             so.FindProperty("_bossBar").objectReferenceValue = bossBar;
             so.FindProperty("_bossFill").objectReferenceValue = bossFill;

@@ -63,7 +63,7 @@ namespace PenmonScramble.Editor
             CreateEventSystem();
             var canvas = CreateCanvas();
             var touch = CreateTouchControls(canvas.transform);
-            var hud = CreateHud(canvas.transform, touch.SpecialImage);
+            var hud = CreateHud(canvas.transform);
             var menuButton = CreateMenuButton(hud.transform);
             var cutIn = CreateCutIn(canvas.transform);
             var session = new GameObject("OnlineSession").AddComponent<OnlineSession>();
@@ -81,7 +81,7 @@ namespace PenmonScramble.Editor
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);
             CreateCreatureArt();
-            CreateStage(hud, session, title, titleMenu, stageMenu, shake, stageCamera, cutIn);
+            CreateStage(hud, session, title, titleMenu, stageMenu, shake, stageCamera, cutIn, touch.View);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings();
@@ -173,7 +173,7 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        private static void CreateStage(StageHud hud, OnlineSession session, ModeSelectPanel title, TitleMenu titleMenu, StageMenu stageMenu, CameraShake shake, StageCamera stageCamera, SpecialCutIn cutIn)
+        private static void CreateStage(StageHud hud, OnlineSession session, ModeSelectPanel title, TitleMenu titleMenu, StageMenu stageMenu, CameraShake shake, StageCamera stageCamera, SpecialCutIn cutIn, TouchControlsView touch)
         {
             var stageObj = new GameObject("Stage");
             var view = stageObj.AddComponent<StageView>();
@@ -193,6 +193,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_modeSelect").objectReferenceValue = title;
             so.FindProperty("_titleMenu").objectReferenceValue = titleMenu;
             so.FindProperty("_menu").objectReferenceValue = stageMenu;
+            so.FindProperty("_touch").objectReferenceValue = touch;
             so.ApplyModifiedProperties();
         }
 

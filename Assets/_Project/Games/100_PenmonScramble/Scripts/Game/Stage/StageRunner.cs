@@ -13,7 +13,8 @@ namespace PenmonScramble.Game
     /// 計算はソロとホストが StageHost、ゲストは StageGuest で、どちらもスナップショットを StageView に渡して描く。
     /// ステージはホストがタイトルで選んだもの、連れていくのは各自の記録の編成（§8）。報酬は各自の記録に書く。
     /// BGM はタイトル・ステージ・ボスエリアで切り替え、結果で止めてジングルを鳴らす。
-    /// 遊んでいる間はメニュー（StageMenu）を開ける。開いている間は自分の入力を「メニュー中」にする
+    /// 遊んでいる間はメニュー（StageMenu）を開ける。開いている間は自分の入力を「メニュー中」にする。
+    /// スマホのボタンは遊んでいる間だけ出し、場に出ている子の技・待ち・ゲージを映す（TouchControlsView）
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に読む
     [DefaultExecutionOrder(100)]
@@ -29,6 +30,7 @@ namespace PenmonScramble.Game
         [SerializeField] private ModeSelectPanel _modeSelect;
         [SerializeField] private TitleMenu _titleMenu;
         [SerializeField] private StageMenu _menu;
+        [SerializeField] private TouchControlsView _touch;
 
         private readonly LocalInputSampler _input = new LocalInputSampler();
         private StageLink _link;
@@ -157,6 +159,7 @@ namespace PenmonScramble.Game
 
             UpdateHud(latest);
             _menu.SetAvailable(latest.Result == StageResult.Playing);
+            _touch.SetShown(latest.Result == StageResult.Playing);
             UpdateResult(latest, input);
             if (latest.Result == StageResult.Playing)
             {
@@ -188,6 +191,7 @@ namespace PenmonScramble.Game
             if (_lastPlayerState != null)
             {
                 _hud.SetParty(_lastPlayerState, fallen: state == null);
+                _touch.Show(_lastPlayerState, fallen: state == null);
             }
 
             _hud.SetProgress(snapshot);
