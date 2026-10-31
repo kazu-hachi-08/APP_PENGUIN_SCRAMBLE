@@ -73,6 +73,9 @@ namespace PenmonScramble.Core
         public float FrozenSeconds { get; internal set; }
         public float InvincibleSeconds { get; internal set; }
 
+        /// <summary>攻撃を受けた直後の無敵の残り（秒）。必殺技・復活の無敵（InvincibleSeconds）と分けて持ち、交代で出てきた子には引き継がない</summary>
+        public float HitInvincibleSeconds { get; internal set; }
+
         /// <summary>ダウン中に、近くに仲間がいた時間の合計（秒）。離れてもためた分は残る</summary>
         public float ReviveSeconds { get; internal set; }
 
@@ -122,7 +125,7 @@ namespace PenmonScramble.Core
         public bool IsDashing => Dash != null;
         public bool IsWindingUp => WindUp != null;
         public bool IsFrozen => FrozenSeconds > 0f;
-        public bool IsInvincible => InvincibleSeconds > 0f || IsSubmerged;
+        public bool IsInvincible => InvincibleSeconds > 0f || HitInvincibleSeconds > 0f || IsSubmerged;
         public bool IsSpecialReady => SpecialGauge >= 1f;
 
         /// <summary>このプレイヤーがメニューを開いている（見た目だけ。計算には使わない）</summary>
@@ -141,6 +144,8 @@ namespace PenmonScramble.Core
 
             ActiveIndex = next;
             Dash = null;
+            // 交代して無敵のまま逃げる遊びにしないため
+            HitInvincibleSeconds = 0f;
             return true;
         }
 

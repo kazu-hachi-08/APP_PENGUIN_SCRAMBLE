@@ -133,6 +133,9 @@ namespace PenmonScramble.Core
         /// <summary>復活した直後の無敵（秒）。囲まれたまま起きて、すぐまた倒れる、を防ぐ</summary>
         public const float ReviveInvincibleSeconds = 2f;
 
+        /// <summary>プレイヤーのペンモンが敵の攻撃を受けた直後の無敵（秒）。囲まれて同時に何発も当たり、一瞬で倒れないようにする。長いとごり押しで勝ててしまうので短く</summary>
+        public const float HitInvincibleSeconds = 0.4f;
+
         // 吹っ飛びの連鎖
         /// <summary>この速さ以上で飛んでいる敵だけが、ほかの敵にぶつかってダメージを与える（マス/秒）。弱い技で押しただけでは連鎖させない</summary>
         public const float ChainMinSpeed = 6f;

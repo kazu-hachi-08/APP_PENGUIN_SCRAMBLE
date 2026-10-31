@@ -161,6 +161,7 @@ namespace PenmonScramble.Core
                 unit.SwitchCooldown = MathF.Max(0f, unit.SwitchCooldown - dt);
                 unit.FrozenSeconds = MathF.Max(0f, unit.FrozenSeconds - dt);
                 unit.InvincibleSeconds = MathF.Max(0f, unit.InvincibleSeconds - dt);
+                unit.HitInvincibleSeconds = MathF.Max(0f, unit.HitInvincibleSeconds - dt);
                 unit.SlowSeconds = MathF.Max(0f, unit.SlowSeconds - dt);
                 unit.ComboWindowSeconds = MathF.Max(0f, unit.ComboWindowSeconds - dt);
                 unit.ComboCooldownSeconds = MathF.Max(0f, unit.ComboCooldownSeconds - dt);
