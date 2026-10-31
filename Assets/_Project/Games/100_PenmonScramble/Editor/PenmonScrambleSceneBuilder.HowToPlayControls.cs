@@ -42,7 +42,8 @@ namespace PenmonScramble.Editor
         private const float PadGlyphSize = 110f;
         private static readonly Vector2 PadWideGlyphSize = new Vector2(200f, 90f);
         private const int PadWideFontSize = 28;
-        private const float PadLabelOffset = 140f;
+        // 絵の右端から文字の左端まで（丸いボタンでは以前と同じ位置になる）
+        private const float PadLabelGap = 30f;
         private static readonly Vector2 PadLabelSize = new Vector2(520f, 80f);
         private static readonly Color PadCrossColor = new Color(0.40f, 0.60f, 0.95f);
         private static readonly Color PadCircleColor = new Color(0.90f, 0.35f, 0.35f);
@@ -124,7 +125,8 @@ namespace PenmonScramble.Editor
             var key = CreateKeyCap(parent, glyph, position, size, fontSize, new Key[0], controls, round, name);
             key.GetComponentInChildren<Text>().color = Color.white;
             key.transform.Find("Face").GetComponent<Image>().color = color;
-            var labelPosition = position + Vector2.right * (PadLabelOffset + PadLabelSize.x * 0.5f - PadGlyphSize * 0.5f);
+            // 文字は絵の右端から測る。L1・OPTIONS は丸より横に長いので、丸の幅で測ると絵に重なる
+            var labelPosition = position + Vector2.right * (size.x * 0.5f + PadLabelGap + PadLabelSize.x * 0.5f);
             var label = CreateLabel(parent, $"{name}Label", action, KeyWordFontSize, labelPosition, PadLabelSize);
             label.alignment = TextAnchor.MiddleLeft;
         }

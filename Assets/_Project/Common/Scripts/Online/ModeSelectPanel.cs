@@ -38,6 +38,11 @@ namespace PenmonScramble.Common.Online
         [SerializeField] private string _copiedLabel = "コピーしました";
         [SerializeField] private float _copiedLabelSeconds = 1.5f;
 
+        [Header("Error")]
+        [SerializeField] private string _connectFailedMessage = "接続できませんでした\nコードや通信状況を確認してください";
+        [Tooltip("Unity のサービスの準備ができていない（Project ID 未リンクなど）とき。プレイヤーには直せないので、そう伝える")]
+        [SerializeField] private string _servicesNotReadyMessage = "いまはオンラインで遊べません\nオンラインの準備ができていません";
+
         private Action _onNpcSelected;
         private Action<bool> _onOnlineReady;
         private Action<int, int> _onMatchStarted;
@@ -251,7 +256,8 @@ namespace PenmonScramble.Common.Online
 
         /// <summary>
         /// 接続失敗の理由（コード違い・通信なし等）は細かく分けず、ログに残して待機画面で止める。
-        /// キャンセルでメニューに戻ればやり直せる
+        /// キャンセルでメニューに戻ればやり直せる。
+        /// ただしサービスの準備ができていない失敗は、プレイヤーがコードや通信を見直しても直らないので、別の文で伝える
         /// </summary>
         private void ShowError(Exception e)
         {
@@ -259,7 +265,7 @@ namespace PenmonScramble.Common.Online
             _session.Leave();
             _copyButton.gameObject.SetActive(false);
             SetStartButtonVisible(false);
-            SetStatus("接続できませんでした\nコードや通信状況を確認してください");
+            SetStatus(OnlineSession.IsServicesSetupError(e) ? _servicesNotReadyMessage : _connectFailedMessage);
         }
 
         private void ShowMenu()

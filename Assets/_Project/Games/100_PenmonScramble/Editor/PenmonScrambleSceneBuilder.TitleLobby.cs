@@ -66,7 +66,8 @@ namespace PenmonScramble.Editor
         private static readonly Color StageBadgeColor = new Color(1f, 0.85f, 0.3f);
         private static readonly Vector2 OnlineButtonPosition = new Vector2(400f, -372f);
         private static readonly Vector2 OnlineButtonSize = new Vector2(270f, 150f);
-        private const int OnlineButtonFontSize = 42;
+        // 「みんなで遊ぶ」の6文字がボタンの内側（幅 - 余白）に1行で入る大きさ
+        private const int OnlineButtonFontSize = 38;
         private static readonly Vector2 SoloButtonPosition = new Vector2(740f, -372f);
         private static readonly Vector2 SoloButtonSize = new Vector2(390f, 170f);
         private const int SoloButtonFontSize = 60;

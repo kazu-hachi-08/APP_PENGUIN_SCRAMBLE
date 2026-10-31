@@ -21,6 +21,8 @@ namespace PenmonScramble.Editor
         private static readonly Color ButtonPressedTint = new Color(0.85f, 0.85f, 0.85f);
         private const float ButtonLabelDarken = 0.45f;
         private const float ButtonTextPadding = 12f;
+        // ボタンの文字は入りきらなければこの割合まで縮める。文字数や実行時の日本語フォントの幅で、はみ出したり途中で折り返したりしないように
+        private const float ButtonMinFontRatio = 0.7f;
 
         private static readonly Color MenuPanelColor = new Color(0.08f, 0.12f, 0.26f, 0.92f);
         private static readonly Color PanelFrameColor = new Color(1f, 1f, 1f, 0.25f);
@@ -78,6 +80,11 @@ namespace PenmonScramble.Editor
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
             text.raycastTarget = false;
+            // 縮めるかどうかは枠の高さで決まるので、折り返しを許す必要がある（Unity の Best Fit の仕様）
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = Mathf.RoundToInt(fontSize * ButtonMinFontRatio);
+            text.resizeTextMaxSize = fontSize;
             var outline = obj.AddComponent<Outline>();
             outline.effectColor = Color.Lerp(color, Color.black, 1f - ButtonLabelDarken);
             outline.effectDistance = LabelOutlineDistance;
