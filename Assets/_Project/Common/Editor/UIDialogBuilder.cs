@@ -41,11 +41,7 @@ namespace PenmonScramble.Common.Editor
             // メッセージ
             var msgObj = CreateUIObject("MessageText", panelObj.transform);
             SetAnchorRange(msgObj.GetComponent<RectTransform>(), new Vector2(0.08f, 0.35f), new Vector2(0.92f, 0.75f));
-            var msgText = msgObj.AddComponent<Text>();
-            msgText.text = "メッセージ内容";
-            msgText.fontSize = CommonMessageFontSize;
-            msgText.alignment = TextAnchor.MiddleCenter;
-            msgText.color = new Color(0.85f, 0.88f, 0.95f);
+            var msgText = AddText(msgObj, "メッセージ内容", CommonMessageFontSize, TextAnchor.MiddleCenter, new Color(0.85f, 0.88f, 0.95f));
 
             // ボタンエリア
             var btnAreaObj = CreateUIObject("ButtonArea", panelObj.transform);
@@ -203,11 +199,17 @@ namespace PenmonScramble.Common.Editor
         // ラベル系の太字・中央寄せ文字。設定順は text → fontSize → 太字 → 中央 → color
         private static Text AddBoldCenteredText(GameObject obj, string content, int fontSize, Color color)
         {
+            return AddText(obj, content, fontSize, TextAnchor.MiddleCenter, color, FontStyle.Bold);
+        }
+
+        // 文字の設定順（text → fontSize → fontStyle → alignment → color）は、生成結果の見た目を揃えるため固定する
+        private static Text AddText(GameObject obj, string content, int fontSize, TextAnchor alignment, Color color, FontStyle style = FontStyle.Normal)
+        {
             var text = obj.AddComponent<Text>();
             text.text = content;
             text.fontSize = fontSize;
-            text.fontStyle = FontStyle.Bold;
-            text.alignment = TextAnchor.MiddleCenter;
+            text.fontStyle = style;
+            text.alignment = alignment;
             text.color = color;
             return text;
         }
@@ -232,12 +234,7 @@ namespace PenmonScramble.Common.Editor
 
             var textObj = CreateUIObject("Text", btnObj.transform);
             SetStretchAll(textObj.GetComponent<RectTransform>());
-            var text = textObj.AddComponent<Text>();
-            text.text = label;
-            text.fontSize = 22;
-            text.fontStyle = FontStyle.Bold;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.color = Color.white;
+            AddText(textObj, label, 22, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
 
             return btnObj;
         }
@@ -274,11 +271,7 @@ namespace PenmonScramble.Common.Editor
             lRect.anchorMax = new Vector2(1, 1);
             lRect.pivot = new Vector2(0.5f, 1);
             lRect.sizeDelta = new Vector2(0, VolumeLabelHeight);
-            var text = labelObj.AddComponent<Text>();
-            text.text = label;
-            text.fontSize = VolumeLabelFontSize;
-            text.alignment = TextAnchor.MiddleLeft;
-            text.color = Color.white;
+            AddText(labelObj, label, VolumeLabelFontSize, TextAnchor.MiddleLeft, Color.white);
 
             // 透明な Image をタッチ判定にする（Slider は自分に当たったレイキャストでしかドラッグを受け取らないため）
             var sliderObj = CreateUIObject("SliderBar", rowObj.transform);

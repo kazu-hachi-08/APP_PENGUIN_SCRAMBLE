@@ -27,7 +27,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            _titleText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(PenguinLabels.StarColor(species.Stars))}>{PenguinLabels.Stars(species.Stars)}</color> {species.Name}";
+            _titleText.text = $"{PenguinLabels.ColoredStars(species.Stars)} {species.Name}";
             _elementChip.color = PenguinPalette.ElementColor(species.Element);
             _elementText.text = PenguinLabels.ElementName(species.Element);
             _personalityText.text = SpeciesTexts.Personality(species.No);

@@ -70,11 +70,8 @@ namespace PenmonScramble.Core
                 return;
             }
 
-            var direction = (nearest.Position - unit.Position).Normalized;
-            if (!direction.IsNearlyZero)
-            {
-                unit.Facing = direction;
-            }
+            // 重なっているときは今の向きのまま（AwayFrom の fallback）
+            unit.Facing = AwayFrom(unit.Position, nearest, unit.Facing);
         }
 
         private void UseMelee(Unit user, SkillDef skill)
@@ -132,6 +129,9 @@ namespace PenmonScramble.Core
             var direction = (target.Position - center).Normalized;
             return direction.IsNearlyZero ? fallback : direction;
         }
+
+        /// <summary>ベクトルの向き。長さ0なら fallback（正規化すると Zero になり、向きが決まらないため）</summary>
+        private static Vec2 DirectionOr(Vec2 vector, Vec2 fallback) => vector.IsNearlyZero ? fallback : vector.Normalized;
 
         /// <summary>円が範囲に少しでもかかっていれば当てる</summary>
         private static bool IsWithin(Unit target, Vec2 center, float radius)

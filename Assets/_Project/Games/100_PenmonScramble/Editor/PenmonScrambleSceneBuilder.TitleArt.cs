@@ -54,19 +54,14 @@ namespace PenmonScramble.Editor
         /// </summary>
         private static void CreateTitleDiorama(GameObject root, Camera stageCamera)
         {
-            var cameraObj = new GameObject("TitleCamera");
-            var camera = cameraObj.AddComponent<Camera>();
-            camera.farClipPlane = TitleCameraFarClip;
             // タイトルが開いたときに TitleDiorama が点ける
-            camera.enabled = false;
+            var camera = CreateStandbyCamera("TitleCamera", TitleCameraFarClip);
 
             var diorama = root.AddComponent<TitleDiorama>();
             var so = new SerializedObject(diorama);
             so.FindProperty("_camera").objectReferenceValue = camera;
             so.FindProperty("_stageCamera").objectReferenceValue = stageCamera;
-            so.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
-            so.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
-            so.FindProperty("_fxShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Fx.shader");
+            BindStageShaders(so);
             so.ApplyModifiedProperties();
         }
 
@@ -118,22 +113,36 @@ namespace PenmonScramble.Editor
         /// <summary>Art/ の PNG をスプライトとして読む。無ければ null。取り込み設定が違えば直してから読む（透過はそのまま使う）</summary>
         private static Sprite LoadArtSprite(string path, int maxSize)
         {
+            return LoadTextureAsset<Sprite>(path,
+                importer => importer.textureType == TextureImporterType.Sprite && importer.maxTextureSize == maxSize && importer.alphaIsTransparency,
+                importer =>
+                {
+                    importer.textureType = TextureImporterType.Sprite;
+                    importer.spriteImportMode = SpriteImportMode.Single;
+                    importer.mipmapEnabled = false;
+                    importer.alphaIsTransparency = true;
+                    importer.maxTextureSize = maxSize;
+                });
+        }
+
+        /// <summary>
+        /// 画像を取り込み設定をそろえてから読む。無ければ null。設定が違うときだけ直して取り込み直す
+        /// （そろっている画像は取り込み直さない。取り込み直しは重く、差分も出るため）
+        /// </summary>
+        private static T LoadTextureAsset<T>(string path, System.Func<TextureImporter, bool> isSet, System.Action<TextureImporter> apply) where T : UnityEngine.Object
+        {
             if (AssetImporter.GetAtPath(path) is not TextureImporter importer)
             {
                 return null;
             }
 
-            if (importer.textureType != TextureImporterType.Sprite || importer.maxTextureSize != maxSize || !importer.alphaIsTransparency)
+            if (!isSet(importer))
             {
-                importer.textureType = TextureImporterType.Sprite;
-                importer.spriteImportMode = SpriteImportMode.Single;
-                importer.mipmapEnabled = false;
-                importer.alphaIsTransparency = true;
-                importer.maxTextureSize = maxSize;
+                apply(importer);
                 importer.SaveAndReimport();
             }
 
-            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            return AssetDatabase.LoadAssetAtPath<T>(path);
         }
     }
 }

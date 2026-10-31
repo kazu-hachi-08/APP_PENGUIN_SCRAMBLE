@@ -15,8 +15,6 @@ namespace PenmonScramble.Game
         private const float CameraPitch = TitleDiorama.CameraPitch;
         private const float CameraFieldOfView = TitleDiorama.CameraFieldOfView;
         private const float CameraMargin = 0f;
-        private const int DepthBits = 24;
-        private const int MaxTicksPerFrame = 5;
 
         [SerializeField] private RawImage _screen;
         [SerializeField] private Camera _camera;
@@ -56,14 +54,7 @@ namespace PenmonScramble.Game
 
         private void OnDisable() => Stop();
 
-        private void OnDestroy()
-        {
-            if (_texture != null)
-            {
-                _texture.Release();
-                Destroy(_texture);
-            }
-        }
+        private void OnDestroy() => AreaCameraFit.ReleaseTexture(ref _texture);
 
         private void Update()
         {
@@ -72,58 +63,23 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            _accumulator += Time.deltaTime;
-            var ticks = 0;
-            while (_accumulator >= Balance.TickSeconds && ticks < MaxTicksPerFrame)
+            var interpolation = StageHost.StepFixedTicks(ref _accumulator, Time.deltaTime, null, () =>
             {
                 _practice.Tick();
                 _view.Apply(_recorder.Capture());
-                _accumulator -= Balance.TickSeconds;
-                ticks++;
-            }
-
-            // 重くて追いつけないときは、溜まった分を捨てて早送りしない
-            _accumulator = Mathf.Min(_accumulator, Balance.TickSeconds);
-            _view.Render(_accumulator / Balance.TickSeconds);
+            });
+            _view.Render(interpolation);
         }
 
         /// <summary>小窓の大きさの絵を撮るようにして、練習場の映す範囲がちょうど収まる位置に構える</summary>
         private void PrepareCamera()
         {
-            EnsureTexture();
+            AreaCameraFit.EnsureScreenTexture(ref _texture, _screen, _camera, "SkillDemo");
             _camera.targetTexture = _texture;
             _camera.clearFlags = CameraClearFlags.SolidColor;
             _camera.backgroundColor = StageTheme.ForWorld(StageView.PreviewWorld).Background;
             var center = (SkillPractice.Center + SkillPractice.ViewOffset).ToVector2().ToFloor();
             AreaCameraFit.FitPerspective(_camera, center, SkillPractice.ViewSize.ToVector2(), CameraPitch, CameraFieldOfView, StageCamera.Headroom, CameraMargin);
-        }
-
-        /// <summary>画面の実際の画素数で撮る（基準解像度のままだと、大きな画面でぼやける）</summary>
-        private void EnsureTexture()
-        {
-            var canvas = _screen.canvas;
-            var scale = canvas != null ? canvas.scaleFactor : 1f;
-            var size = _screen.rectTransform.rect.size * scale;
-            var width = Mathf.Max(1, Mathf.RoundToInt(size.x));
-            var height = Mathf.Max(1, Mathf.RoundToInt(size.y));
-            if (_texture != null && _texture.width == width && _texture.height == height)
-            {
-                return;
-            }
-
-            if (_texture != null)
-            {
-                _camera.targetTexture = null;
-                _texture.Release();
-                Destroy(_texture);
-            }
-
-            _texture = new RenderTexture(width, height, DepthBits)
-            {
-                name = "SkillDemo",
-                antiAliasing = Mathf.Max(1, QualitySettings.antiAliasing),
-            };
-            _screen.texture = _texture;
         }
     }
 }

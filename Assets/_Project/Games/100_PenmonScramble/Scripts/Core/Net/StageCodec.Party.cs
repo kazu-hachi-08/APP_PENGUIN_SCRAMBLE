@@ -12,52 +12,46 @@ namespace PenmonScramble.Core
 
         public static byte[] EncodeParty(IReadOnlyList<OwnedPenguin> party)
         {
-            using var stream = new MemoryStream();
-            using var writer = new BinaryWriter(stream);
-            writer.Write(FormatVersion);
-            writer.Write((byte)party.Count);
-            foreach (var penguin in party)
+            return Encode(writer =>
             {
-                writer.Write((byte)penguin.speciesNo);
-                writer.Write((short)Math.Clamp(penguin.power, 1, MaxPower));
-            }
-
-            return stream.ToArray();
+                writer.Write((byte)party.Count);
+                foreach (var penguin in party)
+                {
+                    writer.Write((byte)penguin.speciesNo);
+                    writer.Write((short)Math.Clamp(penguin.power, 1, MaxPower));
+                }
+            });
         }
 
-        /// <summary>版が違う・壊れている・知らない種類が入っているときは false</summary>
+        /// <summary>
+        /// 版が違う・壊れている・知らない種類が入っているときは false。
+        /// 人数0は空の編成を party に残して false を返す（呼び出し側は true のときだけ使う）。
+        /// 知らない種類のときは party を null のままにする
+        /// </summary>
         public static bool TryDecodeParty(byte[] data, out UnitStats[] party)
         {
-            party = null;
-            try
+            TryRead(data, ReadParty, out party);
+            return party != null && party.Length > 0;
+        }
+
+        /// <summary>知らない種類が入っていたら null を返す（読み取りはそこで止める）</summary>
+        private static UnitStats[] ReadParty(BinaryReader reader)
+        {
+            var count = Math.Min((int)reader.ReadByte(), Balance.PartySize);
+            var result = new UnitStats[count];
+            for (var i = 0; i < count; i++)
             {
-                using var reader = new BinaryReader(new MemoryStream(data));
-                if (reader.ReadByte() != FormatVersion)
+                var species = SpeciesTable.Get(reader.ReadByte());
+                var power = Math.Clamp((int)reader.ReadInt16(), 1, MaxPower);
+                if (species == null)
                 {
-                    return false;
+                    return null;
                 }
 
-                var count = Math.Min((int)reader.ReadByte(), Balance.PartySize);
-                var result = new UnitStats[count];
-                for (var i = 0; i < count; i++)
-                {
-                    var species = SpeciesTable.Get(reader.ReadByte());
-                    var power = Math.Clamp((int)reader.ReadInt16(), 1, MaxPower);
-                    if (species == null)
-                    {
-                        return false;
-                    }
-
-                    result[i] = SpeciesTable.PlayerStats(species, power);
-                }
-
-                party = result;
-                return count > 0;
+                result[i] = SpeciesTable.PlayerStats(species, power);
             }
-            catch (EndOfStreamException)
-            {
-                return false;
-            }
+
+            return result;
         }
     }
 }

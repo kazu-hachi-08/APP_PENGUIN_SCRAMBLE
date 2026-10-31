@@ -45,7 +45,7 @@ namespace PenmonScramble.Core
                 Element = boss.Element,
                 Radius = boss.Radius,
                 MoveSpeed = boss.MoveSpeed,
-                MaxHp = Math.Max(1, (int)MathF.Round(hp)),
+                MaxHp = UnitStats.HpOf(hp),
                 Attack = Balance.BigBossAttack * Balance.WorldEnemyScale(world),
                 // 技は持たず、BigBoss の攻撃を順に出す
                 Skills = Array.Empty<SkillDef>(),

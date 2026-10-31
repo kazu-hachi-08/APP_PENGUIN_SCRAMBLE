@@ -161,8 +161,7 @@ namespace PenmonScramble.Editor
             rect.anchoredPosition = position * scale;
             obj.GetComponent<Image>().raycastTarget = false;
 
-            var textObj = UIDialogBuilder.CreateUIObject("Text", obj.transform);
-            UIDialogBuilder.SetStretchAll(textObj.GetComponent<RectTransform>());
+            var textObj = CreateStretchGroup(obj.transform, "Text");
             var text = AddText(textObj, label, PhoneButtonFontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
@@ -194,8 +193,7 @@ namespace PenmonScramble.Editor
             shadow.raycastTarget = false;
             face.raycastTarget = false;
 
-            var textObj = UIDialogBuilder.CreateUIObject("Text", obj.transform);
-            UIDialogBuilder.SetStretchAll(textObj.GetComponent<RectTransform>());
+            var textObj = CreateStretchGroup(obj.transform, "Text");
             var text = AddText(textObj, label, fontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.fontStyle = FontStyle.Bold;
@@ -228,11 +226,8 @@ namespace PenmonScramble.Editor
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
-            var image = obj.AddComponent<Image>();
-            image.sprite = sprite;
+            var image = AddImage(obj, sprite, color, false);
             image.type = sprite != null && sprite.border != Vector4.zero ? Image.Type.Sliced : Image.Type.Simple;
-            image.color = color;
-            image.raycastTarget = false;
             return image;
         }
 

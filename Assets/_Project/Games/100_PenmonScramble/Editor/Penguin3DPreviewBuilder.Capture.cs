@@ -16,6 +16,8 @@ namespace PenmonScramble.Editor
         private const int PoseCellSize = 360;
         private const int AreaWidth = 960;
         private const int AreaHeight = 540;
+        // 撮る絵の縁をなめらかにする（Render を通る撮影はすべてこの値）
+        private const int PreviewMsaa = 4;
 
         // 姿勢を撮るカメラ。ゲームのカメラに近い見下ろし方で、斜め前から
         private const float PoseCameraPitch = 40f;
@@ -61,13 +63,8 @@ namespace PenmonScramble.Editor
         [MenuItem("Tools/PenmonScramble/3D Preview Capture")]
         public static void Capture()
         {
-            var stage = Object.FindAnyObjectByType<PenguinPreviewStage>();
-            if (stage == null)
-            {
-                Open();
-                stage = Object.FindAnyObjectByType<PenguinPreviewStage>();
-                if (stage == null) return;
-            }
+            var stage = FindOrOpenPreviewStage();
+            if (stage == null) return;
 
             Directory.CreateDirectory(CaptureFolder);
             var shadows = stage.RealShadows;
@@ -106,7 +103,7 @@ namespace PenmonScramble.Editor
             var rotation = player.transform.localRotation;
             player.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
             stage.Camera.aspect = 1f;
-            PlacePoseCamera(stage.Camera, player.transform.position);
+            PlaceCamera(stage.Camera, player.transform.position, PoseCameraTarget, PoseCameraDistance);
             for (var row = 0; row < rows.Length; row++)
             {
                 stage.SetRealShadows(rows[row].shadows);
@@ -122,15 +119,6 @@ namespace PenmonScramble.Editor
             player.transform.localRotation = rotation;
             stage.Camera.ResetAspect();
             return sheet;
-        }
-
-        private static void PlacePoseCamera(Camera camera, Vector3 penguin)
-        {
-            camera.orthographic = false;
-            camera.fieldOfView = PoseCameraFov;
-            var rotation = Quaternion.Euler(PoseCameraPitch, PoseCameraYaw, 0f);
-            var target = penguin + PoseCameraTarget;
-            camera.transform.SetPositionAndRotation(target - rotation * Vector3.forward * PoseCameraDistance, rotation);
         }
 
         /// <summary>エリア全体。ほかのペンギンには色々な姿勢を取らせて、動きが混ざったときの見え方を見る</summary>
@@ -164,19 +152,8 @@ namespace PenmonScramble.Editor
 
         private static Texture2D Render(Camera camera, int width, int height)
         {
-            // リニアの色空間でも PNG の色が画面と同じになるよう sRGB で受ける
-            var target = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, 4);
-            var previous = camera.targetTexture;
-            camera.targetTexture = target;
-            camera.Render();
-            camera.targetTexture = previous;
-
-            RenderTexture.active = target;
-            var texture = new Texture2D(width, height, TextureFormat.RGB24, false);
-            texture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            var texture = StageCapture.RenderToTexture(camera, width, height, PreviewMsaa, TextureFormat.RGB24);
             texture.Apply();
-            RenderTexture.active = null;
-            RenderTexture.ReleaseTemporary(target);
             return texture;
         }
 

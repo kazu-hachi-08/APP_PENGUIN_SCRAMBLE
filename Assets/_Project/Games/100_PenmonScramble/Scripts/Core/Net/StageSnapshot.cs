@@ -155,16 +155,7 @@ namespace PenmonScramble.Core
         /// <summary>交代したら出る子（1→2→3→1 の順で、倒れた子は飛ばす）。いなければ -1</summary>
         public int NextAliveIndex()
         {
-            for (var i = 1; i < Members.Count; i++)
-            {
-                var index = (ActiveIndex + i) % Members.Count;
-                if (Members[index].Hp > 0)
-                {
-                    return index;
-                }
-            }
-
-            return -1;
+            return Unit.NextAliveIndex(ActiveIndex, Members.Count, index => Members[index].Hp > 0);
         }
     }
 
@@ -206,17 +197,7 @@ namespace PenmonScramble.Core
 
         public bool TryGetPlayer(int seat, out UnitState state)
         {
-            foreach (var unit in Units)
-            {
-                if (unit.Team == Team.Player && unit.Seat == seat)
-                {
-                    state = unit;
-                    return true;
-                }
-            }
-
-            state = default;
-            return false;
+            return TryFindUnit(unit => unit.Team == Team.Player && unit.Seat == seat, out state);
         }
 
         /// <summary>倒れて場から消えた人は見つからない</summary>
@@ -235,9 +216,20 @@ namespace PenmonScramble.Core
 
         public bool TryGetBoss(out UnitState state)
         {
+            return TryFindUnit(unit => unit.Has(UnitFlags.Boss), out state);
+        }
+
+        public int CountAlive(Team team)
+        {
+            return CountUnits(unit => unit.Team == team);
+        }
+
+        /// <summary>最初に match に合うユニットを返す。無ければ false（state は default）</summary>
+        private bool TryFindUnit(Func<UnitState, bool> match, out UnitState state)
+        {
             foreach (var unit in Units)
             {
-                if (unit.Has(UnitFlags.Boss))
+                if (match(unit))
                 {
                     state = unit;
                     return true;
@@ -248,12 +240,12 @@ namespace PenmonScramble.Core
             return false;
         }
 
-        public int CountAlive(Team team)
+        private int CountUnits(Func<UnitState, bool> match)
         {
             var count = 0;
             foreach (var unit in Units)
             {
-                if (unit.Team == team)
+                if (match(unit))
                 {
                     count++;
                 }

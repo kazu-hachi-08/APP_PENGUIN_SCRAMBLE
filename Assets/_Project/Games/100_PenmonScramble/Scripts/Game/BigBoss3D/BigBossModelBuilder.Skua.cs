@@ -72,7 +72,7 @@ namespace PenmonScramble.Game
             var tip = kit.Joint(left ? BigBossPart.TipLeft : BigBossPart.TipRight, shoulder, new Vector3(SkuaInnerWing * side, 0f, -0.06f));
             kit.Parts.Add("WingOuter", ToyMeshes.Sphere, tip, new Vector3(0.38f * side, 0f, -0.1f), new Vector3(0.82f, 0.075f, 0.44f), SkuaWing, BodyGloss);
             kit.Parts.Add("WingPatch", ToyMeshes.Sphere, tip, new Vector3(0.3f * side, 0f, -0.08f), new Vector3(0.26f, 0.085f, 0.22f), SkuaPatch, MatteGloss);
-            kit.Parts.Add("Primary", ToyMeshes.Drop, tip, new Vector3(0.72f * side, 0f, -0.2f), Fin(new Vector3(side, 0f, -0.5f), Vector3.up), new Vector3(0.22f, 0.42f, 0.05f), SkuaWing, BodyGloss);
+            AddFin(kit, tip, "Primary", new Vector3(0.72f * side, 0f, -0.2f), new Vector3(side, 0f, -0.5f), new Vector3(0.22f, 0.42f, 0.05f), SkuaWing);
         }
 
         /// <summary>尾羽は扇のように3枚</summary>
@@ -82,7 +82,7 @@ namespace PenmonScramble.Game
             for (var i = -1; i <= 1; i++)
             {
                 var direction = Quaternion.Euler(0f, i * 18f, 0f) * Vector3.back;
-                kit.Parts.Add("TailFeather", ToyMeshes.Drop, tail, direction * 0.22f, Fin(direction, Vector3.up), new Vector3(0.26f, 0.5f, 0.06f), SkuaWing, BodyGloss);
+                AddFin(kit, tail, "TailFeather", direction * 0.22f, direction, new Vector3(0.26f, 0.5f, 0.06f), SkuaWing);
             }
         }
 

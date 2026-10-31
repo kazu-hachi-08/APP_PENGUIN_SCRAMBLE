@@ -35,7 +35,7 @@ namespace PenmonScramble.Game
         private static void HeadSpike(Rig rig, string objName, Vector3 rootDir, Vector3 pointDir, Vector3 scale, Color color, float gloss)
         {
             var position = HeadSurface(rootDir) + pointDir.normalized * scale.y * 0.4f;
-            rig.OnHead(objName, ToyMeshes.Drop, position, Quaternion.FromToRotation(Vector3.up, pointDir), scale, color, gloss);
+            rig.OnHead(objName, ToyMeshes.Drop, position, Point(pointDir), scale, color, gloss);
         }
 
         /// <summary>頭に付ける小さな土台。中の部品は頭の大きさの倍率を掛ける前の値で置ける</summary>
@@ -101,7 +101,7 @@ namespace PenmonScramble.Game
             var rotation = Quaternion.Euler(ChinStrapTilt, 0f, 0f);
             var center = HeadCenter - rotation * Vector3.up * ChinStrapDrop;
             var radius = Mathf.Sqrt(HeadRadius * HeadRadius - ChinStrapDrop * ChinStrapDrop) + 0.005f;
-            rig.Band("ChinStrap", rig.Head, center * rig.S, rotation, Vector2.one * radius * rig.S, 0.03f * rig.S, c, BodyGloss);
+            rig.HeadBand("ChinStrap", center, rotation, radius, 0.03f, c, BodyGloss);
         }
 
         private static void EarPatches(Rig rig, Color c)
@@ -123,7 +123,7 @@ namespace PenmonScramble.Game
         {
             for (var side = -1f; side <= 1f; side += 2f)
             {
-                rig.Band("Glasses", rig.Head, new Vector3(0.10f * side, 0.15f, 0.36f) * rig.S, Quaternion.Euler(90f, 0f, 0f), Vector2.one * 0.085f * rig.S, 0.025f * rig.S, c, ShinyGloss);
+                rig.HeadBand("Glasses", new Vector3(0.10f * side, 0.15f, 0.36f), Quaternion.Euler(90f, 0f, 0f), 0.085f, 0.025f, c, ShinyGloss);
             }
 
             rig.OnHead("GlassesBridge", ToyMeshes.Sphere, new Vector3(0f, 0.17f, 0.37f), Quaternion.identity, new Vector3(0.06f, 0.02f, 0.02f), c, ShinyGloss);
@@ -200,7 +200,7 @@ namespace PenmonScramble.Game
         {
             var radius = Mathf.Sqrt(HeadRadius * HeadRadius - height * height) + 0.012f;
             var tilt = tails ? -14f : 0f;
-            rig.Band("Headband", rig.Head, (HeadCenter + Vector3.up * height) * rig.S, Quaternion.Euler(tilt, 0f, 0f), Vector2.one * radius * rig.S, 0.06f * rig.S, c, ClothGloss);
+            rig.HeadBand("Headband", HeadCenter + Vector3.up * height, Quaternion.Euler(tilt, 0f, 0f), radius, 0.06f, c, ClothGloss);
             if (!tails)
             {
                 return;
@@ -215,11 +215,11 @@ namespace PenmonScramble.Game
         /// <summary>おでこに上げたゴーグル。帯とレンズ2つ</summary>
         private static void Goggles(Rig rig, Color c)
         {
-            rig.Band("GogglesStrap", rig.Head, (HeadCenter + Vector3.up * 0.17f) * rig.S, Quaternion.Euler(-15f, 0f, 0f), Vector2.one * 0.26f * rig.S, 0.05f * rig.S, StrapColor, ClothGloss);
+            rig.HeadBand("GogglesStrap", HeadCenter + Vector3.up * 0.17f, Quaternion.Euler(-15f, 0f, 0f), 0.26f, 0.05f, StrapColor, ClothGloss);
             for (var side = -1f; side <= 1f; side += 2f)
             {
                 var dir = new Vector3(0.35f * side, 0.75f, 0.55f);
-                var rotation = Quaternion.FromToRotation(Vector3.up, dir);
+                var rotation = Point(dir);
                 rig.OnHead("GogglesFrame", ToyMeshes.Puck, HeadSurface(dir, 0.01f), rotation, new Vector3(0.15f, 0.06f, 0.15f), StrapColor, AccessoryGloss);
                 rig.OnHead("GogglesLens", ToyMeshes.Puck, HeadSurface(dir, 0.035f), rotation, new Vector3(0.12f, 0.03f, 0.12f), c, ShinyGloss);
             }

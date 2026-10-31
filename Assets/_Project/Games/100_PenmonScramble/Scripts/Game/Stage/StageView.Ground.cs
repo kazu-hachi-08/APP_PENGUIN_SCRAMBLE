@@ -87,13 +87,9 @@ namespace PenmonScramble.Game
         /// <summary>絵を min〜max（床の上の長方形）いっぱいに引き伸ばして貼った板</summary>
         private void CreateFloor(string objName, Material material, Vector2 min, Vector2 max, float height)
         {
-            var floor = new GameObject(objName);
-            floor.transform.SetParent(transform, false);
-            floor.transform.position = ((min + max) * 0.5f).ToFloor(height);
+            // StageView は原点・無回転の根のオブジェクトなので、ローカルの位置は床の位置と同じ
             var size = max - min;
-            floor.transform.localScale = new Vector3(size.x, 1f, size.y);
-            floor.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.FloorQuad;
-            floor.AddComponent<MeshRenderer>().sharedMaterial = material;
+            ToyParts.FloorPlate(objName, transform, ((min + max) * 0.5f).ToFloor(height), new Vector3(size.x, 1f, size.y), material);
         }
 
         /// <summary>エリアの境目に、奥から手前まで横たわる低い柵（角の丸い円柱を細長くつぶす）</summary>
@@ -103,8 +99,7 @@ namespace PenmonScramble.Game
             gate.transform.SetParent(transform, false);
             gate.transform.position = new Vector3(x, GateHeight * 0.5f, (minY + maxY) * 0.5f);
             gate.transform.localScale = new Vector3(GateWidth, GateHeight, maxY - minY);
-            gate.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.Puck;
-            gate.AddComponent<MeshRenderer>().sharedMaterial = _materials.Toon.Get(color, GateGloss);
+            ToyParts.AddMesh(gate, ToyMeshes.Puck, _materials.Toon.Get(color, GateGloss));
             return gate;
         }
 

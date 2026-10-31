@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using PenmonScramble.Core;
 using PenmonScramble.Game;
 using UnityEditor;
@@ -49,16 +48,12 @@ namespace PenmonScramble.Editor
             }
 
             Directory.CreateDirectory(PortraitFolder);
-            var materials = new ToonMaterials(AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader"), AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader"));
-            var studio = new GameObject("PortraitStudio");
-            try
+            WithPortraitStudio("PortraitStudio", (camera, materials, parent) =>
             {
-                var camera = CreatePortraitCamera(studio.transform);
-                CreatePortraitLight(studio.transform);
                 var changed = 0;
                 for (var no = 1; no <= SpeciesTable.Count; no++)
                 {
-                    var model = PenguinModelBuilder.Build(PenguinLooks.Get(no), materials, studio.transform);
+                    var model = PenguinModelBuilder.Build(PenguinLooks.Get(no), materials, parent);
                     model.gameObject.AddComponent<PenguinMotion>().Apply(PenguinPose.Idle);
                     changed += ShootPortrait(camera, model, PortraitYaw, PortraitPitch, PenguinPortraitHalfSize, PenguinPortraitPath(no)) ? 1 : 0;
                 }
@@ -66,20 +61,38 @@ namespace PenmonScramble.Editor
                 for (var i = 0; i < Balance.WorldCount; i++)
                 {
                     var no = BigBossTable.SkuaNo + i;
-                    var model = BigBossModelBuilder.Build(no, materials, studio.transform);
+                    var model = BigBossModelBuilder.Build(no, materials, parent);
                     model.gameObject.AddComponent<BigBossMotion>().Apply(BigBossPose.Idle);
                     changed += ShootPortrait(camera, model, BossPortraitYaw, BossPortraitPitch, 0f, BossPortraitPath(no)) ? 1 : 0;
                 }
 
                 Debug.Log($"[PenmonScrambleSceneBuilder] UI の顔を撮りました（変わった絵 {changed} 枚）");
+                return changed;
+            });
+
+            AssetDatabase.Refresh();
+        }
+
+        /// <summary>
+        /// 撮影用の箱（ToonMaterials と studio の GameObject）を作り、中にカメラと太陽を置いて shoot で撮る。
+        /// 撮り終えたら（例外で止まっても）箱とマテリアルを消す
+        /// </summary>
+        private static T WithPortraitStudio<T>(string name, System.Func<Camera, ToonMaterials, Transform, T> shoot)
+        {
+            var materials = new ToonMaterials(AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader"), AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader"));
+            var studio = new GameObject(name);
+            try
+            {
+                var camera = CreatePortraitCamera(studio.transform);
+                // ステージと同じ太陽。カメラが前から見るので、左上の奥からの光が顔の側を照らすように合わせて回す
+                CreateSunLight("PortraitSun", studio.transform, Quaternion.Euler(0f, 180f, 0f) * Quaternion.Euler(SunAngles), LightShadows.None);
+                return shoot(camera, materials, studio.transform);
             }
             finally
             {
                 Object.DestroyImmediate(studio);
                 materials.DestroyAll();
             }
-
-            AssetDatabase.Refresh();
         }
 
         private static Camera CreatePortraitCamera(Transform parent)
@@ -97,38 +110,25 @@ namespace PenmonScramble.Editor
             return camera;
         }
 
-        /// <summary>ステージと同じ太陽。カメラが前から見るので、左上の奥からの光が顔の側を照らすように合わせて回す</summary>
-        private static void CreatePortraitLight(Transform parent)
-        {
-            var obj = new GameObject("PortraitSun");
-            obj.transform.SetParent(parent, false);
-            obj.transform.rotation = Quaternion.Euler(0f, 180f, 0f) * Quaternion.Euler(SunAngles);
-            var light = obj.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.color = SunColor;
-            light.intensity = SunIntensity;
-            light.shadows = LightShadows.None;
-        }
-
-        /// <summary>1体を撮って保存し、撮り終えたら消す。halfSize が 0 なら体に合わせて目いっぱいに撮る。書き直したら true</summary>
-        private static bool ShootPortrait(Camera camera, ToyModel model, float yaw, float pitch, float halfSize, string path)
+        /// <summary>撮る向き。体を yaw、カメラを pitch で構える（大ボスとペンギンで角度を変える）</summary>
+        private static void PoseForPortrait(Camera camera, ToyModel model, float yaw, float pitch)
         {
             // 床に影を落とす場所が無いので、足元の丸い影は消す
             model.BlobShadow.enabled = false;
             model.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
             camera.transform.rotation = Quaternion.Euler(pitch, 180f, 0f);
+        }
+
+        /// <summary>1体を撮って保存し、撮り終えたら消す。halfSize が 0 なら体に合わせて目いっぱいに撮る。書き直したら true</summary>
+        private static bool ShootPortrait(Camera camera, ToyModel model, float yaw, float pitch, float halfSize, string path)
+        {
+            PoseForPortrait(camera, model, yaw, pitch);
             FramePortrait(camera, model, halfSize);
             var texture = RenderPortrait(camera, PortraitSize);
             var png = texture.EncodeToPNG();
             Object.DestroyImmediate(texture);
             Object.DestroyImmediate(model.gameObject);
-            if (File.Exists(path) && File.ReadAllBytes(path).SequenceEqual(png))
-            {
-                return false;
-            }
-
-            File.WriteAllBytes(path, png);
-            return true;
+            return WriteBytesIfChanged(path, png);
         }
 
         /// <summary>
@@ -185,17 +185,7 @@ namespace PenmonScramble.Editor
         /// </summary>
         private static Texture2D RenderPortrait(Camera camera, int size)
         {
-            var target = RenderTexture.GetTemporary(size, size, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, PortraitMsaa);
-            camera.targetTexture = target;
-            camera.Render();
-            camera.targetTexture = null;
-
-            RenderTexture.active = target;
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            texture.ReadPixels(new Rect(0, 0, size, size), 0, 0);
-            RenderTexture.active = null;
-            RenderTexture.ReleaseTemporary(target);
-
+            var texture = StageCapture.RenderToTexture(camera, size, size, PortraitMsaa, TextureFormat.RGBA32);
             var pixels = texture.GetPixels32();
             for (var i = 0; i < pixels.Length; i++)
             {

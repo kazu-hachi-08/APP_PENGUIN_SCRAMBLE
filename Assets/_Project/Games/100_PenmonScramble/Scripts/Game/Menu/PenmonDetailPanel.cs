@@ -69,7 +69,7 @@ namespace PenmonScramble.Game
         private void ShowProfile()
         {
             CreatureArt.ShowFace(_face, _species.No);
-            _titleText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(PenguinLabels.StarColor(_species.Stars))}>{PenguinLabels.Stars(_species.Stars)}</color> {_species.Name}";
+            _titleText.text = $"{PenguinLabels.ColoredStars(_species.Stars)} {_species.Name}";
             _elementChip.color = PenguinPalette.ElementColor(_species.Element);
             _elementText.text = PenguinLabels.ElementName(_species.Element);
             _personalityText.text = SpeciesTexts.Personality(_species.No);

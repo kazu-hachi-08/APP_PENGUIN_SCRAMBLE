@@ -69,5 +69,26 @@ namespace PenmonScramble.Editor
             Debug.Log($"[StageCapture] {CaptureFolder} に撮りました");
             EditorApplication.ExitPlaymode();
         }
+
+        /// <summary>
+        /// カメラの絵を1枚の Texture2D に撮る（試作の場とステージの撮影で共通）。
+        /// 撮る間だけ一時の RenderTexture に描き、カメラの targetTexture と RenderTexture.active は撮る前の値に戻す。
+        /// 色は sRGB で受ける（リニアの色空間でも PNG の色が画面と同じになるように）。Apply は呼び出し側が必要なら行う
+        /// </summary>
+        internal static Texture2D RenderToTexture(Camera camera, int width, int height, int msaa, TextureFormat format)
+        {
+            var target = RenderTexture.GetTemporary(width, height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, msaa);
+            var previous = camera.targetTexture;
+            camera.targetTexture = target;
+            camera.Render();
+            camera.targetTexture = previous;
+
+            RenderTexture.active = target;
+            var texture = new Texture2D(width, height, format, false);
+            texture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            RenderTexture.active = null;
+            RenderTexture.ReleaseTemporary(target);
+            return texture;
+        }
     }
 }

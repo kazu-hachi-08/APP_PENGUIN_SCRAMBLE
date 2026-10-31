@@ -26,7 +26,6 @@ namespace PenmonScramble.Game
         private static readonly Vector3 CloseFocus = RevealSpot + new Vector3(0f, 0.75f, 0f);
         private const float CloseDistance = 6f;
         private const float CloseViewportX = 0.36f;
-        private const int DepthBits = 24;
 
         private static readonly Color BackgroundColor = new Color(0.13f, 0.15f, 0.32f);
         private static readonly Color RareBackgroundColor = new Color(0.03f, 0.03f, 0.08f);
@@ -102,11 +101,7 @@ namespace PenmonScramble.Game
         private void OnDestroy()
         {
             _materials?.DestroyAll();
-            if (_texture != null)
-            {
-                _texture.Release();
-                Destroy(_texture);
-            }
+            AreaCameraFit.ReleaseTexture(ref _texture);
         }
 
         private void Update()
@@ -130,42 +125,15 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>画面の実際の画素数で撮る（基準解像度のままだと、大きな画面でぼやける）</summary>
         private void PrepareCamera()
         {
             _camera.orthographic = false;
             _camera.fieldOfView = CameraFieldOfView;
             _camera.clearFlags = CameraClearFlags.SolidColor;
             _camera.backgroundColor = BackgroundColor;
-            var canvas = _screen.canvas;
-            var scale = canvas != null ? canvas.scaleFactor : 1f;
-            var size = _screen.rectTransform.rect.size * scale;
-            var width = Mathf.Max(1, Mathf.RoundToInt(size.x));
-            var height = Mathf.Max(1, Mathf.RoundToInt(size.y));
-            if (_texture == null || _texture.width != width || _texture.height != height)
-            {
-                ReplaceTexture(width, height);
-            }
-
+            AreaCameraFit.EnsureScreenTexture(ref _texture, _screen, _camera, "Gacha");
             _camera.targetTexture = _texture;
-            _camera.aspect = width / (float)height;
-        }
-
-        private void ReplaceTexture(int width, int height)
-        {
-            if (_texture != null)
-            {
-                _camera.targetTexture = null;
-                _texture.Release();
-                Destroy(_texture);
-            }
-
-            _texture = new RenderTexture(width, height, DepthBits)
-            {
-                name = "Gacha",
-                antiAliasing = Mathf.Max(1, QualitySettings.antiAliasing),
-            };
-            _screen.texture = _texture;
+            _camera.aspect = _texture.width / (float)_texture.height;
         }
 
         /// <summary>見る点が画面の横 ViewportX の所に来るよう、カメラを横へずらして構える（画面の縦横比が変わっても、マシンが右のボタンに隠れない）</summary>

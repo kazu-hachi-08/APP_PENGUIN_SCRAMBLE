@@ -70,9 +70,8 @@ namespace PenmonScramble.Editor
 
         private static void CreateButtonText(Transform parent, string label, int fontSize, Color color)
         {
-            var obj = UIDialogBuilder.CreateUIObject("Text", parent);
+            var obj = CreateStretchGroup(parent, "Text");
             var rect = obj.GetComponent<RectTransform>();
-            UIDialogBuilder.SetStretchAll(rect);
             rect.offsetMin = new Vector2(ButtonTextPadding, ButtonTextPadding * 0.5f);
             rect.offsetMax = new Vector2(-ButtonTextPadding, 0f);
             var text = AddText(obj, label, fontSize);
@@ -95,19 +94,26 @@ namespace PenmonScramble.Editor
 
         private static Image AddSliced(GameObject obj, string spritePath, Color color, float cornerScale)
         {
-            var image = obj.AddComponent<Image>();
-            image.sprite = UiSprite(spritePath);
+            var image = AddImage(obj, UiSprite(spritePath), color, true);
             image.type = Image.Type.Sliced;
             image.pixelsPerUnitMultiplier = cornerScale;
+            return image;
+        }
+
+        /// <summary>絵と色を付けた Image を置く。押せるか（raycast）もここで決める。型などの追加の設定は呼んだ側で行う</summary>
+        private static Image AddImage(GameObject obj, Sprite sprite, Color color, bool raycast)
+        {
+            var image = obj.AddComponent<Image>();
+            image.sprite = sprite;
             image.color = color;
+            image.raycastTarget = raycast;
             return image;
         }
 
         /// <summary>親いっぱいに重ねる飾りの層（押す邪魔をしない）</summary>
         private static Image AddSlicedLayer(Transform parent, string name, string spritePath, Color color, float cornerScale)
         {
-            var obj = UIDialogBuilder.CreateUIObject(name, parent);
-            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
+            var obj = CreateStretchGroup(parent, name);
             var image = AddSliced(obj, spritePath, color, cornerScale);
             image.raycastTarget = false;
             return image;
@@ -133,9 +139,7 @@ namespace PenmonScramble.Editor
         /// </summary>
         private static GameObject CreateModal(Transform parent, string name, Vector2 panelSize, string heading, out Transform panel, out Text headingText)
         {
-            var root = UIDialogBuilder.CreateUIObject(name, parent);
-            UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
-            root.AddComponent<Image>().color = ModalDimColor;
+            var root = CreateFullScreenBacking(parent, name, ModalDimColor);
             var panelObj = CreatePanel(root.transform, "Panel", Vector2.zero, panelSize);
             SetSlideIn(panelObj, ModalSlideFrom, 0f);
             panel = panelObj.transform;

@@ -140,16 +140,22 @@ namespace PenmonScramble.Core
         {
             ActiveIndex = 0;
             var first = _members[0];
-            first.Hp = Math.Max(1, (int)MathF.Round(first.MaxHp * hpRatio));
+            first.Hp = UnitStats.HpOf(first.MaxHp * hpRatio);
             Dash = null;
         }
 
         private int FindNextAlive()
         {
-            for (var i = 1; i < _members.Length; i++)
+            return NextAliveIndex(ActiveIndex, _members.Length, index => _members[index].IsAlive);
+        }
+
+        /// <summary>activeIndex の次から1周して、isAlive な添字を返す（activeIndex 自身は見ない。全滅なら -1）。Unit と通信の状態で同じ回り方にするため1か所にまとめる</summary>
+        internal static int NextAliveIndex(int activeIndex, int count, Func<int, bool> isAlive)
+        {
+            for (var i = 1; i < count; i++)
             {
-                var index = (ActiveIndex + i) % _members.Length;
-                if (_members[index].IsAlive)
+                var index = (activeIndex + i) % count;
+                if (isAlive(index))
                 {
                     return index;
                 }

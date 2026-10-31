@@ -36,7 +36,7 @@ namespace PenmonScramble.Core
                 return;
             }
 
-            unit.Facing = toTarget.IsNearlyZero ? unit.Facing : toTarget.Normalized;
+            unit.Facing = DirectionOr(toTarget, unit.Facing);
             // 技2を持っている（ボス）なら、待ち時間が明けたときは派手な技2を先に出す
             var slot = unit.Skills.Length > 1 && unit.Cooldowns[1] <= 0f ? 1 : EnemySkillSlot;
             TryUseSkill(unit, slot, faceNearestWhenIdle: false);

@@ -1,4 +1,5 @@
 using UnityEngine;
+using static PenmonScramble.Game.ToyMotionMath;
 
 namespace PenmonScramble.Game
 {

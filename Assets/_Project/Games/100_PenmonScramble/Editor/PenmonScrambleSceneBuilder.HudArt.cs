@@ -37,22 +37,15 @@ namespace PenmonScramble.Editor
         /// <summary>平行四辺形を、縁からの距離（内側が負）と縦の位置（0=下・1=上）から1画素ずつ塗る</summary>
         private static Texture2D DrawSlant(System.Func<float, float, Color> pixel)
         {
-            var texture = new Texture2D(SlantSpriteWidth, SlantSpriteHeight, TextureFormat.RGBA32, false);
             var half = new Vector2(SlantSpriteWidth, SlantSpriteHeight) * 0.5f;
             // 傾けた座標では、横の半分の幅が傾いた分だけ狭くなる。1画素あけて縁のぼかしが切れないようにする
             var skewedHalf = new Vector2(half.x - SlantSlope * half.y - 1f, half.y - 1f);
-            for (var y = 0; y < SlantSpriteHeight; y++)
+            return PaintTexture(SlantSpriteWidth, SlantSpriteHeight, (x, y) =>
             {
-                for (var x = 0; x < SlantSpriteWidth; x++)
-                {
-                    var p = new Vector2(x + 0.5f, y + 0.5f) - half;
-                    p.x -= SlantSlope * p.y;
-                    texture.SetPixel(x, y, pixel(RoundRectDistance(p, skewedHalf, SlantCorner), (y + 0.5f) / SlantSpriteHeight));
-                }
-            }
-
-            texture.Apply();
-            return texture;
+                var p = new Vector2(x + 0.5f, y + 0.5f) - half;
+                p.x -= SlantSlope * p.y;
+                return pixel(RoundRectDistance(p, skewedHalf, SlantCorner), (y + 0.5f) / SlantSpriteHeight);
+            });
         }
 
         /// <summary>上が明るく下へ少し暗い面（厚みのある札に見せる）</summary>

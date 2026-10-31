@@ -62,11 +62,18 @@ namespace PenmonScramble.Game
                 return material;
             }
 
-            material = Track(new Material(_toon) { name = $"Toon_{ColorUtility.ToHtmlStringRGB(color)}" });
+            material = NewToon($"Toon_{ColorUtility.ToHtmlStringRGB(color)}", color, gloss);
+            _cache.Add((color, gloss), material);
+            return material;
+        }
+
+        /// <summary>色とつやを決めたトゥーンの素材を1つ作る。縁の線の設定は呼び出し側で決める</summary>
+        private Material NewToon(string materialName, Color color, float gloss)
+        {
+            var material = Track(new Material(_toon) { name = materialName });
             material.SetColor(BaseColorId, color);
             material.SetFloat(GlossId, gloss);
             material.SetFloat(GlossSizeId, GlossSize);
-            _cache.Add((color, gloss), material);
             return material;
         }
 
@@ -82,7 +89,7 @@ namespace PenmonScramble.Game
             material.SetTexture(BaseMapId, texture);
             material.SetColor(BaseColorId, color);
             material.SetFloat(GlossId, 0f);
-            DisableOutline(material);
+            ApplyOutline(material, 0f);
             _floors.Add((texture, color), material);
             return material;
         }
@@ -100,11 +107,8 @@ namespace PenmonScramble.Game
         /// </summary>
         private Material CreateTransparent(string materialName, Color color, float gloss)
         {
-            var material = Track(new Material(_toon) { name = materialName });
-            material.SetColor(BaseColorId, color);
-            material.SetFloat(GlossId, gloss);
-            material.SetFloat(GlossSizeId, GlossSize);
-            DisableOutline(material);
+            var material = NewToon(materialName, color, gloss);
+            ApplyOutline(material, 0f);
             material.SetFloat(SrcBlendId, (float)BlendMode.SrcAlpha);
             material.SetFloat(DstBlendId, (float)BlendMode.OneMinusSrcAlpha);
             material.SetFloat(ZWriteId, 0f);
@@ -117,15 +121,15 @@ namespace PenmonScramble.Game
         {
             foreach (var pair in _cache)
             {
-                pair.Value.SetFloat(OutlineWidthId, width);
-                pair.Value.SetShaderPassEnabled(OutlinePass, width > 0f);
+                ApplyOutline(pair.Value, width);
             }
         }
 
-        private static void DisableOutline(Material material)
+        /// <summary>線の太さを入れ、0 のときは線のパスごと切る（床や半透明の素材は width 0 で呼ぶ）</summary>
+        private static void ApplyOutline(Material material, float width)
         {
-            material.SetFloat(OutlineWidthId, 0f);
-            material.SetShaderPassEnabled(OutlinePass, false);
+            material.SetFloat(OutlineWidthId, width);
+            material.SetShaderPassEnabled(OutlinePass, width > 0f);
         }
 
         /// <summary>シーンに保存しない作り物なので、片付けるときにまとめて消す</summary>

@@ -71,7 +71,7 @@ namespace PenmonScramble.Game
             _dirty = false;
             ApplyShadows();
             ApplyCamera(_camera, _cameraPreset);
-            _materials.SetOutlineWidth(_outline ? _outlineWidth : 0f);
+            ApplyOutline();
         }
 
         public void SetRealShadows(bool real)
@@ -83,8 +83,10 @@ namespace PenmonScramble.Game
         public void SetOutline(bool on)
         {
             _outline = on;
-            _materials.SetOutlineWidth(on ? _outlineWidth : 0f);
+            ApplyOutline();
         }
+
+        private void ApplyOutline() => _materials.SetOutlineWidth(_outline ? _outlineWidth : 0f);
 
         public bool Outline => _outline;
 
@@ -116,7 +118,7 @@ namespace PenmonScramble.Game
                 AddPenguin(no, LineupSpot(no), scale);
             }
 
-            _materials.SetOutlineWidth(_outline ? _outlineWidth : 0f);
+            ApplyOutline();
             HideRecursively(_generated.transform);
         }
 
@@ -128,12 +130,7 @@ namespace PenmonScramble.Game
 
         private void AddFloor(string objName, Vector2 size, float height, Material material)
         {
-            var floor = new GameObject(objName);
-            floor.transform.SetParent(_generated.transform, false);
-            floor.transform.localPosition = new Vector3(0f, height, 0f);
-            floor.transform.localScale = new Vector3(size.x, 1f, size.y);
-            floor.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.FloorQuad;
-            floor.AddComponent<MeshRenderer>().sharedMaterial = material;
+            ToyParts.FloorPlate(objName, _generated.transform, new Vector3(0f, height, 0f), new Vector3(size.x, 1f, size.y), material);
         }
 
         /// <summary>番号 no のペンギンの並ぶ位置。行は属性（5種類ずつ）、奥の行ほど上</summary>

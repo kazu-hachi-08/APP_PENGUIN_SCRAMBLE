@@ -1,5 +1,6 @@
 using PenmonScramble.Core;
 using UnityEngine;
+using static PenmonScramble.Game.ToyMotionMath;
 
 namespace PenmonScramble.Game
 {
@@ -80,7 +81,7 @@ namespace PenmonScramble.Game
         public void PlayKnockback(Vector3 velocity)
         {
             Bind();
-            var local = transform.InverseTransformDirection(new Vector3(velocity.x, 0f, velocity.z));
+            var local = FlatLocal(transform, velocity);
             var speed = local.magnitude;
             if (speed <= 0f)
             {
@@ -106,12 +107,7 @@ namespace PenmonScramble.Game
         public void SnapFacing(Vector3 direction)
         {
             Bind();
-            var local = transform.InverseTransformDirection(direction);
-            if (local.x * local.x + local.z * local.z > 0f)
-            {
-                _pose.Yaw = YawOf(local);
-            }
-
+            _pose.Yaw = SnapYaw(transform, direction, _pose.Yaw);
             Apply(_pose);
         }
 
@@ -126,7 +122,7 @@ namespace PenmonScramble.Game
             Down = false;
             Frozen = false;
             Velocity = Vector3.zero;
-            _blinkTimer = NextBlinkInterval();
+            _blinkTimer = NextBlinkInterval(BlinkIntervalMin, BlinkIntervalMax);
             Apply(_pose);
         }
 
@@ -141,7 +137,7 @@ namespace PenmonScramble.Game
 
             _model = GetComponent<PenguinModel>();
             _rest = new Rest(_model);
-            _blinkTimer = NextBlinkInterval();
+            _blinkTimer = NextBlinkInterval(BlinkIntervalMin, BlinkIntervalMax);
         }
 
         private void Update() => Tick(Time.deltaTime);
@@ -155,7 +151,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var local = transform.InverseTransformDirection(new Vector3(Velocity.x, 0f, Velocity.z));
+            var local = FlatLocal(transform, Velocity);
             var speed = local.magnitude;
             var knocked = _pose.Knock < 1f;
             var moving = speed > MovingThreshold && !knocked && !Down;
@@ -188,7 +184,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var facing = transform.InverseTransformDirection(new Vector3(Facing.x, 0f, Facing.z));
+            var facing = FlatLocal(transform, Facing);
             var target = facing.sqrMagnitude > 0f ? facing : moving ? localVelocity : Vector3.zero;
             if (target.sqrMagnitude > 0f)
             {
@@ -204,16 +200,10 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            _blinkTimer = NextBlinkInterval();
+            // 全員が同時にまばたきしないよう、間隔を毎回ばらつかせる（見た目だけなので Core の乱数とは関係ない）
+            _blinkTimer = NextBlinkInterval(BlinkIntervalMin, BlinkIntervalMax);
             PlayBlink();
         }
-
-        // 全員が同時にまばたきしないよう、間隔を毎回ばらつかせる（見た目だけなので Core の乱数とは関係ない）
-        private static float NextBlinkInterval() => Random.Range(BlinkIntervalMin, BlinkIntervalMax);
-
-        private static float Advance(float progress, float dt, float seconds) => Mathf.Min(1f, progress + dt / seconds);
-
-        private static float YawOf(Vector3 direction) => Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
 
         /// <summary>姿勢を部品に置く。毎回休みの姿勢から組み直すので、前のフレームの値が残らない</summary>
         public void Apply(PenguinPose pose)
@@ -229,13 +219,6 @@ namespace PenmonScramble.Game
             _model.Figure.localScale = Vector3.one * figure.Scale;
             ApplyShadow(pose, figure);
             ApplyBlink(pose);
-        }
-
-        /// <summary>start で 0、peak で 1、end で 0 に戻る山（なめらかに）</summary>
-        private static float Bell(float t, float start, float peak, float end)
-        {
-            if (t <= start || t >= end) return 0f;
-            return t < peak ? Mathf.SmoothStep(0f, 1f, (t - start) / (peak - start)) : Mathf.SmoothStep(1f, 0f, (t - peak) / (end - peak));
         }
 
         /// <summary>組み立てたときの部品の位置・向き・大きさ</summary>
@@ -322,23 +305,6 @@ namespace PenmonScramble.Game
                 FlipperRight.ApplyTo(model.FlipperRight);
                 FootLeft.ApplyTo(model.FootLeft);
                 FootRight.ApplyTo(model.FootRight);
-            }
-        }
-
-        /// <summary>部品1つ分の姿勢</summary>
-        private struct Offset
-        {
-            public Vector3 Position;
-            public Vector3 Euler;
-            public Vector3 Scale;
-
-            public static Offset From(Transform t) => new Offset { Position = t.localPosition, Euler = t.localEulerAngles, Scale = t.localScale };
-
-            public void ApplyTo(Transform t)
-            {
-                t.localPosition = Position;
-                t.localRotation = Quaternion.Euler(Euler);
-                t.localScale = Scale;
             }
         }
     }

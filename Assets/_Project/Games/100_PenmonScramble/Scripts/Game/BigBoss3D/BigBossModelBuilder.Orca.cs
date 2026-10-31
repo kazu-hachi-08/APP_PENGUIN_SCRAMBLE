@@ -48,7 +48,7 @@ namespace PenmonScramble.Game
         {
             var shoulder = kit.Joint(side < 0f ? BigBossPart.LimbLeft : BigBossPart.LimbRight, body, new Vector3(0.5f * side, 0.25f, 0.32f));
             var direction = new Vector3(side, -0.45f, -0.35f).normalized;
-            kit.Parts.Add("Flipper", ToyMeshes.Drop, shoulder, direction * 0.26f, Fin(direction, Vector3.up), new Vector3(0.36f, 0.62f, 0.09f), OrcaBlack, BodyGloss);
+            AddFin(kit, shoulder, "Flipper", direction * 0.26f, direction, new Vector3(0.36f, 0.62f, 0.09f), OrcaBlack);
         }
 
         /// <summary>白い下あごと口の中。上の歯は胴に付けて、口を開くと上下の歯が見えるようにする</summary>
@@ -70,7 +70,7 @@ namespace PenmonScramble.Game
             for (var side = -1f; side <= 1f; side += 2f)
             {
                 var direction = new Vector3(0.8f * side, 0f, -0.6f).normalized;
-                kit.Parts.Add("Fluke", ToyMeshes.Drop, tail, direction * 0.3f + Vector3.back * 0.05f, Fin(direction, Vector3.up), new Vector3(0.4f, 0.7f, 0.08f), OrcaBlack, BodyGloss);
+                AddFin(kit, tail, "Fluke", direction * 0.3f + Vector3.back * 0.05f, direction, new Vector3(0.4f, 0.7f, 0.08f), OrcaBlack);
             }
         }
 

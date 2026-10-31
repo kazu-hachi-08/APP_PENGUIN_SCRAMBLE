@@ -162,10 +162,12 @@ namespace PenmonScramble.Common.Input
             System.Array.Clear(_actionDown, 0, ActionCount);
 
             if (_virtualJoystick != null) _virtualJoystick.ResetInput();
-            if (_virtualAction1Button != null) _virtualAction1Button.ResetButton();
-            if (_virtualAction2Button != null) _virtualAction2Button.ResetButton();
-            if (_virtualAction3Button != null) _virtualAction3Button.ResetButton();
-            if (_virtualAction4Button != null) _virtualAction4Button.ResetButton();
+
+            for (int i = 0; i < ActionCount; i++)
+            {
+                VirtualButton virtualButton = GetVirtualAction(i);
+                if (virtualButton != null) virtualButton.ResetButton();
+            }
         }
     }
 }

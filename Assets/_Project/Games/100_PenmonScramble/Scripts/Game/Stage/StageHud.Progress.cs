@@ -119,7 +119,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var ratio = boss.MaxHp > 0 ? (float)boss.Hp / boss.MaxHp : 0f;
+            var ratio = HpRatio(boss.Hp, boss.MaxHp);
             if (boss.Id != _bossId)
             {
                 _bossId = boss.Id;

@@ -175,9 +175,7 @@ namespace PenmonScramble.Editor
 
         private static Button CreateWebInputCover(Transform input)
         {
-            var obj = UIDialogBuilder.CreateUIObject("WebInputCover", input);
-            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
-            obj.AddComponent<Image>().color = Color.clear;
+            var obj = CreateFullScreenBacking(input, "WebInputCover", Color.clear);
             var button = obj.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
             return button;

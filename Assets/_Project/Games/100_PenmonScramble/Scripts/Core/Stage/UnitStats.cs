@@ -1,3 +1,5 @@
+using System;
+
 namespace PenmonScramble.Core
 {
     /// <summary>
@@ -29,5 +31,8 @@ namespace PenmonScramble.Core
 
         /// <summary>大ボス。技の代わりに、予告つきの攻撃を順に出す。それ以外は null</summary>
         public BigBossDef BigBoss { get; set; }
+
+        /// <summary>HP は最低1。0 で生まれると、出た瞬間に倒れた扱いになるため</summary>
+        public static int HpOf(float value) => Math.Max(1, (int)MathF.Round(value));
     }
 }

@@ -68,13 +68,8 @@ namespace PenmonScramble.Editor
         [MenuItem("Tools/PenmonScramble/3D Preview Motion Capture")]
         public static void CaptureMotions()
         {
-            var stage = Object.FindAnyObjectByType<PenguinPreviewStage>();
-            if (stage == null)
-            {
-                Open();
-                stage = Object.FindAnyObjectByType<PenguinPreviewStage>();
-                if (stage == null) return;
-            }
+            var stage = FindOrOpenPreviewStage();
+            if (stage == null) return;
 
             Directory.CreateDirectory(CaptureFolder);
             var shadows = stage.RealShadows;
@@ -82,8 +77,7 @@ namespace PenmonScramble.Editor
             var spot = player.transform.localPosition;
             try
             {
-                stage.SetRealShadows(false);
-                stage.SetOutline(true);
+                BeginPreviewCapture(stage);
                 Save(CaptureMotionSheet(stage, player), "motions.png");
             }
             finally
@@ -127,16 +121,22 @@ namespace PenmonScramble.Editor
         {
             player.ResetPose();
             row.Start(player);
-            player.Tick(row.PreRoll);
-            var step = row.Seconds / (MotionSamples - 1);
+            SampleRow(stage.Camera, player.Tick, row.PreRoll, row.Seconds, sheet, MotionCellSize, y);
+        }
+
+        /// <summary>preRoll 進めてから seconds かけて MotionSamples 枚撮り、cellSize 四方のセルを sheet の y 段目に並べる（ボスの動きと共通）</summary>
+        private static void SampleRow(Camera camera, Action<float> tick, float preRoll, float seconds, Texture2D sheet, int cellSize, int y)
+        {
+            tick(preRoll);
+            var step = seconds / (MotionSamples - 1);
             for (var col = 0; col < MotionSamples; col++)
             {
                 if (col > 0)
                 {
-                    player.Tick(step);
+                    tick(step);
                 }
 
-                Blit(sheet, Render(stage.Camera, MotionCellSize, MotionCellSize), col * MotionCellSize, y * MotionCellSize);
+                Blit(sheet, Render(camera, cellSize, cellSize), col * cellSize, y * cellSize);
             }
         }
 

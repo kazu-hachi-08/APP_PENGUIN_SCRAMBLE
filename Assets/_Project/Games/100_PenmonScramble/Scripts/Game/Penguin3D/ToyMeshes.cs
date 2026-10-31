@@ -238,18 +238,7 @@ namespace PenmonScramble.Game
                 }
             }
 
-            var triangles = new int[vertices.Count];
-            for (var i = 0; i < triangles.Length; i++)
-            {
-                triangles[i] = i;
-            }
-
-            var mesh = new Mesh { name = "ToyStar" };
-            mesh.SetVertices(vertices);
-            mesh.SetTriangles(triangles, 0);
-            mesh.RecalculateNormals();
-            mesh.RecalculateBounds();
-            return mesh;
+            return MeshFromVertexList("ToyStar", vertices);
         }
 
         private static Mesh CreateIceChunk()
@@ -279,13 +268,19 @@ namespace PenmonScramble.Game
                 AddOutwardTriangle(vertices, Vector3.up, top[i], top[next]);
             }
 
+            return MeshFromVertexList("ToyIceChunk", vertices);
+        }
+
+        /// <summary>面ごとに分けた頂点を、0..n-1 の順にそのまま三角形にしたメッシュを作る（法線は面から自動で求める）</summary>
+        private static Mesh MeshFromVertexList(string meshName, List<Vector3> vertices)
+        {
             var triangles = new int[vertices.Count];
             for (var i = 0; i < triangles.Length; i++)
             {
                 triangles[i] = i;
             }
 
-            var mesh = new Mesh { name = "ToyIceChunk" };
+            var mesh = new Mesh { name = meshName };
             mesh.SetVertices(vertices);
             mesh.SetTriangles(triangles, 0);
             mesh.RecalculateNormals();

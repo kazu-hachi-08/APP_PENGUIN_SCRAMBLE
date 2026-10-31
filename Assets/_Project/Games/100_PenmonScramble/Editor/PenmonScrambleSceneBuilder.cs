@@ -59,7 +59,8 @@ namespace PenmonScramble.Editor
             // メニューの部品の絵（ボタン・アイコン）。UI を組む前に描いておく
             CreateUiArt();
             var (shake, stageCamera) = CreateCamera();
-            CreateSun();
+            // 影は足元の丸い影で出すので、光の影は切る
+            CreateSunLight("Sun", null, Quaternion.Euler(SunAngles), LightShadows.None);
             CreateEventSystem();
             var canvas = CreateCanvas();
             var touch = CreateTouchControls(canvas.transform);
@@ -98,33 +99,67 @@ namespace PenmonScramble.Editor
             var rig = new GameObject("CameraRig").AddComponent<StageCamera>();
             var arm = new GameObject("CameraArm");
             arm.transform.SetParent(rig.transform, false);
-            var cameraObj = new GameObject("Main Camera");
-            cameraObj.tag = "MainCamera";
-            cameraObj.transform.SetParent(arm.transform, false);
-            var camera = cameraObj.AddComponent<Camera>();
+            var camera = CreateMainCamera(arm.transform, CameraFarClip);
             camera.orthographic = false;
             camera.fieldOfView = StageCamera.FieldOfView;
-            camera.farClipPlane = CameraFarClip;
-            camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = BackgroundColor;
-            cameraObj.AddComponent<AudioListener>();
             var so = new SerializedObject(rig);
             so.FindProperty("_arm").objectReferenceValue = arm.transform;
             so.FindProperty("_camera").objectReferenceValue = camera;
             so.ApplyModifiedProperties();
-            return (cameraObj.AddComponent<CameraShake>(), rig);
+            return (camera.gameObject.AddComponent<CameraShake>(), rig);
         }
 
-        /// <summary>影は足元の丸い影で出すので、光の影は切る</summary>
-        private static void CreateSun()
+        /// <summary>
+        /// ゲームを映すカメラ（tag は MainCamera、音を聞く AudioListener つき）。親を渡すと、その下に付ける。
+        /// 背景は乱戦の空の色にそろえる。画角など場ごとの違いは、呼んだ側で設定する
+        /// </summary>
+        internal static Camera CreateMainCamera(Transform parent, float farClip)
         {
-            var obj = new GameObject("Sun");
-            obj.transform.rotation = Quaternion.Euler(SunAngles);
+            var obj = new GameObject("Main Camera") { tag = "MainCamera" };
+            if (parent != null)
+            {
+                obj.transform.SetParent(parent, false);
+            }
+
+            var camera = obj.AddComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = BackgroundColor;
+            camera.farClipPlane = farClip;
+            obj.AddComponent<AudioListener>();
+            return camera;
+        }
+
+        /// <summary>
+        /// 描くのを止めて置くカメラ。点けるのは開いた画面の側（ガチャ・タイトル・ペンモン画面など）で、
+        /// 閉じている間に毎フレーム描いて無駄な処理をしないようにする
+        /// </summary>
+        private static Camera CreateStandbyCamera(string name, float farClip)
+        {
+            var camera = new GameObject(name).AddComponent<Camera>();
+            camera.farClipPlane = farClip;
+            camera.enabled = false;
+            return camera;
+        }
+
+        /// <summary>
+        /// 太陽（Directional Light）を1つ作って返す。色と強さは場によらず同じ。影の有無だけ場ごとに違うので引数にする
+        /// （ステージは足元の丸い影で出すので光の影は切り、試作の場は本物の影を使う）
+        /// </summary>
+        internal static Light CreateSunLight(string name, Transform parent, Quaternion rotation, LightShadows shadows)
+        {
+            var obj = new GameObject(name);
+            if (parent != null)
+            {
+                obj.transform.SetParent(parent, false);
+            }
+
+            obj.transform.rotation = rotation;
             var light = obj.AddComponent<Light>();
             light.type = LightType.Directional;
             light.color = SunColor;
             light.intensity = SunIntensity;
-            light.shadows = LightShadows.None;
+            light.shadows = shadows;
+            return light;
         }
 
         private static void CreateEventSystem()
@@ -181,9 +216,7 @@ namespace PenmonScramble.Editor
             viewSo.FindProperty("_cameraShake").objectReferenceValue = shake;
             viewSo.FindProperty("_stageCamera").objectReferenceValue = stageCamera;
             viewSo.FindProperty("_cutIn").objectReferenceValue = cutIn;
-            viewSo.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
-            viewSo.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
-            viewSo.FindProperty("_fxShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Fx.shader");
+            BindStageShaders(viewSo);
             viewSo.ApplyModifiedProperties();
             var runner = stageObj.AddComponent<StageRunner>();
             var so = new SerializedObject(runner);
@@ -195,6 +228,14 @@ namespace PenmonScramble.Editor
             so.FindProperty("_menu").objectReferenceValue = stageMenu;
             so.FindProperty("_touch").objectReferenceValue = touch;
             so.ApplyModifiedProperties();
+        }
+
+        /// <summary>キャラ・足元の丸い影・エフェクトの三つのシェーダーを描く部品につなぐ。どの画面も同じ絵にそろえるため、指定はここ一か所</summary>
+        private static void BindStageShaders(SerializedObject so)
+        {
+            so.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
+            so.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
+            so.FindProperty("_fxShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Fx.shader");
         }
 
         private static Text AddText(GameObject obj, string value, int fontSize)

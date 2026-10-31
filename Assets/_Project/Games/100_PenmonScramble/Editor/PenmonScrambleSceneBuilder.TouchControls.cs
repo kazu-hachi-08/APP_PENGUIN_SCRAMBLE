@@ -113,8 +113,7 @@ namespace PenmonScramble.Editor
 
         private static TouchControls CreateTouchControls(Transform canvas)
         {
-            var root = UIDialogBuilder.CreateUIObject("TouchControls", canvas);
-            UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
+            var root = CreateStretchGroup(canvas, "TouchControls");
             root.AddComponent<SafeAreaFitter>();
             root.AddComponent<CanvasGroup>();
             var visibility = root.AddComponent<TouchControlsVisibility>();
@@ -151,10 +150,7 @@ namespace PenmonScramble.Editor
             CreateTouchImage(handle.transform, "Rim", TouchCirclePath, JoystickHandleRimColor, JoystickHandleSize);
             CreateTouchImage(handle.transform, "Face", TouchFacePath, JoystickHandleColor, JoystickHandleSize * TouchFaceRatio);
             CreateTouchImage(handle.transform, "Gloss", TouchGlossPath, Color.white, JoystickHandleSize * TouchFaceRatio);
-            foreach (var image in handle.GetComponentsInChildren<Image>())
-            {
-                image.raycastTarget = false;
-            }
+            DisableRaycasts(handle.transform);
 
             var joystick = background.gameObject.AddComponent<VirtualJoystick>();
             var so = new SerializedObject(joystick);
@@ -258,8 +254,7 @@ namespace PenmonScramble.Editor
             rect.anchoredPosition = position;
 
             var depth = size * TouchDepthRatio;
-            var visual = UIDialogBuilder.CreateUIObject("Visual", rect);
-            UIDialogBuilder.SetStretchAll(visual.GetComponent<RectTransform>());
+            var visual = CreateStretchGroup(rect, "Visual");
             var shadow = CreateTouchImage(visual.transform, "Shadow", TouchCirclePath, ShadowColor, size);
             shadow.rectTransform.anchoredPosition = new Vector2(0f, -depth) + TouchShadowExtra;
             var baseImage = CreateTouchImage(visual.transform, "Base", TouchCirclePath, Color.Lerp(color, Color.black, TouchBaseDarken), size);
@@ -284,24 +279,15 @@ namespace PenmonScramble.Editor
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             obj.GetComponent<RectTransform>().sizeDelta = Vector2.one * size;
-            var image = obj.AddComponent<Image>();
-            image.sprite = spritePath != null ? UiSprite(spritePath) : null;
-            image.color = color;
-            return image;
+            return AddImage(obj, spritePath != null ? UiSprite(spritePath) : null, color, true);
         }
 
         private static Text CreateTouchLabel(Transform parent, string label, int fontSize)
         {
-            var obj = UIDialogBuilder.CreateUIObject("Text", parent);
-            obj.GetComponent<RectTransform>().sizeDelta = new Vector2(fontSize * 4f, fontSize * 1.5f);
-            var text = AddText(obj, label, fontSize);
-            text.alignment = TextAnchor.MiddleCenter;
+            // 位置は呼んだ側が決める。字と縁の作りは CreateLabel と同じで、縁の距離だけ小さいボタン用にする
+            var text = CreateLabel(parent, "Text", label, fontSize, Vector2.zero, new Vector2(fontSize * 4f, fontSize * 1.5f));
             text.fontStyle = FontStyle.Bold;
-            text.color = Color.white;
-            text.raycastTarget = false;
-            var outline = obj.AddComponent<Outline>();
-            outline.effectColor = LabelOutlineColor;
-            outline.effectDistance = ButtonLabelOutlineDistance;
+            text.GetComponent<Outline>().effectDistance = ButtonLabelOutlineDistance;
             return text;
         }
 

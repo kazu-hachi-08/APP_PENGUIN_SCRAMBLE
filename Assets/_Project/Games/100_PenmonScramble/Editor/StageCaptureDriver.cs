@@ -19,6 +19,8 @@ namespace PenmonScramble.Editor
         private const int Width = 1280;
         private const int Height = 720;
         private const int Seed = 12345;
+        // 撮る絵の縁をなめらかにする（試作の場の撮影と同じ値）
+        private const int CaptureMsaa = 4;
 
         // 状態の見た目の場面: P2 はずっとダウン、半分の敵はこの間だけ凍る、P1 はこの時刻に交代する
         private const float FreezeFrom = 0.4f;
@@ -295,17 +297,8 @@ namespace PenmonScramble.Editor
 
         private void Save(string fileName)
         {
-            var target = RenderTexture.GetTemporary(Width, Height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, 4);
-            var previous = _camera.targetTexture;
-            _camera.targetTexture = target;
-            _camera.Render();
-            _camera.targetTexture = previous;
-            RenderTexture.active = target;
-            var texture = new Texture2D(Width, Height, TextureFormat.RGB24, false);
-            texture.ReadPixels(new Rect(0, 0, Width, Height), 0, 0);
+            var texture = StageCapture.RenderToTexture(_camera, Width, Height, CaptureMsaa, TextureFormat.RGB24);
             texture.Apply();
-            RenderTexture.active = null;
-            RenderTexture.ReleaseTemporary(target);
             File.WriteAllBytes(Path.Combine(StageCapture.CaptureFolder, fileName), texture.EncodeToPNG());
             Object.Destroy(texture);
         }

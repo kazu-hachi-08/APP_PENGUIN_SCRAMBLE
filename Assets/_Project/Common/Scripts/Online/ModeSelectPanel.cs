@@ -241,8 +241,7 @@ namespace PenmonScramble.Common.Online
         private void HandleLobbyDisconnected()
         {
             _session.Leave();
-            SetStartButtonVisible(false);
-            _copyButton.gameObject.SetActive(false);
+            HideLobbyButtons();
             SetStatus("接続が切れました\nキャンセルしてやり直してください");
         }
 
@@ -263,8 +262,7 @@ namespace PenmonScramble.Common.Online
         {
             Debug.LogWarning($"[ModeSelectPanel] オンライン接続に失敗しました: {e}");
             _session.Leave();
-            _copyButton.gameObject.SetActive(false);
-            SetStartButtonVisible(false);
+            HideLobbyButtons();
             SetStatus(OnlineSession.IsServicesSetupError(e) ? _servicesNotReadyMessage : _connectFailedMessage);
         }
 
@@ -279,9 +277,15 @@ namespace PenmonScramble.Common.Online
             _menuGroup.SetActive(false);
             _waitingGroup.SetActive(true);
             // コードが発行されるまで（部屋作成中・参加側の接続中）はコピーするものがないので隠す
+            HideLobbyButtons();
+            SetStatus(status);
+        }
+
+        // コードや開始ボタンは、部屋が出来ていない・接続が切れた・失敗したときには出さない
+        private void HideLobbyButtons()
+        {
             _copyButton.gameObject.SetActive(false);
             SetStartButtonVisible(false);
-            SetStatus(status);
         }
 
         private void SetStartButtonVisible(bool visible)

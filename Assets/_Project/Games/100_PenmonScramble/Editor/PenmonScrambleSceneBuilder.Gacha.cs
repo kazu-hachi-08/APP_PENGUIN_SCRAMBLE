@@ -68,8 +68,7 @@ namespace PenmonScramble.Editor
 
         private static GachaScreen CreateGachaScreen(Transform canvas)
         {
-            var root = UIDialogBuilder.CreateUIObject("Gacha", canvas);
-            UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
+            var root = CreateStretchGroup(canvas, "Gacha");
             // 3Dを映す板が後ろのタイトルをふさぐ（押せないように raycastTarget は残す）
             var screen = root.AddComponent<RawImage>();
             screen.color = Color.white;
@@ -121,18 +120,13 @@ namespace PenmonScramble.Editor
         /// <summary>3Dを撮るカメラ（シーンの直下。ガチャ画面が開いている間だけ GachaStage が点ける）と、部屋を組む GachaStage</summary>
         private static GachaStage CreateGachaStage(GameObject root, RawImage screen)
         {
-            var cameraObj = new GameObject("GachaCamera");
-            var camera = cameraObj.AddComponent<Camera>();
-            camera.farClipPlane = GachaFarClip;
-            camera.enabled = false;
+            var camera = CreateStandbyCamera("GachaCamera", GachaFarClip);
 
             var stage = root.AddComponent<GachaStage>();
             var so = new SerializedObject(stage);
             so.FindProperty("_screen").objectReferenceValue = screen;
             so.FindProperty("_camera").objectReferenceValue = camera;
-            so.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
-            so.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
-            so.FindProperty("_fxShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Fx.shader");
+            BindStageShaders(so);
             so.ApplyModifiedProperties();
             return stage;
         }
@@ -140,8 +134,7 @@ namespace PenmonScramble.Editor
         /// <summary>画面全体の透明なボタン。演出の間だけ出すので、ほかのボタンより手前に置いて、どこを押してもとばせるようにする</summary>
         private static Button CreateSkipButton(Transform parent)
         {
-            var obj = UIDialogBuilder.CreateUIObject("Skip", parent);
-            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
+            var obj = CreateStretchGroup(parent, "Skip");
             var image = obj.AddComponent<Image>();
             image.color = Color.clear;
             var button = obj.AddComponent<Button>();
@@ -181,12 +174,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_elementText").objectReferenceValue = elementText;
             so.FindProperty("_personalityText").objectReferenceValue = personality;
             so.FindProperty("_statsText").objectReferenceValue = stats;
-            var cardsProperty = so.FindProperty("_skillCards");
-            cardsProperty.arraySize = skillCards.Length;
-            for (var i = 0; i < skillCards.Length; i++)
-            {
-                cardsProperty.GetArrayElementAtIndex(i).objectReferenceValue = skillCards[i];
-            }
+            SetObjectArray(so.FindProperty("_skillCards"), skillCards);
 
             so.FindProperty("_newTag").objectReferenceValue = newTag;
             so.ApplyModifiedProperties();

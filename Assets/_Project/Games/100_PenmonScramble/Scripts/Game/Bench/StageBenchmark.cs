@@ -21,8 +21,6 @@ namespace PenmonScramble.Game
         private const int Seed = 12345;
         // 世界3の敵に負けて場面が軽くならないよう、ボットは強めにする（敵が減る速さは、次の波が来るので変わらない）
         private const int BotPower = 400;
-        // 処理が追いつかないときに追いつこうとして余計に重くならないよう、StageHost と同じ上限にする
-        private const int MaxTicksPerFrame = 5;
         // 作り直した直後のフレームは組み立ての分だけ長いので、数えない
         private const int SkipFramesAfterRebuild = 3;
         // これより長く止まったフレームは、その場でログに出す（何が起きた瞬間か追えるように）
@@ -140,12 +138,9 @@ namespace PenmonScramble.Game
 
         private void StepWorld(float dt)
         {
-            _accumulator += dt;
-            var ticks = 0;
-            while (_accumulator >= Balance.TickSeconds && ticks < MaxTicksPerFrame)
+            // 処理の上限と刻みは StageHost と同じ（計測の結果が本番の進み方と食い違わないように）
+            var interpolation = StageHost.StepFixedTicks(ref _accumulator, dt, null, () =>
             {
-                _accumulator -= Balance.TickSeconds;
-                ticks++;
                 foreach (var player in _players)
                 {
                     _world.SetInput(player.Id, StageBot.InputFor(_world, player, _time));
@@ -153,10 +148,8 @@ namespace PenmonScramble.Game
 
                 _world.Tick();
                 _view.Apply(_recorder.Capture());
-            }
-
-            _accumulator = Mathf.Min(_accumulator, Balance.TickSeconds);
-            _view.Render(_accumulator / Balance.TickSeconds);
+            });
+            _view.Render(interpolation);
 
             // 全滅・全部倒したら同じ場面を始め直して、測り続ける
             if (_world.Result != StageResult.Playing)

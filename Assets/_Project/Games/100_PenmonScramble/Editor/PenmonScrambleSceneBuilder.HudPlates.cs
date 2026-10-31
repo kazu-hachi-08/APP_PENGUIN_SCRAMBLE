@@ -392,11 +392,7 @@ namespace PenmonScramble.Editor
         /// <summary>飾りの絵（押す邪魔をしない）。spritePath が null なら絵の無い四角（顔は実行時に入れる）</summary>
         private static Image CreateHudImage(Transform parent, string name, string spritePath, Color color, Vector2 anchor, Vector2 position, Vector2 size)
         {
-            var image = CreateHudRect(parent, name, anchor, position, size).gameObject.AddComponent<Image>();
-            image.sprite = spritePath != null ? UiSprite(spritePath) : null;
-            image.color = color;
-            image.raycastTarget = false;
-            return image;
+            return AddImage(CreateHudRect(parent, name, anchor, position, size).gameObject, spritePath != null ? UiSprite(spritePath) : null, color, false);
         }
 
         /// <summary>親いっぱいに広げた太字の白い文字（濃い紺で縁取る）。左右の余白で、板の斜めの部分や顔との重なりを避ける</summary>

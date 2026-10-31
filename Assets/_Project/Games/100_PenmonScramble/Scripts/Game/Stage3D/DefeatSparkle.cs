@@ -57,9 +57,7 @@ namespace PenmonScramble.Game
                 var isCoin = i < coins;
                 _sizes[i] = isCoin ? CoinSize : Vector3.one * StarSize;
                 _pieces[i] = CreatePiece(isCoin ? ToyMeshes.Puck : ToyMeshes.Star, isCoin ? coin : star, _sizes[i]);
-                // 全部が同じ向きへ飛ばないよう、ぐるりと等間隔に散らしてから少しずらす（見た目だけなので Core の乱数とは関係ない）
-                var angle = (i + Random.value * 0.6f) / count * Mathf.PI * 2f;
-                var outward = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * (Random.Range(SpreadSpeedMin, SpreadSpeedMax) * spread);
+                var outward = ToyEasing.RingDirection(i, count, 0.6f) * (Random.Range(SpreadSpeedMin, SpreadSpeedMax) * spread);
                 _velocities[i] = outward + Vector3.up * Random.Range(UpSpeedMin, UpSpeedMax);
                 _spins[i] = Random.insideUnitSphere * SpinSpeedMax;
             }
@@ -71,9 +69,7 @@ namespace PenmonScramble.Game
             piece.transform.SetParent(transform, false);
             piece.transform.localScale = size;
             piece.transform.localRotation = Random.rotation;
-            piece.AddComponent<MeshFilter>().sharedMesh = mesh;
-            var renderer = piece.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
+            var renderer = ToyParts.AddMesh(piece, mesh, material);
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             return piece.transform;
         }
@@ -89,7 +85,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var shrink = t < ShrinkFrom ? 1f : 1f - (t - ShrinkFrom) / (1f - ShrinkFrom);
+            var shrink = ToyEasing.Shrink(t, ShrinkFrom);
             for (var i = 0; i < _pieces.Length; i++)
             {
                 Move(i, dt);

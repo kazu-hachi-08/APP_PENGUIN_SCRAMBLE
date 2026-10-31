@@ -67,7 +67,10 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>+Y がこの向きを向く回転（しずくの先を向けるときに使う）</summary>
-        private static Quaternion Point(float x, float y, float z) => Quaternion.FromToRotation(Vector3.up, new Vector3(x, y, z));
+        private static Quaternion Point(float x, float y, float z) => Point(new Vector3(x, y, z));
+
+        /// <summary>+Y がこの向きを向く回転（direction は長さが 1 でなくてよい）</summary>
+        private static Quaternion Point(Vector3 direction) => Quaternion.FromToRotation(Vector3.up, direction);
 
         /// <summary>飾りを付けるときの部品の置き場所と、体型の倍率</summary>
         private readonly struct Rig
@@ -125,6 +128,12 @@ namespace PenmonScramble.Game
             {
                 var scale = new Vector3(radius.x / TorusCenterRadius, thickness / TorusTubeDiameter, radius.y / TorusCenterRadius);
                 return Parts.Add(objName, ToyMeshes.Torus, parent, center, rotation, scale, color, gloss);
+            }
+
+            /// <summary>頭に輪を付ける。位置・半径・太さは頭の大きさの倍率を掛ける前の値（頭の球の中心が (0, 0.12, 0)、半径 0.3）</summary>
+            public Transform HeadBand(string objName, Vector3 center, Quaternion rotation, float radius, float thickness, Color color, float gloss)
+            {
+                return Band(objName, Head, center * S, rotation, Vector2.one * radius * S, thickness * S, color, gloss);
             }
         }
     }

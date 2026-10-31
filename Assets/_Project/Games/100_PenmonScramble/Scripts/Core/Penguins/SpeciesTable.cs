@@ -103,7 +103,7 @@ namespace PenmonScramble.Core
                 Element = species.Element,
                 Radius = Balance.PenguinRadius,
                 MoveSpeed = species.MoveSpeed,
-                MaxHp = Math.Max(1, (int)MathF.Round(species.HpRate * power)),
+                MaxHp = UnitStats.HpOf(species.HpRate * power),
                 Attack = species.AttackRate * power / 100f,
                 Skills = new[] { species.Skill1, species.Skill2 },
             };
@@ -131,7 +131,7 @@ namespace PenmonScramble.Core
             var stats = EnemyStats(species, playerCount, world);
             stats.IsBoss = true;
             stats.Radius *= Balance.BossRadiusScale;
-            stats.MaxHp = Math.Max(1, (int)MathF.Round(stats.MaxHp * Balance.BossHpScale));
+            stats.MaxHp = UnitStats.HpOf(stats.MaxHp * Balance.BossHpScale);
             stats.Attack *= Balance.BossAttackScale;
             stats.Skills = new[] { species.Skill1, species.Skill2 };
             stats.CooldownScale = Balance.BossCooldownScale;
@@ -141,7 +141,7 @@ namespace PenmonScramble.Core
 
         public static int EnemyMaxHp(SpeciesDef species, int playerCount, int world = 1)
         {
-            return Math.Max(1, (int)MathF.Round(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(playerCount) * Balance.WorldEnemyScale(world)));
+            return UnitStats.HpOf(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(playerCount) * Balance.WorldEnemyScale(world));
         }
     }
 }

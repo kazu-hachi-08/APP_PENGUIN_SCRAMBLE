@@ -30,9 +30,7 @@ namespace PenmonScramble.Game
             obj.transform.SetParent(parent, false);
             // どの塊も同じ向きで並ぶと作り物っぽいので、向きを少しずつ変える（見た目だけなので Core の乱数とは関係ない）
             obj.transform.localRotation = Quaternion.Euler(0f, Random.Range(0f, MaxYaw), 0f);
-            obj.AddComponent<MeshFilter>().sharedMesh = ToyMeshes.IceChunk;
-            var renderer = obj.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = materials.Toon.Ice;
+            var renderer = ToyParts.AddMesh(obj, ToyMeshes.IceChunk, materials.Toon.Ice);
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
             var block = obj.AddComponent<IceBlock>();

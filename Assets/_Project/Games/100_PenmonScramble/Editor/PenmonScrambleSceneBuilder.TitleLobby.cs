@@ -170,8 +170,7 @@ namespace PenmonScramble.Editor
         /// <summary>画面いっぱいの入れ物。中の部品をまとめてすべり込ませる</summary>
         private static Transform CreateSlideGroup(Transform parent, string name, Vector2 from, float delay)
         {
-            var obj = UIDialogBuilder.CreateUIObject(name, parent);
-            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
+            var obj = CreateStretchGroup(parent, name);
             SetSlideIn(obj, from, delay);
             return obj.transform;
         }
