@@ -158,7 +158,8 @@ namespace PenmonScramble.Game
 
             UpdateHud(latest);
             _menu.SetAvailable(latest.Result == StageResult.Playing);
-            _touch.SetShown(latest.Result == StageResult.Playing);
+            // メニューを開いている間は、スマホのボタンを隠す（メニューの札と重ねず、押しても届かないことを見せる）
+            _touch.SetShown(latest.Result == StageResult.Playing && !_menu.IsOpen);
             UpdateResult(latest, input);
             if (latest.Result == StageResult.Playing)
             {
@@ -193,10 +194,13 @@ namespace PenmonScramble.Game
                 _touch.Show(_lastPlayerState, fallen: state == null);
             }
 
+            _menu.SetStatus(snapshot, _lastPlayerState, fallen: state == null);
+
             _hud.SetProgress(snapshot);
             _hud.SetEdgeMarkers(snapshot, _localSeat, _seatColor);
             // 自分の3体が届くまでは中身が空なので出さない（ゲストは最初のスナップショットまで）
-            _hud.SetShown(_lastPlayerState != null);
+            // メニューを開いている間は隠す（メニューの帯と右の欄が、同じことをもっと大きく出す。協力は後ろが透けて重なるため）
+            _hud.SetShown(_lastPlayerState != null && !_menu.IsOpen);
         }
 
         private void Retry()

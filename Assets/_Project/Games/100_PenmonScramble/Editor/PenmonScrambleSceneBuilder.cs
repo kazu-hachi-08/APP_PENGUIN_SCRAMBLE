@@ -74,11 +74,10 @@ namespace PenmonScramble.Editor
             var gacha = CreateGachaScreen(canvas.transform);
             var penguins = CreatePenguinListScreen(canvas.transform);
             // ステージ中のメニューは HUD の上、遊び方はタイトルとメニューの両方から開くので一番上
-            var pause = UIDialogBuilder.CreatePauseDialog(canvas.transform, MenuHeading, withHelp: true);
             var confirm = UIDialogBuilder.CreateCommonDialog(canvas.transform);
             var howToPlay = CreateHowToPlayScreen(canvas.transform);
             var titleMenu = CreateTitleMenu(title, gacha, penguins, howToPlay, confirm);
-            var stageMenu = CreateStageMenu(menuButton, pause, confirm, howToPlay);
+            var stageMenu = CreateStageMenu(canvas.transform, menuButton, howToPlay);
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);
             CreateCreatureArt();
