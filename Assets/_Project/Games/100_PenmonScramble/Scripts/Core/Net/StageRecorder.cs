@@ -45,6 +45,9 @@ namespace PenmonScramble.Core
             {
                 Round = _round,
                 StageNo = _world.StageNo,
+                Difficulty = _world.Difficulty,
+                ArenaRound = _world.ArenaRound,
+                ArenaRoundsWon = _world.ArenaRoundsWon,
                 Tick = _world.TickCount,
                 Result = _world.Result,
                 AreaMin = _world.AreaMin,
@@ -116,6 +119,8 @@ namespace PenmonScramble.Core
             if (unit.IsSubmerged) flags |= UnitFlags.Submerged;
             if (unit.IsInMenu) flags |= UnitFlags.InMenu;
             if (unit.IsWindingUp) flags |= UnitFlags.WindingUp;
+            if (unit.IsSerious) flags |= UnitFlags.Serious;
+            if (unit.IsEnraged) flags |= UnitFlags.Enraged;
             return flags;
         }
 

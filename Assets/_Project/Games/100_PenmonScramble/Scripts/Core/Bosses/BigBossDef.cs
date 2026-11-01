@@ -16,6 +16,30 @@ namespace PenmonScramble.Core
 
         /// <summary>エリアの上半分か下半分を赤い帯で知らせ、波で押し流す（波を起こす）</summary>
         Wave,
+
+        /// <summary>闘技場の何か所かに赤い円 → 竜巻が立ち、しばらく近くのプレイヤーを中へ吸い込む（巨大ペンモンの風）</summary>
+        Vortex,
+
+        /// <summary>一番近いプレイヤーへ向けた赤い帯 → ボスは動かず、帯に稲妻が走る（巨大ペンモンの雷）</summary>
+        Beam,
+    }
+
+    /// <summary>
+    /// 本気の大ボスが HP 半分を切った後に増える攻撃。Kind の攻撃を出すときだけ、Extra 回ぶん多く出す。
+    /// Simultaneous なら同時に（波が2本）、そうでなければ休まずに続けて（羽の雨が2回）
+    /// </summary>
+    public sealed class BossRage
+    {
+        public BossRage(BossAttackKind kind, int extra, bool simultaneous)
+        {
+            Kind = kind;
+            Extra = extra;
+            Simultaneous = simultaneous;
+        }
+
+        public BossAttackKind Kind { get; }
+        public int Extra { get; }
+        public bool Simultaneous { get; }
     }
 
     /// <summary>大ボスの攻撃1つ分。ダメージ・吹っ飛びは Skill の値を使う（技と同じ当て方で済ませるため）</summary>
@@ -36,7 +60,9 @@ namespace PenmonScramble.Core
 
         /// <summary>
         /// 突進: Range（距離）・DashSpeed・AreaRadius（体より広く当たる分）/ 雨: AreaRadius（円の半径）・Count（ばらばらに落とす数）/
-        /// 飛び出し: AreaRadius / 波: 使うのは Power・Knockback だけ
+        /// 飛び出し: AreaRadius / 波: 使うのは Power・Knockback だけ /
+        /// 竜巻: AreaRadius（吸い込む円の半径）・Count（竜巻の数）・Duration・Interval（当たる間隔）・Pull（吸い込む速さ）/
+        /// 稲妻: AreaRadius（帯の幅の半分）・Range（帯の長さ。0 なら柵まで）
         /// </summary>
         public SkillDef Skill { get; }
 
@@ -47,8 +73,9 @@ namespace PenmonScramble.Core
     /// <summary>大ボス1体分。ペンギンの天敵なので、ペンギンの種類表とは分けて持つ</summary>
     public sealed class BigBossDef
     {
-        public BigBossDef(int no, string name, Element element, float hpRate, float radius, float moveSpeed, float restSeconds, params BossAttackDef[] attacks)
+        public BigBossDef(int no, string name, Element element, float hpRate, float radius, float moveSpeed, float restSeconds, BossRage rage, params BossAttackDef[] attacks)
         {
+            Rage = rage;
             No = no;
             Name = name;
             Element = element;
@@ -74,5 +101,8 @@ namespace PenmonScramble.Core
 
         /// <summary>この順に繰り返す</summary>
         public IReadOnlyList<BossAttackDef> Attacks { get; }
+
+        /// <summary>本気（ボスラッシュの3戦目）で HP 半分を切った後に増える攻撃</summary>
+        public BossRage Rage { get; }
     }
 }

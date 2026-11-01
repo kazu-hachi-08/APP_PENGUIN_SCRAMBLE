@@ -29,12 +29,12 @@ namespace PenmonScramble.Game
             }
 
             var first = warnings[0];
-            if (warnings.Count > 1 || IsCircle(first))
+            if (IsCircle(first))
             {
                 return BossAttackKind.Rain;
             }
 
-            // 帯: 足元から出ていれば突進（横切る突進も同じ）、エリアの端から端までなら波
+            // 帯: 足元から出ていれば突進（横切る突進も同じ）、エリアの端から端までなら波（本気のシャチは2本同時）
             return Vector2.Distance(first.From.ToVector2(), bossPosition) <= ChargeStartTolerance ? BossAttackKind.Charge : BossAttackKind.Wave;
         }
 

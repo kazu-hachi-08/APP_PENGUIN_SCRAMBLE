@@ -21,6 +21,10 @@ namespace PenmonScramble.Editor
         public const string Benchmark = Root + "Benchmark/";
         public const int BenchmarkPriority = 41;
 
+        // 開発用のステージを遊ぶ（記録には書かない）。確かめる項目と撮る項目の間に置く
+        public const string Dev = Root + "Dev/";
+        public const int DevPriority = 52;
+
         public const string Capture = Root + "Capture/";
         // 試作の場を開く項目と、そこで撮る項目の間に区切り線を入れる
         public const int CaptureOpenPriority = 60;

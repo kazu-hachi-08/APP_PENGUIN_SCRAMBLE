@@ -53,6 +53,7 @@ namespace PenmonScramble.Game
             _flashTimer -= dt;
             TickPop(dt);
             TickUnderground(dt);
+            TickRageSteam(dt);
             ApplyStatus();
         }
 

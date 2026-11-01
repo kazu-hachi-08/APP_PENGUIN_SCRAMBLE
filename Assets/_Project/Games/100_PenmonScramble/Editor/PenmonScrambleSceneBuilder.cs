@@ -19,7 +19,7 @@ namespace PenmonScramble.Editor
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private const string ScenePath = "Assets/_Project/Games/100_PenmonScramble/Scenes/" + SceneNames.PenmonScramble + ".unity";
+        public const string ScenePath = "Assets/_Project/Games/100_PenmonScramble/Scenes/" + SceneNames.PenmonScramble + ".unity";
 
         // 横画面の基準解像度。共通基盤のダイアログと同じ値にそろえる
         private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);

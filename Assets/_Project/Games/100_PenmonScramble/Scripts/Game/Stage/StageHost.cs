@@ -26,6 +26,7 @@ namespace PenmonScramble.Game
         private readonly Dictionary<int, InputLatch> _remoteInputs = new Dictionary<int, InputLatch>();
         private readonly Dictionary<int, UnitStats[]> _parties = new Dictionary<int, UnitStats[]>();
         private readonly StageDef _stage;
+        private readonly Difficulty _difficulty;
 
         private StageWorld _world;
         private StageRecorder _recorder;
@@ -35,11 +36,12 @@ namespace PenmonScramble.Game
         private float _partyWait;
         private StageSnapshot _unsent;
 
-        public StageHost(StageView view, StageLink link, int playerCount, StageDef stage, UnitStats[] localParty)
+        public StageHost(StageView view, StageLink link, int playerCount, StageDef stage, UnitStats[] localParty, Difficulty difficulty = Difficulty.Normal)
         {
             _view = view;
             _link = link;
             _stage = stage;
+            _difficulty = difficulty;
             _parties[LocalSeat] = localParty;
             for (var seat = 0; seat < playerCount; seat++)
             {
@@ -64,7 +66,7 @@ namespace PenmonScramble.Game
             _recorder?.Detach();
             _round++;
             var seats = _seats.ToArray();
-            _players = TrialStage.Create(_stage, System.Environment.TickCount, seats, PartiesOf(seats), out _world);
+            _players = TrialStage.Create(_stage, System.Environment.TickCount, seats, PartiesOf(seats), out _world, _difficulty);
             _recorder = new StageRecorder(_world, _round);
             _accumulator = 0f;
             _unsent = null;

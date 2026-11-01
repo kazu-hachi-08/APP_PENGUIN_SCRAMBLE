@@ -30,10 +30,16 @@ namespace PenmonScramble.Game
         /// <param name="height">ペンギンの背の高さ。煙を足元から頭まで散らして体全体を隠す</param>
         public static void Spawn(Transform parent, StageMaterials materials, Vector2 position, float radius, float height)
         {
+            Spawn(parent, materials, position, radius, height, SmokeColor);
+        }
+
+        /// <param name="color">煙の色（本気の大ボスの赤い湯気など）</param>
+        public static void Spawn(Transform parent, StageMaterials materials, Vector2 position, float radius, float height, Color color)
+        {
             var puff = new GameObject("SmokePuff").AddComponent<SmokePuff>();
             puff.transform.SetParent(parent, false);
             puff.transform.position = position.ToFloor();
-            puff.Create(materials.Toon.Get(SmokeColor, Gloss), radius, height);
+            puff.Create(materials.Toon.Get(color, Gloss), radius, height);
         }
 
         private void Create(Material material, float radius, float height)

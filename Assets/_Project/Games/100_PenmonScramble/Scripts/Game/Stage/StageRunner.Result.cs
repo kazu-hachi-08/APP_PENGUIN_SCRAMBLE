@@ -72,14 +72,19 @@ namespace PenmonScramble.Game
             GameSounds.Play(_resultCleared ? GameSound.Clear : GameSound.Fail);
             BeginSlowMotion();
 
-            var stageName = StageTable.Get(snapshot.StageNo)?.Name ?? string.Empty;
+            var stageName = Stages.Get(snapshot.StageNo)?.Name ?? string.Empty;
             var unlockedName = StageTable.Get(reward.UnlockedStageNo)?.Name;
             _hud.ShowResult(new ResultInfo(_resultCleared, canRetry: _host != null, stageName, snapshot.EnemiesDefeated, reward, unlockedName));
         }
 
-        /// <summary>結果を自分の記録に書いて保存する。協力ではホストのクリアが全員の記録に付く</summary>
+        /// <summary>結果を自分の記録に書いて保存する。協力ではホストのクリアが全員の記録に付く。開発用のステージは何も書かない</summary>
         private static StageReward RecordResult(StageSnapshot snapshot, bool cleared)
         {
+            if (Stages.IsDev(snapshot.StageNo))
+            {
+                return new StageReward(0, 0, 0);
+            }
+
             var reward = GameSave.Record.RecordStage(snapshot.StageNo, cleared, snapshot.EnemiesDefeated);
             GameSave.Save();
             return reward;

@@ -50,7 +50,7 @@ namespace PenmonScramble.Game
         {
             if (_snapshot != null)
             {
-                _stageText.text = StageTable.Get(_snapshot.StageNo)?.Name ?? string.Empty;
+                _stageText.text = Stages.Get(_snapshot.StageNo)?.Name ?? string.Empty;
                 _areaPips.Set(_snapshot.AreaIndex, _snapshot.AreaCount);
             }
 

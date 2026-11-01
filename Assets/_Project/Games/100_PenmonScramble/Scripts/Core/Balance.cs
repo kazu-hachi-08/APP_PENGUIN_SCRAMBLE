@@ -23,6 +23,9 @@ namespace PenmonScramble.Core
         /// <summary>闘技場へ入る通り道の幅の半分（マス）。協力の4人が詰まらずに通れる広さ</summary>
         public const float ArenaDoorHalfWidth = 1.5f;
 
+        /// <summary>闘技場が続くとき（ボスラッシュ）に、前の闘技場の右端と次の闘技場の左端の間に空ける通り道の長さ（マス）</summary>
+        public const float ArenaCorridorLength = 4f;
+
         /// <summary>吹っ飛びの減速（マス/秒²）。大きいほどすぐ止まる</summary>
         public const float KnockbackDeceleration = 18f;
 

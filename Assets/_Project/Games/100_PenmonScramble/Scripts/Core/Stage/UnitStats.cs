@@ -32,6 +32,12 @@ namespace PenmonScramble.Core
         /// <summary>大ボス。技の代わりに、予告つきの攻撃を順に出す。それ以外は null</summary>
         public BigBossDef BigBoss { get; set; }
 
+        /// <summary>大ボスの本気（ボスラッシュの3戦目）</summary>
+        public bool IsSerious { get; set; }
+
+        /// <summary>巨大ペンモンの闘技場の大技。技1・技2に加えて、間をあけてこれを出す。それ以外は null</summary>
+        public BossAttackDef GiantAttack { get; set; }
+
         /// <summary>HP は最低1。0 で生まれると、出た瞬間に倒れた扱いになるため</summary>
         public static int HpOf(float value) => Math.Max(1, (int)MathF.Round(value));
     }

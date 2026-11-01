@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
 
     /// <summary>見た目を変える状態。描く側が、技の定義を引かずに分かるようにする</summary>
     [Flags]
-    public enum UnitFlags : byte
+    public enum UnitFlags : ushort
     {
         None = 0,
         Dashing = 1,
@@ -33,6 +33,12 @@ namespace PenmonScramble.Core
 
         /// <summary>雑魚・ステージのボスが技を出す前に構えている（体が膨らんで光る）</summary>
         WindingUp = 128,
+
+        /// <summary>大ボスの本気（頭に「本気」の札・赤い湯気）</summary>
+        Serious = 256,
+
+        /// <summary>本気の大ボスが HP 半分を切って吠えた後（湯気が濃くなる）</summary>
+        Enraged = 512,
     }
 
     /// <summary>描くのに要るユニット1体分の値（場に出ている子の値）</summary>
@@ -215,6 +221,15 @@ namespace PenmonScramble.Core
 
         /// <summary>遊んでいるステージの番号。ゲストはクリアしたときにこの番号を自分の記録に書く</summary>
         public int StageNo { get; set; }
+
+        /// <summary>ボスラッシュの難易度（ゲストの HUD・結果・報酬に使う）。ストーリーは Normal</summary>
+        public Difficulty Difficulty { get; set; }
+
+        /// <summary>いまの闘技場が何戦目か（1〜）。闘技場でなければ 0</summary>
+        public int ArenaRound { get; set; }
+
+        /// <summary>勝った闘技場の戦いの数</summary>
+        public int ArenaRoundsWon { get; set; }
         public int Tick { get; set; }
         public StageResult Result { get; set; }
         /// <summary>いま動ける範囲。出入口が開いている間は次のエリアまで広がる</summary>

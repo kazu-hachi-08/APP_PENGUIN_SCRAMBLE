@@ -52,6 +52,24 @@ namespace PenmonScramble.Game
             _session.ContinueWhenMemberLeaves = true;
             _modeSelect.ShowMultiplayer(StartSolo, StartOnline, Balance.MaxPlayers);
             PlayMusic(MusicTrack.Title);
+            StartDevStageIfRequested();
+        }
+
+        /// <summary>
+        /// エディタの Tools/PenmonScramble/Dev から開いたときは、タイトルを飛ばして開発用のステージをひとりで始める
+        /// （「ひとりで遊ぶ」を押したのと同じ流れ）
+        /// </summary>
+        private void StartDevStageIfRequested()
+        {
+            if (!DevStageRequest.TryTake(out var stageNo, out var difficulty) || Stages.Get(stageNo) == null)
+            {
+                return;
+            }
+
+            _modeSelect.gameObject.SetActive(false);
+            SeatNames.UseSolo(UserProfile.Name);
+            _menu.Bind(solo: true, canRestart: true);
+            StartHost(1, null, Stages.Get(stageNo), difficulty);
         }
 
         private void OnDestroy()
@@ -73,7 +91,7 @@ namespace PenmonScramble.Game
             // 協力の名前は OnlineSession が配る。ひとりのときは自分の名前だけ
             SeatNames.UseSolo(UserProfile.Name);
             _menu.Bind(solo: true, canRestart: true);
-            StartHost(1, null);
+            StartHost(1, null, SelectedStage, Difficulty.Normal);
         }
 
         private void StartOnline(int seat, int playerCount)
@@ -92,7 +110,7 @@ namespace PenmonScramble.Game
                 _session.OnMemberLeft += OnMemberLeft;
                 _link.InputReceived += OnRemoteInput;
                 _link.PartyReceived += OnRemoteParty;
-                StartHost(playerCount, _link);
+                StartHost(playerCount, _link, SelectedStage, Difficulty.Normal);
                 return;
             }
 
@@ -101,12 +119,14 @@ namespace PenmonScramble.Game
             _link.SendParty(StageCodec.EncodeParty(GameSave.Record.PartyPenguins()));
         }
 
+        /// <summary>ロビーのカードで選んだストーリーのステージ</summary>
+        private StageDef SelectedStage => StageTable.Get(_titleMenu.SelectedStageNo) ?? StageTable.Stage1;
+
         /// <summary>最初の挑戦は、ゲストの編成がそろってから StageHost が始める</summary>
-        private void StartHost(int playerCount, StageLink link)
+        private void StartHost(int playerCount, StageLink link, StageDef stage, Difficulty difficulty)
         {
             SetLocalSeat(StageHost.LocalSeat);
-            var stage = StageTable.Get(_titleMenu.SelectedStageNo) ?? StageTable.Stage1;
-            _host = new StageHost(_view, link, playerCount, stage, GameSave.Record.PartyStats());
+            _host = new StageHost(_view, link, playerCount, stage, GameSave.Record.PartyStats(), difficulty);
         }
 
         private void SetLocalSeat(int seat)
@@ -163,7 +183,8 @@ namespace PenmonScramble.Game
             UpdateResult(latest, input);
             if (latest.Result == StageResult.Playing)
             {
-                PlayMusic(latest.IsBossArea ? MusicTrack.Boss : MusicTrack.Stage);
+                // 闘技場の連戦（ボスラッシュ）は、どの戦いもボスの曲
+                PlayMusic(latest.IsBossArea || latest.ArenaRound > 0 ? MusicTrack.Boss : MusicTrack.Stage);
             }
         }
 

@@ -7,7 +7,8 @@ namespace PenmonScramble.Game
     /// <summary>
     /// 大ボスの闘技場の楕円に沿って並べる、おもちゃの丸い柵（丸い柱・柱の上の玉・柱をつなぐ太い横木）。
     /// 柱は百本近くになるので、部品の種類ごとに1つのメッシュへまとめて描く回数を減らす。
-    /// 入口（前のエリアからの通り道）にかかる柱だけは別にまとめ、入口が開いている間は隠す
+    /// 入口（前のエリアからの通り道）と出口（次の闘技場への通り道）にかかる柱だけは別にまとめ、開いている間は隠す。
+    /// 闘技場どうしの通り道の両側にも、同じ柵を立てる（BuildCorridor）
     /// </summary>
     public static class ArenaFence
     {
@@ -60,23 +61,76 @@ namespace PenmonScramble.Game
         /// <summary>入口の通り道にかかる柱（入口が開いている間は隠す）。柱の太さぶん広く見る</summary>
         public static bool IsInDoorway(Vector2 post, AreaShape doorway) => doorway.Contains(post.ToVec2(), -PostDiameter * 0.5f);
 
-        /// <summary>柵を組んで parent の下に置く。戻り値は入口の柱（入口が開いている間は隠す）</summary>
-        public static GameObject Build(Transform parent, AreaShape arena, ToonMaterials materials, StageTheme theme)
+        /// <summary>
+        /// 柵を組んで parent の下に置く。entrance / exit は通り道（無ければ null）。
+        /// 戻り値は入口・出口にかかる柱（開いている間は隠す）。通り道が無ければ null
+        /// </summary>
+        public static (GameObject entrance, GameObject exit) Build(Transform parent, AreaShape arena, AreaShape? entrance, AreaShape? exit, ToonMaterials materials, StageTheme theme)
         {
-            var doorway = StageLayout.Doorway(arena);
             var posts = PostPoints(arena, PostSpacing);
             var fence = new Parts(materials, theme);
-            var door = new Parts(materials, theme);
+            var entranceDoor = new Parts(materials, theme);
+            var exitDoor = new Parts(materials, theme);
             for (var i = 0; i < posts.Count; i++)
             {
                 var next = posts[(i + 1) % posts.Count];
-                var inDoor = IsInDoorway(posts[i], doorway);
-                (inDoor ? door : fence).AddPost(posts[i], i);
-                (inDoor || IsInDoorway(next, doorway) ? door : fence).AddRail(posts[i], next);
+                var parts = PartsFor(posts[i], entrance, exit, fence, entranceDoor, exitDoor);
+                parts.AddPost(posts[i], i);
+                // 横木は、どちらかの柱が入口・出口にかかっていればそちらと一緒に隠す
+                (parts == fence ? PartsFor(next, entrance, exit, fence, entranceDoor, exitDoor) : parts).AddRail(posts[i], next);
             }
 
             fence.Combine("ArenaFence", parent);
-            return door.Combine("ArenaDoor", parent);
+            var entranceObj = entrance.HasValue ? entranceDoor.Combine("ArenaEntrance", parent) : null;
+            var exitObj = exit.HasValue ? exitDoor.Combine("ArenaExit", parent) : null;
+            return (entranceObj, exitObj);
+        }
+
+        /// <summary>
+        /// 闘技場どうしの通り道の、楕円の外に出ている所の両側に柵を立てる。
+        /// 前の楕円の柵が通り道の縁の高さを横切る所から、次の楕円の同じ所まで
+        /// </summary>
+        public static void BuildCorridor(Transform parent, AreaShape previous, AreaShape next, ToonMaterials materials, StageTheme theme)
+        {
+            var parts = new Parts(materials, theme);
+            var half = Balance.ArenaDoorHalfWidth;
+            var fromX = previous.Max.X - TipInset(previous, half);
+            var toX = next.Min.X + TipInset(next, half);
+            var count = Mathf.Max(1, Mathf.RoundToInt((toX - fromX) / PostSpacing));
+            foreach (var side in new[] { -1f, 1f })
+            {
+                var y = next.Center.Y + half * side;
+                for (var i = 0; i <= count; i++)
+                {
+                    var post = new Vector2(Mathf.Lerp(fromX, toX, (float)i / count), y);
+                    parts.AddPost(post, i);
+                    if (i < count)
+                    {
+                        parts.AddRail(post, new Vector2(Mathf.Lerp(fromX, toX, (float)(i + 1) / count), y));
+                    }
+                }
+            }
+
+            parts.Combine("CorridorFence", parent);
+        }
+
+        /// <summary>楕円の左右の端から、高さ halfWidth の所で縁が横切るまでの横の距離</summary>
+        public static float TipInset(AreaShape arena, float halfWidth)
+        {
+            var a = arena.Width * 0.5f;
+            var b = arena.Height * 0.5f;
+            var ratio = Mathf.Clamp01(halfWidth / b);
+            return a * (1f - Mathf.Sqrt(1f - ratio * ratio));
+        }
+
+        private static Parts PartsFor(Vector2 post, AreaShape? entrance, AreaShape? exit, Parts fence, Parts entranceDoor, Parts exitDoor)
+        {
+            if (entrance.HasValue && IsInDoorway(post, entrance.Value))
+            {
+                return entranceDoor;
+            }
+
+            return exit.HasValue && IsInDoorway(post, exit.Value) ? exitDoor : fence;
         }
 
         /// <summary>楕円を ArcSamples に分けた i 番目の点。0 が左端で、上（奥）へ回る</summary>

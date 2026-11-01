@@ -10,6 +10,9 @@ namespace PenmonScramble.Core
 
         /// <summary>一番近い敵を追いかけながら、決まった間隔で当たる（合体技「雷雲」）</summary>
         Cloud,
+
+        /// <summary>しばらく残り、近くの相手を中心へ引き寄せ、中にいる間は決まった間隔で当たる（巨大ペンモンの竜巻）</summary>
+        Vortex,
     }
 
     /// <summary>地面に置かれた範囲（設置・落下の技、必殺技）</summary>

@@ -4,7 +4,8 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 床に置かれた範囲（床に寝かせた円と輪）。設置は属性の色でうっすら、落下は落ちる場所を赤っぽく脈打たせて知らせる
+    /// 床に置かれた範囲（床に寝かせた円と輪）。設置は属性の色でうっすら、落下は落ちる場所を赤っぽく脈打たせて知らせる。
+    /// 巨大ペンモンの竜巻は、近づくと吸い込まれる危ない所なので、落下と同じく赤みを混ぜて濃く出す
     /// </summary>
     public class EffectView : MonoBehaviour
     {
@@ -15,6 +16,8 @@ namespace PenmonScramble.Game
         // 動く範囲（雷雲）が、届いた位置へ寄っていく速さ。毎秒15回しか届かないので、そのまま置くとかくかくする
         private const float FollowSharpness = 12f;
         private static readonly Color DropWarningColor = new Color(1f, 0.25f, 0.2f);
+        private const float VortexRedness = 0.35f;
+        private const float VortexFillAlpha = 0.4f;
 
         private float _radius;
         private float _age;
@@ -30,8 +33,9 @@ namespace PenmonScramble.Game
 
             var element = PenguinPalette.ElementColor(effect.Element);
             var isDrop = effect.Kind == AreaEffectKind.Drop;
-            var ringColor = isDrop ? Color.Lerp(element, DropWarningColor, 0.6f) : element;
-            var fillAlpha = isDrop ? DropFillAlpha : ZoneFillAlpha;
+            var isVortex = effect.Kind == AreaEffectKind.Vortex;
+            var ringColor = isDrop ? Color.Lerp(element, DropWarningColor, 0.6f) : isVortex ? Color.Lerp(element, DropWarningColor, VortexRedness) : element;
+            var fillAlpha = isDrop ? DropFillAlpha : isVortex ? VortexFillAlpha : ZoneFillAlpha;
             view.CreatePart(materials, "Fill", DecalSprites.Circle, new Color(ringColor.r, ringColor.g, ringColor.b, fillAlpha), 0);
             // 輪は円の上に描く（同じ高さなので、順番で決める）
             view.CreatePart(materials, "Ring", DecalSprites.Ring, ringColor, 1);
