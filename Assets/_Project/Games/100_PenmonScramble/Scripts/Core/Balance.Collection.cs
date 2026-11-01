@@ -19,8 +19,8 @@ namespace PenmonScramble.Core
         private static readonly int[] SellPrices = { 10, 30, 100 };
 
         // 解放したワールドの数ごとの、引いたときのパワーの範囲。添字はワールドの数-1
-        private static readonly int[] PowerMins = { 80, 160, 280 };
-        private static readonly int[] PowerMaxes = { 120, 240, 400 };
+        private static readonly int[] PowerMins = { 80, 160, 280, 430, 610 };
+        private static readonly int[] PowerMaxes = { 120, 240, 400, 610, 870 };
 
         // ★が高いほど強い（パワーに掛ける）。添字は★-1
         private static readonly float[] StarPowerScales = { 1f, 1.2f, 1.5f };

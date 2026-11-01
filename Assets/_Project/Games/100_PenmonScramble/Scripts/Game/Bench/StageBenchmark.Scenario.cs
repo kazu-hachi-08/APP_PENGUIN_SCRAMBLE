@@ -49,7 +49,7 @@ namespace PenmonScramble.Game
                 }
             }
 
-            /// <summary>敵の合計が一番多いエリアと、最後のステージ（シャチ）の大ボスのエリア</summary>
+            /// <summary>敵の合計が一番多いエリアと、最後のステージ（サメ）の大ボスのエリア</summary>
             public static Scenario[] CreateAll()
             {
                 var crowd = HeaviestArea(out var crowdStage, out var crowdArea);

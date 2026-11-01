@@ -1,7 +1,7 @@
 """ComfyUI（Comfy Desktop）の API で、ワールドの地面の絵と大ボスの闘技場の床の絵（§9）を作る。
 Comfy Desktop を起動しておく（モデル: DreamShaperXL_Turbo_v2_1）。元絵は Tools/Art/raw/（git には入れない）に出し、
 同じ絵を Art/Stage/World<n>.png（地面）・Arena<n>.png（闘技場）へ置く。
-使い方: python gen.py <name> [<name> ...]   （name: w1..w3, a1..a3, all）
+使い方: python gen.py <name> [<name> ...]   （name: w1..w5, a1..a5, all）
 seed を変えて作り直すとき: python gen.py w1:1234 。気に入ったら SEEDS に書いておく
 """
 import json, sys, time, urllib.request, os, shutil
@@ -20,12 +20,16 @@ GROUNDS = {
     1: "sunny sandy beach with small scattered ice floes and pebbles, shallow sea foam along the top edge, warm sand color",
     2: "flat smooth frozen lake ice surface, pale light blue ice surface with subtle thin cracks and scattered small snow patches, uniform floor texture filling the whole image, pale cyan",
     3: "dark night ocean surface with floating ice sheets and cracks in the ice, deep navy blue, faint moonlight reflections",
+    4: "flat weathered grey slate rock ground on a cliff top, smooth stone with faint cracks, thin wet streaks and a few small white sea spray foam patches, cold grey blue, uniform floor texture filling the whole image",
+    5: "flat smooth dark grey brown volcanic rock ground covered in fine ash, only a few very thin faint dim orange lava cracks far apart, mostly plain rock, muted warm brown, uniform floor texture filling the whole image",
 }
 # 闘技場の床。楕円（横32×縦18マス）を囲む四角に引き伸ばして貼るので、まん中を中心にした模様にする
 ARENAS = {
     1: "sand arena floor, smooth packed sand raked into faint concentric oval rings around the center, a few small pebbles, warm beige sand",
     2: "close-up of a smooth polished pale blue ice surface filling the whole image edge to edge, faint white skate scratches curving around the center, light frost, uniform floor texture, pale cyan",
     3: "flat floor of pale blue ice slabs fitted together like paving, filling the whole image edge to edge, thin dark navy sea water showing in the narrow cracks between the slabs, faint moonlight glow, uniform floor texture",
+    4: "flat floor of smooth grey stone slabs fitted together in faint concentric oval rings around the center, wet sheen from sea spray, small white foam streaks, filling the whole image edge to edge, cold grey blue, uniform floor texture",
+    5: "flat floor of large smooth dark grey brown basalt stone plates fitted tightly together around the center, very thin faint dim orange glow in a few of the seams, mostly plain stone, muted warm brown, filling the whole image edge to edge, uniform floor texture",
 }
 GROUND_NEG = ("text, letters, logo, watermark, characters, animals, penguins, people, horizon, sky, perspective, "
               "blurry, lowres, high contrast, busy, cluttered, frame, border, hole, pit, crater, walls, edges")

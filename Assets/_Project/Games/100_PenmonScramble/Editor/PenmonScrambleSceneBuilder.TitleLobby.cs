@@ -62,6 +62,8 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 StageTextSize = new Vector2(420f, 70f);
         private const int StageNoFontSize = 32;
         private const int StageNameFontSize = 60;
+        // 「火山の入り江 3」のような長い名前は、◀ ▶ の間に収まるまで縮める
+        private const int StageNameMinFontSize = 44;
         private const int StageBadgeFontSize = 30;
         private static readonly Color StageNoColor = new Color(0.6f, 0.85f, 1f);
         private static readonly Color StageBadgeColor = new Color(1f, 0.85f, 0.3f);
@@ -240,6 +242,9 @@ namespace PenmonScramble.Editor
             no.color = StageNoColor;
             var name = CreateLabel(card, "Name", string.Empty, StageNameFontSize, StageNameLabelPosition, StageTextSize);
             name.fontStyle = FontStyle.Bold;
+            name.resizeTextForBestFit = true;
+            name.resizeTextMinSize = StageNameMinFontSize;
+            name.resizeTextMaxSize = StageNameFontSize;
             var badge = CreateLabel(card, "Badge", string.Empty, StageBadgeFontSize, StageBadgePosition, StageTextSize);
             badge.fontStyle = FontStyle.Bold;
             badge.color = StageBadgeColor;

@@ -5,11 +5,12 @@ namespace PenmonScramble.Core
     /// <summary>ワールドごとの敵の強さと、大ボスの調整値</summary>
     public static partial class Balance
     {
-        public const int WorldCount = 3;
+        public const int WorldCount = 5;
 
         // ワールドごとの敵の HP・攻撃の倍率。添字はワールド-1。
-        // ガチャのパワーの範囲（PowerMins / PowerMaxes の真ん中 100 / 200 / 340）に合わせて、先のワールドでも手ごたえを残す
-        private static readonly float[] WorldEnemyScales = { 1f, 2f, 3.4f };
+        // ガチャのパワーの範囲（PowerMins / PowerMaxes の真ん中 100 / 200 / 340 / 520 / 740）に合わせて、先のワールドでも手ごたえを残す。
+        // ワールド4・5の値は置き値（フェーズ 7 のバランス調整で、強化の伸びと合わせて決め直す）
+        private static readonly float[] WorldEnemyScales = { 1f, 2f, 3.4f, 5.2f, 7.4f };
 
         public static float WorldEnemyScale(int world)
         {

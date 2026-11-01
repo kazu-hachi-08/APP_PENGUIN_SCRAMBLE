@@ -48,8 +48,7 @@ namespace PenmonScramble.Game
             var stage = Stages.Get(snapshot.StageNo);
             var world = stage?.World ?? 1;
             var theme = StageTheme.ForWorld(world);
-            var art = CreatureArt.Ground(world);
-            var texture = art != null ? art.texture : Texture2D.whiteTexture;
+            var (texture, tint) = GroundArt(world, theme);
             if (Camera.main != null)
             {
                 Camera.main.backgroundColor = theme.Background;
@@ -62,13 +61,13 @@ namespace PenmonScramble.Game
                 var max = area.Max.ToVector2();
                 if (area.IsEllipse)
                 {
-                    CreateArena(stage, i, area, world, theme, texture);
+                    CreateArena(stage, i, area, world, theme, texture, tint);
                     continue;
                 }
 
                 var isBossArea = snapshot.AreaCount > 1 && i == snapshot.AreaCount - 1;
-                CreateOutside(i, snapshot.AreaCount, texture, min, max);
-                CreateFloor($"Area{i}", _materials.Toon.Floor(texture, StageTheme.AreaTintOf(i, isBossArea)), min, max, 0f);
+                CreateOutside(i, snapshot.AreaCount, texture, tint, min, max);
+                CreateFloor($"Area{i}", _materials.Toon.Floor(texture, StageTheme.AreaTintOf(i, isBossArea) * tint), min, max, 0f);
                 if (i < snapshot.AreaCount - 1)
                 {
                     _gates.Add((max.x, CreateGate(i, max.x, min.y, max.y, theme.Gate)));
@@ -81,18 +80,15 @@ namespace PenmonScramble.Game
         /// 闘技場の絵が無ければ、ワールドの地面をボスエリアの色にして敷く。
         /// 入口（前のエリアからの通り道）と出口（次の闘技場への通り道）にかかる柱は、開いている間だけ隠す
         /// </summary>
-        private void CreateArena(StageDef stage, int index, AreaShape arena, int world, StageTheme theme, Texture worldTexture)
+        private void CreateArena(StageDef stage, int index, AreaShape arena, int world, StageTheme theme, Texture worldTexture, Color worldTint)
         {
             var min = arena.Min.ToVector2();
             var max = arena.Max.ToVector2();
             var outside = new Vector2(OutsideWidth, OutsideDepth);
             var outsideHeight = ArenaOutsideFloorHeight - ArenaOutsideFloorStep * index;
-            CreateFloor($"Outside{index}", _materials.Toon.Floor(worldTexture, StageTheme.OutsideTint), min - outside, max + outside, outsideHeight);
+            CreateFloor($"Outside{index}", _materials.Toon.Floor(worldTexture, StageTheme.OutsideTint * worldTint), min - outside, max + outside, outsideHeight);
 
-            var art = CreatureArt.ArenaGround(world);
-            var floor = art != null
-                ? _materials.Toon.Floor(art.texture, Color.white)
-                : _materials.Toon.Floor(worldTexture, StageTheme.AreaTintOf(index, true));
+            var floor = ArenaFloor(world, theme, worldTexture, worldTint, index);
             var size = max - min;
             var disc = ToyParts.AddMesh(new GameObject($"Area{index}"), ToyMeshes.FloorDisc, floor);
             disc.transform.SetParent(transform, false);
@@ -141,11 +137,44 @@ namespace PenmonScramble.Game
         /// エリアより一回り大きい床を暗くして下に敷く。横長の画面ではエリアの外まで映るので、
         /// カメラの背景色が見えて不自然にならないようにする。重ならないよう、左右へはみ出すのは最初と最後のエリアだけ
         /// </summary>
-        private void CreateOutside(int index, int areaCount, Texture texture, Vector2 min, Vector2 max)
+        private void CreateOutside(int index, int areaCount, Texture texture, Color tint, Vector2 min, Vector2 max)
         {
             var outsideMin = new Vector2(index == 0 ? min.x - OutsideWidth : min.x, min.y - OutsideDepth);
             var outsideMax = new Vector2(index == areaCount - 1 ? max.x + OutsideWidth : max.x, max.y + OutsideDepth);
-            CreateFloor($"Outside{index}", _materials.Toon.Floor(texture, StageTheme.OutsideTint), outsideMin, outsideMax, OutsideFloorHeight);
+            CreateFloor($"Outside{index}", _materials.Toon.Floor(texture, StageTheme.OutsideTint * tint), outsideMin, outsideMax, OutsideFloorHeight);
+        }
+
+        /// <summary>
+        /// ワールドの地面の絵と、それに掛ける色。絵がまだ無いワールド（4・5）は、前のワールドの絵を借りて色を替える。
+        /// どちらも無ければ白い板（色は掛けない）
+        /// </summary>
+        private static (Texture texture, Color tint) GroundArt(int world, StageTheme theme)
+        {
+            var art = CreatureArt.Ground(world);
+            if (art != null)
+            {
+                return (art.texture, Color.white);
+            }
+
+            var borrowed = theme.FallbackArtWorld > 0 ? CreatureArt.Ground(theme.FallbackArtWorld) : null;
+            return borrowed != null ? (borrowed.texture, theme.FallbackArtTint) : (Texture2D.whiteTexture, Color.white);
+        }
+
+        /// <summary>
+        /// 闘技場の床。闘技場の絵 → 借りたワールドの闘技場の絵（色替え）→ ワールドの地面をボスエリアの色にしたもの、の順に探す
+        /// </summary>
+        private Material ArenaFloor(int world, StageTheme theme, Texture worldTexture, Color worldTint, int index)
+        {
+            var art = CreatureArt.ArenaGround(world);
+            if (art != null)
+            {
+                return _materials.Toon.Floor(art.texture, Color.white);
+            }
+
+            var borrowed = theme.FallbackArtWorld > 0 ? CreatureArt.ArenaGround(theme.FallbackArtWorld) : null;
+            return borrowed != null
+                ? _materials.Toon.Floor(borrowed.texture, theme.FallbackArtTint)
+                : _materials.Toon.Floor(worldTexture, StageTheme.AreaTintOf(index, true) * worldTint);
         }
 
         /// <summary>絵を min〜max（床の上の長方形）いっぱいに引き伸ばして貼った板</summary>
