@@ -77,7 +77,7 @@ namespace PenmonScramble.Editor
             var pause = UIDialogBuilder.CreatePauseDialog(canvas.transform, MenuHeading, withHelp: true);
             var confirm = UIDialogBuilder.CreateCommonDialog(canvas.transform);
             var howToPlay = CreateHowToPlayScreen(canvas.transform);
-            var titleMenu = CreateTitleMenu(title, gacha, penguins, howToPlay);
+            var titleMenu = CreateTitleMenu(title, gacha, penguins, howToPlay, confirm);
             var stageMenu = CreateStageMenu(menuButton, pause, confirm, howToPlay);
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);

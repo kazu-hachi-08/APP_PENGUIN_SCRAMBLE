@@ -1,4 +1,5 @@
 using PenmonScramble.Common.Editor;
+using PenmonScramble.Common.UI;
 using PenmonScramble.Common.Online;
 using PenmonScramble.Common.Profile;
 using PenmonScramble.Game;
@@ -82,7 +83,7 @@ namespace PenmonScramble.Editor
         /// ロビーの中身と、設定・名前の入力を作り、TitleMenu（ロビー）・TitleFlow（スタート → ロビー）・ModeSelectPanel のメニューをつなぐ。
         /// ガチャ・ペンモン・遊び方の画面はタイトルより手前に作るので、それらができてから呼ぶ
         /// </summary>
-        private static TitleMenu CreateTitleMenu(ModeSelectPanel title, GachaScreen gacha, PenguinListScreen penguins, HowToPlayScreen howToPlay)
+        private static TitleMenu CreateTitleMenu(ModeSelectPanel title, GachaScreen gacha, PenguinListScreen penguins, HowToPlayScreen howToPlay, CommonDialog notice)
         {
             var root = title.transform;
             var lobby = root.Find($"{MenuGroupName}/{LobbyName}");
@@ -134,7 +135,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_nameEntry").objectReferenceValue = nameEntry;
             so.ApplyModifiedProperties();
 
-            AddTitleFlow(title, lobby.gameObject, menu, nameEntry, gacha);
+            AddTitleFlow(title, lobby.gameObject, menu, nameEntry, gacha, notice);
             return menu;
         }
 
@@ -148,7 +149,7 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        private static void AddTitleFlow(ModeSelectPanel title, GameObject lobby, TitleMenu menu, NameEntryDialog nameEntry, GachaScreen gacha)
+        private static void AddTitleFlow(ModeSelectPanel title, GameObject lobby, TitleMenu menu, NameEntryDialog nameEntry, GachaScreen gacha, CommonDialog notice)
         {
             var splash = title.transform.Find(SplashName);
             var flow = title.gameObject.AddComponent<TitleFlow>();
@@ -164,6 +165,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_menu").objectReferenceValue = menu;
             so.FindProperty("_nameEntry").objectReferenceValue = nameEntry;
             so.FindProperty("_gacha").objectReferenceValue = gacha;
+            so.FindProperty("_notice").objectReferenceValue = notice;
             so.ApplyModifiedProperties();
         }
 

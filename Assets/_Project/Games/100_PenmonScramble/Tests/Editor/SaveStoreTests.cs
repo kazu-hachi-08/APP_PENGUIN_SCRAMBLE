@@ -65,7 +65,7 @@ namespace PenmonScramble.Tests
             Assert.That(loaded.freePullsUsed, Is.EqualTo(3));
             Assert.That(loaded.penguins.Count, Is.EqualTo(3));
             Assert.That(loaded.penguins[0].speciesNo, Is.EqualTo(5));
-            Assert.That(loaded.penguins[0].power, Is.EqualTo(150));
+            Assert.That(loaded.penguins[0].Power, Is.EqualTo(150));
             Assert.That(loaded.party, Is.EqualTo(new[] { 3, 1, 2 }));
             Assert.That(loaded.clearedStages, Is.EqualTo(new[] { 1 }));
             Assert.That(loaded.nextPenguinId, Is.EqualTo(4));
@@ -103,10 +103,48 @@ namespace PenmonScramble.Tests
             Assert.That(_storage.Read(SaveStore.BrokenKeyPrefix + 2), Is.EqualTo("second"));
         }
 
+        /// <summary>v1 の記録は今回だけ読まずに消して初めからにする（ユーザー承認済み）。すぐ上書きし、退避はしない</summary>
+        [Test]
+        public void Load_Version1_IsDiscardedAndOverwritten()
+        {
+            _storage.Write(SaveStore.Key, "{\"version\":1,\"coins\":500,\"freePullsUsed\":3,\"penguins\":[{\"id\":1,\"speciesNo\":1,\"power\":80}],\"party\":[1],\"clearedStages\":[1]}");
+
+            var data = _store.Load();
+
+            Assert.That(_store.DiscardedOldRecord, Is.True);
+            Assert.That(_store.LastBrokenKey, Is.Null);
+            Assert.That(data.version, Is.EqualTo(SaveData.CurrentVersion));
+            Assert.That(data.coins, Is.Zero);
+            Assert.That(data.penguins, Is.Empty);
+            Assert.That(new PlayerRecord(data).FreePullsLeft, Is.EqualTo(Balance.FreePulls));
+            Assert.That(_storage.Read(SaveStore.BrokenKeyPrefix + 1), Is.Null);
+
+            // 2回目からは v2 の記録として読む（もう知らせない）
+            _store.Load();
+            Assert.That(_store.DiscardedOldRecord, Is.False);
+        }
+
+        [Test]
+        public void SaveThenLoad_KeepsGrowth()
+        {
+            var data = SaveData.CreateNew();
+            data.penguins.Add(new OwnedPenguin(1, 5, 150) { boost = 40, limitBreak = 2 });
+            data.clearedRush.Add(1012);
+            _store.Save(data);
+
+            var loaded = _store.Load();
+
+            Assert.That(loaded.penguins[0].basePower, Is.EqualTo(150));
+            Assert.That(loaded.penguins[0].boost, Is.EqualTo(40));
+            Assert.That(loaded.penguins[0].limitBreak, Is.EqualTo(2));
+            Assert.That(loaded.penguins[0].Power, Is.EqualTo(190));
+            Assert.That(loaded.clearedRush, Is.EqualTo(new[] { 1012 }));
+        }
+
         [Test]
         public void Load_RepairsParty_DropsMissingAndFillsStrongest()
         {
-            _storage.Write(SaveStore.Key, "{\"version\":1,\"penguins\":[{\"id\":1,\"speciesNo\":1,\"power\":80},{\"id\":2,\"speciesNo\":2,\"power\":120},{\"id\":3,\"speciesNo\":3,\"power\":100},{\"id\":4,\"speciesNo\":4,\"power\":90}],\"party\":[9,1,1]}");
+            _storage.Write(SaveStore.Key, "{\"version\":2,\"penguins\":[{\"id\":1,\"speciesNo\":1,\"basePower\":80},{\"id\":2,\"speciesNo\":2,\"basePower\":120},{\"id\":3,\"speciesNo\":3,\"basePower\":100},{\"id\":4,\"speciesNo\":4,\"basePower\":90}],\"party\":[9,1,1]}");
 
             var data = _store.Load();
 
@@ -118,7 +156,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Load_UnknownSpecies_IsKeptButNotInParty()
         {
-            _storage.Write(SaveStore.Key, "{\"version\":1,\"penguins\":[{\"id\":1,\"speciesNo\":99,\"power\":80}],\"party\":[1]}");
+            _storage.Write(SaveStore.Key, "{\"version\":2,\"penguins\":[{\"id\":1,\"speciesNo\":99,\"basePower\":80}],\"party\":[1]}");
 
             var data = _store.Load();
 
@@ -130,7 +168,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Reset_StartsOverAndKeepsBrokenBackups()
         {
-            _storage.Write(SaveStore.Key, "{\"version\":1,\"coins\":500,\"freePullsUsed\":3,\"penguins\":[{\"id\":1,\"speciesNo\":1,\"power\":80}],\"party\":[1],\"clearedStages\":[1]}");
+            _storage.Write(SaveStore.Key, "{\"version\":2,\"coins\":500,\"freePullsUsed\":3,\"penguins\":[{\"id\":1,\"speciesNo\":1,\"basePower\":80}],\"party\":[1],\"clearedStages\":[1]}");
             _storage.Write(SaveStore.BrokenKeyPrefix + 1, "old");
 
             var reset = _store.Reset();

@@ -30,6 +30,12 @@ namespace PenmonScramble.Core
         /// <summary>読めなかった記録の退避先。「.1」「.2」…と空いている所に入れ、前に退避したものも消さない</summary>
         public const string BrokenKeyPrefix = "PenmonScramble.Save.Broken.";
 
+        /// <summary>
+        /// これより古い版の記録は読まずに、新しい記録で上書きする。v1 → v2 の今回だけの例外（ユーザー承認済み。
+        /// CLAUDE.md §3.5）。v2 からはまた「足すだけ」に戻すので、この値は上げない
+        /// </summary>
+        public const int OldestReadableVersion = 2;
+
         // 退避先を探す上限。これを超えたら最後の枠に上書きする（何度も壊れ続けて無限に増えないように）
         private const int MaxBrokenSlots = 10;
 
@@ -45,10 +51,14 @@ namespace PenmonScramble.Core
         /// <summary>前回の Load で読めない記録を退避したときのキー。無ければ null</summary>
         public string LastBrokenKey { get; private set; }
 
+        /// <summary>前回の Load で、古い版（v1）の記録を消して初めからにしたか（タイトルで一言知らせる）</summary>
+        public bool DiscardedOldRecord { get; private set; }
+
         /// <summary>記録が無ければ新しく作る。読めなければ退避して新しく作る</summary>
         public SaveData Load()
         {
             LastBrokenKey = null;
+            DiscardedOldRecord = false;
             var text = _storage.Read(Key);
             if (string.IsNullOrEmpty(text))
             {
@@ -60,6 +70,13 @@ namespace PenmonScramble.Core
             {
                 LastBrokenKey = Backup(text);
                 return SaveData.CreateNew();
+            }
+
+            if (data.version < OldestReadableVersion)
+            {
+                // すぐ書いておく（何も保存せずに閉じても、次の起動でまた知らせないように）
+                DiscardedOldRecord = true;
+                return Reset();
             }
 
             Upgrade(data);
@@ -106,6 +123,7 @@ namespace PenmonScramble.Core
             data.penguins ??= new List<OwnedPenguin>();
             data.party ??= new List<int>();
             data.clearedStages ??= new List<int>();
+            data.clearedRush ??= new List<int>();
             if (data.version < SaveData.CurrentVersion)
             {
                 data.version = SaveData.CurrentVersion;

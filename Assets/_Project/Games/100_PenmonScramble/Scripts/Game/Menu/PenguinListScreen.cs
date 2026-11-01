@@ -9,7 +9,7 @@ namespace PenmonScramble.Game
     /// <summary>
     /// ペンモン画面。左上に編成の帯（3枠）、左下に持っている子の一覧、右に選んだ子の図鑑カード（PenmonDetailPanel）。
     /// 一覧か枠の子を選ぶ → 「編成に入れる」 → 光った枠から入れたい所を押す、の順で編成する。
-    /// 編成にいない子は「売る」（2回押しで確定）
+    /// 編成にいない子は「売る」（2回押しで確定）。「強化」で強化の窓（EnhanceScreen）を重ねて開く
     /// </summary>
     public class PenguinListScreen : MonoBehaviour
     {
@@ -24,6 +24,8 @@ namespace PenmonScramble.Game
         [SerializeField] private Text _setPartyLabel;
         [SerializeField] private Button _sellButton;
         [SerializeField] private Text _sellLabel;
+        [SerializeField] private Button _enhanceButton;
+        [SerializeField] private EnhanceScreen _enhance;
         [SerializeField] private Button _sortButton;
         [SerializeField] private Text _sortLabel;
         [SerializeField] private Button _backButton;
@@ -48,6 +50,8 @@ namespace PenmonScramble.Game
 
             _setPartyButton.onClick.AddListener(TogglePicking);
             _sellButton.onClick.AddListener(Sell);
+            _enhanceButton.onClick.AddListener(OpenEnhance);
+            _enhance.Closed += Refresh;
             _sortButton.onClick.AddListener(ChangeSort);
             _backButton.onClick.AddListener(Close);
             _cardTemplate.gameObject.SetActive(false);
@@ -122,6 +126,18 @@ namespace PenmonScramble.Game
             Select(0);
         }
 
+        private void OpenEnhance()
+        {
+            if (Record.Find(_selectedId) == null)
+            {
+                return;
+            }
+
+            _picking = false;
+            _confirmSell = false;
+            _enhance.Open(_selectedId);
+        }
+
         private void ChangeSort()
         {
             _sort = PenguinSort.Next(_sort);
@@ -182,6 +198,7 @@ namespace PenmonScramble.Game
                 : "一覧からペンモンを選ぶと、右にくわしく出ます";
 
             _setPartyButton.interactable = species != null;
+            _enhanceButton.interactable = species != null;
             _setPartyLabel.text = _picking ? "やめる" : inParty ? "並びを変える" : "編成に入れる";
 
             var canSell = penguin != null && !inParty;

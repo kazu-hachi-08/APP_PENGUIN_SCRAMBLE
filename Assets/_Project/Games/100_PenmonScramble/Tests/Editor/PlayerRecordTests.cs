@@ -86,7 +86,7 @@ namespace PenmonScramble.Tests
                 var penguin = record.Pull(random);
                 var stars = SpeciesTable.Get(penguin.speciesNo).Stars;
                 var scale = Balance.StarPowerScale(stars);
-                Assert.That(penguin.power, Is.InRange((int)MathF.Floor(Balance.PowerMin(1) * scale), (int)MathF.Ceiling(Balance.PowerMax(1) * scale)));
+                Assert.That(penguin.Power, Is.InRange((int)MathF.Floor(Balance.PowerMin(1) * scale), (int)MathF.Ceiling(Balance.PowerMax(1) * scale)));
             }
         }
 
@@ -184,7 +184,7 @@ namespace PenmonScramble.Tests
             Assert.That(stats.Length, Is.EqualTo(Balance.PartySize));
             var first = record.Find(record.Party[0]);
             Assert.That(stats[0].SpeciesNo, Is.EqualTo(first.speciesNo));
-            Assert.That(stats[0].MaxHp, Is.EqualTo(SpeciesTable.PlayerStats(SpeciesTable.Get(first.speciesNo), first.power).MaxHp));
+            Assert.That(stats[0].MaxHp, Is.EqualTo(SpeciesTable.PlayerStats(SpeciesTable.Get(first.speciesNo), first.Power).MaxHp));
         }
 
         [Test]

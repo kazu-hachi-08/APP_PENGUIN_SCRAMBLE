@@ -42,7 +42,7 @@ namespace PenmonScramble.Core
         {
             switch (mode)
             {
-                case PenguinSortMode.Power: return b.power.CompareTo(a.power);
+                case PenguinSortMode.Power: return b.Power.CompareTo(a.Power);
                 case PenguinSortMode.Number: return a.speciesNo.CompareTo(b.speciesNo);
                 default: return 0;
             }
