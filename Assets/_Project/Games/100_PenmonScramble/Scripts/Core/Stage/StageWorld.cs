@@ -28,14 +28,21 @@ namespace PenmonScramble.Core
             _random = new Random(seed);
         }
 
-        /// <summary>ステージ定義どおりにエリアを順に進める。敵は波ごとに出し、HP は人数で増やす</summary>
-        public StageWorld(StageDef stage, int playerCount, int seed)
+        /// <summary>ステージ定義どおりにエリアを順に進める。敵は波ごとに出し、HP は人数で増やす。難易度は敵の HP・攻撃・予告の長さに掛かる</summary>
+        public StageWorld(StageDef stage, int playerCount, int seed, Difficulty difficulty = Difficulty.Normal)
             : this(StageLayout.Area(stage, 0), seed)
         {
             _stage = stage;
             _playerCount = playerCount;
+            Difficulty = difficulty;
             StartArea(0);
         }
+
+        /// <summary>ボスラッシュの難易度。ストーリーとテスト用の場は Normal</summary>
+        public Difficulty Difficulty { get; } = Difficulty.Normal;
+
+        /// <summary>雑魚の構えと、大ボス・巨大ペンモンの赤い予告に掛ける倍率</summary>
+        private float TelegraphScale => Balance.DifficultyTelegraphScale(Difficulty);
 
         public event Action<HitEvent> Hit;
         public event Action<DefeatedEvent> Defeated;
@@ -75,7 +82,11 @@ namespace PenmonScramble.Core
             var unit = new Unit(_nextId++, team, party, position, seat);
             if (party[0].BigBoss != null)
             {
-                unit.Brain = new BigBossBrain(party[0].BigBoss);
+                unit.Brain = BigBossBrain.ForBigBoss(party[0].BigBoss, party[0].IsSerious, TelegraphScale);
+            }
+            else if (party[0].GiantAttack != null)
+            {
+                unit.Brain = BigBossBrain.ForGiant(party[0].GiantAttack, TelegraphScale);
             }
 
             if (team == Team.Enemy)

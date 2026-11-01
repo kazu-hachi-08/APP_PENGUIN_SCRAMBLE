@@ -142,6 +142,7 @@ namespace PenmonScramble.Editor
             var labelText = row.Find("Label").GetComponent<Text>();
             labelText.fontSize = MenuFontSize - 4;
             labelText.fontStyle = FontStyle.Bold;
+            FitLineHeight(labelText);
             slider.fillRect.GetComponent<Image>().color = VolumeFillColor;
             return slider;
         }

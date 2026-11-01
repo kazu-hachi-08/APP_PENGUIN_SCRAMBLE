@@ -8,8 +8,8 @@ using static PenmonScramble.Tests.TestWorld;
 namespace PenmonScramble.Tests
 {
     /// <summary>
-    /// 3D の大ボス: 3体とも組み立てられる・赤い範囲から攻撃の構えを読み取れる・どの動きでも床にめり込まない・
-    /// もぐると床の下に隠れて飛び出す。見た目の良し悪しはスクショで人が決めるので、ここでは壊れ方だけを見る
+    /// 3D の大ボス: 5体とも組み立てられる・赤い範囲から攻撃の構えを読み取れる・どの動きでも床にめり込まない・
+    /// もぐると床の下に隠れて飛び出す（サメは背びれだけ残す）。見た目の良し悪しはスクショで人が決めるので、ここでは壊れ方だけを見る
     /// </summary>
     public class BigBoss3DTests
     {
@@ -17,7 +17,7 @@ namespace PenmonScramble.Tests
         // 部品が床にめり込んでよい深さ（丸みの分）
         private const float FloorTolerance = 0.05f;
 
-        private static readonly int[] Bosses = { BigBossTable.SkuaNo, BigBossTable.LeopardSealNo, BigBossTable.OrcaNo };
+        private static readonly int[] Bosses = { BigBossTable.SkuaNo, BigBossTable.LeopardSealNo, BigBossTable.OrcaNo, BigBossTable.FulmarNo, BigBossTable.SharkNo };
 
         private GameObject _parent;
         private StageMaterials _materials;
@@ -61,7 +61,7 @@ namespace PenmonScramble.Tests
             Assert.That(model[BigBossPart.LimbLeft], Is.Not.Null);
             Assert.That(model[BigBossPart.Tail], Is.Not.Null);
             Assert.That(model.Eyes.Count, Is.EqualTo(2));
-            if (no == BigBossTable.SkuaNo)
+            if (no == BigBossTable.SkuaNo || no == BigBossTable.FulmarNo)
             {
                 Assert.That(model[BigBossPart.TipRight], Is.Not.Null, "翼の先がしなる");
                 Assert.That(model[BigBossPart.FootLeft], Is.Not.Null);
@@ -80,16 +80,18 @@ namespace PenmonScramble.Tests
             Assert.That(Bounds(model).max.y, Is.EqualTo(model.TopHeight).Within(0.2f), "頭の上の文字と氷の塊の高さが合う");
         }
 
-        [Test]
-        public void Skua_FliesAboveItsShadow()
+        [TestCase(BigBossTable.SkuaNo, 0.3f)]
+        [TestCase(BigBossTable.FulmarNo, 0.1f)]
+        public void Birds_FlyAboveTheirShadows(int no, float clearance)
         {
-            var motion = Build(BigBossTable.SkuaNo);
+            var motion = Build(no);
             motion.Tick(Step);
-            Assert.That(Bounds(motion.GetComponent<BigBossModel>()).min.y, Is.GreaterThan(0.3f), "足の先も床から離れている");
+            Assert.That(Bounds(motion.GetComponent<BigBossModel>()).min.y, Is.GreaterThan(clearance), "足の先も床から離れている");
         }
 
         [Test]
-        public void AllMotions_StayAboveTheFloor([ValueSource(nameof(Bosses))] int no, [Values(BossAttackKind.Charge, BossAttackKind.Rain, BossAttackKind.Wave)] BossAttackKind kind)
+        public void AllMotions_StayAboveTheFloor([ValueSource(nameof(Bosses))] int no,
+            [Values(BossAttackKind.Charge, BossAttackKind.Rain, BossAttackKind.Wave, BossAttackKind.Gust, BossAttackKind.Vortex)] BossAttackKind kind)
         {
             var motion = Build(no);
             motion.Velocity = Vector3.forward * 2f;
@@ -156,6 +158,26 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
+        public void Shark_Submerged_KeepsOnlyItsDorsalFinAboveTheFloor_AndTurns()
+        {
+            var motion = Build(BigBossTable.SharkNo);
+            var model = motion.GetComponent<BigBossModel>();
+            motion.Submerged = true;
+            Run(motion, BigBossMotion.SubmergeSeconds + Step);
+
+            Assert.That(motion.IsUnderground, Is.True);
+            Assert.That(motion.KeepsFinUp, Is.True);
+            var top = Bounds(model).max.y;
+            Assert.That(top, Is.GreaterThan(0.3f), "背びれは床の上に出ている");
+            Assert.That(top, Is.LessThan(model.TopHeight * 0.5f), "体は床の下");
+
+            var yaw = motion.Pose.Yaw;
+            motion.Facing = Vector3.right;
+            Run(motion, 0.5f);
+            Assert.That(Mathf.DeltaAngle(yaw, motion.Pose.Yaw), Is.Not.EqualTo(0f).Within(1f), "もぐったまま向きを変えて走る");
+        }
+
+        [Test]
         public void DropIn_FallsFromAboveTheScreen_ThenLandsOnTheFloor([ValueSource(nameof(Bosses))] int no)
         {
             // 羽ばたきで上下する大ボスもいるので、降りてこない同じ大ボスと同じ時間だけ動かして比べる
@@ -211,6 +233,12 @@ namespace PenmonScramble.Tests
         [TestCase(BigBossTable.OrcaNo, 0, BossAttackKind.Wave)]
         [TestCase(BigBossTable.OrcaNo, 1, BossAttackKind.Charge)]
         [TestCase(BigBossTable.OrcaNo, 2, BossAttackKind.Charge)]
+        [TestCase(BigBossTable.FulmarNo, 0, BossAttackKind.Gust)]
+        [TestCase(BigBossTable.FulmarNo, 1, BossAttackKind.Vortex)]
+        [TestCase(BigBossTable.FulmarNo, 2, BossAttackKind.Charge)]
+        [TestCase(BigBossTable.SharkNo, 0, BossAttackKind.Fin)]
+        [TestCase(BigBossTable.SharkNo, 1, BossAttackKind.Ambush)]
+        [TestCase(BigBossTable.SharkNo, 2, BossAttackKind.Charge)]
         public void Telegraph_IsReadFromTheWarnings(int no, int attackIndex, BossAttackKind expected)
         {
             var world = Create();
@@ -218,7 +246,7 @@ namespace PenmonScramble.Tests
             boss.Brain.NextAttackIndex = attackIndex;
             world.AddUnit(Team.Player, Stats(Melee()), new Vec2(-4f, 3f), seat: 0);
             var recorder = new StageRecorder(world, round: 1);
-            Assert.That(BigBossTelegraph.Read(recorder.Capture().Warnings, boss.Position.ToVector2(), boss.IsSubmerged), Is.Null, "予告が出る前は構えない");
+            Assert.That(BigBossTelegraph.Read(recorder.Capture().Warnings), Is.Null, "予告が出る前は構えない");
 
             for (var i = 0; i < Seconds(Balance.BigBossFirstAttackDelay) + 2 && world.Warnings.Count == 0; i++)
             {
@@ -226,8 +254,7 @@ namespace PenmonScramble.Tests
             }
 
             var snapshot = StageCodec.DecodeSnapshot(StageCodec.EncodeSnapshot(recorder.Capture()));
-            snapshot.TryGetBoss(out var state);
-            Assert.That(BigBossTelegraph.Read(snapshot.Warnings, state.Position.ToVector2(), state.Has(UnitFlags.Submerged)), Is.EqualTo(expected));
+            Assert.That(BigBossTelegraph.Read(snapshot.Warnings), Is.EqualTo(expected));
         }
 
         [Test]
@@ -240,7 +267,7 @@ namespace PenmonScramble.Tests
             var model = view.GetComponentInChildren<BigBossModel>(true);
             var motion = view.GetComponentInChildren<BigBossMotion>(true);
 
-            var circle = new List<WarningState> { new WarningState(9, new Vec2(3f, 2f), new Vec2(3f, 2f), 1.6f, 0f) };
+            var circle = new List<WarningState> { new WarningState(9, BossAttackKind.Ambush, new Vec2(3f, 2f), new Vec2(3f, 2f), 1.6f, 0f, 0f) };
             view.PushState(BossState(UnitFlags.Boss | UnitFlags.Submerged), Balance.TickSeconds);
             view.PushWarnings(circle);
             Assert.That(motion.Telegraph, Is.EqualTo(BossAttackKind.Ambush));

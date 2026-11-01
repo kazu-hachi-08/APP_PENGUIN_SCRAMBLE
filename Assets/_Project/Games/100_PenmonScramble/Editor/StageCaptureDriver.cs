@@ -77,19 +77,23 @@ namespace PenmonScramble.Editor
             }
         }
 
-        // ワールド1は2人で戦いの流れを、ワールド2・3は床の見た目を撮る。最後に状態の見た目
+        // ワールド1は2人で戦いの流れを、ワールド2〜5は床の見た目を撮る。最後に状態の見た目
         // （status1_1: P1 の突進の残像・P2 のダウン、_2: 凍る・敵は暗い、_3: 交代の煙、_4: 氷が砕ける・被弾で白く光る）。
         // 突進は台本の戦いで最初に出るもの（種が同じなので毎回同じ時刻）を撮る。
-        // 大ボスは攻撃の順がひと回りする数だけ撮る（boss3: カモメ、boss6: アザラシ、boss9: シャチ。奇数枚目が構え・偶数枚目が攻撃）
+        // 大ボスは攻撃の順がひと回りする数だけ撮る（boss3: カモメ、boss6: アザラシ、boss9: シャチ、boss12: オオフルマカモメ、boss15: サメ。奇数枚目が構え・偶数枚目が攻撃）
         private static readonly Scene[] Scenes =
         {
             new Scene(1, 2, false, 0.1f, 1.2f, 2.5f, 4f, 6f),
             new Scene(4, 1, false, 2f),
             new Scene(7, 1, false, 2f),
+            new Scene(10, 1, false, 2f),
+            new Scene(13, 1, false, 2f),
             new Scene(1, 2, true, 0.3f, 0.7f, SwitchAt + 0.05f, FreezeUntil + 0.06f),
             Scene.BigBoss(3, BigBossTable.SkuaNo, 2),
             Scene.BigBoss(6, BigBossTable.LeopardSealNo, 2),
             Scene.BigBoss(9, BigBossTable.OrcaNo, 3),
+            Scene.BigBoss(12, BigBossTable.FulmarNo, 3),
+            Scene.BigBoss(15, BigBossTable.SharkNo, 3),
         };
 
         private StageView _view;

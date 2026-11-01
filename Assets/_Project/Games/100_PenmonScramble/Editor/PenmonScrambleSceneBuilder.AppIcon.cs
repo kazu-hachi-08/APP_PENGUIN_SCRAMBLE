@@ -55,6 +55,13 @@ namespace PenmonScramble.Editor
 
             Directory.CreateDirectory(IconFolder);
             var (figure, adaptiveFigure) = ShootIconFigures();
+            // 撮り損ねたアデリンで作ると、配る版のアイコンまで壊れる。そのときは前のアイコンをそのまま使う
+            if (IsBlankShot(figure) || IsBlankShot(adaptiveFigure))
+            {
+                Debug.LogWarning("[PenmonScrambleSceneBuilder] アイコンのアデリンがほとんど1色で撮れたので、前のアイコンを残しました。もう一度 Rebuild してください");
+                return;
+            }
+
             var background = DrawIconBackground(IconSize);
             var full = Composite(background, figure);
             var changed = 0;

@@ -19,7 +19,7 @@ namespace PenmonScramble.Editor
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private const string ScenePath = "Assets/_Project/Games/100_PenmonScramble/Scenes/" + SceneNames.PenmonScramble + ".unity";
+        public const string ScenePath = "Assets/_Project/Games/100_PenmonScramble/Scenes/" + SceneNames.PenmonScramble + ".unity";
 
         // 横画面の基準解像度。共通基盤のダイアログと同じ値にそろえる
         private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
@@ -74,11 +74,10 @@ namespace PenmonScramble.Editor
             var gacha = CreateGachaScreen(canvas.transform);
             var penguins = CreatePenguinListScreen(canvas.transform);
             // ステージ中のメニューは HUD の上、遊び方はタイトルとメニューの両方から開くので一番上
-            var pause = UIDialogBuilder.CreatePauseDialog(canvas.transform, MenuHeading, withHelp: true);
             var confirm = UIDialogBuilder.CreateCommonDialog(canvas.transform);
             var howToPlay = CreateHowToPlayScreen(canvas.transform);
-            var titleMenu = CreateTitleMenu(title, gacha, penguins, howToPlay);
-            var stageMenu = CreateStageMenu(menuButton, pause, confirm, howToPlay);
+            var titleMenu = CreateTitleMenu(title, gacha, penguins, howToPlay, confirm);
+            var stageMenu = CreateStageMenu(canvas.transform, menuButton, howToPlay);
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);
             CreateCreatureArt();
@@ -225,6 +224,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_session").objectReferenceValue = session;
             so.FindProperty("_modeSelect").objectReferenceValue = title;
             so.FindProperty("_titleMenu").objectReferenceValue = titleMenu;
+            so.FindProperty("_rushLobby").objectReferenceValue = title.GetComponent<RushLobby>();
             so.FindProperty("_menu").objectReferenceValue = stageMenu;
             so.FindProperty("_touch").objectReferenceValue = touch;
             so.ApplyModifiedProperties();
@@ -247,6 +247,22 @@ namespace PenmonScramble.Editor
             text.fontSize = fontSize;
             text.color = TextColor;
             return text;
+        }
+
+        // 日本語フォント（M PLUS Rounded）の1行の高さは、字の大きさのおよそ 1.4 倍（UiLayoutCheck で測った値に少し余裕を足す）
+        private const float FontLineHeightRatio = 1.45f;
+
+        /// <summary>
+        /// 1字の記号（× ◇ など）や短い名札を、字の大きさに近い枠に置くと、字は収まっても行の高さが枠からはみ出す。
+        /// 字の位置（真ん中）は変えずに、行が収まるまで枠を上下に同じだけ広げる
+        /// </summary>
+        private static void FitLineHeight(Text text)
+        {
+            var rect = text.rectTransform;
+            var extra = text.fontSize * FontLineHeightRatio - rect.rect.height;
+            if (extra <= 0f) return;
+            rect.offsetMin -= new Vector2(0f, extra * 0.5f);
+            rect.offsetMax += new Vector2(0f, extra * 0.5f);
         }
 
         private static void AddToBuildSettings()

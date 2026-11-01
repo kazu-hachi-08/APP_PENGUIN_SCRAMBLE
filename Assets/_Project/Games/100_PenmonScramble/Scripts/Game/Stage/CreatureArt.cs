@@ -15,11 +15,13 @@ namespace PenmonScramble.Game
         /// <summary>添字は種類の番号-1</summary>
         [SerializeField] private Sprite[] _penguins = new Sprite[SpeciesTable.Count];
         /// <summary>添字は大ボスの番号-101</summary>
-        [SerializeField] private Sprite[] _bigBosses = new Sprite[Balance.WorldCount];
+        [SerializeField] private Sprite[] _bigBosses = new Sprite[BigBossTable.Count];
         /// <summary>添字はワールド-1。1エリア分（16×9マス）に引き伸ばして敷く</summary>
         [SerializeField] private Sprite[] _grounds = new Sprite[Balance.WorldCount];
         /// <summary>添字はワールド-1。大ボスの闘技場の床。楕円を囲む四角（32×18マス）に引き伸ばして、楕円の形に切って敷く</summary>
         [SerializeField] private Sprite[] _arenaGrounds = new Sprite[Balance.WorldCount];
+        /// <summary>ボスラッシュのコロシアムの床（石の円形の舞台）。1枚の絵に、ステージごとにワールドの色を掛けて敷く</summary>
+        [SerializeField] private Sprite _colosseum;
 
         private static CreatureArt _instance;
 
@@ -51,6 +53,9 @@ namespace PenmonScramble.Game
 
         /// <summary>闘技場の床の絵。無ければ null（ワールドの地面で代わりに敷く）</summary>
         public static Sprite ArenaGround(int world) => _instance != null ? At(_instance._arenaGrounds, world - 1) : null;
+
+        /// <summary>コロシアムの床の絵。無ければ null（ワールドの闘技場の絵で代わりに敷く）</summary>
+        public static Sprite Colosseum() => _instance != null && _instance._colosseum != null ? _instance._colosseum : null;
 
         /// <summary>UI の顔（カード・ガチャ・カットイン）。絵の無い種類（新しい版で増えた子など）は出さない</summary>
         public static void ShowFace(Image image, int speciesNo)

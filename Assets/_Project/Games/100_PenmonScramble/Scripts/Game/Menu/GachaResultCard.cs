@@ -31,7 +31,7 @@ namespace PenmonScramble.Game
             _elementChip.color = PenguinPalette.ElementColor(species.Element);
             _elementText.text = PenguinLabels.ElementName(species.Element);
             _personalityText.text = SpeciesTexts.Personality(species.No);
-            _statsText.text = $"パワー <b>{penguin.power}</b>　　HP <b>{PlayerRecord.StatsOf(penguin).MaxHp}</b>";
+            _statsText.text = $"パワー <b>{penguin.Power}</b>　　HP <b>{PlayerRecord.StatsOf(penguin).MaxHp}</b>";
             for (var i = 0; i < _skillCards.Length; i++)
             {
                 _skillCards[i].Show(species, i, false);

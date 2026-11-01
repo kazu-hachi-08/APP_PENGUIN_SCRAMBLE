@@ -1,7 +1,7 @@
 """ComfyUI（Comfy Desktop）の API で、ワールドの地面の絵と大ボスの闘技場の床の絵（§9）を作る。
 Comfy Desktop を起動しておく（モデル: DreamShaperXL_Turbo_v2_1）。元絵は Tools/Art/raw/（git には入れない）に出し、
-同じ絵を Art/Stage/World<n>.png（地面）・Arena<n>.png（闘技場）へ置く。
-使い方: python gen.py <name> [<name> ...]   （name: w1..w3, a1..a3, all）
+同じ絵を Art/Stage/World<n>.png（地面）・Arena<n>.png（闘技場）・Colosseum.png（ボスラッシュのコロシアム）へ置く。
+使い方: python gen.py <name> [<name> ...]   （name: w1..w5, a1..a5, c1, all）
 seed を変えて作り直すとき: python gen.py w1:1234 。気に入ったら SEEDS に書いておく
 """
 import json, sys, time, urllib.request, os, shutil
@@ -20,12 +20,21 @@ GROUNDS = {
     1: "sunny sandy beach with small scattered ice floes and pebbles, shallow sea foam along the top edge, warm sand color",
     2: "flat smooth frozen lake ice surface, pale light blue ice surface with subtle thin cracks and scattered small snow patches, uniform floor texture filling the whole image, pale cyan",
     3: "dark night ocean surface with floating ice sheets and cracks in the ice, deep navy blue, faint moonlight reflections",
+    4: "flat weathered grey slate rock ground on a cliff top, smooth stone with faint cracks, thin wet streaks and a few small white sea spray foam patches, cold grey blue, uniform floor texture filling the whole image",
+    5: "flat smooth dark grey brown volcanic rock ground covered in fine ash, only a few very thin faint dim orange lava cracks far apart, mostly plain rock, muted warm brown, uniform floor texture filling the whole image",
 }
 # 闘技場の床。楕円（横32×縦18マス）を囲む四角に引き伸ばして貼るので、まん中を中心にした模様にする
 ARENAS = {
     1: "sand arena floor, smooth packed sand raked into faint concentric oval rings around the center, a few small pebbles, warm beige sand",
     2: "close-up of a smooth polished pale blue ice surface filling the whole image edge to edge, faint white skate scratches curving around the center, light frost, uniform floor texture, pale cyan",
     3: "flat floor of pale blue ice slabs fitted together like paving, filling the whole image edge to edge, thin dark navy sea water showing in the narrow cracks between the slabs, faint moonlight glow, uniform floor texture",
+    4: "flat floor of smooth grey stone slabs fitted together in faint concentric oval rings around the center, wet sheen from sea spray, small white foam streaks, filling the whole image edge to edge, cold grey blue, uniform floor texture",
+    5: "flat floor of large smooth dark grey brown basalt stone plates fitted tightly together around the center, very thin faint dim orange glow in a few of the seams, mostly plain stone, muted warm brown, filling the whole image edge to edge, uniform floor texture",
+}
+# ボスラッシュのコロシアムの床。1枚を5つのステージで使い回し、ゲームの中でワールドの色を掛けるので、明るく色の少ない石にする。
+# 柱と旗は3Dの柵（ArenaFence）で立てるので、絵は床だけ
+COLOSSEUM = {
+    1: "round stone colosseum arena floor, large pale grey limestone paving slabs laid in concentric circular rings around a round center medallion, thin seams between the stones, slightly worn, faint dust, filling the whole image edge to edge, uniform floor texture, light neutral grey stone",
 }
 GROUND_NEG = ("text, letters, logo, watermark, characters, animals, penguins, people, horizon, sky, perspective, "
               "blurry, lowres, high contrast, busy, cluttered, frame, border, hole, pit, crater, walls, edges")
@@ -46,7 +55,7 @@ def workflow(pos, neg, w, h, seed, prefix):
 
 
 # 絵の種類ごとの（プロンプト、既定の seed の始まり、Unity に置く名前）
-KINDS = {"w": (GROUNDS, 9000, "World"), "a": (ARENAS, 9500, "Arena")}
+KINDS = {"w": (GROUNDS, 9000, "World"), "a": (ARENAS, 9500, "Arena"), "c": (COLOSSEUM, 9800, "Colosseum")}
 
 
 def job(name, seed=None):
@@ -59,7 +68,9 @@ def job(name, seed=None):
 
 
 def art_path(name):
-    return os.path.join(STAGE_ART, f"{KINDS[name[0]][2]}{name[1:]}.png")
+    # コロシアムは1枚だけなので、番号を付けない
+    suffix = "" if name[0] == "c" else name[1:]
+    return os.path.join(STAGE_ART, f"{KINDS[name[0]][2]}{suffix}.png")
 
 
 def post(path, data):
@@ -100,7 +111,7 @@ if __name__ == "__main__":
     names = []
     for a in sys.argv[1:]:
         if a == "all":
-            names += [f"w{i}" for i in GROUNDS] + [f"a{i}" for i in ARENAS]
+            names += [f"w{i}" for i in GROUNDS] + [f"a{i}" for i in ARENAS] + [f"c{i}" for i in COLOSSEUM]
         else:
             names.append(a)
     for a in names:

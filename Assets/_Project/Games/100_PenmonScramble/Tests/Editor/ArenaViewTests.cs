@@ -219,5 +219,32 @@ namespace PenmonScramble.Tests
 
             Assert.That(nearestOutside, Is.GreaterThan(Balance.ArenaDoorHalfWidth));
         }
+
+        [Test]
+        public void ChainedArenas_ExitPostsSitOnTheRightTip()
+        {
+            var stage = DevStageTable.ArenaGauntlet;
+            var arena = StageLayout.Area(stage, 0);
+            var exit = StageLayout.Passage(stage, 1);
+            var posts = ArenaFence.PostPoints(arena, ArenaFence.PostSpacing);
+
+            var door = posts.FindAll(p => ArenaFence.IsInDoorway(p, exit));
+
+            Assert.That(door.Count, Is.InRange(1, 5));
+            Assert.That(door.TrueForAll(p => p.x > arena.Center.X), Is.True, "出口は右端だけ");
+        }
+
+        [Test]
+        public void CorridorFence_StartsWhereTheArenaFenceCrossesTheCorridorEdge()
+        {
+            var arena = StageLayout.Area(DevStageTable.ArenaGauntlet, 1);
+            var half = Balance.ArenaDoorHalfWidth;
+            var x = arena.Min.X + ArenaFence.TipInset(arena, half);
+
+            // 柵の縁（楕円）の上にある
+            var dx = (x - arena.Center.X) / (arena.Width * 0.5f);
+            var dy = half / (arena.Height * 0.5f);
+            Assert.That(dx * dx + dy * dy, Is.EqualTo(1f).Within(Tolerance));
+        }
     }
 }

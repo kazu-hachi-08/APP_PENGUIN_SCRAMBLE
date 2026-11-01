@@ -16,6 +16,8 @@ namespace PenmonScramble.Game
         private const float BannerPopSeconds = 0.18f;
         private const float BannerPopScale = 0.35f;
         private const string GateOpenMessage = "すすめ →";
+        private const string RoundClearMessage = "ROUND CLEAR!";
+        private const string FinalRoundMessage = "FINAL ROUND";
         // 残りの敵のアイコンは、雑魚と同じく暗くしたペンモンの顔
         private const int EnemyIconSpecies = 1;
         private static readonly Color WildFaceColor = Color.Lerp(Color.white, Color.black, UnitView.EnemyDarkness);
@@ -47,12 +49,12 @@ namespace PenmonScramble.Game
 
         public void SetProgress(StageSnapshot snapshot)
         {
-            _areaPips.Set(snapshot.AreaIndex, snapshot.AreaCount);
+            _areaPips.Set(snapshot.AreaIndex, snapshot.AreaCount, IsRoundStage(snapshot));
             var gateOpen = snapshot.IsGateOpen;
             _enemyIcon.gameObject.SetActive(!gateOpen);
             _enemyText.text = gateOpen ? GateOpenMessage : $"のこり {snapshot.CountAlive(Team.Enemy)}";
             _enemyText.color = gateOpen ? _gateTextColor : _enemyTextColor;
-            Announce(snapshot, snapshot.IsBossArea);
+            Announce(snapshot);
             AnnounceCombos(snapshot);
             SetBoss(snapshot);
         }
@@ -63,23 +65,45 @@ namespace PenmonScramble.Game
             _edgeMarkers.Set(snapshot, localSeat, seatColor);
         }
 
-        /// <summary>エリアに入ったとき・出入口が開いたときに、画面の真ん中に大きく出す</summary>
-        private void Announce(StageSnapshot snapshot, bool isBossArea)
+        /// <summary>
+        /// エリアに入ったとき・出入口が開いたときに、画面の真ん中に大きく出す。
+        /// 闘技場が続くステージ（ボスラッシュ）は「ROUND 2」、闘技場で勝って通り道が開いたら「ROUND CLEAR!」
+        /// </summary>
+        private void Announce(StageSnapshot snapshot)
         {
             if (snapshot.Round != _announcedRound || snapshot.AreaIndex != _announcedArea)
             {
                 _announcedRound = snapshot.Round;
                 _announcedArea = snapshot.AreaIndex;
                 _announcedGate = false;
-                ShowBanner(isBossArea ? "ボスエリア！" : $"エリア {snapshot.AreaIndex + 1}");
+                ShowBanner(AreaBanner(snapshot));
                 return;
             }
 
             if (snapshot.IsGateOpen && !_announcedGate)
             {
                 _announcedGate = true;
-                ShowBanner(GateOpenMessage);
+                ShowBanner(snapshot.ArenaRound > 0 ? RoundClearMessage : GateOpenMessage);
             }
+        }
+
+        /// <summary>闘技場の連戦のステージ（ボスラッシュ）か。エリアの進み具合を「ROUND」で数える</summary>
+        public static bool IsRoundStage(StageSnapshot snapshot)
+        {
+            var stage = Stages.Get(snapshot.StageNo);
+            return stage != null && stage.ArenaCount > 1 && stage.ArenaCount == stage.Areas.Count;
+        }
+
+        private static string AreaBanner(StageSnapshot snapshot)
+        {
+            var stage = Stages.Get(snapshot.StageNo);
+            if (stage != null && stage.ArenaCount > 1 && snapshot.ArenaRound > 0)
+            {
+                // 最後の戦い（ボスラッシュは本気の大ボス）は、特別に知らせて気を引きしめる
+                return snapshot.ArenaRound == stage.ArenaCount ? FinalRoundMessage : $"ROUND {snapshot.ArenaRound}";
+            }
+
+            return snapshot.IsBossArea ? "ボスエリア！" : $"エリア {snapshot.AreaIndex + 1}";
         }
 
         /// <summary>同じ回にいくつ起きても、最後の1つだけ出す（文字が重なって読めなくなるため）</summary>

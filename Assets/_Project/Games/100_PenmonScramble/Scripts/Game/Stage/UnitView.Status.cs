@@ -53,6 +53,7 @@ namespace PenmonScramble.Game
             _flashTimer -= dt;
             TickPop(dt);
             TickUnderground(dt);
+            TickRageSteam(dt);
             ApplyStatus();
         }
 
@@ -120,10 +121,11 @@ namespace PenmonScramble.Game
                 return true;
             }
 
-            // もぐっている大ボスは、床の下へ沈みきったら体を出さず、床の暗い影だけ見せる（UnitView.BigBoss.cs）
+            // もぐっている大ボスは、床の下へ沈みきったら体を出さず、床の暗い影だけ見せる（UnitView.BigBoss.cs）。
+            // サメは床の上に背びれを出したまま走るので、体（床の下に沈んだ分は床に隠れる）を出しておく
             if (IsSubmerged)
             {
-                return _bigBoss != null && !_bigBoss.IsUnderground;
+                return _bigBoss != null && (!_bigBoss.IsUnderground || _bigBoss.KeepsFinUp);
             }
 
             return !IsInvincible || Mathf.Repeat(_statusTime * InvincibleBlinkPerSecond, 1f) < 0.5f;

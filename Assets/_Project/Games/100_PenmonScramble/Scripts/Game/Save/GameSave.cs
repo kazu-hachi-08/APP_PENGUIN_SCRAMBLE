@@ -10,6 +10,7 @@ namespace PenmonScramble.Game
     {
         private static readonly SaveStore Store = new SaveStore(new PlayerPrefsStorage(), new JsonFormat());
         private static PlayerRecord _record;
+        private static bool _oldRecordNoticePending;
 
         public static PlayerRecord Record
         {
@@ -22,10 +23,23 @@ namespace PenmonScramble.Game
                     {
                         Debug.LogWarning($"[GameSave] 記録が読めなかったので {Store.LastBrokenKey} に退避して新しく始めます");
                     }
+
+                    _oldRecordNoticePending = Store.DiscardedOldRecord;
                 }
 
                 return _record;
             }
+        }
+
+        /// <summary>
+        /// 古い版（v1）の記録を消して初めからにしたなら、1回だけ true を返す（タイトルで一言知らせる）
+        /// </summary>
+        public static bool TakeOldRecordNotice()
+        {
+            _ = Record;
+            var pending = _oldRecordNoticePending;
+            _oldRecordNoticePending = false;
+            return pending;
         }
 
         public static void Save()

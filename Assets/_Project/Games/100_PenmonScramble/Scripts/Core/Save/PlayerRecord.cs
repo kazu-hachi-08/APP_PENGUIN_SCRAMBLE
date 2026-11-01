@@ -130,7 +130,7 @@ namespace PenmonScramble.Core
 
         public static UnitStats StatsOf(OwnedPenguin penguin)
         {
-            return SpeciesTable.PlayerStats(SpeciesTable.Get(penguin.speciesNo), penguin.power);
+            return SpeciesTable.PlayerStats(SpeciesTable.Get(penguin.speciesNo), penguin.Power);
         }
 
         /// <summary>
@@ -153,6 +153,9 @@ namespace PenmonScramble.Core
             record.FillParty();
             foreach (var penguin in data.penguins)
             {
+                // 手で書き換えた記録などで、ありえない育ち方にならないように
+                penguin.boost = Math.Max(0, penguin.boost);
+                penguin.limitBreak = Math.Clamp(penguin.limitBreak, 0, Balance.MaxLimitBreak);
                 data.nextPenguinId = Math.Max(data.nextPenguinId, penguin.id + 1);
             }
         }
@@ -161,7 +164,7 @@ namespace PenmonScramble.Core
         private void FillParty()
         {
             var candidates = Data.penguins.FindAll(p => IsUsable(p) && !IsInParty(p.id));
-            candidates.Sort((a, b) => b.power.CompareTo(a.power));
+            candidates.Sort((a, b) => b.Power.CompareTo(a.Power));
             foreach (var penguin in candidates)
             {
                 if (Data.party.Count >= Balance.PartySize)

@@ -50,7 +50,7 @@ namespace PenmonScramble.Game
         /// </summary>
         public void PushWarnings(IReadOnlyList<WarningState> warnings)
         {
-            var kind = BigBossTelegraph.Read(warnings, _to, IsSubmerged);
+            var kind = BigBossTelegraph.Read(warnings);
             if (_telegraph.HasValue && !kind.HasValue)
             {
                 _bigBoss.PlayStrike(_telegraph.Value);

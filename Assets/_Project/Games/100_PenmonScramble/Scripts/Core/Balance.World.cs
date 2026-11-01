@@ -5,11 +5,12 @@ namespace PenmonScramble.Core
     /// <summary>ワールドごとの敵の強さと、大ボスの調整値</summary>
     public static partial class Balance
     {
-        public const int WorldCount = 3;
+        public const int WorldCount = 5;
 
         // ワールドごとの敵の HP・攻撃の倍率。添字はワールド-1。
-        // ガチャのパワーの範囲（PowerMins / PowerMaxes の真ん中 100 / 200 / 340）に合わせて、先のワールドでも手ごたえを残す
-        private static readonly float[] WorldEnemyScales = { 1f, 2f, 3.4f };
+        // ガチャのパワーの範囲（PowerMins / PowerMaxes の真ん中 100 / 200 / 340 / 520 / 740）に合わせて、先のワールドでも手ごたえを残す。
+        // ワールド4・5は、その頃の編成に ★3 が混ざって強くなる分を上乗せする（バランスの試験場で、各ワールドの手ごたえがそろう値にした）
+        private static readonly float[] WorldEnemyScales = { 1f, 2f, 3.4f, 6.4f, 9.4f };
 
         public static float WorldEnemyScale(int world)
         {
@@ -20,7 +21,7 @@ namespace PenmonScramble.Core
         /// <summary>大ボスの HP ＝ 種類の HP の倍率 × EnemyPower × これ × 人数の倍率 × ワールドの倍率。ステージのボス（BossHpScale）より硬い</summary>
         public const float BigBossHpScale = 30f;
         /// <summary>大ボスの攻撃 ＝ これ × ワールドの倍率。技の威力に掛ける</summary>
-        public const float BigBossAttack = 1f;
+        public const float BigBossAttack = 1.5f;
         /// <summary>大ボスが飛ばされる強さの割合。攻撃の予告の場所がずれないよう、ほとんど動かさない</summary>
         public const float BigBossKnockbackScale = 0.1f;
         /// <summary>攻撃と攻撃の間は、一番近いプレイヤーからこれだけ離れた所まで寄る（マス）。くっついて押し合いにならないように</summary>

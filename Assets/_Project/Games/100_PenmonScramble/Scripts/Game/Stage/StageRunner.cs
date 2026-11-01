@@ -11,7 +11,8 @@ namespace PenmonScramble.Game
     /// <summary>
     /// タイトル（ひとりで / 部屋を作る / コードで参加）からステージを始め、入力・HUD・結果をつなぐ。
     /// 計算はソロとホストが StageHost、ゲストは StageGuest で、どちらもスナップショットを StageView に渡して描く。
-    /// ステージはホストがタイトルで選んだもの、連れていくのは各自の記録の編成。報酬は各自の記録に書く。
+    /// 「ひとりで遊ぶ」はロビーのカードで選んだストーリー、「みんなで遊ぶ」はホストが待ちの窓で選んだボスラッシュ（RushLobby）。
+    /// 連れていくのは各自の記録の編成。報酬は各自の記録に書く。
     /// BGM はタイトル・ステージ・ボスエリアで切り替え、結果で止めてジングルを鳴らす。
     /// 遊んでいる間はメニュー（StageMenu）を開ける。開いている間は自分の入力を「メニュー中」にする。
     /// スマホのボタンは遊んでいる間だけ出し、場に出ている子の技・待ち・ゲージを映す（TouchControlsView）
@@ -25,6 +26,7 @@ namespace PenmonScramble.Game
         [SerializeField] private OnlineSession _session;
         [SerializeField] private ModeSelectPanel _modeSelect;
         [SerializeField] private TitleMenu _titleMenu;
+        [SerializeField] private RushLobby _rushLobby;
         [SerializeField] private StageMenu _menu;
         [SerializeField] private TouchControlsView _touch;
 
@@ -52,6 +54,24 @@ namespace PenmonScramble.Game
             _session.ContinueWhenMemberLeaves = true;
             _modeSelect.ShowMultiplayer(StartSolo, StartOnline, Balance.MaxPlayers);
             PlayMusic(MusicTrack.Title);
+            StartDevStageIfRequested();
+        }
+
+        /// <summary>
+        /// エディタの Tools/PenmonScramble/Dev から開いたときは、タイトルを飛ばして開発用のステージをひとりで始める
+        /// （「ひとりで遊ぶ」を押したのと同じ流れ）
+        /// </summary>
+        private void StartDevStageIfRequested()
+        {
+            if (!DevStageRequest.TryTake(out var stageNo, out var difficulty) || Stages.Get(stageNo) == null)
+            {
+                return;
+            }
+
+            _modeSelect.gameObject.SetActive(false);
+            SeatNames.UseSolo(UserProfile.Name);
+            _menu.Bind(solo: true, canRestart: true);
+            StartHost(1, null, Stages.Get(stageNo), difficulty);
         }
 
         private void OnDestroy()
@@ -73,7 +93,7 @@ namespace PenmonScramble.Game
             // 協力の名前は OnlineSession が配る。ひとりのときは自分の名前だけ
             SeatNames.UseSolo(UserProfile.Name);
             _menu.Bind(solo: true, canRestart: true);
-            StartHost(1, null);
+            StartHost(1, null, SelectedStage, Difficulty.Normal);
         }
 
         private void StartOnline(int seat, int playerCount)
@@ -85,14 +105,16 @@ namespace PenmonScramble.Game
             _session.OnPeerDisconnected += ReturnToTitle;
             _session.OnConnectionLost += ReturnToTitle;
 
-            // 「やり直し」は全員の挑戦を始め直すので、ホストだけが押せる
-            _menu.Bind(solo: false, canRestart: seat == StageHost.LocalSeat);
+            // 「やり直し」は全員の挑戦を始め直すので、ホストだけが押せる。
+            // ホストがひとりで始めたときは、ひとりで遊ぶのと同じくメニューで止める（待っている仲間がいないので）
+            _menu.Bind(solo: playerCount == 1, canRestart: seat == StageHost.LocalSeat);
             if (seat == StageHost.LocalSeat)
             {
                 _session.OnMemberLeft += OnMemberLeft;
                 _link.InputReceived += OnRemoteInput;
                 _link.PartyReceived += OnRemoteParty;
-                StartHost(playerCount, _link);
+                var choice = _rushLobby.Choice;
+                StartHost(playerCount, _link, RushTable.Get(choice.StageNo) ?? RushTable.Get(RushTable.FirstNo), choice.Difficulty);
                 return;
             }
 
@@ -101,12 +123,14 @@ namespace PenmonScramble.Game
             _link.SendParty(StageCodec.EncodeParty(GameSave.Record.PartyPenguins()));
         }
 
+        /// <summary>ロビーのカードで選んだストーリーのステージ（ひとりで遊ぶ）</summary>
+        private StageDef SelectedStage => StageTable.Get(_titleMenu.SelectedStageNo) ?? StageTable.Stage1;
+
         /// <summary>最初の挑戦は、ゲストの編成がそろってから StageHost が始める</summary>
-        private void StartHost(int playerCount, StageLink link)
+        private void StartHost(int playerCount, StageLink link, StageDef stage, Difficulty difficulty)
         {
             SetLocalSeat(StageHost.LocalSeat);
-            var stage = StageTable.Get(_titleMenu.SelectedStageNo) ?? StageTable.Stage1;
-            _host = new StageHost(_view, link, playerCount, stage, GameSave.Record.PartyStats());
+            _host = new StageHost(_view, link, playerCount, stage, GameSave.Record.PartyStats(), difficulty);
         }
 
         private void SetLocalSeat(int seat)
@@ -158,11 +182,13 @@ namespace PenmonScramble.Game
 
             UpdateHud(latest);
             _menu.SetAvailable(latest.Result == StageResult.Playing);
-            _touch.SetShown(latest.Result == StageResult.Playing);
+            // メニューを開いている間は、スマホのボタンを隠す（メニューの札と重ねず、押しても届かないことを見せる）
+            _touch.SetShown(latest.Result == StageResult.Playing && !_menu.IsOpen);
             UpdateResult(latest, input);
             if (latest.Result == StageResult.Playing)
             {
-                PlayMusic(latest.IsBossArea ? MusicTrack.Boss : MusicTrack.Stage);
+                // 闘技場の連戦（ボスラッシュ）は、どの戦いもボスの曲
+                PlayMusic(latest.IsBossArea || latest.ArenaRound > 0 ? MusicTrack.Boss : MusicTrack.Stage);
             }
         }
 
@@ -193,10 +219,13 @@ namespace PenmonScramble.Game
                 _touch.Show(_lastPlayerState, fallen: state == null);
             }
 
+            _menu.SetStatus(snapshot, _lastPlayerState, fallen: state == null);
+
             _hud.SetProgress(snapshot);
             _hud.SetEdgeMarkers(snapshot, _localSeat, _seatColor);
             // 自分の3体が届くまでは中身が空なので出さない（ゲストは最初のスナップショットまで）
-            _hud.SetShown(_lastPlayerState != null);
+            // メニューを開いている間は隠す（メニューの帯と右の欄が、同じことをもっと大きく出す。協力は後ろが透けて重なるため）
+            _hud.SetShown(_lastPlayerState != null && !_menu.IsOpen);
         }
 
         private void Retry()

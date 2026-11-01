@@ -36,11 +36,13 @@
 - **読めない記録を上書きしない:** 読めなかった記録は消さずに残す（別のキーに退避するなど）。
 - **保存先が変わる設定は触らない:** Player Settings の Company Name / Product Name、Android のパッケージ名と署名キー、WebGL の公開 URL（パス）を変えると保存先が変わる。変える必要があるときは、作業前にユーザーに確認する。
 - **迷ったら止まる:** 記録が読めなくなるかもしれない変更は、実装する前にユーザーに説明して確認を取る。
+- **過去の例外（v1 → v2）:** 大型アップデート v2 で、ユーザーの承認を得て version 1 の記録だけを消して初めからにした（`SaveStore.OldestReadableVersion = 2`）。この値は上げないこと。v2 からはまた上のルールどおり「足すだけ」。
 
 ## 4. リリース
 - ビルド: Unity の `Tools > PenmonScramble > Release > Windows / Web`（bat が読むリポジトリの隣のフォルダへ出力する）。
 - Windows 版: `Tools/Release/release-windows-test.bat`（テスト版）/ `release-windows.ps1 -Version vX.Y`。配った版は `UpdateNotice` / `PenmonScramble_Start.bat` から自動で更新される。
 - ブラウザ版: `Tools/Release/release-web.bat`（GitHub Pages の `penmon-scramble-web` に公開）。
+- Android 版: まだ配っていない。`Tools > PenmonScramble > Release > Android（つないだ端末に入れる）` で `Builds/Android/PenmonScramble.apk` を作り、USB でつないだ端末へ入れて起動する（署名は Unity の仮の鍵。配る前に正式な鍵を決める＝ユーザーに確認）。
 - 詳しくは各スクリプトの先頭コメントを参照。
 
 ## 5. AIへの指示（回答のスタンス）

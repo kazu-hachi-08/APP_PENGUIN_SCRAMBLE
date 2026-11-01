@@ -31,6 +31,16 @@ namespace PenmonScramble.Editor
         // 標準の体型（背の高さ約1.2）が絵の高さの 8 割ほどになる値
         private const float PenguinPortraitHalfSize = 0.78f;
 
+        // 撮った絵の写っている所のうち、いちばん多い色がこの割合を超えたら「シェーダーが間に合わず仮の色で描かれた」とみなす。
+        // まともな絵は陰の段・白黒の模様・縁の線で色が分かれて 0.13〜0.33 ほど、仮の色で撮れた絵は 0.6 ほどになる
+        private const float BlankShotDominantShare = 0.5f;
+        // 色を数えるときに下の桁を捨てる量（隣り合う陰のわずかな違いを同じ色として数える）
+        private const int BlankShotColorShift = 3;
+        // 半分より透けた所は縁のにじみなので数えない
+        private const byte BlankShotMinAlpha = 128;
+        // 準備の空撮りは小さくてよい（シェーダーを読み込ませるだけ）
+        private const int WarmUpShotSize = 64;
+
         private static string PenguinPortraitPath(int speciesNo) => $"{PortraitFolder}Penguin{speciesNo:00}.png";
 
         private static string BossPortraitPath(int bossNo) => $"{PortraitFolder}Boss{bossNo}.png";
@@ -51,34 +61,52 @@ namespace PenmonScramble.Editor
             WithPortraitStudio("PortraitStudio", (camera, materials, parent) =>
             {
                 var changed = 0;
+                var failed = 0;
                 for (var no = 1; no <= SpeciesTable.Count; no++)
                 {
                     var model = PenguinModelBuilder.Build(PenguinLooks.Get(no), materials, parent);
                     model.gameObject.AddComponent<PenguinMotion>().Apply(PenguinPose.Idle);
-                    changed += ShootPortrait(camera, model, PortraitYaw, PortraitPitch, PenguinPortraitHalfSize, PenguinPortraitPath(no)) ? 1 : 0;
+                    Tally(ShootPortrait(camera, model, PortraitYaw, PortraitPitch, PenguinPortraitHalfSize, PenguinPortraitPath(no)), ref changed, ref failed);
                 }
 
-                for (var i = 0; i < Balance.WorldCount; i++)
+                for (var i = 0; i < BigBossTable.Count; i++)
                 {
                     var no = BigBossTable.SkuaNo + i;
                     var model = BigBossModelBuilder.Build(no, materials, parent);
                     model.gameObject.AddComponent<BigBossMotion>().Apply(BigBossPose.Idle);
-                    changed += ShootPortrait(camera, model, BossPortraitYaw, BossPortraitPitch, 0f, BossPortraitPath(no)) ? 1 : 0;
+                    Tally(ShootPortrait(camera, model, BossPortraitYaw, BossPortraitPitch, 0f, BossPortraitPath(no)), ref changed, ref failed);
                 }
 
-                Debug.Log($"[PenmonScrambleSceneBuilder] UI の顔を撮りました（変わった絵 {changed} 枚）");
+                Debug.Log($"[PenmonScrambleSceneBuilder] UI の顔を撮りました（変わった絵 {changed} 枚・撮り損ねて前の絵のままにした絵 {failed} 枚）");
                 return changed;
             });
 
             AssetDatabase.Refresh();
         }
 
+        private enum ShotResult
+        {
+            Unchanged,
+            Written,
+            Failed,
+        }
+
+        private static void Tally(ShotResult result, ref int changed, ref int failed)
+        {
+            changed += result == ShotResult.Written ? 1 : 0;
+            failed += result == ShotResult.Failed ? 1 : 0;
+        }
+
         /// <summary>
         /// 撮影用の箱（ToonMaterials と studio の GameObject）を作り、中にカメラと太陽を置いて shoot で撮る。
-        /// 撮り終えたら（例外で止まっても）箱とマテリアルを消す
+        /// 撮り終えたら（例外で止まっても）箱とマテリアルを消す。
+        /// エディタはシェーダーを裏で読み込む（非同期コンパイル）ので、準備が間に合わない1枚目が仮の水色一色で撮れることがあった。
+        /// 撮る間だけ裏読み込みを止め、念のため空撮りで準備させてから撮る
         /// </summary>
         private static T WithPortraitStudio<T>(string name, System.Func<Camera, ToonMaterials, Transform, T> shoot)
         {
+            var asyncCompilation = ShaderUtil.allowAsyncCompilation;
+            ShaderUtil.allowAsyncCompilation = false;
             var materials = new ToonMaterials(AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader"), AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader"));
             var studio = new GameObject(name);
             try
@@ -86,13 +114,30 @@ namespace PenmonScramble.Editor
                 var camera = CreatePortraitCamera(studio.transform);
                 // ステージと同じ太陽。カメラが前から見るので、左上の奥からの光が顔の側を照らすように合わせて回す
                 CreateSunLight("PortraitSun", studio.transform, Quaternion.Euler(0f, 180f, 0f) * Quaternion.Euler(SunAngles), LightShadows.None);
+                WarmUpStudio(camera, materials, studio.transform);
                 return shoot(camera, materials, studio.transform);
             }
             finally
             {
                 Object.DestroyImmediate(studio);
                 materials.DestroyAll();
+                ShaderUtil.allowAsyncCompilation = asyncCompilation;
             }
+        }
+
+        /// <summary>ペンギンと大ボスを1体ずつ小さく撮って捨てる。本番の1枚目より先に、同じシェーダーで描かせておく</summary>
+        private static void WarmUpStudio(Camera camera, ToonMaterials materials, Transform parent)
+        {
+            WarmUpShot(camera, PenguinModelBuilder.Build(PenguinLooks.Get(1), materials, parent), PortraitYaw, PortraitPitch);
+            WarmUpShot(camera, BigBossModelBuilder.Build(BigBossTable.SkuaNo, materials, parent), BossPortraitYaw, BossPortraitPitch);
+        }
+
+        private static void WarmUpShot(Camera camera, ToyModel model, float yaw, float pitch)
+        {
+            PoseForPortrait(camera, model, yaw, pitch);
+            FramePortrait(camera, model, 0f);
+            Object.DestroyImmediate(StageCapture.RenderToTexture(camera, WarmUpShotSize, WarmUpShotSize, 1, TextureFormat.RGBA32));
+            Object.DestroyImmediate(model.gameObject);
         }
 
         private static Camera CreatePortraitCamera(Transform parent)
@@ -119,16 +164,52 @@ namespace PenmonScramble.Editor
             camera.transform.rotation = Quaternion.Euler(pitch, 180f, 0f);
         }
 
-        /// <summary>1体を撮って保存し、撮り終えたら消す。halfSize が 0 なら体に合わせて目いっぱいに撮る。書き直したら true</summary>
-        private static bool ShootPortrait(Camera camera, ToyModel model, float yaw, float pitch, float halfSize, string path)
+        /// <summary>
+        /// 1体を撮って保存し、撮り終えたら消す。halfSize が 0 なら体に合わせて目いっぱいに撮る。
+        /// 撮り損ねた絵（ほとんど1色）は書かずに前の絵を残す（正しい絵を壊さないため）
+        /// </summary>
+        private static ShotResult ShootPortrait(Camera camera, ToyModel model, float yaw, float pitch, float halfSize, string path)
         {
             PoseForPortrait(camera, model, yaw, pitch);
             FramePortrait(camera, model, halfSize);
             var texture = RenderPortrait(camera, PortraitSize);
-            var png = texture.EncodeToPNG();
+            var blank = IsBlankShot(texture.GetPixels32());
+            var png = blank ? null : texture.EncodeToPNG();
             Object.DestroyImmediate(texture);
             Object.DestroyImmediate(model.gameObject);
-            return WriteBytesIfChanged(path, png);
+            if (blank)
+            {
+                Debug.LogWarning($"[PenmonScrambleSceneBuilder] {path} がほとんど1色で撮れたので、書き込まずに前の絵を残しました。もう一度 Rebuild してください");
+                return ShotResult.Failed;
+            }
+
+            return WriteBytesIfChanged(path, png) ? ShotResult.Written : ShotResult.Unchanged;
+        }
+
+        /// <summary>
+        /// 何も写っていない、または写っている所のほとんどが同じ色なら、撮り損ねとみなす。
+        /// シェーダーの準備が間に合わないと、体・目・くちばしまで仮の色一色になり、縁の線だけが残る
+        /// </summary>
+        private static bool IsBlankShot(Color32[] pixels)
+        {
+            var counts = new Dictionary<int, int>();
+            var opaque = 0;
+            var top = 0;
+            foreach (var c in pixels)
+            {
+                if (c.a < BlankShotMinAlpha)
+                {
+                    continue;
+                }
+
+                opaque++;
+                var key = (c.r >> BlankShotColorShift) << 16 | (c.g >> BlankShotColorShift) << 8 | (c.b >> BlankShotColorShift);
+                counts.TryGetValue(key, out var count);
+                counts[key] = ++count;
+                top = Mathf.Max(top, count);
+            }
+
+            return opaque == 0 || top > opaque * BlankShotDominantShare;
         }
 
         /// <summary>

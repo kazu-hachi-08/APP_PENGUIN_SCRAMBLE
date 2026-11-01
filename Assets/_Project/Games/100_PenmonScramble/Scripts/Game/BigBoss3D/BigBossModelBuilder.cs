@@ -5,9 +5,9 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 大ボス3体を球・卵形・しずく形で組み立てる。形がペンギンと違うので、ペンギンの組み立て役とは分ける。
+    /// 大ボス5体を球・卵形・しずく形で組み立てる。形がペンギンと違うので、ペンギンの組み立て役とは分ける。
     /// 寸法は当たりの半径を 1 とした値（全体の大きさは根元の scale = 当たりの半径）。前は +Z、足元が原点。
-    /// 体ごとの組み立ては BigBossModelBuilder.Skua.cs / .Seal.cs / .Orca.cs。当たり判定（Collider）は付けない
+    /// 体ごとの組み立ては BigBossModelBuilder.Skua.cs / .Seal.cs / .Orca.cs / .Fulmar.cs / .Shark.cs。当たり判定（Collider）は付けない
     /// </summary>
     public static partial class BigBossModelBuilder
     {
@@ -44,6 +44,12 @@ namespace PenmonScramble.Game
                 case BigBossSpecies.LeopardSeal:
                     BuildSeal(kit);
                     break;
+                case BigBossSpecies.Fulmar:
+                    BuildFulmar(kit);
+                    break;
+                case BigBossSpecies.Shark:
+                    BuildShark(kit);
+                    break;
                 default:
                     BuildOrca(kit);
                     break;
@@ -51,7 +57,7 @@ namespace PenmonScramble.Game
 
             var shadow = ToyParts.BlobShadow(materials, root.transform, kit.ShadowSize);
             model.AssignFrame(kit.Figure, shadow, kit.Top);
-            model.Assign(bossNo, kit.Eyes, kit.Center);
+            model.Assign(bossNo, kit.Eyes, kit.Center, kit.DiveDepth);
             model.SetRealShadows(true);
             return model;
         }
@@ -111,6 +117,9 @@ namespace PenmonScramble.Game
 
             /// <summary>足元の丸い影の大きさ（横・前後）</summary>
             public Vector2 ShadowSize;
+
+            /// <summary>もぐったときに沈める深さ。0 なら体が全部隠れる深さ（BigBossModel.DiveDepth）</summary>
+            public float DiveDepth;
 
             public Kit(BigBossModel model, ToyParts parts, Transform figure)
             {

@@ -60,13 +60,31 @@ namespace PenmonScramble.Editor
             }
         }
 
+        // Android は配る仕組み（署名の鍵・配り方）がまだ無いので、手元の端末で遊ぶ版だけを作る（git に入れない）
+        private const string AndroidOutput = OutputRoot + "Android/PenmonScramble.apk";
+
+        /// <summary>
+        /// .apk を作り、USB でつないだ端末（Build Profiles の Android の「Run Device」）へ入れて起動する。
+        /// 署名は Unity の仮の鍵（PC ごとに違う）。あとで正式な鍵に替えると上書きで入らず、入れ直し（記録が消える）になる
+        /// </summary>
+        [MenuItem(EditorMenu.Release + "Android（つないだ端末に入れる）", priority = EditorMenu.ReleasePriority + 2)]
+        public static void ReleaseAndroidToDevice()
+        {
+            if (Build(BuildTarget.Android, AndroidOutput, BuildOptions.AutoRunPlayer))
+            {
+                Debug.Log($"[PenmonScrambleBuild] 端末に入れて起動しました。.apk は {Path.GetFullPath(AndroidOutput)}");
+            }
+        }
+
         private static string ReleasePath(string folder)
         {
             string projectRoot = Path.GetDirectoryName(Application.dataPath);
             return Path.GetFullPath(Path.Combine(projectRoot, "..", folder));
         }
 
-        private static bool Build(BuildTarget target, string location, params string[] defines)
+        private static bool Build(BuildTarget target, string location, params string[] defines) => Build(target, location, BuildOptions.None, defines);
+
+        private static bool Build(BuildTarget target, string location, BuildOptions buildOptions, params string[] defines)
         {
             // 画質ごとの描画の設定（縁の線・影など）を、ビルドの前にそろえておく
             RenderPipelineSetup.Ensure();
@@ -75,7 +93,7 @@ namespace PenmonScramble.Editor
                 scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray(),
                 locationPathName = location,
                 target = target,
-                options = BuildOptions.None,
+                options = buildOptions,
                 extraScriptingDefines = defines,
             };
             var report = BuildPipeline.BuildPlayer(options);

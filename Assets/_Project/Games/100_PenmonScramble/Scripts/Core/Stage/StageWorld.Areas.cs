@@ -54,10 +54,17 @@ namespace PenmonScramble.Core
                 switch (effect.Kind)
                 {
                     case AreaEffectKind.Zone:
+                    case AreaEffectKind.Lava:
                         UpdateZone(effect, dt);
+                        break;
+                    case AreaEffectKind.Fin:
+                        UpdateFinRunner(effect, dt);
                         break;
                     case AreaEffectKind.Drop:
                         UpdateDrop(effect, dt);
+                        break;
+                    case AreaEffectKind.Vortex:
+                        UpdateVortex(effect, dt);
                         break;
                     default:
                         UpdateCloud(effect, dt);
@@ -106,9 +113,33 @@ namespace PenmonScramble.Core
                 }
 
                 var outward = AwayFrom(effect.Position, target, Vec2.Right);
-                var pulls = skill.Pull > 0f;
+                // 竜巻は UpdateVortex で位置を寄せているので、当たったときは飛ばさない（飛ばすと一瞬動けなくなり、抜け出せなくなる）
+                var pulls = skill.Pull > 0f && effect.Kind != AreaEffectKind.Vortex;
                 ApplyHit(effect.OwnerId, target, effect.Damage, pulls ? skill.Pull : skill.Knockback, pulls ? -outward : outward, skill);
             }
+        }
+
+        /// <summary>
+        /// 竜巻: 円とそのまわり（VortexReachRatio 倍）の相手を、毎回少しずつ中心へ寄せる。吹っ飛ばさずに位置を動かすので、
+        /// 歩いて逆らえば抜け出せる（引く速さは歩く速さより遅い）。円の中にいる相手には、間隔ごとに当たる
+        /// </summary>
+        private void UpdateVortex(AreaEffect vortex, float dt)
+        {
+            DriftVortex(vortex, dt);
+            var reach = vortex.Radius * Balance.VortexReachRatio;
+            foreach (var target in _units)
+            {
+                if (target.Team == vortex.Team || !target.IsAlive || target.IsSubmerged || !IsWithin(target, vortex.Position, reach))
+                {
+                    continue;
+                }
+
+                var toCenter = vortex.Position - target.Position;
+                var step = System.MathF.Min(toCenter.Length, vortex.Skill.Pull * dt);
+                target.Position += DirectionOr(toCenter, Vec2.Zero) * step;
+            }
+
+            UpdateZone(vortex, dt);
         }
 
         /// <summary>前へすべり、ぶつかった敵を進む向きへ飛ばす。壁に当たってもすべる距離は減っていく</summary>

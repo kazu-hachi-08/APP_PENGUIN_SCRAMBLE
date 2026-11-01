@@ -23,6 +23,9 @@ namespace PenmonScramble.Core
         /// <summary>闘技場へ入る通り道の幅の半分（マス）。協力の4人が詰まらずに通れる広さ</summary>
         public const float ArenaDoorHalfWidth = 1.5f;
 
+        /// <summary>闘技場が続くとき（ボスラッシュ）に、前の闘技場の右端と次の闘技場の左端の間に空ける通り道の長さ（マス）</summary>
+        public const float ArenaCorridorLength = 4f;
+
         /// <summary>吹っ飛びの減速（マス/秒²）。大きいほどすぐ止まる</summary>
         public const float KnockbackDeceleration = 18f;
 
@@ -93,7 +96,7 @@ namespace PenmonScramble.Core
         /// <summary>敵の HP ＝ 種類の HP の倍率 × これ × 人数の倍率</summary>
         public const int EnemyPower = 25;
         /// <summary>敵の攻撃 ＝ 種類の攻撃の倍率 × これ</summary>
-        public const float EnemyAttackScale = 0.5f;
+        public const float EnemyAttackScale = 0.9f;
         public const float EnemySpeedScale = 0.45f;
         /// <summary>敵は同じ技でも、プレイヤーのこの倍の間をあけて使う</summary>
         public const float EnemyCooldownScale = 5f;
@@ -124,7 +127,8 @@ namespace PenmonScramble.Core
 
         // ステージのボス。同じ種類の雑魚を、大きく・硬く・強くする
         public const float BossHpScale = 15f;
-        public const float BossAttackScale = 2f;
+        /// <summary>雑魚の攻撃（EnemyAttackScale）に掛ける。巨大ペンモンもこれを使うので、雑魚より少し強いくらいにとどめる</summary>
+        public const float BossAttackScale = 1.3f;
         public const float BossRadiusScale = 2f;
         /// <summary>雑魚（EnemyCooldownScale）より短い間で技を使う</summary>
         public const float BossCooldownScale = 2f;
@@ -163,8 +167,9 @@ namespace PenmonScramble.Core
         /// <summary>足が遅くなっている間の速さの割合（合体技「吹雪」）</summary>
         public const float SlowSpeedRatio = 0.5f;
 
-        // 協力の人数ごとの敵の HP の倍率。添字は人数-1
-        private static readonly float[] EnemyHpScales = { 1.0f, 1.6f, 2.2f, 2.8f };
+        // 協力の人数ごとの敵の HP の倍率。添字は人数-1。ストーリーはひとりなので、ボスラッシュで効く。
+        // 人数が増えると手数だけでなく、狙いが分かれ・倒れても起こし合えるので、人数より少し強めに伸ばす（バランスの試験場で 2〜4 人の手ごたえがそろう値）
+        private static readonly float[] EnemyHpScales = { 1.0f, 1.9f, 2.7f, 3.4f };
 
         public static float EnemyHpScale(int playerCount)
         {

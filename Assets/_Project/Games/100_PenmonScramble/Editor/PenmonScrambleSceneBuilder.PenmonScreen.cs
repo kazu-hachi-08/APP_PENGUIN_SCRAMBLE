@@ -64,7 +64,11 @@ namespace PenmonScramble.Editor
         private const int BadgeFontSize = 30;
         private const int ListCardFontSize = 26;
         private const int SlotCardFontSize = 30;
-
+        private const int CardLimitFontSize = 18;
+        private const float CardLimitHeight = 22f;
+        private const float CardTagHeight = 26f;
+        private const int CardTagFontSize = 19;
+        private static readonly Color LimitUpTagColor = new Color(1f, 0.78f, 0.25f);
         // 右: 図鑑カード。中身の位置はパネルの中心から
         private static readonly Vector2 DetailPosition = new Vector2(545f, -52f);
         private static readonly Vector2 DetailSize = new Vector2(790f, 946f);
@@ -95,9 +99,16 @@ namespace PenmonScramble.Editor
         private static readonly string[] SkillCardNames = { "Skill1", "Skill2", "Special" };
         private static readonly float[] SkillCardY = { -113f, -213f, -313f };
         private static readonly Vector2 SkillCardSize = new Vector2(760f, 92f);
-        private static readonly float[] DetailButtonX = { -190f, 190f };
+        // 編成に入れる・強化・売る
+        private static readonly float[] DetailButtonX = { -255f, 0f, 255f };
         private const float DetailButtonY = -415f;
-        private static readonly Vector2 DetailButtonSize = new Vector2(360f, 96f);
+        private static readonly Vector2 DetailButtonSize = new Vector2(240f, 96f);
+        private const int DetailButtonFontSize = 32;
+        private static readonly Color EnhanceColor = new Color(0.62f, 0.40f, 0.90f);
+        // 顔の下の上限解放の◆
+        private static readonly Vector2 DetailLimitOffset = new Vector2(0f, -88f);
+        private static readonly Vector2 DetailLimitSize = new Vector2(170f, 34f);
+        private const int DetailLimitFontSize = 28;
         private static readonly Vector2 EmptyTextSize = new Vector2(700f, 100f);
 
         // 技のカードの中身（カードの中心から）
@@ -134,10 +145,12 @@ namespace PenmonScramble.Editor
 
             var slots = CreatePartyBand(root.transform);
             var hint = CreateLabel(root.transform, "Hint", string.Empty, HintFontSize, HintPosition, HintSize);
-            var content = CreateCardGrid(root.transform);
+            var content = CreateCardGrid(root.transform, GridPosition, GridSize);
             var template = CreatePenguinCard(content, "CardTemplate", PenguinCardSize, ListCardFontSize);
             template.gameObject.SetActive(false);
-            var (detail, setParty, sell) = CreateDetailPanel(root.transform);
+            var (detail, setParty, enhanceButton, sell) = CreateDetailPanel(root.transform);
+            // 強化の窓はペンモン画面の上に重ねるので、最後に作る（一番手前）
+            var enhance = CreateEnhanceScreen(root.transform);
 
             var screen = root.AddComponent<PenguinListScreen>();
             var so = new SerializedObject(screen);
@@ -153,6 +166,8 @@ namespace PenmonScramble.Editor
             so.FindProperty("_setPartyLabel").objectReferenceValue = setParty.GetComponentInChildren<Text>();
             so.FindProperty("_sellButton").objectReferenceValue = sell;
             so.FindProperty("_sellLabel").objectReferenceValue = sell.GetComponentInChildren<Text>();
+            so.FindProperty("_enhanceButton").objectReferenceValue = enhanceButton;
+            so.FindProperty("_enhance").objectReferenceValue = enhance;
             so.FindProperty("_sortButton").objectReferenceValue = sort;
             so.FindProperty("_sortLabel").objectReferenceValue = sort.GetComponentInChildren<Text>();
             so.FindProperty("_backButton").objectReferenceValue = back;
@@ -179,12 +194,12 @@ namespace PenmonScramble.Editor
             return slots;
         }
 
-        /// <summary>縦にスクロールする4列のカード置き場。カードは PenguinListScreen が実行時に並べる</summary>
-        private static RectTransform CreateCardGrid(Transform parent)
+        /// <summary>縦にスクロールする4列のカード置き場。カードは PenguinListScreen・EnhanceScreen が実行時に並べる</summary>
+        private static RectTransform CreateCardGrid(Transform parent, Vector2 position, Vector2 size)
         {
             var viewport = UIDialogBuilder.CreateUIObject("Grid", parent);
             var viewportRect = viewport.GetComponent<RectTransform>();
-            PlaceCenter(viewportRect, GridPosition, GridSize);
+            PlaceCenter(viewportRect, position, size);
             // スクロールの当たり判定のため、透明な Image を敷く
             viewport.AddComponent<Image>().color = Color.clear;
             viewport.AddComponent<RectMask2D>();
@@ -244,6 +259,12 @@ namespace PenmonScramble.Editor
             badgeText.fontStyle = FontStyle.Bold;
             badge.gameObject.SetActive(false);
 
+            var limit = CreatePlainText(obj.transform, "Limit", string.Empty, CardLimitFontSize,
+                new Vector2(faceX, CardStripHeight * 0.5f - faceSize * 0.5f + CardLimitHeight * 0.5f), new Vector2(faceSize, CardLimitHeight), TextAnchor.MiddleCenter, Color.white);
+            limit.gameObject.AddComponent<Outline>().effectColor = LabelOutlineColor;
+            var limitUp = CreateCardTag(obj.transform, new Vector2(faceX, size.y * 0.5f - CardTagHeight * 0.5f - CardPadding * 0.5f), faceSize);
+            var group = obj.AddComponent<CanvasGroup>();
+
             var card = obj.AddComponent<PenguinCard>();
             var so = new SerializedObject(card);
             so.FindProperty("_button").objectReferenceValue = button;
@@ -253,12 +274,26 @@ namespace PenmonScramble.Editor
             so.FindProperty("_elementStrip").objectReferenceValue = strip;
             so.FindProperty("_badge").objectReferenceValue = badge.gameObject;
             so.FindProperty("_badgeText").objectReferenceValue = badgeText;
+            so.FindProperty("_limitText").objectReferenceValue = limit;
+            so.FindProperty("_limitUpTag").objectReferenceValue = limitUp;
+            so.FindProperty("_group").objectReferenceValue = group;
             so.ApplyModifiedProperties();
             return card;
         }
 
-        /// <summary>右側の図鑑カード。下の2つのボタン（編成に入れる・売る）も返す</summary>
-        private static (PenmonDetailPanel panel, Button setParty, Button sell) CreateDetailPanel(Transform parent)
+        /// <summary>強化の素材の一覧で、同じ種類の子の顔の上に出す金の「上限UP」の札（ふだんは隠す）</summary>
+        private static GameObject CreateCardTag(Transform parent, Vector2 position, float width)
+        {
+            var size = new Vector2(width, CardTagHeight);
+            var tag = CreatePanel(parent, "LimitUpTag", position, size, LimitUpTagColor);
+            tag.raycastTarget = false;
+            CreatePlainText(tag.transform, "Text", "上限UP", CardTagFontSize, Vector2.zero, size, TextAnchor.MiddleCenter, DarkTextColor).fontStyle = FontStyle.Bold;
+            tag.gameObject.SetActive(false);
+            return tag.gameObject;
+        }
+
+        /// <summary>右側の図鑑カード。下の3つのボタン（編成に入れる・強化・売る）も返す</summary>
+        private static (PenmonDetailPanel panel, Button setParty, Button enhance, Button sell) CreateDetailPanel(Transform parent)
         {
             var panelImage = CreatePanel(parent, "Detail", DetailPosition, DetailSize, PanelColor);
             var panelObj = panelImage.gameObject;
@@ -267,6 +302,8 @@ namespace PenmonScramble.Editor
             var contentObj = CreateStretchGroup(panelObj.transform, "Content");
             var content = contentObj.transform;
             var face = CreateCircle(content, "Face", FacePosition, FaceSize, Color.white);
+            var limit = CreatePlainText(content, "Limit", string.Empty, DetailLimitFontSize, FacePosition + DetailLimitOffset, DetailLimitSize, TextAnchor.MiddleCenter, Color.white);
+            limit.gameObject.AddComponent<Outline>().effectColor = LabelOutlineColor;
             var title = CreatePlainText(content, "Title", string.Empty, TitleFontSize, TitlePosition, TitleSize, TextAnchor.MiddleLeft, Color.white);
             title.fontStyle = FontStyle.Bold;
             var chip = CreatePanel(content, "Element", ElementChipPosition, ElementChipSize, Color.white);
@@ -287,8 +324,9 @@ namespace PenmonScramble.Editor
             }
 
             // ボタンは何も選んでいないときも出しておく（押せない状態で）ので、中身の外に置く
-            var setParty = CreateTitleButton(panelObj.transform, "SetParty", string.Empty, new Vector2(DetailButtonX[0], DetailButtonY), DetailButtonSize, StartColor, SmallFontSize);
-            var sell = CreateTitleButton(panelObj.transform, "Sell", string.Empty, new Vector2(DetailButtonX[1], DetailButtonY), DetailButtonSize, SoloColor, SmallFontSize);
+            var setParty = CreateTitleButton(panelObj.transform, "SetParty", string.Empty, new Vector2(DetailButtonX[0], DetailButtonY), DetailButtonSize, StartColor, DetailButtonFontSize);
+            var enhance = CreateTitleButton(panelObj.transform, "Enhance", "強化", new Vector2(DetailButtonX[1], DetailButtonY), DetailButtonSize, EnhanceColor, DetailButtonFontSize);
+            var sell = CreateTitleButton(panelObj.transform, "Sell", string.Empty, new Vector2(DetailButtonX[2], DetailButtonY), DetailButtonSize, SoloColor, DetailButtonFontSize);
 
             var panel = panelObj.AddComponent<PenmonDetailPanel>();
             var so = new SerializedObject(panel);
@@ -300,6 +338,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_elementText").objectReferenceValue = elementText;
             so.FindProperty("_personalityText").objectReferenceValue = personality;
             so.FindProperty("_statsText").objectReferenceValue = stats;
+            so.FindProperty("_limitText").objectReferenceValue = limit;
             so.FindProperty("_hpBar").objectReferenceValue = hpBar;
             so.FindProperty("_attackBar").objectReferenceValue = attackBar;
             so.FindProperty("_speedBar").objectReferenceValue = speedBar;
@@ -307,7 +346,7 @@ namespace PenmonScramble.Editor
 
             so.FindProperty("_demo").objectReferenceValue = demo;
             so.ApplyModifiedProperties();
-            return (panel, setParty, sell);
+            return (panel, setParty, enhance, sell);
         }
 
         /// <summary>見出しと、横に伸びる棒（Image の fillAmount で長さを出す）</summary>

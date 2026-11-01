@@ -1,4 +1,5 @@
 using PenmonScramble.Common.Editor;
+using PenmonScramble.Common.UI;
 using PenmonScramble.Common.Online;
 using PenmonScramble.Common.Profile;
 using PenmonScramble.Game;
@@ -16,7 +17,7 @@ namespace PenmonScramble.Editor
     public static partial class PenmonScrambleSceneBuilder
     {
         private const string SoloLabel = "ひとりで遊ぶ";
-        private const string OnlineLabel = "みんなで遊ぶ\n<size=28>最大4人で協力</size>";
+        private const string OnlineLabel = "みんなで遊ぶ\n<size=28>ボスラッシュ</size>";
         private const string NameHintLabel = "タップで変更";
 
         // 上の札
@@ -61,6 +62,8 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 StageTextSize = new Vector2(420f, 70f);
         private const int StageNoFontSize = 32;
         private const int StageNameFontSize = 60;
+        // 「火山の入り江 3」のような長い名前は、◀ ▶ の間に収まるまで縮める
+        private const int StageNameMinFontSize = 44;
         private const int StageBadgeFontSize = 30;
         private static readonly Color StageNoColor = new Color(0.6f, 0.85f, 1f);
         private static readonly Color StageBadgeColor = new Color(1f, 0.85f, 0.3f);
@@ -82,7 +85,7 @@ namespace PenmonScramble.Editor
         /// ロビーの中身と、設定・名前の入力を作り、TitleMenu（ロビー）・TitleFlow（スタート → ロビー）・ModeSelectPanel のメニューをつなぐ。
         /// ガチャ・ペンモン・遊び方の画面はタイトルより手前に作るので、それらができてから呼ぶ
         /// </summary>
-        private static TitleMenu CreateTitleMenu(ModeSelectPanel title, GachaScreen gacha, PenguinListScreen penguins, HowToPlayScreen howToPlay)
+        private static TitleMenu CreateTitleMenu(ModeSelectPanel title, GachaScreen gacha, PenguinListScreen penguins, HowToPlayScreen howToPlay, CommonDialog notice)
         {
             var root = title.transform;
             var lobby = root.Find($"{MenuGroupName}/{LobbyName}");
@@ -134,7 +137,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_nameEntry").objectReferenceValue = nameEntry;
             so.ApplyModifiedProperties();
 
-            AddTitleFlow(title, lobby.gameObject, menu, nameEntry, gacha);
+            AddTitleFlow(title, lobby.gameObject, menu, nameEntry, gacha, notice);
             return menu;
         }
 
@@ -148,7 +151,7 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        private static void AddTitleFlow(ModeSelectPanel title, GameObject lobby, TitleMenu menu, NameEntryDialog nameEntry, GachaScreen gacha)
+        private static void AddTitleFlow(ModeSelectPanel title, GameObject lobby, TitleMenu menu, NameEntryDialog nameEntry, GachaScreen gacha, CommonDialog notice)
         {
             var splash = title.transform.Find(SplashName);
             var flow = title.gameObject.AddComponent<TitleFlow>();
@@ -164,6 +167,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_menu").objectReferenceValue = menu;
             so.FindProperty("_nameEntry").objectReferenceValue = nameEntry;
             so.FindProperty("_gacha").objectReferenceValue = gacha;
+            so.FindProperty("_notice").objectReferenceValue = notice;
             so.ApplyModifiedProperties();
         }
 
@@ -238,6 +242,9 @@ namespace PenmonScramble.Editor
             no.color = StageNoColor;
             var name = CreateLabel(card, "Name", string.Empty, StageNameFontSize, StageNameLabelPosition, StageTextSize);
             name.fontStyle = FontStyle.Bold;
+            name.resizeTextForBestFit = true;
+            name.resizeTextMinSize = StageNameMinFontSize;
+            name.resizeTextMaxSize = StageNameFontSize;
             var badge = CreateLabel(card, "Badge", string.Empty, StageBadgeFontSize, StageBadgePosition, StageTextSize);
             badge.fontStyle = FontStyle.Bold;
             badge.color = StageBadgeColor;

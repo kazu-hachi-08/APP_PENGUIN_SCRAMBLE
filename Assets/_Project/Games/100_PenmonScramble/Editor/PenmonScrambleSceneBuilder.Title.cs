@@ -20,7 +20,7 @@ namespace PenmonScramble.Editor
         private const string LobbyName = "Lobby";
         private const string SplashName = "Splash";
 
-        private const string HostLabel = "部屋を作る\n<size=34>コードを友だちに送って\n最大4人で協力</size>";
+        private const string HostLabel = "部屋を作る\n<size=34>コードを友だちに送って\n最大4人でボスラッシュ</size>";
         private const string JoinCaption = "コードで参加";
         private const string JoinLabel = "参加する";
         private const string CodePlaceholder = "参加コード";
@@ -63,12 +63,13 @@ namespace PenmonScramble.Editor
         private const float CloseButtonSize = 90f;
         private const float CloseButtonInset = 20f;
 
-        // 接続待ちの窓: 上に状態と参加コード（文面は ModeSelectPanel が入れる）、下に「コピー」「開始」「キャンセル」
-        private static readonly Vector2 WaitingPanelSize = new Vector2(1180f, 560f);
-        private static readonly Vector2 WaitingPanelPosition = new Vector2(0f, -30f);
-        private static readonly Vector2 StatusPosition = new Vector2(0f, 60f);
-        private static readonly Vector2 StatusSize = new Vector2(1100f, 380f);
-        private const float WaitButtonsY = -195f;
+        // 接続待ちの窓: 上に状態と参加コード（文面は ModeSelectPanel が入れる）、下に「コピー」「開始」「キャンセル」。
+        // 部屋に入ったら、右にボスラッシュの選択（RushLobby）が出て、状態の文字は左へ寄る。窓の上の端はロゴの下にそろえる
+        private static readonly Vector2 WaitingPanelSize = new Vector2(1600f, 760f);
+        private static readonly Vector2 WaitingPanelPosition = new Vector2(0f, -90f);
+        private static readonly Vector2 StatusPosition = new Vector2(0f, 80f);
+        private static readonly Vector2 StatusSize = new Vector2(1100f, 420f);
+        private const float WaitButtonsY = -305f;
         private const float WaitButtonsSpacing = 390f;
         private static readonly Vector2 WaitButtonSize = new Vector2(360f, 120f);
 
@@ -106,6 +107,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_copyButtonLabel").objectReferenceValue = copy.GetComponentInChildren<Text>();
             so.FindProperty("_startButton").objectReferenceValue = start;
             so.ApplyModifiedProperties();
+            CreateRushLobby(panel, status.transform.parent, status);
             return panel;
         }
 
@@ -146,6 +148,8 @@ namespace PenmonScramble.Editor
             var waiting = CreateStretchGroup(parent, "Waiting");
             var panel = CreatePanel(waiting.transform, "Panel", WaitingPanelPosition, WaitingPanelSize).transform;
             status = CreateLabel(panel, "Status", string.Empty, StatusFontSize, StatusPosition, StatusSize);
+            // カードの横の細い列に寄せたときも、長い文は折り返して入れる
+            status.horizontalOverflow = HorizontalWrapMode.Wrap;
 
             copy = CreateTitleButton(panel, "Copy", CopyLabel, new Vector2(-WaitButtonsSpacing, WaitButtonsY), WaitButtonSize, OnlineColor, WaitButtonFontSize);
             start = CreateTitleButton(panel, "Start", StartLabel, new Vector2(0f, WaitButtonsY), WaitButtonSize, StartColor, WaitButtonFontSize);

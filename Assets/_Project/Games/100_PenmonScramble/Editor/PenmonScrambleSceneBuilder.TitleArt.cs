@@ -30,7 +30,8 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 LogoSmallSize = new Vector2(500f, 140f);
         private const float LogoSmallTilt = 8f;
         private static readonly Vector2 LogoMainPosition = new Vector2(0f, -40f);
-        private static readonly Vector2 LogoMainSize = new Vector2(1300f, 200f);
+        // 140 の太字で「ペンモンスクランブル」はおよそ 1400 の幅になる
+        private static readonly Vector2 LogoMainSize = new Vector2(1500f, 200f);
         private const int LogoSmallFontSize = 96;
         private const int LogoMainFontSize = 140;
         private static readonly Color LogoSmallColor = new Color(1f, 0.35f, 0.25f);

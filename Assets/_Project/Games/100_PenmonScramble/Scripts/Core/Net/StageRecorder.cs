@@ -45,6 +45,9 @@ namespace PenmonScramble.Core
             {
                 Round = _round,
                 StageNo = _world.StageNo,
+                Difficulty = _world.Difficulty,
+                ArenaRound = _world.ArenaRound,
+                ArenaRoundsWon = _world.ArenaRoundsWon,
                 Tick = _world.TickCount,
                 Result = _world.Result,
                 AreaMin = _world.AreaMin,
@@ -82,7 +85,7 @@ namespace PenmonScramble.Core
 
             foreach (var warning in _world.Warnings)
             {
-                snapshot.Warnings.Add(new WarningState(warning.Id, warning.From, warning.To, warning.HalfWidth, warning.Progress));
+                snapshot.Warnings.Add(new WarningState(warning.Id, warning.Kind, warning.From, warning.To, warning.HalfWidth, warning.HalfAngleDegrees, warning.Progress));
             }
 
             MoveEvents(snapshot);
@@ -116,6 +119,8 @@ namespace PenmonScramble.Core
             if (unit.IsSubmerged) flags |= UnitFlags.Submerged;
             if (unit.IsInMenu) flags |= UnitFlags.InMenu;
             if (unit.IsWindingUp) flags |= UnitFlags.WindingUp;
+            if (unit.IsSerious) flags |= UnitFlags.Serious;
+            if (unit.IsEnraged) flags |= UnitFlags.Enraged;
             return flags;
         }
 

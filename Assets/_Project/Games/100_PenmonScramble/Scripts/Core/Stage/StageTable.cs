@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// ステージの定義表。3ワールド×3ステージ。エリアの数・各エリアの敵の出方を変えるときはここを直す。
+    /// ステージの定義表。5ワールド×3ステージ。エリアの数・各エリアの敵の出方を変えるときはここを直す。
     /// 番号（No）は記録と通信に使うので、並べ替えたり途中に足したりしない
     /// </summary>
     public static class StageTable
@@ -14,6 +14,9 @@ namespace PenmonScramble.Core
         private static readonly int[] Mixed = { 1, 2, 3, 6, 7, 11, 12, 13, 16, 17, 4, 8, 9, 14, 18, 19 };
         private static readonly int[] Strong = { 4, 8, 9, 14, 18, 19, 3, 7, 11, 16 };
         private static readonly int[] Elite = { 4, 8, 9, 14, 18, 19, 5, 10, 15, 20 };
+        // ワールド4・5は ★3 を半分まで混ぜ、最後は ★3 だけの波も出す
+        private static readonly int[] Ace = { 5, 10, 15, 20, 4, 8, 14, 19 };
+        private static readonly int[] Legend = { 5, 10, 15, 20 };
 
         // ---- ワールド1 海岸 ----
 
@@ -88,7 +91,7 @@ namespace PenmonScramble.Core
             Area(Wave(8, Elite), Wave(8, Elite), Wave(7, Elite)),
             Area(Boss(3, Elite, 20), Wave(5, Elite), Wave(5, Elite)));
 
-        /// <summary>最後に大ボス（シャチ）。ゲームの最後のステージ</summary>
+        /// <summary>最後に大ボス（シャチ）</summary>
         private static readonly StageDef Stage9 = new StageDef(9, "深海 3",
             Area(Wave(7, Elite), Wave(7, Elite)),
             Area(Wave(7, Elite), Wave(8, Elite)),
@@ -97,8 +100,67 @@ namespace PenmonScramble.Core
             Area(Wave(8, Elite), Wave(8, Elite), Wave(8, Elite)),
             Area(Boss(2, Strong, BigBossTable.OrcaNo), Wave(4, Strong), Wave(4, Strong)));
 
+        // ---- ワールド4 嵐の崖 ----
+        // ワールド4・5の1・2ステージ目のボスは巨大ペンモン。闘技場で、属性の大技も使ってくる
+
+        private static readonly StageDef Stage10 = new StageDef(10, "嵐の崖 1",
+            Area(Wave(7, Elite), Wave(7, Elite)),
+            Area(Wave(7, Elite), Wave(7, Ace)),
+            Area(Wave(8, Elite), Wave(7, Ace), Wave(6, Elite)),
+            Area(Wave(8, Ace), Wave(7, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace), Wave(7, Ace)),
+            AreaDef.Arena(Giant(2, Elite, 15), Wave(3, Elite), Wave(3, Elite)));
+
+        private static readonly StageDef Stage11 = new StageDef(11, "嵐の崖 2",
+            Area(Wave(7, Elite), Wave(7, Ace)),
+            Area(Wave(7, Ace), Wave(8, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace), Wave(6, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace), Wave(8, Ace)),
+            AreaDef.Arena(Giant(2, Ace, 18), Wave(3, Ace), Wave(3, Ace)));
+
+        /// <summary>最後に大ボス（オオフルマカモメ）。突風で柵まで押されるので、雑魚はさらに少なめ</summary>
+        private static readonly StageDef Stage12 = new StageDef(12, "嵐の崖 3",
+            Area(Wave(7, Ace), Wave(8, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace), Wave(7, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace), Wave(8, Ace)),
+            Area(Boss(2, Elite, BigBossTable.FulmarNo), Wave(3, Elite), Wave(3, Elite)));
+
+        // ---- ワールド5 火山の入り江 ----
+
+        private static readonly StageDef Stage13 = new StageDef(13, "火山の入り江 1",
+            Area(Wave(7, Ace), Wave(8, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace)),
+            Area(Wave(8, Ace), Wave(8, Legend), Wave(7, Ace)),
+            Area(Wave(8, Ace), Wave(8, Ace)),
+            Area(Wave(8, Ace), Wave(8, Legend), Wave(8, Ace)),
+            AreaDef.Arena(Giant(2, Ace, 5), Wave(3, Ace), Wave(3, Ace)));
+
+        private static readonly StageDef Stage14 = new StageDef(14, "火山の入り江 2",
+            Area(Wave(8, Ace), Wave(8, Ace)),
+            Area(Wave(8, Ace), Wave(8, Legend)),
+            Area(Wave(8, Legend), Wave(8, Ace), Wave(7, Legend)),
+            Area(Wave(8, Legend), Wave(8, Ace)),
+            Area(Wave(8, Legend), Wave(8, Legend), Wave(8, Ace)),
+            AreaDef.Arena(Giant(2, Legend, 20), Wave(3, Ace), Wave(3, Ace)));
+
+        /// <summary>最後に大ボス（サメ）。ゲームの最後のステージ</summary>
+        private static readonly StageDef Stage15 = new StageDef(15, "火山の入り江 3",
+            Area(Wave(8, Ace), Wave(8, Legend)),
+            Area(Wave(8, Legend), Wave(8, Ace)),
+            Area(Wave(8, Legend), Wave(8, Legend), Wave(7, Ace)),
+            Area(Wave(8, Legend), Wave(8, Legend)),
+            Area(Wave(8, Legend), Wave(8, Legend), Wave(8, Legend)),
+            Area(Boss(2, Ace, BigBossTable.SharkNo), Wave(3, Ace), Wave(4, Ace)));
+
         /// <summary>番号の順に並べる（No は添字+1）</summary>
-        private static readonly StageDef[] All = { Stage1, Stage2, Stage3, Stage4, Stage5, Stage6, Stage7, Stage8, Stage9 };
+        private static readonly StageDef[] All =
+        {
+            Stage1, Stage2, Stage3, Stage4, Stage5, Stage6, Stage7, Stage8, Stage9,
+            Stage10, Stage11, Stage12, Stage13, Stage14, Stage15,
+        };
 
         public static int Count => All.Length;
 
@@ -114,5 +176,6 @@ namespace PenmonScramble.Core
         private static AreaDef Area(params WaveDef[] waves) => new AreaDef(waves);
         private static WaveDef Wave(int count, int[] pool) => new WaveDef(count, pool);
         private static WaveDef Boss(int count, int[] pool, int bossNo) => new WaveDef(count, pool, bossNo);
+        private static WaveDef Giant(int count, int[] pool, int speciesNo) => new WaveDef(count, pool, new[] { new BossSpawn(speciesNo, BossRank.Giant) });
     }
 }

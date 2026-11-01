@@ -139,6 +139,21 @@ namespace PenmonScramble.Core
             return stats;
         }
 
+        /// <summary>
+        /// 巨大ペンモン。ステージのボスをさらに大きく・硬くして、属性の大技（GiantAttacks）も持たせる。
+        /// 大技の予告の場所がずれないよう、大ボスと同じくらい飛ばされにくくする
+        /// </summary>
+        public static UnitStats GiantStats(SpeciesDef species, int playerCount, int world = 1)
+        {
+            var stats = BossStats(species, playerCount, world);
+            stats.Radius = Balance.PenguinRadius * Balance.GiantRadiusScale;
+            stats.MaxHp = UnitStats.HpOf(stats.MaxHp * Balance.GiantHpScale);
+            stats.KnockbackScale = Balance.BigBossKnockbackScale;
+            stats.CooldownScale = Balance.GiantCooldownScale;
+            stats.GiantAttack = GiantAttacks.For(species.Element);
+            return stats;
+        }
+
         public static int EnemyMaxHp(SpeciesDef species, int playerCount, int world = 1)
         {
             return UnitStats.HpOf(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(playerCount) * Balance.WorldEnemyScale(world));

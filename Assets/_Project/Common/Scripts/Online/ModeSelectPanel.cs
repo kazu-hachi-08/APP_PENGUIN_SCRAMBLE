@@ -32,6 +32,9 @@ namespace PenmonScramble.Common.Online
         [SerializeField] private Text _copyButtonLabel;
         [Tooltip("3人以上の部屋でホストが試合を始めるボタン。1対1のゲームでは使わないので未設定でよい")]
         [SerializeField] private Button _startButton;
+        [Tooltip("3人以上の部屋で「開始」を押せる人数（ホストを含む）。1 ならホストひとりでも始められる")]
+        [Min(1)]
+        [SerializeField] private int _minPlayersToStart = OnlineSession.DefaultMaxPlayers;
 
         [Header("Copy")]
         [SerializeField] private string _copyLabel = "コードをコピー";
@@ -49,6 +52,14 @@ namespace PenmonScramble.Common.Online
         private Action _onTitle;
         private int _maxPlayers = OnlineSession.DefaultMaxPlayers;
         private string _roomCode;
+        private int _memberCount;
+        private bool _startAllowed = true;
+
+        /// <summary>
+        /// 3人以上の部屋の待機中に、部屋に入った（ホストはコードが出た・ゲストはつながった）か、出た（キャンセル・切断・失敗）か。
+        /// 引数は自分がホストかと、部屋にいるか。ゲームが待機画面に自分の部品（遊ぶものの選択など）を出し入れするのに使う
+        /// </summary>
+        public event Action<bool, bool> RoomStateChanged;
 
         private bool IsMultiRoom => _maxPlayers > OnlineSession.DefaultMaxPlayers;
 
@@ -126,6 +137,7 @@ namespace PenmonScramble.Common.Online
                 if (IsMultiRoom)
                 {
                     RefreshLobby(1);
+                    RoomStateChanged?.Invoke(true, true);
                 }
                 else
                 {
@@ -180,7 +192,7 @@ namespace PenmonScramble.Common.Online
 
         private void CancelWaiting()
         {
-            _session.Leave();
+            LeaveRoom();
             ShowMenu();
         }
 
@@ -208,9 +220,21 @@ namespace PenmonScramble.Common.Online
             }
         }
 
+        /// <summary>
+        /// ゲーム側の都合で「開始」を止める（ホストが選んだ遊ぶものが、まだ解放されていないときなど）。
+        /// 人数の条件とは別に持ち、両方そろったときだけ押せる
+        /// </summary>
+        public void SetStartAllowed(bool allowed)
+        {
+            _startAllowed = allowed;
+            RefreshStartInteractable();
+        }
+
         private void StartMatch()
         {
-            _session.StartMatch();
+            if (!_startAllowed) return;
+
+            _session.StartMatch(allowAlone: _minPlayersToStart <= 1);
         }
 
         private void HandlePeerConnected(bool isHost)
@@ -218,7 +242,12 @@ namespace PenmonScramble.Common.Online
             // 3人以上の部屋はホストの開始を待つ。ホスト側の人数表示は HandleMemberCountChanged で行う
             if (IsMultiRoom)
             {
-                if (!isHost) SetStatus("接続しました\nホストが開始するのを待っています");
+                if (!isHost)
+                {
+                    SetStatus("接続しました\nホストが開始するのを待っています");
+                    RoomStateChanged?.Invoke(false, true);
+                }
+
                 return;
             }
 
@@ -240,17 +269,23 @@ namespace PenmonScramble.Common.Online
         /// <summary>ロビーで待っている間にホストが抜けたら、キャンセルでやり直してもらう</summary>
         private void HandleLobbyDisconnected()
         {
-            _session.Leave();
+            LeaveRoom();
             HideLobbyButtons();
             SetStatus("接続が切れました\nキャンセルしてやり直してください");
         }
 
-        /// <summary>ホストの待機画面。2人以上そろえば開始できる</summary>
+        /// <summary>ホストの待機画面。開始できる人数（既定は2人）そろえば開始できる</summary>
         private void RefreshLobby(int count)
         {
+            _memberCount = count;
             SetStatus($"参加コード\n<size=64>{_roomCode}</size>\n参加者 {count}/{_maxPlayers}人");
             SetStartButtonVisible(true);
-            if (_startButton != null) _startButton.interactable = count >= OnlineSession.DefaultMaxPlayers;
+            RefreshStartInteractable();
+        }
+
+        private void RefreshStartInteractable()
+        {
+            if (_startButton != null) _startButton.interactable = _startAllowed && _memberCount >= _minPlayersToStart;
         }
 
         /// <summary>
@@ -261,9 +296,17 @@ namespace PenmonScramble.Common.Online
         private void ShowError(Exception e)
         {
             Debug.LogWarning($"[ModeSelectPanel] オンライン接続に失敗しました: {e}");
-            _session.Leave();
+            LeaveRoom();
             HideLobbyButtons();
             SetStatus(OnlineSession.IsServicesSetupError(e) ? _servicesNotReadyMessage : _connectFailedMessage);
+        }
+
+        /// <summary>部屋から抜けて、待機画面に出していたゲームの部品にも知らせる</summary>
+        private void LeaveRoom()
+        {
+            bool wasHost = _session.IsHost;
+            _session.Leave();
+            RoomStateChanged?.Invoke(wasHost, false);
         }
 
         private void ShowMenu()

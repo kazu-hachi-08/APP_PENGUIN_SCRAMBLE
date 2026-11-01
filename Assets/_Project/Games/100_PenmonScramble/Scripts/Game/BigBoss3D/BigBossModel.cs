@@ -10,6 +10,8 @@ namespace PenmonScramble.Game
         Skua,
         LeopardSeal,
         Orca,
+        Fulmar,
+        Shark,
     }
 
     /// <summary>大ボスの動かす関節。どの大ボスも同じ名前で持ち、その大ボスに無い関節は null</summary>
@@ -22,18 +24,18 @@ namespace PenmonScramble.Game
         /// <summary>下あご。開くと口の中と歯が見える</summary>
         Jaw,
 
-        /// <summary>翼（カモメ）・前ヒレ（アザラシ）・胸ビレ（シャチ）の付け根</summary>
+        /// <summary>翼（カモメ）・前ヒレ（アザラシ）・胸ビレ（シャチ・サメ）の付け根</summary>
         LimbLeft,
         LimbRight,
 
-        /// <summary>翼の先（カモメ）。付け根から遅れて動かし、羽ばたきをしなやかに見せる</summary>
+        /// <summary>翼の先（カモメ2体）。付け根から遅れて動かし、羽ばたきをしなやかに見せる</summary>
         TipLeft,
         TipRight,
 
-        /// <summary>胴の後ろの半分（アザラシの腰・シャチの尾の付け根）</summary>
+        /// <summary>胴の後ろの半分（アザラシの腰・シャチとサメの尾の付け根）</summary>
         Hips,
 
-        /// <summary>尾羽（カモメ）・後ろヒレ（アザラシ）・尾びれ（シャチ）</summary>
+        /// <summary>尾羽（カモメ）・後ろヒレ（アザラシ）・尾びれ（シャチ・サメ）</summary>
         Tail,
         FootLeft,
         FootRight,
@@ -59,6 +61,8 @@ namespace PenmonScramble.Game
             {
                 case BigBossTable.SkuaNo: return BigBossSpecies.Skua;
                 case BigBossTable.LeopardSealNo: return BigBossSpecies.LeopardSeal;
+                case BigBossTable.FulmarNo: return BigBossSpecies.Fulmar;
+                case BigBossTable.SharkNo: return BigBossSpecies.Shark;
                 default: return BigBossSpecies.Orca;
             }
         }
@@ -69,13 +73,23 @@ namespace PenmonScramble.Game
         /// <summary>胴の中心の高さ（飛んでいるカモメは浮いている高さ）。被弾でのけぞるときの軸</summary>
         public float CenterHeight { get; private set; }
 
+        /// <summary>
+        /// もぐったときに沈める深さ。背びれを床の上に残す大ボス（サメ）は頭のてっぺんより浅く、それ以外は体が全部隠れる深さ。
+        /// 0 以下なら決めていない（BigBossMotion がてっぺんの高さから決める）
+        /// </summary>
+        public float DiveDepth { get; private set; }
+
+        /// <summary>もぐっても背びれを床の上に出したまま動く（サメ）。もぐっている間も体を隠さず、向きも変える</summary>
+        public bool KeepsFinUp => DiveDepth > 0f;
+
         public Transform this[BigBossPart part] => _joints[(int)part];
 
-        internal void Assign(int bossNo, IReadOnlyList<Transform> eyes, float centerHeight)
+        internal void Assign(int bossNo, IReadOnlyList<Transform> eyes, float centerHeight, float diveDepth)
         {
             BossNo = bossNo;
             Eyes = eyes;
             CenterHeight = centerHeight;
+            DiveDepth = diveDepth;
         }
 
         internal void SetJoint(BigBossPart part, Transform joint) => _joints[(int)part] = joint;

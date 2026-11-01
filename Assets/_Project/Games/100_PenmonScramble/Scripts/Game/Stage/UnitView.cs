@@ -38,6 +38,8 @@ namespace PenmonScramble.Game
         private bool IsDown => (_flags & UnitFlags.Down) != 0;
         private bool IsSubmerged => (_flags & UnitFlags.Submerged) != 0;
         private bool IsInMenu => (_flags & UnitFlags.InMenu) != 0;
+        private bool IsSerious => (_flags & UnitFlags.Serious) != 0;
+        private bool IsEnraged => (_flags & UnitFlags.Enraged) != 0;
 
         /// <param name="seatColor">プレイヤーの席の色。null なら輪と文字を出さない（敵）</param>
         public static UnitView Create(Transform parent, StageMaterials materials, UnitState unit, Color? seatColor, string label)

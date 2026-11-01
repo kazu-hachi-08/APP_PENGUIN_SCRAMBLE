@@ -44,7 +44,6 @@ namespace PenmonScramble.Editor
         private const float MenuBarWidthRatio = 0.14f;
         private const float MenuBarHeightRatio = 0.48f;
         private const float MenuBarSpacingRatio = 0.24f;
-        private const string MenuHeading = "メニュー";
 
         private static StageHud CreateHud(Transform canvas)
         {
@@ -240,19 +239,6 @@ namespace PenmonScramble.Editor
             }
 
             return icon;
-        }
-
-        /// <summary>ステージ中のメニュー。ポーズと確認は共通基盤のダイアログ、遊び方はタイトルと同じ画面を使う</summary>
-        private static StageMenu CreateStageMenu(Button openButton, PauseDialog dialog, CommonDialog confirm, HowToPlayScreen howToPlay)
-        {
-            var menu = new GameObject("StageMenu").AddComponent<StageMenu>();
-            var so = new SerializedObject(menu);
-            so.FindProperty("_openButton").objectReferenceValue = openButton;
-            so.FindProperty("_dialog").objectReferenceValue = dialog;
-            so.FindProperty("_confirm").objectReferenceValue = confirm;
-            so.FindProperty("_howToPlay").objectReferenceValue = howToPlay;
-            so.ApplyModifiedProperties();
-            return menu;
         }
     }
 }

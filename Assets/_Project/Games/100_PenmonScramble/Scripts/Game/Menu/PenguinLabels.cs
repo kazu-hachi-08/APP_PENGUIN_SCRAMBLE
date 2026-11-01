@@ -12,6 +12,10 @@ namespace PenmonScramble.Game
         private const string PipOnColor = "#FFD24D";
         private const string PipOffColor = "#FFFFFF40";
         private const char Pip = '●';
+        private const string LimitOnColor = "#FFD24D";
+        private const string LimitOffColor = "#FFFFFF59";
+        private const char LimitOn = '◆';
+        private const char LimitOff = '◇';
 
         public static string Stars(int stars) => new string('★', Mathf.Clamp(stars, 1, Balance.MaxStars));
 
@@ -41,12 +45,19 @@ namespace PenmonScramble.Game
             return $"<color={PipOnColor}>{new string(Pip, on)}</color><color={PipOffColor}>{new string(Pip, max - on)}</color>";
         }
 
+        /// <summary>上限解放の回数を「◆◆◇◇」のように出す（解放した分を金に）</summary>
+        public static string LimitPips(int limitBreak)
+        {
+            var on = Mathf.Clamp(limitBreak, 0, Balance.MaxLimitBreak);
+            return $"<color={LimitOnColor}>{new string(LimitOn, on)}</color><color={LimitOffColor}>{new string(LimitOff, Balance.MaxLimitBreak - on)}</color>";
+        }
+
         /// <summary>カードに出す3行。知らない種類（新しい版で増えた子）は「？」</summary>
         public static string Card(OwnedPenguin penguin)
         {
             var species = SpeciesTable.Get(penguin.speciesNo);
             var name = species != null ? $"{Stars(species.Stars)}\n{species.Name}" : "？\n？";
-            return $"{name}\nパワー {penguin.power}";
+            return $"{name}\nパワー {penguin.Power}";
         }
     }
 }

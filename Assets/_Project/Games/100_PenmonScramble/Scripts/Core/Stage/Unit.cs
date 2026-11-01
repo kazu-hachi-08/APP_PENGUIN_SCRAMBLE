@@ -94,6 +94,10 @@ namespace PenmonScramble.Core
 
         internal DashState Dash { get; set; }
 
+        /// <summary>突風に押し流されている間の状態。押されていなければ null</summary>
+        internal GustState Gust { get; set; }
+        public bool IsBlownByGust => Gust != null;
+
         /// <summary>技を出す前の構え（雑魚とステージのボスだけ）。構えていなければ null</summary>
         internal WindUpState WindUp { get; set; }
 
@@ -102,8 +106,17 @@ namespace PenmonScramble.Core
         internal const int NoAttackTarget = 0;
         public bool HasAttackRight => AttackRightTargetId != NoAttackTarget;
 
-        /// <summary>大ボスの攻撃の進み具合。大ボスでなければ null</summary>
+        /// <summary>大ボス（と巨大ペンモンの大技）の攻撃の進み具合。どちらでもなければ null</summary>
         internal BigBossBrain Brain { get; set; }
+
+        /// <summary>技1・技2に加えて、闘技場の大技を出す巨大ペンモン</summary>
+        public bool IsGiant => Brain != null && Brain.IsGiant;
+
+        /// <summary>大ボスの本気（頭に「本気」の札・赤い湯気）</summary>
+        public bool IsSerious => Brain != null && Brain.IsSerious;
+
+        /// <summary>本気の大ボスが HP 半分を切って吠えた後</summary>
+        public bool IsEnraged => Brain != null && Brain.IsEnraged;
 
         /// <summary>大ボスがもぐっている（ヒョウアザラシ）。攻撃が効かず、ほかのユニットとも押し合わない</summary>
         public bool IsSubmerged { get; internal set; }
@@ -156,6 +169,18 @@ namespace PenmonScramble.Core
             var first = _members[0];
             first.Hp = UnitStats.HpOf(first.MaxHp * hpRatio);
             Dash = null;
+        }
+
+        /// <summary>元気な子（控えも）をそれぞれ最大 HP の ratio だけ回復する。倒れた子はそのまま</summary>
+        internal void HealAliveMembers(float ratio)
+        {
+            foreach (var member in _members)
+            {
+                if (member.IsAlive)
+                {
+                    member.Hp = Math.Min(member.MaxHp, member.Hp + UnitStats.HpOf(member.MaxHp * ratio));
+                }
+            }
         }
 
         private int FindNextAlive()

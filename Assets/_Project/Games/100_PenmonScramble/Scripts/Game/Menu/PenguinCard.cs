@@ -7,7 +7,8 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// 一覧と編成の枠に並べる1体分のカード。左に顔、右に★・名前・パワー、下に属性の色の帯。
-    /// 編成にいる子は左上に編成の番号（1〜3）のバッジを出す。編成の枠は、入れる枠を選ぶ間だけ光って脈打つ
+    /// 編成にいる子は左上に編成の番号（1〜3）のバッジを出す。上限解放した子は顔の下に◆。編成の枠は、入れる枠を選ぶ間だけ光って脈打つ。
+    /// 強化の素材を選ぶ一覧でも使う（押せない子は暗く、同じ種類には「上限UP」の札）
     /// </summary>
     public class PenguinCard : MonoBehaviour
     {
@@ -21,6 +22,11 @@ namespace PenmonScramble.Game
         [SerializeField] private Image _elementStrip;
         [SerializeField] private GameObject _badge;
         [SerializeField] private Text _badgeText;
+        [SerializeField] private Text _limitText;
+        [SerializeField] private GameObject _limitUpTag;
+        [SerializeField] private CanvasGroup _group;
+        [Tooltip("素材にできない子の暗さ")]
+        [SerializeField] private float _lockedAlpha = 0.35f;
         [SerializeField] private Color _normalColor = new Color(0.20f, 0.26f, 0.40f);
         [SerializeField] private Color _partyColor = new Color(0.36f, 0.30f, 0.18f);
         [SerializeField] private Color _selectedColor = new Color(1.00f, 0.60f, 0.25f);
@@ -61,6 +67,19 @@ namespace PenmonScramble.Game
             _badgeText.text = (partyIndex + 1).ToString();
             _restColor = selected ? _selectedColor : partyIndex >= 0 ? _partyColor : _normalColor;
             _frame.color = _restColor;
+            // 一覧が◇だらけにならないよう、1回でも解放した子だけに出す
+            var limitBreak = penguin?.limitBreak ?? 0;
+            _limitText.gameObject.SetActive(limitBreak > 0);
+            _limitText.text = PenguinLabels.LimitPips(limitBreak);
+            SetMaterialState(false, false);
+        }
+
+        /// <summary>強化の素材を選ぶ一覧での見た目。Show の後に呼ぶ</summary>
+        public void SetMaterialState(bool locked, bool limitUp)
+        {
+            _group.alpha = locked ? _lockedAlpha : 1f;
+            _button.interactable = !locked;
+            _limitUpTag.SetActive(limitUp && !locked);
         }
 
         /// <summary>入れる枠を選んでいる間は光らせる（どこを押せばいいか分かるように）</summary>

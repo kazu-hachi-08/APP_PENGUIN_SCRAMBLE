@@ -12,6 +12,8 @@ namespace PenmonScramble.Editor
         private const string HudSlantFramePath = UiArtFolder + "HudSlantFrame.png";
         private const string HudSegmentRingPath = UiArtFolder + "HudSegmentRing.png";
         private const string HudMarkerPinPath = UiArtFolder + "HudMarkerPin.png";
+        private const string CrownIconPath = UiArtFolder + "IconCrown.png";
+        private const string LockIconPath = UiArtFolder + "IconLock.png";
 
         // 斜めの板: 高さ 64 で、上が右へ 0.4 ずれる平行四辺形。角は少しだけ丸める。
         // 9スライスは左右だけ（上下を切ると、伸ばしたときに斜めの辺が途中で折れるため）
@@ -38,6 +40,8 @@ namespace PenmonScramble.Editor
             WriteUiSprite(HudSlantFramePath, DrawSlant(SlantFramePixel), SlantBorder, horizontalOnly: true);
             WriteUiSprite(HudSegmentRingPath, DrawIcon(SegmentRingPixel), 0);
             WriteUiSprite(HudMarkerPinPath, DrawIcon((p, px) => White(IconCoverage(PinDistance(p), px))), 0);
+            WriteUiSprite(CrownIconPath, DrawIcon(CrownPixel), 0);
+            WriteUiSprite(LockIconPath, DrawIcon(LockPixel), 0);
             CreateResultArt();
         }
 
@@ -55,6 +59,46 @@ namespace PenmonScramble.Editor
             var touchX = PinDiscRadius * sin;
             var cone = Mathf.Max(line, touchX - q.x);
             return Mathf.Min(disc, cone);
+        }
+
+        /// <summary>
+        /// 王冠（白で描いて Image の色で塗る）: 下の帯と、3本のとがり（まん中が高い）の先に玉。
+        /// 小さく出しても形が分かるよう、とがりは太く、玉は大きめにする
+        /// </summary>
+        private static Color CrownPixel(Vector2 p, float pixel)
+        {
+            const float bandTop = -0.35f;
+            const float bandBottom = -0.7f;
+            const float halfWidth = 0.78f;
+            // 帯の上の、3本のとがりと谷の高さ（左右の端・谷・まん中のとがり）
+            const float sideTip = 0.32f;
+            const float centerTip = 0.5f;
+            const float valley = -0.12f;
+            const float ballRadius = 0.13f;
+            var x = Mathf.Abs(p.x);
+            // 横の位置で、とがりの高さを折れ線にする（端 → 谷 → まん中）
+            var valleyX = halfWidth * 0.5f;
+            var top = x > valleyX ? Mathf.Lerp(valley, sideTip, (x - valleyX) / (halfWidth - valleyX)) : Mathf.Lerp(centerTip, valley, x / valleyX);
+            var body = Mathf.Max(Mathf.Max(x - halfWidth, bandBottom - p.y), p.y - top);
+            var center = (new Vector2(p.x, p.y) - new Vector2(0f, centerTip + ballRadius * 0.6f)).magnitude - ballRadius;
+            var side = (new Vector2(x, p.y) - new Vector2(halfWidth, sideTip + ballRadius * 0.6f)).magnitude - ballRadius;
+            var shape = Mathf.Min(body, Mathf.Min(center, side));
+            // 帯の上の線を少しだけ暗くして、帯ととがりの境目を見せる
+            var line = Mathf.Abs(p.y - bandTop) < 0.04f ? 0.8f : 1f;
+            return new Color(line, line, line, IconCoverage(shape, pixel));
+        }
+
+        /// <summary>鍵（白で描いて Image の色で塗る）: 角の丸い四角の本体と、上の輪。本体のまん中に鍵穴を抜く</summary>
+        private static Color LockPixel(Vector2 p, float pixel)
+        {
+            var body = RoundRectDistance(p - new Vector2(0f, -0.3f), new Vector2(0.62f, 0.48f), 0.12f);
+            var ringCenter = new Vector2(0f, 0.18f);
+            var ring = Mathf.Abs((p - ringCenter).magnitude - 0.38f) - 0.1f;
+            // 輪は本体より上の半分だけ（下は本体に隠れる）
+            ring = Mathf.Max(ring, ringCenter.y - 0.05f - p.y);
+            var hole = Mathf.Min((p - new Vector2(0f, -0.22f)).magnitude - 0.12f, RoundRectDistance(p - new Vector2(0f, -0.4f), new Vector2(0.05f, 0.14f), 0.04f));
+            var shape = Mathf.Max(Mathf.Min(body, ring), -hole);
+            return White(IconCoverage(shape, pixel));
         }
 
         /// <summary>平行四辺形を、縁からの距離（内側が負）と縦の位置（0=下・1=上）から1画素ずつ塗る</summary>

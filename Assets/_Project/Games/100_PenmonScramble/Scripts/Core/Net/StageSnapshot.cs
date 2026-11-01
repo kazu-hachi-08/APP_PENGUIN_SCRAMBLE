@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
 
     /// <summary>見た目を変える状態。描く側が、技の定義を引かずに分かるようにする</summary>
     [Flags]
-    public enum UnitFlags : byte
+    public enum UnitFlags : ushort
     {
         None = 0,
         Dashing = 1,
@@ -33,6 +33,12 @@ namespace PenmonScramble.Core
 
         /// <summary>雑魚・ステージのボスが技を出す前に構えている（体が膨らんで光る）</summary>
         WindingUp = 128,
+
+        /// <summary>大ボスの本気（頭に「本気」の札・赤い湯気）</summary>
+        Serious = 256,
+
+        /// <summary>本気の大ボスが HP 半分を切って吠えた後（湯気が濃くなる）</summary>
+        Enraged = 512,
     }
 
     /// <summary>描くのに要るユニット1体分の値（場に出ている子の値）</summary>
@@ -111,21 +117,32 @@ namespace PenmonScramble.Core
     public readonly struct WarningState
     {
         public readonly int Id;
+
+        /// <summary>どの攻撃の予告か（大ボスの構えの見た目に使う）</summary>
+        public readonly BossAttackKind Kind;
         public readonly Vec2 From;
         public readonly Vec2 To;
         public readonly float HalfWidth;
 
+        /// <summary>0 より大きければ扇（要が From、半径が |To - From|）</summary>
+        public readonly float HalfAngleDegrees;
+
         /// <summary>攻撃が来るまでの進み具合（0〜1）</summary>
         public readonly float Progress;
 
-        public WarningState(int id, Vec2 from, Vec2 to, float halfWidth, float progress)
+        public WarningState(int id, BossAttackKind kind, Vec2 from, Vec2 to, float halfWidth, float halfAngleDegrees, float progress)
         {
             Id = id;
+            Kind = kind;
             From = from;
             To = to;
             HalfWidth = halfWidth;
+            HalfAngleDegrees = halfAngleDegrees;
             Progress = progress;
         }
+
+        public bool IsFan => HalfAngleDegrees > 0f;
+        public bool IsCircle => !IsFan && (To - From).LengthSquared <= 1e-6f;
     }
 
     /// <summary>
@@ -215,6 +232,15 @@ namespace PenmonScramble.Core
 
         /// <summary>遊んでいるステージの番号。ゲストはクリアしたときにこの番号を自分の記録に書く</summary>
         public int StageNo { get; set; }
+
+        /// <summary>ボスラッシュの難易度（ゲストの HUD・結果・報酬に使う）。ストーリーは Normal</summary>
+        public Difficulty Difficulty { get; set; }
+
+        /// <summary>いまの闘技場が何戦目か（1〜）。闘技場でなければ 0</summary>
+        public int ArenaRound { get; set; }
+
+        /// <summary>勝った闘技場の戦いの数</summary>
+        public int ArenaRoundsWon { get; set; }
         public int Tick { get; set; }
         public StageResult Result { get; set; }
         /// <summary>いま動ける範囲。出入口が開いている間は次のエリアまで広がる</summary>

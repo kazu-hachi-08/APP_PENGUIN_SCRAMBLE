@@ -9,14 +9,18 @@ namespace PenmonScramble.Game
     /// <summary>結果の画面に出すもの</summary>
     public readonly struct ResultInfo
     {
-        public ResultInfo(bool cleared, bool canRetry, string stageName, int enemiesDefeated, StageReward reward, string unlockedStageName)
+        /// <param name="unlockedNames">新しく遊べるようになったもの（ステージ・ボスラッシュの難易度）の名前。無ければ空</param>
+        /// <param name="roundCount">闘技場の連戦（ボスラッシュ）の戦いの数。0 なら「勝った戦い」の札を出さない</param>
+        public ResultInfo(bool cleared, bool canRetry, string stageName, int enemiesDefeated, StageReward reward, string[] unlockedNames, int roundsWon = 0, int roundCount = 0)
         {
             Cleared = cleared;
             CanRetry = canRetry;
             StageName = stageName;
             EnemiesDefeated = enemiesDefeated;
             Reward = reward;
-            UnlockedStageName = unlockedStageName;
+            UnlockedNames = unlockedNames ?? Array.Empty<string>();
+            RoundsWon = roundsWon;
+            RoundCount = roundCount;
         }
 
         public bool Cleared { get; }
@@ -28,13 +32,16 @@ namespace PenmonScramble.Game
         public int EnemiesDefeated { get; }
         public StageReward Reward { get; }
 
-        /// <summary>新しく遊べるようになったステージの名前。無ければ null</summary>
-        public string UnlockedStageName { get; }
+        /// <summary>新しく遊べるようになったものの名前。ボスラッシュは次のステージと次の難易度の2つになることもある</summary>
+        public string[] UnlockedNames { get; }
+
+        public int RoundsWon { get; }
+        public int RoundCount { get; }
     }
 
     /// <summary>
     /// 結果の画面: 見出しがまん中に叩きつけられ（クリアなら紙ふぶき）、カメラがペンモンへ寄るのに合わせて右の列へ移る。
-    /// 続けて札が上から順にすべり込み（倒した数 → コイン → 初クリア ボーナス → 次のステージの解放）、最後にボタンが出る。
+    /// 続けて札が上から順にすべり込み（倒した数 → 勝った戦い（ボスラッシュ）→ コイン → 初クリア ボーナス → 解放）、最後にボタンが出る。
     /// 途中で画面を押すと（攻撃のボタンでも）、最後の姿まで飛ばす。時間はメニューと同じく実時間で進める
     /// </summary>
     public class ResultScreen : MonoBehaviour, IPointerClickHandler
@@ -61,6 +68,8 @@ namespace PenmonScramble.Game
         [SerializeField] private Color _failTitleColor = new Color(0.7f, 0.82f, 1f);
         [SerializeField] private ResultHeadline _headline;
         [SerializeField] private ResultRow _defeatedRow;
+        [Tooltip("ボスラッシュの「勝った戦い 2/3」")]
+        [SerializeField] private ResultRow _roundsRow;
         [SerializeField] private ResultRow _coinRow;
         [SerializeField] private RectTransform _coinIcon;
         [SerializeField] private ResultRow _bonusRow;
@@ -69,6 +78,8 @@ namespace PenmonScramble.Game
         [Tooltip("札を並べる列の、一番上の札の位置と札の間隔（出さない札は詰める）")]
         [SerializeField] private float _rowTop = 110f;
         [SerializeField] private float _rowSpacing = 96f;
+        [Tooltip("一番下の札を置ける位置。札が多いとき（ボスラッシュの初クリア）は、ボタンに重ならないよう間を詰める")]
+        [SerializeField] private float _rowBottom = -226f;
         [SerializeField] private CanvasGroup _buttons;
         [SerializeField] private Vector2 _buttonsSlideFrom = new Vector2(0f, -160f);
         [SerializeField] private Button _retryButton;
@@ -172,17 +183,18 @@ namespace PenmonScramble.Game
         {
             var reward = info.Reward;
             var hasBonus = reward.FirstClearBonus > 0;
-            var hasUnlock = !string.IsNullOrEmpty(info.UnlockedStageName);
-            _unlockText.text = hasUnlock ? $"「{info.UnlockedStageName}」解放！" : string.Empty;
+            var hasUnlock = info.UnlockedNames.Length > 0;
+            _unlockText.text = hasUnlock ? $"「{string.Join("」「", info.UnlockedNames)}」解放！" : string.Empty;
 
-            var rows = new[] { _defeatedRow, _coinRow, _bonusRow, _unlockRow };
-            var shown = new[] { true, true, hasBonus, hasUnlock };
-            var targets = new[] { info.EnemiesDefeated, reward.Coins, reward.FirstClearBonus, -1 };
-            var formats = new[] { "{0} 体", "+{0}", "+{0}", string.Empty };
+            var rows = new[] { _defeatedRow, _roundsRow, _coinRow, _bonusRow, _unlockRow };
+            var shown = new[] { true, info.RoundCount > 0, true, hasBonus, hasUnlock };
+            var targets = new[] { info.EnemiesDefeated, info.RoundsWon, reward.Coins, reward.FirstClearBonus, -1 };
+            var formats = new[] { "{0} 体", $"{{0}}/{info.RoundCount}", "+{0}", "+{0}", string.Empty };
+            var spacing = RowSpacing(System.Array.FindAll(shown, s => s).Length);
             var list = new System.Collections.Generic.List<ResultRow>();
             for (var i = 0; i < rows.Length; i++)
             {
-                var home = new Vector2(0f, _rowTop - _rowSpacing * list.Count);
+                var home = new Vector2(0f, _rowTop - spacing * list.Count);
                 rows[i].Setup(shown[i], home, targets[i], formats[i]);
                 if (shown[i])
                 {
@@ -193,6 +205,8 @@ namespace PenmonScramble.Game
             _shownRows = list.ToArray();
             _buttonsAt = RowAt(_shownRows.Length - 1) + RowInterval + ButtonsDelay;
         }
+
+        private float RowSpacing(int count) => count <= 1 ? _rowSpacing : Mathf.Min(_rowSpacing, (_rowTop - _rowBottom) / (count - 1));
 
         private static float RowAt(int index) => FirstRowAt + RowInterval * index;
 

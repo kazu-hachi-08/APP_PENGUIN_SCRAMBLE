@@ -10,9 +10,15 @@ namespace PenmonScramble.Core
 
         private void UpdateEnemy(Unit unit, float dt)
         {
-            if (unit.Brain != null)
+            if (unit.Brain != null && !unit.Brain.IsGiant)
             {
                 UpdateBigBoss(unit, unit.Brain, dt);
+                return;
+            }
+
+            // 巨大ペンモンは、大技の予告を出している間は動かない。大技の合間はふつうのボスと同じに戦う
+            if (unit.Brain != null && UpdateGiantBigAttack(unit, unit.Brain, dt))
+            {
                 return;
             }
 
@@ -54,7 +60,7 @@ namespace PenmonScramble.Core
             var slot = unit.Skills.Length > 1 && unit.Cooldowns[1] <= 0f ? 1 : EnemySkillSlot;
             if (unit.Cooldowns[slot] <= 0f)
             {
-                unit.WindUp = new WindUpState(slot, Balance.WindUpSeconds(unit.IsBoss, slot));
+                unit.WindUp = new WindUpState(slot, Balance.WindUpSeconds(unit.IsBoss, slot) * TelegraphScale);
             }
         }
 

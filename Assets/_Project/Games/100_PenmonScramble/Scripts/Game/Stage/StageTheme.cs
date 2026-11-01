@@ -14,7 +14,16 @@ namespace PenmonScramble.Game
         private static readonly Color BossAreaTint = new Color(1f, 0.85f, 0.85f);
 
         private StageTheme(Color background, Color gate, FenceColors fence)
+            : this(background, gate, fence, 0, Color.white)
         {
+        }
+
+        /// <param name="fallbackArtWorld">このワールドの地面・闘技場の絵がまだ無いとき、代わりに借りるワールド</param>
+        /// <param name="fallbackArtTint">借りた絵に掛けて、このワールドの色に寄せる色</param>
+        private StageTheme(Color background, Color gate, FenceColors fence, int fallbackArtWorld, Color fallbackArtTint)
+        {
+            FallbackArtWorld = fallbackArtWorld;
+            FallbackArtTint = fallbackArtTint;
             Background = background;
             Gate = gate;
             FencePost = fence.Post;
@@ -33,6 +42,10 @@ namespace PenmonScramble.Game
         public Color FenceCap { get; }
         public Color FenceAltCap { get; }
 
+        /// <summary>絵が無いときに借りるワールド（0 なら借りない）。ComfyUI の絵ができるまで、色を替えた前のワールドの絵で代わりにする</summary>
+        public int FallbackArtWorld { get; }
+        public Color FallbackArtTint { get; }
+
         // エリアの外は暗くして、動ける範囲との境目を見せる
         /// <summary>エリアの外に敷く床（同じ絵を暗くする色）</summary>
         public static Color OutsideTint { get; } = new Color(0.55f, 0.55f, 0.6f);
@@ -48,7 +61,28 @@ namespace PenmonScramble.Game
             // 3 深海: 夜の海・氷の割れ目。暗い海でも柵が見えるよう、明るい柱に金と水色の玉
             new StageTheme(new Color(0.04f, 0.06f, 0.14f), new Color(0.55f, 0.75f, 0.90f),
                 new FenceColors(new Color(0.80f, 0.90f, 1f), new Color(0.25f, 0.40f, 0.75f), new Color(1f, 0.80f, 0.30f), new Color(0.45f, 0.90f, 1f))),
+            // 4 嵐の崖: 暗い灰色の岩と白い波しぶき。冷たい灰青の床の上で見えるよう、白い石の柱に黄色と水色の玉
+            new StageTheme(new Color(0.20f, 0.24f, 0.30f), new Color(0.45f, 0.50f, 0.58f),
+                new FenceColors(new Color(0.88f, 0.90f, 0.93f), new Color(0.36f, 0.44f, 0.55f), new Color(1f, 0.85f, 0.30f), new Color(0.45f, 0.85f, 0.95f)),
+                2, new Color(0.62f, 0.66f, 0.72f)),
+            // 5 火山の入り江: 黒い岩と赤く光る溶岩の筋。暗い床でも見えるよう、明るい石の柱にだいだいと黄色の玉
+            new StageTheme(new Color(0.12f, 0.06f, 0.05f), new Color(0.60f, 0.32f, 0.18f),
+                new FenceColors(new Color(0.92f, 0.84f, 0.74f), new Color(0.80f, 0.32f, 0.14f), new Color(1f, 0.55f, 0.15f), new Color(1f, 0.85f, 0.30f)),
+                1, new Color(0.62f, 0.40f, 0.32f)),
         };
+
+        // ボスラッシュのコロシアムの床（明るい石の絵）に掛ける色。添字はワールド-1。そのステージの大ボスのワールドの色に寄せる
+        private static readonly Color[] ColosseumTints =
+        {
+            new Color(1f, 0.93f, 0.80f),
+            new Color(0.82f, 0.92f, 1f),
+            new Color(0.55f, 0.66f, 0.86f),
+            new Color(0.74f, 0.80f, 0.87f),
+            new Color(0.88f, 0.62f, 0.50f),
+        };
+
+        /// <summary>コロシアムの床の絵に掛ける色</summary>
+        public Color ColosseumTint => ColosseumTints[Mathf.Clamp(System.Array.IndexOf(Worlds, this), 0, ColosseumTints.Length - 1)];
 
         private readonly struct FenceColors
         {

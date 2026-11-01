@@ -5,7 +5,7 @@ namespace PenmonScramble.Core
     /// </summary>
     public static class TrialStage
     {
-        // プレイヤーはエリア0の左寄りから始める（敵は右寄りに出る）
+        // プレイヤーはエリア0の左寄りから始める（敵は右寄りに出る）。闘技場から始まるとき（ボスラッシュ）も同じ割合
         private const float PlayerSpawnXRatio = -0.7f;
 
         // 協力のときにプレイヤーを縦に並べる間隔（マス）。体の直径より広くして、最初から重ならないようにする
@@ -13,12 +13,13 @@ namespace PenmonScramble.Core
 
         /// <summary>
         /// seats の席ごとにプレイヤーを1人ずつ置き、席の順に Unit を返す。parties は席の順の編成。
-        /// 敵の種類と位置は seed で決まり、HP は人数で増える
+        /// 敵の種類と位置は seed で決まり、HP は人数と難易度で増える
         /// </summary>
-        public static Unit[] Create(StageDef stage, int seed, int[] seats, UnitStats[][] parties, out StageWorld world)
+        public static Unit[] Create(StageDef stage, int seed, int[] seats, UnitStats[][] parties, out StageWorld world, Difficulty difficulty = Difficulty.Normal)
         {
-            world = new StageWorld(stage, seats.Length, seed);
-            var x = Balance.AreaWidth * 0.5f * PlayerSpawnXRatio;
+            world = new StageWorld(stage, seats.Length, seed, difficulty);
+            var first = StageLayout.Area(stage, 0);
+            var x = first.Center.X + first.Width * 0.5f * PlayerSpawnXRatio;
             var players = new Unit[seats.Length];
             for (var i = 0; i < seats.Length; i++)
             {

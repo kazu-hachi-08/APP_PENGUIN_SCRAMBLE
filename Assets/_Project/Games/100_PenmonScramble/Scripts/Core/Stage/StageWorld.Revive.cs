@@ -17,7 +17,7 @@ namespace PenmonScramble.Core
                 unit.ReviveSeconds += dt;
                 if (unit.ReviveSeconds >= Balance.ReviveSeconds)
                 {
-                    Revive(unit);
+                    Revive(unit, Balance.ReviveHpRatio);
                 }
             }
         }
@@ -35,9 +35,10 @@ namespace PenmonScramble.Core
             return false;
         }
 
-        private static void Revive(Unit unit)
+        /// <param name="hpRatio">起き上がる先頭の子の HP の割合</param>
+        private static void Revive(Unit unit, float hpRatio)
         {
-            unit.ReviveFirstMember(Balance.ReviveHpRatio);
+            unit.ReviveFirstMember(hpRatio);
             unit.ReviveSeconds = 0f;
             unit.KnockbackVelocity = Vec2.Zero;
             unit.InvincibleSeconds = Balance.ReviveInvincibleSeconds;

@@ -1,4 +1,5 @@
 using PenmonScramble.Common.Profile;
+using PenmonScramble.Common.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -8,12 +9,14 @@ namespace PenmonScramble.Game
     /// <summary>
     /// タイトルの2段: 起動したら大きなロゴと「タップしてスタート」だけを見せ、押すとロビー（TitleMenu）へ移る。
     /// ステージから戻ったときは、もう一度押させずにロビーから始める。
-    /// ロビーに入ったら、名前がまだ無ければ名前を決めてもらい、そのあと無料ガチャがあれば開く
+    /// ロビーに入ったら、古い版の記録を消したならそれを知らせ、名前がまだ無ければ名前を決めてもらい、そのあと無料ガチャがあれば開く
     /// </summary>
     public class TitleFlow : MonoBehaviour
     {
         private const string TouchPrompt = "画面をタップしてスタート";
         private const string DesktopPrompt = "クリック / Enter でスタート";
+        private const string OldRecordTitle = "お知らせ";
+        private const string OldRecordMessage = "新しいバージョンになったので、\n記録を初めからにしました";
 
         [SerializeField] private GameObject _splash;
         [Tooltip("画面全体を覆う透明なボタン。どこを押してもスタートする")]
@@ -27,6 +30,8 @@ namespace PenmonScramble.Game
         [SerializeField] private TitleMenu _menu;
         [SerializeField] private NameEntryDialog _nameEntry;
         [SerializeField] private GachaScreen _gacha;
+        [Tooltip("古い版の記録を消したときの知らせ")]
+        [SerializeField] private CommonDialog _notice;
 
         // シーンを読み直しても（ステージから戻っても）覚えておく。アプリを起動し直したら、また見せる
         private static bool _started;
@@ -95,6 +100,18 @@ namespace PenmonScramble.Game
             _splash.SetActive(false);
             _lobby.SetActive(true);
             _logo.SetPose(_lobbyLogoPosition, _lobbyLogoScale, instant);
+            if (GameSave.TakeOldRecordNotice() && _notice != null)
+            {
+                // 無料ガチャが急に開いて驚かないよう、先に理由を伝えてから進める
+                _notice.Show(OldRecordTitle, OldRecordMessage, AskNameOrOpenGacha, showCancelButton: false);
+                return;
+            }
+
+            AskNameOrOpenGacha();
+        }
+
+        private void AskNameOrOpenGacha()
+        {
             if (!UserProfile.HasName)
             {
                 // 初回は決めるまで閉じられない（協力で頭の上に出す名前なので、最初に決めておく）

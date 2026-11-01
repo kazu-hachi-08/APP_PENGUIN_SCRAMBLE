@@ -40,7 +40,7 @@ namespace PenmonScramble.Game
         {
             if (running)
             {
-                var phase = _time < WarmupSeconds ? "warming up" : $"{_time - WarmupSeconds:0}/{MeasureSeconds:0}s";
+                var phase = _time < WarmupSeconds ? "warming up" : $"{_time - WarmupSeconds:0}/{scenario.MeasureSeconds:0}s";
                 text.AppendLine($"> {scenario.Name}  [{phase}]  now {1f / Mathf.Max(Time.unscaledDeltaTime, 0.0001f):0} fps");
                 return;
             }

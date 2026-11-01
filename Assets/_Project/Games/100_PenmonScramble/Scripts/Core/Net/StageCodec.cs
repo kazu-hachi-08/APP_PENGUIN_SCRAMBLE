@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えて変な画面になるより無視する方がよい
         /// </summary>
-        public const byte FormatVersion = 10;
+        public const byte FormatVersion = 12;
 
         private const byte Skill1Flag = 1;
         private const byte Skill2Flag = 2;
@@ -36,6 +36,9 @@ namespace PenmonScramble.Core
             {
                 writer.Write(snapshot.Round);
                 writer.Write((byte)snapshot.StageNo);
+                writer.Write((byte)snapshot.Difficulty);
+                writer.Write((byte)snapshot.ArenaRound);
+                writer.Write((byte)snapshot.ArenaRoundsWon);
                 writer.Write(snapshot.Tick);
                 writer.Write((byte)snapshot.Result);
                 Write(writer, snapshot.AreaMin);
@@ -65,7 +68,7 @@ namespace PenmonScramble.Core
                 writer.Write(unit.Hp);
                 writer.Write(unit.MaxHp);
                 writer.Write(unit.Radius);
-                writer.Write((byte)unit.Flags);
+                writer.Write((ushort)unit.Flags);
                 // 進み具合は見た目にしか使わないので、1バイトに縮める
                 writer.Write(ToByte(unit.Revive));
             }
@@ -97,9 +100,11 @@ namespace PenmonScramble.Core
             foreach (var warning in snapshot.Warnings)
             {
                 writer.Write(warning.Id);
+                writer.Write((byte)warning.Kind);
                 Write(writer, warning.From);
                 Write(writer, warning.To);
                 writer.Write(warning.HalfWidth);
+                writer.Write(warning.HalfAngleDegrees);
                 writer.Write(ToByte(warning.Progress));
             }
 
@@ -160,6 +165,9 @@ namespace PenmonScramble.Core
             {
                 Round = reader.ReadInt32(),
                 StageNo = reader.ReadByte(),
+                Difficulty = (Difficulty)reader.ReadByte(),
+                ArenaRound = reader.ReadByte(),
+                ArenaRoundsWon = reader.ReadByte(),
                 Tick = reader.ReadInt32(),
                 Result = (StageResult)reader.ReadByte(),
                 AreaMin = ReadVec2(reader),
@@ -214,7 +222,7 @@ namespace PenmonScramble.Core
                 var hp = reader.ReadInt32();
                 var maxHp = reader.ReadInt32();
                 var radius = reader.ReadSingle();
-                var flags = (UnitFlags)reader.ReadByte();
+                var flags = (UnitFlags)reader.ReadUInt16();
                 var revive = FromByte(reader.ReadByte());
                 snapshot.Units.Add(new UnitState(id, team, seat, species, position, facing, hp, maxHp, radius, flags, revive));
             }
@@ -246,10 +254,12 @@ namespace PenmonScramble.Core
             for (var i = 0; i < warnings; i++)
             {
                 var id = reader.ReadInt32();
+                var kind = (BossAttackKind)reader.ReadByte();
                 var from = ReadVec2(reader);
                 var to = ReadVec2(reader);
                 var halfWidth = reader.ReadSingle();
-                snapshot.Warnings.Add(new WarningState(id, from, to, halfWidth, FromByte(reader.ReadByte())));
+                var halfAngle = reader.ReadSingle();
+                snapshot.Warnings.Add(new WarningState(id, kind, from, to, halfWidth, halfAngle, FromByte(reader.ReadByte())));
             }
 
             ReadTelegraphs(reader, snapshot);

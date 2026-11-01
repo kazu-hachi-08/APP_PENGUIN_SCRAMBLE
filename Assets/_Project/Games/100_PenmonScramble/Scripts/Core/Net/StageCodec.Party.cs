@@ -18,7 +18,7 @@ namespace PenmonScramble.Core
                 foreach (var penguin in party)
                 {
                     writer.Write((byte)penguin.speciesNo);
-                    writer.Write((short)Math.Clamp(penguin.power, 1, MaxPower));
+                    writer.Write((short)Math.Clamp(penguin.Power, 1, MaxPower));
                 }
             });
         }

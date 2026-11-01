@@ -5,7 +5,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ユニットの体以外の目印: 足元の席の色の輪・頭の上の名前（無ければ「P1」）「BOSS」・ダウン中の復活の範囲とたまり具合・
-    /// 協力でメニューを開いている人の「MENU」
+    /// 協力でメニューを開いている人の「MENU」。本気の大ボスは「BOSS」の代わりに「本気」
     /// </summary>
     public partial class UnitView
     {
@@ -22,6 +22,8 @@ namespace PenmonScramble.Game
         private static readonly Color BossLabelColor = new Color(0.9f, 0.15f, 0.15f);
         // 名前のあとに付けるので、短く目立つ英語にする
         private const string InMenuSuffix = " MENU";
+        private const string BossLabel = "BOSS";
+        private const string SeriousLabel = "本気";
 
         private SpriteRenderer _seatRing;
         private TextMesh _label;
@@ -41,7 +43,7 @@ namespace PenmonScramble.Game
             }
             else if (IsBoss)
             {
-                CreateLabel("BOSS", BossLabelColor);
+                CreateLabel(IsSerious ? SeriousLabel : BossLabel, BossLabelColor);
             }
 
             RenderMarks();

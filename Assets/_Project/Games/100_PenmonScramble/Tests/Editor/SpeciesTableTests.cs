@@ -97,7 +97,7 @@ namespace PenmonScramble.Tests
 
             Assert.That(stats.Skills, Is.EqualTo(new[] { species.Skill1 }));
             Assert.That(stats.CooldownScale, Is.EqualTo(Balance.EnemyCooldownScale));
-            Assert.That(stats.MaxHp, Is.EqualTo((int)System.MathF.Round(species.HpRate * Balance.EnemyPower * 1.6f)));
+            Assert.That(stats.MaxHp, Is.EqualTo((int)System.MathF.Round(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(2))));
         }
 
         [Test]

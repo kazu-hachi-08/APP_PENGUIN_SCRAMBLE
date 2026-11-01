@@ -77,6 +77,31 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
+        public void Scenarios_RushRoundsAreArenasWithTheirBossesAndDodgingBots()
+        {
+            var rush = 0;
+            foreach (var scenario in StageBenchmark.Scenario.CreateAll())
+            {
+                if (!RushTable.IsRush(scenario.Stage.No))
+                {
+                    Assert.That(scenario.Dodges, Is.False, scenario.Name);
+                    continue;
+                }
+
+                rush++;
+                var area = scenario.Stage.Areas[0];
+                // 床と柵は番号から引いたステージではなく、この切り出した定義で組む（StageView.StageOverride）ので、ワールドも元のステージと同じにする
+                Assert.That(scenario.Stage.World, Is.EqualTo(RushTable.Get(scenario.Stage.No).World), scenario.Name);
+                Assert.That(area.IsArena, Is.True, scenario.Name);
+                Assert.That(area.Waves[0].Bosses.Count, Is.GreaterThan(0), scenario.Name);
+                Assert.That(scenario.Dodges, Is.True, scenario.Name);
+                Assert.That(scenario.MeasureSeconds, Is.GreaterThan(StageBenchmark.Scenario.CreateAll()[0].MeasureSeconds), scenario.Name);
+            }
+
+            Assert.That(rush, Is.EqualTo(3));
+        }
+
+        [Test]
         public void StageBot_WalksTowardTheNearestEnemy()
         {
             var players = TrialStage.Create(StageTable.Stage1, 1, new[] { 0 }, new[] { TrialStage.PartyStats(TrialStage.RotatingParty(1, 0, 1)) }, out var world);
