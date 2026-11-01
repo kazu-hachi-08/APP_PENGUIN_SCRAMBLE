@@ -26,6 +26,13 @@ namespace PenmonScramble.Core
                 return;
             }
 
+            if (brain.Current == null && boss.IsSubmerged)
+            {
+                // 背びれで走り終えた（突進の間は大ボスの動きを進めないので、走り終えてからここへ来る）
+                ContinueFin(boss, brain);
+                return;
+            }
+
             if (brain.Current == null)
             {
                 RestAndApproach(boss, brain, dt);
@@ -113,6 +120,12 @@ namespace PenmonScramble.Core
             var skill = attack.Skill;
             switch (attack.Kind)
             {
+                case BossAttackKind.Gust:
+                    StartGust(boss, brain, skill, target);
+                    break;
+                case BossAttackKind.Fin:
+                    StartFin(boss, brain, skill, target);
+                    break;
                 case BossAttackKind.Charge:
                     brain.Direction = attack.CrossScreen ? HorizontalToward(boss, target) : AwayFrom(boss.Position, target, boss.Facing);
                     boss.Facing = brain.Direction;
@@ -131,7 +144,7 @@ namespace PenmonScramble.Core
                     AddWarning(brain, target.Position, target.Position, skill.AreaRadius);
                     break;
                 case BossAttackKind.Vortex:
-                    StartVortex(brain, skill, target);
+                    StartVortex(brain, attack, target);
                     break;
                 case BossAttackKind.Beam:
                     StartBeam(boss, brain, skill, target);
@@ -192,11 +205,13 @@ namespace PenmonScramble.Core
             AddWarning(brain, new Vec2(minX, y), new Vec2(maxX, y), halfWidth);
         }
 
-        /// <summary>竜巻: 1つは一番近いプレイヤーの足元、残りは闘技場のばらばらの場所</summary>
-        private void StartVortex(BigBossBrain brain, SkillDef skill, Unit target)
+        /// <summary>竜巻: 1つは一番近いプレイヤーの足元、残りは闘技場のばらばらの場所。本気のオオフルマカモメは吠えた後に数が増える</summary>
+        private void StartVortex(BigBossBrain brain, BossAttackDef attack, Unit target)
         {
+            var skill = attack.Skill;
             AddWarning(brain, target.Position, target.Position, skill.AreaRadius);
-            for (var i = 1; i < skill.Count; i++)
+            var count = skill.Count + brain.ExtraFor(attack);
+            for (var i = 1; i < count; i++)
             {
                 var point = RandomPointInArea(skill.AreaRadius);
                 AddWarning(brain, point, point, skill.AreaRadius);
@@ -219,6 +234,12 @@ namespace PenmonScramble.Core
             var damage = CalcDamage(boss, skill);
             switch (brain.Current.Kind)
             {
+                case BossAttackKind.Gust:
+                    ExecuteGust(boss, brain, damage, skill);
+                    break;
+                case BossAttackKind.Fin:
+                    ExecuteFin(boss, brain, damage, skill);
+                    break;
                 case BossAttackKind.Charge:
                     boss.Dash = new DashState(skill, brain.Direction, damage, brain.DashDistance);
                     break;
@@ -236,6 +257,7 @@ namespace PenmonScramble.Core
                     boss.IsSubmerged = false;
                     HitPlayersIn(boss, spot, damage, skill, null);
                     Burst?.Invoke(new BurstEvent(BurstShape.Ring, boss.Element, spot.From, spot.HalfWidth, false));
+                    LeaveLeftovers(boss, brain.Current, spot);
                     break;
                 case BossAttackKind.Vortex:
                     foreach (var warning in brain.Warnings)
@@ -283,9 +305,9 @@ namespace PenmonScramble.Core
             }
         }
 
-        private void AddWarning(BigBossBrain brain, Vec2 from, Vec2 to, float halfWidth)
+        private void AddWarning(BigBossBrain brain, Vec2 from, Vec2 to, float halfWidth, float halfAngleDegrees = 0f)
         {
-            var warning = new BossWarning(_nextId++, from, to, halfWidth, brain.TelegraphTotal);
+            var warning = new BossWarning(_nextId++, brain.Current.Kind, from, to, halfWidth, halfAngleDegrees, brain.TelegraphTotal);
             brain.Warnings.Add(warning);
             _warnings.Add(warning);
         }

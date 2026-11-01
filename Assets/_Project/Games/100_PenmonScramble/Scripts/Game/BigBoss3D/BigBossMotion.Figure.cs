@@ -93,13 +93,15 @@ namespace PenmonScramble.Game
         /// <summary>もぐる・飛び出す。床から上の高さを返す（影の大きさに使う）</summary>
         private float Dive(BigBossPose pose, ref Vector3 position, ref Quaternion rotation)
         {
-            var depth = _model.TopHeight + DiveMargin;
+            // 背びれを残すサメは、背びれが立ったまま見えるよう頭から突っ込まずに水平に沈む
+            var keepsFin = _model.KeepsFinUp;
+            var depth = keepsFin ? _model.DiveDepth : _model.TopHeight + DiveMargin;
             if (pose.Submerge > 0f)
             {
                 var s = pose.Submerge;
                 var hop = DiveHop * Bell(s, 0f, 0.25f, 0.6f);
                 position += Vector3.up * (hop - depth * s * s);
-                rotation *= Quaternion.Euler(DivePitch * Mathf.SmoothStep(0f, 1f, s), 0f, 0f);
+                rotation *= Quaternion.Euler((keepsFin ? 0f : DivePitch) * Mathf.SmoothStep(0f, 1f, s), 0f, 0f);
                 return hop;
             }
 

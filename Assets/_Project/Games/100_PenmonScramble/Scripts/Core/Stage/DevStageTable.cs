@@ -7,6 +7,7 @@ namespace PenmonScramble.Core
     public static class DevStageTable
     {
         public const int ArenaGauntletNo = 100;
+        public const int NewBossesNo = 99;
 
         private static readonly int[] Escorts = { 1, 2, 3, 6, 7, 11, 12, 13, 16, 17 };
 
@@ -19,13 +20,31 @@ namespace PenmonScramble.Core
             AreaDef.Arena(Bosses(2, new BossSpawn(BigBossTable.LeopardSealNo, BossRank.Normal)), new WaveDef(2, Escorts)),
             AreaDef.Arena(Bosses(2, new BossSpawn(BigBossTable.OrcaNo, BossRank.Serious)), new WaveDef(2, Escorts)));
 
+        /// <summary>
+        /// 新しい大ボス: オオフルマカモメ → サメ → 本気のオオフルマカモメ → 本気のサメ。
+        /// 4戦続けて、ふだんの攻撃と、本気で吠えた後に増える攻撃（竜巻が増える・背びれが2本）をまとめて確かめる
+        /// </summary>
+        public static readonly StageDef NewBosses = new StageDef(NewBossesNo, "新しい大ボス", 3,
+            AreaDef.Arena(Bosses(1, new BossSpawn(BigBossTable.FulmarNo, BossRank.Normal)), new WaveDef(2, Escorts)),
+            AreaDef.Arena(Bosses(1, new BossSpawn(BigBossTable.SharkNo, BossRank.Normal)), new WaveDef(2, Escorts)),
+            AreaDef.Arena(Bosses(1, new BossSpawn(BigBossTable.FulmarNo, BossRank.Serious)), new WaveDef(2, Escorts)),
+            AreaDef.Arena(Bosses(1, new BossSpawn(BigBossTable.SharkNo, BossRank.Serious)), new WaveDef(2, Escorts)));
+
         /// <summary>開発用のステージなら返す。違えば null</summary>
-        public static StageDef Get(int no) => no == ArenaGauntletNo ? ArenaGauntlet : null;
+        public static StageDef Get(int no)
+        {
+            switch (no)
+            {
+                case ArenaGauntletNo: return ArenaGauntlet;
+                case NewBossesNo: return NewBosses;
+                default: return null;
+            }
+        }
 
         private static WaveDef Bosses(int escorts, params BossSpawn[] bosses) => new WaveDef(escorts, Escorts, bosses);
     }
 
-    /// <summary>番号からステージを引く入口。ストーリー（1〜）と開発用（100）。ボスラッシュ（101〜）もここに足す</summary>
+    /// <summary>番号からステージを引く入口。ストーリー（1〜）と開発用（99・100）。ボスラッシュ（101〜）もここに足す</summary>
     public static class Stages
     {
         public static StageDef Get(int no) => StageTable.Get(no) ?? DevStageTable.Get(no);

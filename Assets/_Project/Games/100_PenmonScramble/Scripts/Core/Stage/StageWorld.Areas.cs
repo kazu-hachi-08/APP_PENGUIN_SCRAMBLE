@@ -54,7 +54,11 @@ namespace PenmonScramble.Core
                 switch (effect.Kind)
                 {
                     case AreaEffectKind.Zone:
+                    case AreaEffectKind.Lava:
                         UpdateZone(effect, dt);
+                        break;
+                    case AreaEffectKind.Fin:
+                        UpdateFinRunner(effect, dt);
                         break;
                     case AreaEffectKind.Drop:
                         UpdateDrop(effect, dt);
@@ -121,6 +125,7 @@ namespace PenmonScramble.Core
         /// </summary>
         private void UpdateVortex(AreaEffect vortex, float dt)
         {
+            DriftVortex(vortex, dt);
             var reach = vortex.Radius * Balance.VortexReachRatio;
             foreach (var target in _units)
             {

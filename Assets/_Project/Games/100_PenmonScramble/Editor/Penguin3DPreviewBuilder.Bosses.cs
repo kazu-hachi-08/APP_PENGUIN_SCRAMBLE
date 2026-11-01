@@ -9,8 +9,8 @@ using Object = UnityEngine.Object;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 大ボス3体のスクショ（形と動きを人が確かめる）。試作の場に一時的に組んで撮り、撮り終えたら消す。
-    /// boss_skua.png / boss_seal.png / boss_orca.png: 縦に動き、横にその動きの始めから終わりまでを6枚。
+    /// 大ボス5体のスクショ（形と動きを人が確かめる）。試作の場に一時的に組んで撮り、撮り終えたら消す。
+    /// boss_skua.png / boss_seal.png / boss_orca.png / boss_fulmar.png / boss_shark.png: 縦に動き、横にその動きの始めから終わりまでを6枚。
     /// bosses_area.png: ゲームのカメラでエリア全体（ペンギンと並べた大きさ）
     /// </summary>
     public static partial class Penguin3DPreviewBuilder
@@ -21,6 +21,8 @@ namespace PenmonScramble.Editor
         private const int BossAreaWidth = 1920;
         private const int BossAreaHeight = 1080;
         private const float BossMoveSpeed = 2f;
+        // エリアの横幅（16マス）に5体が収まる間隔
+        private const float BossAreaSpacing = 3.4f;
 
         private readonly struct BossRow
         {
@@ -74,6 +76,32 @@ namespace PenmonScramble.Editor
             new BossRow("撃破", BigBossMotion.DefeatSeconds, m => m.PlayDefeat()),
         };
 
+        private static readonly BossRow[] FulmarRows =
+        {
+            new BossRow("滑空", 1f / 0.9f, m => { }),
+            new BossRow("移動", 1f / (0.9f + BossMoveSpeed * 0.2f), m => m.Velocity = Vector3.back * BossMoveSpeed, preRoll: 0.5f),
+            new BossRow("突風の予告", 0.6f, m => m.Telegraph = BossAttackKind.Gust),
+            new BossRow("突風が出た", BigBossMotion.StrikeSeconds, m => { m.Telegraph = BossAttackKind.Gust; m.Tick(0.6f); m.Telegraph = null; m.PlayStrike(BossAttackKind.Gust); }),
+            new BossRow("竜巻の予告", 0.6f, m => m.Telegraph = BossAttackKind.Vortex),
+            new BossRow("急降下の予告", 0.6f, m => m.Telegraph = BossAttackKind.Charge),
+            new BossRow("急降下（突進）", 0.5f, m => { m.PlayStrike(BossAttackKind.Charge); m.Sliding = true; }),
+            new BossRow("被弾", BigBossMotion.HitSeconds, m => m.PlayHit()),
+            new BossRow("撃破", BigBossMotion.DefeatSeconds, m => m.PlayDefeat()),
+        };
+
+        private static readonly BossRow[] SharkRows =
+        {
+            new BossRow("休み", 1f / 0.6f, m => { }),
+            new BossRow("泳ぐ", 1f / (0.6f + BossMoveSpeed * 0.4f), m => m.Velocity = Vector3.back * BossMoveSpeed, preRoll: 0.5f),
+            new BossRow("背びれ（もぐって走る）", 0.6f, m => { m.Telegraph = BossAttackKind.Fin; m.Submerged = true; m.Sliding = true; }, preRoll: BigBossMotion.SubmergeSeconds),
+            new BossRow("もぐる（食いつき）", BigBossMotion.SubmergeSeconds, m => { m.Telegraph = BossAttackKind.Ambush; m.Submerged = true; }),
+            new BossRow("飛び出す", BigBossMotion.EmergeSeconds, m => m.Submerged = false, preRoll: 0f),
+            new BossRow("突進の予告", 0.6f, m => m.Telegraph = BossAttackKind.Charge),
+            new BossRow("突進", 0.5f, m => { m.PlayStrike(BossAttackKind.Charge); m.Sliding = true; }),
+            new BossRow("被弾", BigBossMotion.HitSeconds, m => m.PlayHit()),
+            new BossRow("撃破", BigBossMotion.DefeatSeconds, m => m.PlayDefeat()),
+        };
+
         [MenuItem(EditorMenu.Capture + "Boss Motions", priority = EditorMenu.CapturePriority + 4)]
         public static void CaptureBosses()
         {
@@ -91,10 +119,14 @@ namespace PenmonScramble.Editor
                 var skua = AddBoss(stage, holder.transform, BigBossTable.SkuaNo);
                 var seal = AddBoss(stage, holder.transform, BigBossTable.LeopardSealNo);
                 var orca = AddBoss(stage, holder.transform, BigBossTable.OrcaNo);
+                var fulmar = AddBoss(stage, holder.transform, BigBossTable.FulmarNo);
+                var shark = AddBoss(stage, holder.transform, BigBossTable.SharkNo);
                 Save(CaptureBossSheet(stage, skua, SkuaRows), "boss_skua.png");
                 Save(CaptureBossSheet(stage, seal, SealRows), "boss_seal.png");
                 Save(CaptureBossSheet(stage, orca, OrcaRows), "boss_orca.png");
-                Save(CaptureBossArea(stage, skua, seal, orca), "bosses_area.png");
+                Save(CaptureBossSheet(stage, fulmar, FulmarRows), "boss_fulmar.png");
+                Save(CaptureBossSheet(stage, shark, SharkRows), "boss_shark.png");
+                Save(CaptureBossArea(stage, skua, seal, orca, fulmar, shark), "bosses_area.png");
             }
             finally
             {
@@ -158,8 +190,8 @@ namespace PenmonScramble.Editor
             SampleRow(stage.Camera, boss.Tick, row.PreRoll, row.Seconds, sheet, BossCellSize, y);
         }
 
-        /// <summary>エリアに3体とペンギンを並べて、ゲームのカメラで撮る</summary>
-        private static Texture2D CaptureBossArea(PenguinPreviewStage stage, BigBossMotion skua, BigBossMotion seal, BigBossMotion orca)
+        /// <summary>エリアに大ボスとペンギンを並べて、ゲームのカメラで撮る</summary>
+        private static Texture2D CaptureBossArea(PenguinPreviewStage stage, params BigBossMotion[] bosses)
         {
             for (var i = 0; i < stage.Penguins.Count; i++)
             {
@@ -167,11 +199,10 @@ namespace PenmonScramble.Editor
                 stage.Penguins[i].gameObject.SetActive(i >= stage.Penguins.Count - 5);
             }
 
-            var bosses = new[] { skua, seal, orca };
             for (var i = 0; i < bosses.Length; i++)
             {
                 bosses[i].gameObject.SetActive(true);
-                bosses[i].transform.localPosition = new Vector3((i - 1) * 5f, 0f, 1.5f);
+                bosses[i].transform.localPosition = new Vector3((i - (bosses.Length - 1) * 0.5f) * BossAreaSpacing, 0f, 1.5f);
                 bosses[i].ResetPose();
                 bosses[i].SnapFacing(Vector3.back);
                 bosses[i].Tick(0.1f);

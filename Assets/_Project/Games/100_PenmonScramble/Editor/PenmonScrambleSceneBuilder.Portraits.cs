@@ -69,7 +69,7 @@ namespace PenmonScramble.Editor
                     Tally(ShootPortrait(camera, model, PortraitYaw, PortraitPitch, PenguinPortraitHalfSize, PenguinPortraitPath(no)), ref changed, ref failed);
                 }
 
-                for (var i = 0; i < Balance.WorldCount; i++)
+                for (var i = 0; i < BigBossTable.Count; i++)
                 {
                     var no = BigBossTable.SkuaNo + i;
                     var model = BigBossModelBuilder.Build(no, materials, parent);

@@ -117,21 +117,32 @@ namespace PenmonScramble.Core
     public readonly struct WarningState
     {
         public readonly int Id;
+
+        /// <summary>どの攻撃の予告か（大ボスの構えの見た目に使う）</summary>
+        public readonly BossAttackKind Kind;
         public readonly Vec2 From;
         public readonly Vec2 To;
         public readonly float HalfWidth;
 
+        /// <summary>0 より大きければ扇（要が From、半径が |To - From|）</summary>
+        public readonly float HalfAngleDegrees;
+
         /// <summary>攻撃が来るまでの進み具合（0〜1）</summary>
         public readonly float Progress;
 
-        public WarningState(int id, Vec2 from, Vec2 to, float halfWidth, float progress)
+        public WarningState(int id, BossAttackKind kind, Vec2 from, Vec2 to, float halfWidth, float halfAngleDegrees, float progress)
         {
             Id = id;
+            Kind = kind;
             From = from;
             To = to;
             HalfWidth = halfWidth;
+            HalfAngleDegrees = halfAngleDegrees;
             Progress = progress;
         }
+
+        public bool IsFan => HalfAngleDegrees > 0f;
+        public bool IsCircle => !IsFan && (To - From).LengthSquared <= 1e-6f;
     }
 
     /// <summary>

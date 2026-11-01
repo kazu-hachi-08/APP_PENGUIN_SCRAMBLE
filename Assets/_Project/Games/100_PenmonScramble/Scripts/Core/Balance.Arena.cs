@@ -1,6 +1,6 @@
 namespace PenmonScramble.Core
 {
-    /// <summary>闘技場の連戦（戦いの合間）・巨大ペンモン・大ボスの本気の調整値</summary>
+    /// <summary>闘技場の連戦（戦いの合間）・巨大ペンモン・大ボスの本気・オオフルマカモメとサメの調整値</summary>
     public static partial class Balance
     {
         // 戦いの合間。闘技場で勝って次の闘技場があるとき（ボスラッシュ）
@@ -32,5 +32,15 @@ namespace PenmonScramble.Core
         public const float RageRestScale = 0.7f;
         /// <summary>本気のシャチの2本の波の間（マス）。帯の間に立てばどちらにも当たらない広さ</summary>
         public const float RageWaveGap = 1.6f;
+        /// <summary>本気のサメの2本目の背びれが、1本目の道から開く角度（度）。同じ所を走らず、間に逃げ場が残る開き</summary>
+        public const float RageFinSpreadDegrees = 40f;
+
+        // オオフルマカモメ・サメ
+        /// <summary>背びれが向きを変えて走り直すときの予告の秒数（1回目は攻撃の定義の長さ）。止まりすぎず、次の道が読める長さ</summary>
+        public const float FinLegTelegraphSeconds = 0.5f;
+        /// <summary>食いつきの後の溶岩のしぶきを置く距離 ＝ 食いつきの円の半径 × これ。円の縁のすぐ外に散らす</summary>
+        public const float LeftoverSpreadRatio = 1.2f;
+        /// <summary>突風が柵に押し付けたと見なす、柵に押し戻された距離（マス）。押される1回分より小さい値</summary>
+        public const float GustWallHitDistance = 0.02f;
     }
 }

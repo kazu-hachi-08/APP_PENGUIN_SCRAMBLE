@@ -3,13 +3,15 @@ using System;
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// 大ボス3体の定義表。各ワールドの3ステージ目の最後に出る。数値を変えるときはここを直す
+    /// 大ボス5体の定義表。各ワールドの3ステージ目の最後と、ボスラッシュに出る。数値を変えるときはここを直す
     /// </summary>
     public static class BigBossTable
     {
         public const int SkuaNo = 101;
         public const int LeopardSealNo = 102;
         public const int OrcaNo = 103;
+        public const int FulmarNo = 104;
+        public const int SharkNo = 105;
 
         private static readonly BigBossDef[] All =
         {
@@ -26,7 +28,33 @@ namespace PenmonScramble.Core
                 new BossAttackDef(BossAttackKind.Wave, 1.0f, Circles(30f, 8f, 0f, 0)),
                 new BossAttackDef(BossAttackKind.Charge, 1.0f, Dash(40f, 12f, 0f, 20f, 0.3f), crossScreen: true),
                 new BossAttackDef(BossAttackKind.Charge, 0.8f, Dash(34f, 10f, 7f, 15f, 0.3f))),
+            // 突風で柵へ押し流し、動く竜巻で吸い込み、低く急降下する。カモメより大きく重い。本気では竜巻が2つ増える
+            new BigBossDef(FulmarNo, "オオフルマカモメ", Element.Wind, 1.5f, 1.1f, 2.0f, 1.5f, new BossRage(BossAttackKind.Vortex, 2, simultaneous: true),
+                new BossAttackDef(BossAttackKind.Gust, 1.0f, new SkillDef
+                {
+                    Shape = SkillShape.Melee, Power = 24f, Knockback = 6f, Range = 9f, HalfAngleDegrees = 35f, DashSpeed = 10f, Duration = 1.1f,
+                }),
+                new BossAttackDef(BossAttackKind.Vortex, 1.0f, new SkillDef
+                {
+                    Shape = SkillShape.Zone, Power = 7f, AreaRadius = 2f, Count = 3, Duration = 4f, Interval = 0.5f, Pull = 2.2f, ChaseSpeed = 1.1f,
+                }),
+                new BossAttackDef(BossAttackKind.Charge, 0.8f, Dash(30f, 9f, 9f, 14f, 0.25f))),
+            // 背びれだけで床を走り回り（攻撃が効かない）、足元から大口で食いつき（溶岩のしぶきが残る）、浮き上がって突っ込む。
+            // 一番硬い最後の大ボス。本気では背びれが2本になる
+            new BigBossDef(SharkNo, "サメ", Element.Water, 1.6f, 1.25f, 2.1f, 1.3f, new BossRage(BossAttackKind.Fin, 1, simultaneous: true),
+                new BossAttackDef(BossAttackKind.Fin, 0.9f, new SkillDef
+                {
+                    Shape = SkillShape.Dash, Power = 26f, Knockback = 10f, Range = 9f, DashSpeed = 10f, AreaRadius = -0.55f, Count = 2,
+                }),
+                new BossAttackDef(BossAttackKind.Ambush, 1.1f, Circles(36f, 10f, 2f, 0), leftover: new SkillDef
+                {
+                    Shape = SkillShape.Zone, Power = 5f, AreaRadius = 0.9f, Count = 3, Duration = 3f, Interval = 0.5f,
+                }),
+                new BossAttackDef(BossAttackKind.Charge, 1.0f, Dash(36f, 11f, 9f, 14f, 0.3f))),
         };
+
+        /// <summary>大ボスの数（顔の絵の数）</summary>
+        public static int Count => All.Length;
 
         /// <summary>番号（101〜）から引く。大ボスでなければ null</summary>
         public static BigBossDef Get(int no)

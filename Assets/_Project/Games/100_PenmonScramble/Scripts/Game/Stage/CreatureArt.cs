@@ -15,7 +15,7 @@ namespace PenmonScramble.Game
         /// <summary>添字は種類の番号-1</summary>
         [SerializeField] private Sprite[] _penguins = new Sprite[SpeciesTable.Count];
         /// <summary>添字は大ボスの番号-101</summary>
-        [SerializeField] private Sprite[] _bigBosses = new Sprite[Balance.WorldCount];
+        [SerializeField] private Sprite[] _bigBosses = new Sprite[BigBossTable.Count];
         /// <summary>添字はワールド-1。1エリア分（16×9マス）に引き伸ばして敷く</summary>
         [SerializeField] private Sprite[] _grounds = new Sprite[Balance.WorldCount];
         /// <summary>添字はワールド-1。大ボスの闘技場の床。楕円を囲む四角（32×18マス）に引き伸ばして、楕円の形に切って敷く</summary>

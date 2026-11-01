@@ -94,6 +94,10 @@ namespace PenmonScramble.Core
 
         internal DashState Dash { get; set; }
 
+        /// <summary>突風に押し流されている間の状態。押されていなければ null</summary>
+        internal GustState Gust { get; set; }
+        public bool IsBlownByGust => Gust != null;
+
         /// <summary>技を出す前の構え（雑魚とステージのボスだけ）。構えていなければ null</summary>
         internal WindUpState WindUp { get; set; }
 

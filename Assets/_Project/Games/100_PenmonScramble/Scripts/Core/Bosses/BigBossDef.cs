@@ -22,6 +22,12 @@ namespace PenmonScramble.Core
 
         /// <summary>一番近いプレイヤーへ向けた赤い帯 → ボスは動かず、帯に稲妻が走る（巨大ペンモンの雷）</summary>
         Beam,
+
+        /// <summary>ボスから扇形の赤い範囲 → 強い風で押し流す。押されて柵に当たると痛い（オオフルマカモメの突風）</summary>
+        Gust,
+
+        /// <summary>もぐって背びれだけが床を走る。走る道を赤い線で見せ、何度か向きを変えて走る。もぐっている間は攻撃が効かない（サメの背びれ）</summary>
+        Fin,
     }
 
     /// <summary>
@@ -45,12 +51,13 @@ namespace PenmonScramble.Core
     /// <summary>大ボスの攻撃1つ分。ダメージ・吹っ飛びは Skill の値を使う（技と同じ当て方で済ませるため）</summary>
     public sealed class BossAttackDef
     {
-        public BossAttackDef(BossAttackKind kind, float telegraphSeconds, SkillDef skill, bool crossScreen = false)
+        public BossAttackDef(BossAttackKind kind, float telegraphSeconds, SkillDef skill, bool crossScreen = false, SkillDef leftover = null)
         {
             Kind = kind;
             TelegraphSeconds = telegraphSeconds;
             Skill = skill;
             CrossScreen = crossScreen;
+            Leftover = leftover;
         }
 
         public BossAttackKind Kind { get; }
@@ -62,12 +69,21 @@ namespace PenmonScramble.Core
         /// 突進: Range（距離）・DashSpeed・AreaRadius（体より広く当たる分）/ 雨: AreaRadius（円の半径）・Count（ばらばらに落とす数）/
         /// 飛び出し: AreaRadius / 波: 使うのは Power・Knockback だけ /
         /// 竜巻: AreaRadius（吸い込む円の半径）・Count（竜巻の数）・Duration・Interval（当たる間隔）・Pull（吸い込む速さ）/
-        /// 稲妻: AreaRadius（帯の幅の半分）・Range（帯の長さ。0 なら柵まで）
+        /// 稲妻: AreaRadius（帯の幅の半分）・Range（帯の長さ。0 なら柵まで）/
+        /// 突風: Range（扇の半径）・HalfAngleDegrees・DashSpeed（押し流す速さ）・Duration（押す秒数）・Power と Knockback は柵に当たったとき /
+        /// 背びれ: Range（1回に走る距離）・DashSpeed・AreaRadius（体の半径に足す分。背びれだけ当たるので負）・Count（向きを変えて走り直す回数）/
+        /// 竜巻: ChaseSpeed があれば、一番近いプレイヤーの方へゆっくり動く
         /// </summary>
         public SkillDef Skill { get; }
 
         /// <summary>突進: プレイヤーの方ではなく、横一直線に柵まで突っ込む（シャチ）。Range は使わない</summary>
         public bool CrossScreen { get; }
+
+        /// <summary>
+        /// 攻撃の後に床に残す範囲（設置と同じに、しばらく中の相手を削る）。Count か所を、攻撃の場所のまわりに置く。
+        /// サメの食いつきの溶岩のしぶき。残さなければ null
+        /// </summary>
+        public SkillDef Leftover { get; }
     }
 
     /// <summary>大ボス1体分。ペンギンの天敵なので、ペンギンの種類表とは分けて持つ</summary>

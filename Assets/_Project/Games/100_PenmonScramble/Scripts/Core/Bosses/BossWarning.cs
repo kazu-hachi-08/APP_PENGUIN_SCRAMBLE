@@ -4,24 +4,32 @@ namespace PenmonScramble.Core
 {
     /// <summary>
     /// 大ボスの攻撃の前に地面へ出す赤い範囲。From〜To の線から HalfWidth 以内（端は丸い）。
-    /// From と To が同じなら円になる。円・帯・突進の道を、この1つの形で表す
+    /// From と To が同じなら円になる。円・帯・突進の道を、この1つの形で表す。
+    /// HalfAngleDegrees が 0 より大きければ扇（要が From、To の向きへ |To - From| の半径。突風）
     /// </summary>
     public sealed class BossWarning
     {
-        internal BossWarning(int id, Vec2 from, Vec2 to, float halfWidth, float seconds)
+        internal BossWarning(int id, BossAttackKind kind, Vec2 from, Vec2 to, float halfWidth, float halfAngleDegrees, float seconds)
         {
             Id = id;
+            Kind = kind;
             From = from;
             To = to;
             HalfWidth = halfWidth;
+            HalfAngleDegrees = halfAngleDegrees;
             TotalSeconds = seconds;
             Remaining = seconds;
         }
 
         public int Id { get; }
+
+        /// <summary>どの攻撃の予告か。見た目（大ボスの構え）を形から当て推量しないで済むように持たせる</summary>
+        public BossAttackKind Kind { get; }
         public Vec2 From { get; }
         public Vec2 To { get; }
         public float HalfWidth { get; }
+        public float HalfAngleDegrees { get; }
+        public bool IsFan => HalfAngleDegrees > 0f;
         public float TotalSeconds { get; }
         internal float Remaining { get; set; }
 
@@ -31,8 +39,35 @@ namespace PenmonScramble.Core
         /// <summary>円（半径 radius）が範囲に少しでもかかっているか</summary>
         public bool Overlaps(Vec2 center, float radius)
         {
+            if (IsFan)
+            {
+                return OverlapsFan(center, radius);
+            }
+
             var reach = HalfWidth + radius;
             return DistanceSquaredToSegment(center) <= reach * reach;
+        }
+
+        /// <summary>扇: 半径の中で、向きの差が半分の角度（相手の体の幅の分だけ広げる）以内</summary>
+        private bool OverlapsFan(Vec2 center, float radius)
+        {
+            var axis = To - From;
+            var toCenter = center - From;
+            var distance = toCenter.Length;
+            if (distance - radius > axis.Length)
+            {
+                return false;
+            }
+
+            // 要に体がかかっている相手は、向きに関係なく当てる（向きの計算が不安定になるため）
+            if (distance <= radius)
+            {
+                return true;
+            }
+
+            var widen = System.MathF.Asin(System.Math.Min(1f, radius / distance));
+            var cos = Vec2.Dot(axis.Normalized, toCenter / distance);
+            return cos >= System.MathF.Cos(HalfAngleDegrees * System.MathF.PI / 180f + widen);
         }
 
         private float DistanceSquaredToSegment(Vec2 point)
@@ -120,6 +155,12 @@ namespace PenmonScramble.Core
 
         /// <summary>突進ですべる距離（予告の道の長さ）</summary>
         public float DashDistance { get; set; }
+
+        /// <summary>背びれの攻撃。走り直すときに、もう一度この攻撃の予告を出す</summary>
+        public BossAttackDef FinAttack { get; set; }
+
+        /// <summary>背びれ: これから走る残りの回数（いま予告している1回を含む）。0 なら背びれの途中ではない</summary>
+        public int FinLegsLeft { get; set; }
         public List<BossWarning> Warnings { get; } = new List<BossWarning>();
 
         /// <summary>吠えた後に、attack を出すとき増やす数（同時・続けて のどちらかは Rage.Simultaneous）。増えなければ 0</summary>

@@ -7,7 +7,7 @@ namespace PenmonScramble.Game
     /// <summary>
     /// 3D の大ボスの関節を動かす（移動・攻撃の予告の構え・攻撃が出た瞬間・突進・もぐる／飛び出す・被弾・撃破）。
     /// 状態は外（UnitView）から受け取り、関節と体全体（Figure）だけを動かす。毎フレームの姿勢は BigBossPose だけから決まる（Apply）。
-    /// 大ボスごとの動き方は BigBossMotion.Skua.cs / .Seal.cs / .Orca.cs、体全体の動きは BigBossMotion.Figure.cs
+    /// 大ボスごとの動き方は BigBossMotion.Skua.cs / .Seal.cs / .Orca.cs / .Fulmar.cs / .Shark.cs、体全体の動きは BigBossMotion.Figure.cs
     /// </summary>
     [RequireComponent(typeof(BigBossModel))]
     public sealed partial class BigBossMotion : MonoBehaviour, IUnitMotion
@@ -91,8 +91,18 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>床の下に隠れきっている（体を出さず、床の暗い影だけ見せる）</summary>
+        /// <summary>床の下に隠れきっている（体を出さず、床の暗い影だけ見せる。サメは背びれだけ出ている）</summary>
         public bool IsUnderground => _submerged && _pose.Submerge >= 1f;
+
+        /// <summary>もぐっても背びれを床の上に出したまま動く（サメ）</summary>
+        public bool KeepsFinUp
+        {
+            get
+            {
+                Bind();
+                return _model.KeepsFinUp;
+            }
+        }
 
         public BigBossPose Pose => _pose;
 
@@ -227,10 +237,10 @@ namespace PenmonScramble.Game
             Apply(_pose);
         }
 
-        /// <summary>Facing があればそちらへ、無ければ進む向きへ回る。もぐっている間・倒れた後は向きを変えない</summary>
+        /// <summary>Facing があればそちらへ、無ければ進む向きへ回る。もぐっている間（背びれを出して走るサメは別）・倒れた後は向きを変えない</summary>
         private void Turn(Vector3 localVelocity, bool moving, float dt)
         {
-            if (_submerged || _pose.Defeated)
+            if ((_submerged && !_model.KeepsFinUp) || _pose.Defeated)
             {
                 return;
             }
@@ -282,6 +292,12 @@ namespace PenmonScramble.Game
                     break;
                 case BigBossSpecies.LeopardSeal:
                     PoseSeal(pose, ref figure);
+                    break;
+                case BigBossSpecies.Fulmar:
+                    PoseFulmar(pose, ref figure);
+                    break;
+                case BigBossSpecies.Shark:
+                    PoseShark(pose, ref figure);
                     break;
                 default:
                     PoseOrca(pose, ref figure);
@@ -340,6 +356,8 @@ namespace PenmonScramble.Game
                 {
                     case BigBossSpecies.Skua: return SkuaStyle;
                     case BigBossSpecies.LeopardSeal: return SealStyle;
+                    case BigBossSpecies.Fulmar: return FulmarStyle;
+                    case BigBossSpecies.Shark: return SharkStyle;
                     default: return OrcaStyle;
                 }
             }

@@ -85,7 +85,7 @@ namespace PenmonScramble.Core
 
             foreach (var warning in _world.Warnings)
             {
-                snapshot.Warnings.Add(new WarningState(warning.Id, warning.From, warning.To, warning.HalfWidth, warning.Progress));
+                snapshot.Warnings.Add(new WarningState(warning.Id, warning.Kind, warning.From, warning.To, warning.HalfWidth, warning.HalfAngleDegrees, warning.Progress));
             }
 
             MoveEvents(snapshot);

@@ -21,7 +21,7 @@ namespace PenmonScramble.Editor
             var art = new GameObject("CreatureArt").AddComponent<CreatureArt>();
             var so = new SerializedObject(art);
             FillSprites(so.FindProperty("_penguins"), SpeciesTable.Count, i => PenguinPortraitPath(i + 1), CreatureArtMaxSize);
-            FillSprites(so.FindProperty("_bigBosses"), Balance.WorldCount, i => BossPortraitPath(BigBossTable.SkuaNo + i), CreatureArtMaxSize);
+            FillSprites(so.FindProperty("_bigBosses"), BigBossTable.Count, i => BossPortraitPath(BigBossTable.SkuaNo + i), CreatureArtMaxSize);
             FillSprites(so.FindProperty("_grounds"), Balance.WorldCount, i => $"{ArtFolder}Stage/World{i + 1}.png", GroundArtMaxSize);
             FillSprites(so.FindProperty("_arenaGrounds"), Balance.WorldCount, i => $"{ArtFolder}Stage/Arena{i + 1}.png", GroundArtMaxSize);
             so.ApplyModifiedProperties();

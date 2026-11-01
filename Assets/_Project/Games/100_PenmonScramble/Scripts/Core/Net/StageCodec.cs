@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えて変な画面になるより無視する方がよい
         /// </summary>
-        public const byte FormatVersion = 11;
+        public const byte FormatVersion = 12;
 
         private const byte Skill1Flag = 1;
         private const byte Skill2Flag = 2;
@@ -100,9 +100,11 @@ namespace PenmonScramble.Core
             foreach (var warning in snapshot.Warnings)
             {
                 writer.Write(warning.Id);
+                writer.Write((byte)warning.Kind);
                 Write(writer, warning.From);
                 Write(writer, warning.To);
                 writer.Write(warning.HalfWidth);
+                writer.Write(warning.HalfAngleDegrees);
                 writer.Write(ToByte(warning.Progress));
             }
 
@@ -252,10 +254,12 @@ namespace PenmonScramble.Core
             for (var i = 0; i < warnings; i++)
             {
                 var id = reader.ReadInt32();
+                var kind = (BossAttackKind)reader.ReadByte();
                 var from = ReadVec2(reader);
                 var to = ReadVec2(reader);
                 var halfWidth = reader.ReadSingle();
-                snapshot.Warnings.Add(new WarningState(id, from, to, halfWidth, FromByte(reader.ReadByte())));
+                var halfAngle = reader.ReadSingle();
+                snapshot.Warnings.Add(new WarningState(id, kind, from, to, halfWidth, halfAngle, FromByte(reader.ReadByte())));
             }
 
             ReadTelegraphs(reader, snapshot);

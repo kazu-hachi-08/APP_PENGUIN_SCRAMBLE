@@ -24,6 +24,7 @@ namespace PenmonScramble.Core
         {
             foreach (var unit in _units)
             {
+                ApplyGust(unit, dt);
                 var velocity = unit.KnockbackVelocity;
                 if (velocity.IsNearlyZero)
                 {
@@ -75,9 +76,42 @@ namespace PenmonScramble.Core
         {
             foreach (var unit in _units)
             {
+                var before = unit.Position;
                 var shape = WallFor(unit.Position, unit.Radius);
                 (unit.Position, unit.KnockbackVelocity) = shape.Confine(unit.Position, unit.KnockbackVelocity, unit.Radius, Balance.WallRestitution);
+                if (unit.Gust != null && (unit.Position - before).LengthSquared > Balance.GustWallHitDistance * Balance.GustWallHitDistance)
+                {
+                    HitWallByGust(unit);
+                }
             }
+        }
+
+        /// <summary>突風に押されている間は、決まった速さで流す。倒れた・押す時間が終わったら止める</summary>
+        private static void ApplyGust(Unit unit, float dt)
+        {
+            var gust = unit.Gust;
+            if (gust == null)
+            {
+                return;
+            }
+
+            if (!unit.IsAlive || gust.Remaining <= 0f)
+            {
+                unit.Gust = null;
+                return;
+            }
+
+            unit.Position += gust.Velocity * dt;
+            gust.Remaining -= dt;
+        }
+
+        /// <summary>突風で柵に押し付けられた: 1回だけ痛く、柵から少し跳ね返って押しが終わる</summary>
+        private void HitWallByGust(Unit unit)
+        {
+            var gust = unit.Gust;
+            unit.Gust = null;
+            ApplyHit(gust.OwnerId, unit, gust.WallDamage, gust.Skill.Knockback, -gust.Velocity.Normalized, gust.Skill);
+            Burst?.Invoke(new BurstEvent(BurstShape.Blast, Element.Wind, unit.Position, unit.Radius * 1.5f, false));
         }
 
         /// <summary>
