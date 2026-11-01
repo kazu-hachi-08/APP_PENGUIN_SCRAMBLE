@@ -212,7 +212,7 @@ namespace PenmonScramble.Editor
             return row;
         }
 
-        /// <summary>「もう一度」「タイトルへ」はメニューと同じボタン。ゲストには「もう一度」の代わりに待つことを知らせる</summary>
+        /// <summary>「もう一度」（協力のホストは「ステージを選ぶ」。文字は ResultScreen が入れ替える）「タイトルへ」はメニューと同じボタン。ゲストには左のボタンの代わりに待つことを知らせる</summary>
         private static void CreateResultButtons(RectTransform column, SerializedObject screen)
         {
             var group = CreateHudRect(column, "Buttons", Middle, ResultButtonsPosition, ResultButtonsSize);

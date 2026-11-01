@@ -47,7 +47,7 @@ namespace PenmonScramble.Game
         private void Start()
         {
             _seatColor = _view.SeatColor;
-            _hud.RetryRequested += Retry;
+            _hud.ResultNextRequested += OnResultNext;
             _hud.TitleRequested += ReturnToTitle;
             _menu.RestartRequested += Retry;
             _menu.TitleRequested += ReturnToTitle;
@@ -78,13 +78,14 @@ namespace PenmonScramble.Game
         private void OnDestroy()
         {
             EndSlowMotion();
-            _hud.RetryRequested -= Retry;
+            _hud.ResultNextRequested -= OnResultNext;
             _hud.TitleRequested -= ReturnToTitle;
             _menu.RestartRequested -= Retry;
             _menu.TitleRequested -= ReturnToTitle;
             _session.OnPeerDisconnected -= ReturnToTitle;
             _session.OnConnectionLost -= ReturnToTitle;
             _session.OnMemberLeft -= OnMemberLeft;
+            _session.OnReturnToRoom -= ReturnToTitle;
             _guest?.Dispose();
             _link?.Close();
         }
@@ -120,6 +121,8 @@ namespace PenmonScramble.Game
             }
 
             SetLocalSeat(seat);
+            // ホストが結果で「ステージを選ぶ」を押したら、部屋をつないだままシーンを読み直して待ちの窓へ（OnlineSession が部屋を引き継ぐ）
+            _session.OnReturnToRoom += ReturnToTitle;
             _guest = new StageGuest(_view, _link);
             _link.SendParty(StageCodec.EncodeParty(GameSave.Record.PartyPenguins()));
         }
@@ -236,7 +239,22 @@ namespace PenmonScramble.Game
             _host?.StartRound();
         }
 
-        /// <summary>シーンを読み直すと OnlineSession が部屋から抜ける</summary>
+        /// <summary>
+        /// 協力のホストが結果で「ステージを選ぶ」: 全員で部屋の待ちの窓へ戻る。
+        /// 画面はタイトルへ戻るのと同じくシーンを読み直して作り直し、部屋だけを OnlineSession が引き継ぐ
+        /// </summary>
+        private void ReturnToRoom()
+        {
+            if (_leaving)
+            {
+                return;
+            }
+
+            _session.ReturnToRoom();
+            ReturnToTitle();
+        }
+
+        /// <summary>シーンを読み直すと OnlineSession が部屋から抜ける（ReturnToRoom の後なら、部屋を引き継ぐ）</summary>
         private void ReturnToTitle()
         {
             if (_leaving)

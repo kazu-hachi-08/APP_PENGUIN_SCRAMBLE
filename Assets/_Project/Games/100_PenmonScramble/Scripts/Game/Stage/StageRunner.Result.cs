@@ -7,7 +7,7 @@ namespace PenmonScramble.Game
     /// <summary>
     /// 結果の流れ: 決着の瞬間に記録して保存し、BGM を止めてジングルを鳴らし、結果の画面（ResultScreen）を出す。
     /// ソロは最後の一撃をスローで見せる。見出しが右へ移るのに合わせて、カメラがペンモンへ寄る（StageView.ShowResultStage）。
-    /// 攻撃のボタンは、演出の途中なら最後まで飛ばし、出そろった後なら「もう一度」
+    /// 攻撃のボタンは、演出の途中なら最後まで飛ばし、出そろった後なら左のボタン（ソロは「もう一度」、協力のホストは「ステージを選ぶ」）
     /// </summary>
     public partial class StageRunner
     {
@@ -31,7 +31,7 @@ namespace PenmonScramble.Game
         {
             if (snapshot.Result == StageResult.Playing)
             {
-                // ゲストは、ホストが「もう一度」を押したら新しい挑戦のスナップショットが届いてここに来る
+                // ステージ中のメニューの「やり直す」で始め直したら、新しい挑戦のスナップショットが届いてここに来る
                 if (IsShowingResult)
                 {
                     _resultStartedAt = -1f;
@@ -77,13 +77,13 @@ namespace PenmonScramble.Game
 
         private ResultInfo ResultInfoOf(StageSnapshot snapshot, StageReward reward)
         {
-            var canRetry = _host != null;
+            var resultNext = NextOnResult;
             var stage = Stages.Get(snapshot.StageNo);
             if (!RushTable.IsRush(snapshot.StageNo))
             {
                 var unlocked = StageTable.Get(reward.UnlockedStageNo)?.Name;
                 var names = unlocked != null ? new[] { unlocked } : null;
-                return new ResultInfo(_resultCleared, canRetry, stage?.Name ?? string.Empty, snapshot.EnemiesDefeated, reward, names);
+                return new ResultInfo(_resultCleared, resultNext, stage?.Name ?? string.Empty, snapshot.EnemiesDefeated, reward, names);
             }
 
             var difficulty = DifficultyNames.NameOf(snapshot.Difficulty);
@@ -100,7 +100,26 @@ namespace PenmonScramble.Game
                 rushNames.Add($"{stage?.Name} {DifficultyNames.NameOf(reward.UnlockedDifficulty.Value)}");
             }
 
-            return new ResultInfo(_resultCleared, canRetry, title, snapshot.EnemiesDefeated, reward, rushNames.ToArray(), snapshot.ArenaRoundsWon, stage?.ArenaCount ?? 0);
+            return new ResultInfo(_resultCleared, resultNext, title, snapshot.EnemiesDefeated, reward, rushNames.ToArray(), snapshot.ArenaRoundsWon, stage?.ArenaCount ?? 0);
+        }
+
+        /// <summary>
+        /// ソロは同じステージを「もう一度」。協力はボスラッシュのステージと難易度を選び直したいことが多いので、
+        /// ホストが「ステージを選ぶ」で全員を待ちの窓へ戻す（同じものにもう一度挑むときも、待ちの窓でそのまま「開始」）
+        /// </summary>
+        private ResultNext NextOnResult => _host == null ? ResultNext.None : _link == null ? ResultNext.Retry : ResultNext.ChooseStage;
+
+        private void OnResultNext()
+        {
+            switch (NextOnResult)
+            {
+                case ResultNext.Retry:
+                    Retry();
+                    break;
+                case ResultNext.ChooseStage:
+                    ReturnToRoom();
+                    break;
+            }
         }
 
         /// <summary>
@@ -147,7 +166,7 @@ namespace PenmonScramble.Game
 
             if (_hud.ResultSettledFor >= RetryInputDelaySeconds)
             {
-                Retry();
+                OnResultNext();
             }
         }
 
