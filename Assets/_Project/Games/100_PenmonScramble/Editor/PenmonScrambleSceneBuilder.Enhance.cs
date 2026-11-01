@@ -103,6 +103,7 @@ namespace PenmonScramble.Editor
             {
                 var x = (i - (pips.Length - 1) * 0.5f) * TargetPipSpacing;
                 pips[i] = CreatePlainText(panel, $"Pip{i + 1}", "◇", TargetPipFontSize, new Vector2(x, TargetPipY), TargetPipSize, TextAnchor.MiddleCenter, Color.white);
+                FitLineHeight(pips[i]);
                 pips[i].gameObject.AddComponent<Outline>().effectColor = LabelOutlineColor;
             }
 

@@ -92,8 +92,9 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>
-        /// 実際に字が出る範囲が、同じ親の下のほかの部品に重なっていないか。
-        /// 文字を丸ごと含む部品は背景の板とみなし、知らせない
+        /// 実際に字が出る範囲が、同じ親の下のほかの部品に重なっていないか。わざと重ねているものは知らせない:
+        /// 文字を丸ごと含む部品（背景の板）・ふだんは透明で一瞬だけ光る部品・
+        /// 文字の板の中にある部品（ボタンの面やアイコンの上に載せた名札）・文字の板が上に重なっている部品（枠の角に載せた札）
         /// </summary>
         private static void CheckOverlap(Text text, Font font, List<string> issues)
         {
@@ -101,16 +102,18 @@ namespace PenmonScramble.Editor
             if (parent == null) return;
             var glyphs = GlyphRect(text, font);
             if (glyphs.width <= 0f) return;
+            var backdrops = Backdrops(text, parent, glyphs);
 
             foreach (Transform sibling in parent)
             {
                 if (sibling == text.transform || !sibling.gameObject.activeSelf) continue;
-                if (sibling.GetComponentInChildren<Graphic>(true) == null) continue;
+                if (!IsVisible(sibling)) continue;
 
                 var other = sibling.GetComponent<Text>() is Text otherText
                     ? GlyphRect(otherText, font)
                     : RectIn(sibling as RectTransform, parent);
                 if (other.width <= 0f || Contains(other, glyphs)) continue;
+                if (IsUnderOrInsideBackdrop(sibling, other, backdrops)) continue;
 
                 var overlap = Intersect(glyphs, other);
                 if (overlap.width > OverlapTolerance && overlap.height > OverlapTolerance)
@@ -118,6 +121,43 @@ namespace PenmonScramble.Editor
                     issues.Add($"{PathOf(text)}: 「{sibling.name}」に重なる（{overlap.width:0} x {overlap.height:0}）「{Short(text.text)}」");
                 }
             }
+        }
+
+        /// <summary>文字より前（奥）に描かれ、文字を丸ごと含む部品。文字はこの板の上に読める</summary>
+        private static List<(Transform transform, Rect rect)> Backdrops(Text text, Transform parent, Rect glyphs)
+        {
+            var backdrops = new List<(Transform, Rect)>();
+            var index = text.transform.GetSiblingIndex();
+            foreach (Transform sibling in parent)
+            {
+                if (sibling.GetSiblingIndex() >= index || !sibling.gameObject.activeSelf || !IsVisible(sibling)) continue;
+                if (sibling.GetComponent<Text>() != null) continue;
+                var rect = RectIn(sibling as RectTransform, parent);
+                if (Contains(rect, glyphs)) backdrops.Add((sibling, rect));
+            }
+            return backdrops;
+        }
+
+        /// <summary>その部品が文字の板の中にある（板の上の層）か、文字の板の方が手前で上に重なっている</summary>
+        private static bool IsUnderOrInsideBackdrop(Transform sibling, Rect other, List<(Transform transform, Rect rect)> backdrops)
+        {
+            foreach (var (backdrop, rect) in backdrops)
+            {
+                if (backdrop == sibling) continue;
+                if (Contains(rect, other)) return true;
+                if (backdrop.GetSiblingIndex() > sibling.GetSiblingIndex()) return true;
+            }
+            return false;
+        }
+
+        /// <summary>見える部品か。色が透明なもの（光る演出など、動いている間だけ出る）は重なりを数えない</summary>
+        private static bool IsVisible(Transform obj)
+        {
+            foreach (var graphic in obj.GetComponentsInChildren<Graphic>(true))
+            {
+                if (graphic.color.a > 0f) return true;
+            }
+            return false;
         }
 
         /// <summary>字が出る範囲（親の座標で）。Best Fit の文字はいちばん小さくしたときで測る（それでも重なるなら必ず重なる）</summary>

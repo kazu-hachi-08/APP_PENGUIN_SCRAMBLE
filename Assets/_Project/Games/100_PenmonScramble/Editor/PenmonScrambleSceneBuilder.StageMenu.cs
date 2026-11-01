@@ -330,6 +330,7 @@ namespace PenmonScramble.Editor
             var (face, portrait) = AddPortraitFace(disc, PartyDiscDiameter);
             var cross = CreateHudLabel(disc, "Cross", PartyCrossFontSize, TextAnchor.MiddleCenter, 0f, 0f);
             cross.text = "×";
+            FitLineHeight(cross);
             cross.color = SlotCrossColor;
             // 札は顔の下に重ねるので、顔より後に作る
             active.SetAsLastSibling();

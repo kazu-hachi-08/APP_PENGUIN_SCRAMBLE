@@ -182,6 +182,7 @@ namespace PenmonScramble.Editor
             SetRadialFill(cooldown);
             var cross = CreateHudLabel(visual, "Cross", SlotCrossFontSize, TextAnchor.MiddleCenter, 0f, 0f);
             cross.text = "×";
+            FitLineHeight(cross);
             cross.color = SlotCrossColor;
             var hpFill = CreateSlotHpBar(root);
 

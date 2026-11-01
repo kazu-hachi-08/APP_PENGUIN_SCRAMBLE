@@ -42,7 +42,8 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 TouchShadowExtra = new Vector2(0f, -6f);
         private const float SpecialHaloRatio = 1.75f;
         private const float SpecialSparkRatio = 1.32f;
-        private const float SwitchLabelY = -0.4f;
+        // 顔の下の「交代」。字の下の端がボタンの縁より外へ出ないところ
+        private const float SwitchLabelY = -0.35f;
         private const int SwitchLabelFontSize = 28;
         private static readonly Vector2 TouchIconOutlineDistance = new Vector2(3f, -3f);
         // 厚みとアイコンの縁取りは面の色を濃くする（TouchSkillButton が属性の色に変えるときも同じ割合）
