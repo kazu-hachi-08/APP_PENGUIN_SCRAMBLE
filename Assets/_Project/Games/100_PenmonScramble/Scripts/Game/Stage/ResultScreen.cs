@@ -6,15 +6,28 @@ using UnityEngine.UI;
 
 namespace PenmonScramble.Game
 {
+    /// <summary>結果の画面の左のボタン（攻撃のボタンでも押せる）で何をするか</summary>
+    public enum ResultNext
+    {
+        /// <summary>ゲスト。ボタンは「タイトルへ」だけで、ホストが待ちの窓へ戻すのを待つ</summary>
+        None,
+
+        /// <summary>ソロ: 「もう一度」同じステージを始め直す</summary>
+        Retry,
+
+        /// <summary>協力のホスト: 「ステージを選ぶ」全員で部屋の待ちの窓へ戻る</summary>
+        ChooseStage
+    }
+
     /// <summary>結果の画面に出すもの</summary>
     public readonly struct ResultInfo
     {
         /// <param name="unlockedNames">新しく遊べるようになったもの（ステージ・ボスラッシュの難易度）の名前。無ければ空</param>
         /// <param name="roundCount">闘技場の連戦（ボスラッシュ）の戦いの数。0 なら「勝った戦い」の札を出さない</param>
-        public ResultInfo(bool cleared, bool canRetry, string stageName, int enemiesDefeated, StageReward reward, string[] unlockedNames, int roundsWon = 0, int roundCount = 0)
+        public ResultInfo(bool cleared, ResultNext next, string stageName, int enemiesDefeated, StageReward reward, string[] unlockedNames, int roundsWon = 0, int roundCount = 0)
         {
             Cleared = cleared;
-            CanRetry = canRetry;
+            Next = next;
             StageName = stageName;
             EnemiesDefeated = enemiesDefeated;
             Reward = reward;
@@ -25,8 +38,8 @@ namespace PenmonScramble.Game
 
         public bool Cleared { get; }
 
-        /// <summary>「もう一度」を押せるのはホストだけ（ゲストはホストが始め直すのを待つ）</summary>
-        public bool CanRetry { get; }
+        /// <summary>左のボタンで何をするか。押せるのはソロとホストだけ</summary>
+        public ResultNext Next { get; }
 
         public string StageName { get; }
         public int EnemiesDefeated { get; }
@@ -59,7 +72,9 @@ namespace PenmonScramble.Game
         private const float CoinSoundInterval = 0.04f;
         private const string ClearTitle = "クリア！";
         private const string FailTitle = "やられた…";
-        private const string GuestNote = "ホストが「もう一度」を押すと始まります";
+        private const string RetryLabel = "もう一度";
+        private const string ChooseStageLabel = "ステージを選ぶ";
+        private const string GuestNote = "ホストが次のステージを選ぶのを待っています";
 
         [SerializeField] private Image _shade;
         [SerializeField] private Color _clearShadeColor = new Color(0.06f, 0.09f, 0.22f, 0.82f);
@@ -92,6 +107,7 @@ namespace PenmonScramble.Game
         private RectTransform _buttonsRect;
         private Vector2 _buttonsHome;
         private Vector2 _titleButtonHome;
+        private Text _retryLabel;
         private ResultInfo _info;
         private float _elapsed = -1f;
         private float _buttonsAt;
@@ -104,12 +120,13 @@ namespace PenmonScramble.Game
         /// <summary>カメラがペンモンへ寄り始める秒。見出しが右へ移るのと同時に、空いたまん中へペンモンが映る</summary>
         public const float StageCueSeconds = GlideAt - 0.1f;
 
-        public event Action RetryRequested;
+        /// <summary>左のボタン（「もう一度」/「ステージを選ぶ」）を押した</summary>
+        public event Action NextRequested;
         public event Action TitleRequested;
 
         public bool IsShown => gameObject.activeSelf;
 
-        /// <summary>ボタンまで出そろった（ここからは攻撃のボタンで「もう一度」になる）</summary>
+        /// <summary>ボタンまで出そろった（ここからは攻撃のボタンで左のボタンを押したことになる）</summary>
         public bool IsSettled => IsShown && _elapsed >= SettledAt;
 
         /// <summary>出そろってからの秒。出そろう前は負</summary>
@@ -119,7 +136,9 @@ namespace PenmonScramble.Game
 
         private void Awake()
         {
-            _retryButton.onClick.AddListener(() => RetryRequested?.Invoke());
+            _retryButton.onClick.AddListener(() => NextRequested?.Invoke());
+            // ボタンの文字はソロ（もう一度）と協力のホスト（ステージを選ぶ）で入れ替える
+            _retryLabel = _retryButton.GetComponentInChildren<Text>(true);
             _titleButton.onClick.AddListener(() => TitleRequested?.Invoke());
             _coinBurst.Arrived += OnCoinArrived;
             _buttonsRect = (RectTransform)_buttons.transform;
@@ -144,10 +163,12 @@ namespace PenmonScramble.Game
             var screenCenter = ((RectTransform)transform).TransformPoint(Vector3.zero);
             _headline.Setup(info.Cleared ? ClearTitle : FailTitle, info.Cleared ? _clearTitleColor : _failTitleColor, info.StageName, info.Cleared, screenCenter, GlideAt - HeadlineAt);
             SetupRows(info);
-            _retryButton.gameObject.SetActive(info.CanRetry);
+            var hasNext = info.Next != ResultNext.None;
+            _retryButton.gameObject.SetActive(hasNext);
+            _retryLabel.text = info.Next == ResultNext.ChooseStage ? ChooseStageLabel : RetryLabel;
             // ゲストは「タイトルへ」だけなので、まん中に置く
-            ((RectTransform)_titleButton.transform).anchoredPosition = info.CanRetry ? _titleButtonHome : new Vector2(0f, _titleButtonHome.y);
-            _guestNote.gameObject.SetActive(!info.CanRetry);
+            ((RectTransform)_titleButton.transform).anchoredPosition = hasNext ? _titleButtonHome : new Vector2(0f, _titleButtonHome.y);
+            _guestNote.gameObject.SetActive(!hasNext);
             _guestNote.text = GuestNote;
             Evaluate(silent: true);
         }

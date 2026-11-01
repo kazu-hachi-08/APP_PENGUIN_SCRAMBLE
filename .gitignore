@@ -96,3 +96,7 @@ desktop.ini
 
 # 3D の試作の場のスクショ（Tools/PenmonScramble/3D Preview Capture）
 /[Ss]creenshots/
+
+# 曲の素材（OpenTracks・旧DOVA-SYNDROME）。規約で音源そのものの再配布が禁止されており、このリポジトリは公開なので入れない。
+/Assets/_Project/Games/100_PenmonScramble/Music/
+/Assets/_Project/Games/100_PenmonScramble/Music.meta

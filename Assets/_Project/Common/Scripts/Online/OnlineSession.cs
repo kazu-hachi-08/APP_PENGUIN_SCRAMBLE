@@ -28,6 +28,7 @@ namespace PenmonScramble.Common.Online
 
         private const string StartMessage = "session.start";
         private const string NameMessage = "session.name";
+        private const string RoomMessage = "session.room";
 
         // 名前は可変長なので書き込み時に伸ばす。6文字×最大4人でも MaxMessageSize には遠く届かない
         private const int InitialMessageSize = 64;
@@ -67,11 +68,26 @@ namespace PenmonScramble.Common.Online
         public event Action<int, int> OnMatchStarted;
 
         /// <summary>
+        /// 3人以上の部屋のゲストのみ：ホストが ReturnToRoom を呼んだ（試合を終えて、部屋の待機に戻る）。
+        /// ゲームはこの後シーンを読み直す。部屋はつないだまま新しいシーンの OnlineSession に引き継ぐ
+        /// </summary>
+        public event Action OnReturnToRoom;
+
+        /// <summary>
         /// 3人以上の部屋のホストのみ：ContinueWhenMemberLeaves のとき、試合中に参加者が抜けた。引数はその人の席番号
         /// </summary>
         public event Action<int> OnMemberLeft;
 
         public bool IsHost { get; private set; }
+
+        /// <summary>部屋に入っている（作った・参加した）。シーンを読み直して部屋を引き継いだときも true</summary>
+        public bool IsInRoom => _session != null;
+
+        /// <summary>部屋の参加コード。部屋に入っていなければ null</summary>
+        public string RoomCode => _session?.Code;
+
+        /// <summary>3人以上の部屋のホストのみ：参加人数（ホスト自身を含む）</summary>
+        public int MemberCount => _memberIds.Count + 1;
 
         /// <summary>
         /// 3人以上の部屋で、試合中に1人抜けても残りで続けるか。false なら全員の試合を終える（手番制のゲーム向け）
@@ -97,6 +113,31 @@ namespace PenmonScramble.Common.Online
 
         /// <summary>前のフレームの時刻。止まっていた間も進む壁時計で測る（Time は止まっている間を数えない端末があるため）</summary>
         private DateTime _lastFrameUtc = DateTime.UtcNow;
+
+        /// <summary>このあとシーンを読み直しても部屋を抜けず、次のシーンの OnlineSession に引き継ぐ（ReturnToRoom の後）</summary>
+        private bool _carryRoomOverReload;
+
+        /// <summary>
+        /// シーンを読み直す間だけ部屋を預かる。試合の後に部屋の待機へ戻るとき、画面はシーンの読み直しで作り直したいが、
+        /// 部屋（参加コード・集まった人）はそのまま残したいため
+        /// </summary>
+        private static CarriedRoom _carried;
+
+        private sealed class CarriedRoom
+        {
+            public ISession Session;
+            public bool IsHost;
+            public int MaxPlayers;
+            public List<ulong> MemberIds;
+            public Dictionary<ulong, string> MemberNames;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            // エディタで「ドメインを読み直さない」設定でも、前の再生の部屋を拾わない
+            _carried = null;
+        }
 
         private bool IsMultiRoom => _maxPlayers > DefaultMaxPlayers;
 
@@ -127,7 +168,7 @@ namespace PenmonScramble.Common.Online
 
             // CustomMessagingManager は接続開始後にしか無いので、部屋を作ってから登録する。
             // ゲストは参加コードを受け取ってから入ってくるため、ここより先に名前が届くことはない
-            NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(NameMessage, ReceiveName);
+            RegisterMessageHandlers();
             return _session.Code;
         }
 
@@ -143,9 +184,7 @@ namespace PenmonScramble.Common.Online
             // 部屋の定員はホストが決めるので、参加側は部屋の情報から知る
             _maxPlayers = _session.MaxPlayers;
 
-            var messaging = NetworkManager.Singleton.CustomMessagingManager;
-            messaging.RegisterNamedMessageHandler(StartMessage, ReceiveStart);
-            messaging.RegisterNamedMessageHandler(NameMessage, ReceiveName);
+            RegisterMessageHandlers();
 
             // ホストからは送らず、ゲストが名乗ったら返事をもらう形にする。
             // ホストが先に送ると、ゲスト側でハンドラを登録する前に届いて捨てられることがあるため
@@ -183,6 +222,31 @@ namespace PenmonScramble.Common.Online
             OnMatchStarted?.Invoke(0, count);
         }
 
+        /// <summary>
+        /// 3人以上の部屋のホストのみ：試合を終えて、同じ顔ぶれのまま部屋の待機に戻る。ゲストには OnReturnToRoom が届く。
+        /// 呼んだ後はゲーム側がシーンを読み直す。部屋は抜けずに新しいシーンの OnlineSession へ引き継ぎ、
+        /// 次の StartMatch で席を配り直す（試合中に抜けた人の席を詰める）
+        /// </summary>
+        public void ReturnToRoom()
+        {
+            if (!IsHost || !IsMultiRoom || _session == null) return;
+
+            foreach (ulong id in _memberIds)
+            {
+                using var writer = new FastBufferWriter(InitialMessageSize, Allocator.Temp, MaxMessageSize);
+                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RoomMessage, id, writer,
+                    NetworkDelivery.ReliableSequenced);
+            }
+
+            _carryRoomOverReload = true;
+        }
+
+        private void ReceiveRoom(ulong senderId, FastBufferReader reader)
+        {
+            _carryRoomOverReload = true;
+            OnReturnToRoom?.Invoke();
+        }
+
         /// <summary>部屋から抜ける。待機中のキャンセルとシーン離脱の両方で使う</summary>
         public void Leave()
         {
@@ -194,6 +258,7 @@ namespace PenmonScramble.Common.Online
             _memberNames.Clear();
             _seats.Clear();
             _matchStarted = false;
+            _carryRoomOverReload = false;
             _maxPlayers = DefaultMaxPlayers;
 
             if (_session == null) return;
@@ -204,9 +269,82 @@ namespace PenmonScramble.Common.Online
             _peerConnected = false;
         }
 
+        private void Awake()
+        {
+            AdoptCarriedRoom();
+        }
+
         private void OnDestroy()
         {
+            if (_carryRoomOverReload && _session != null)
+            {
+                CarryRoom();
+                return;
+            }
+
             Leave();
+        }
+
+        /// <summary>部屋を抜けずに預ける。このインスタンスの受け口は外し、次のシーンの OnlineSession が付け直す</summary>
+        private void CarryRoom()
+        {
+            UnsubscribeNetworkEvents();
+            StopNameWait();
+            _carried = new CarriedRoom
+            {
+                Session = _session,
+                IsHost = IsHost,
+                MaxPlayers = _maxPlayers,
+                MemberIds = new List<ulong>(_memberIds),
+                MemberNames = new Dictionary<ulong, string>(_memberNames)
+            };
+            _session = null;
+        }
+
+        /// <summary>
+        /// 前のシーンが預けた部屋を引き継ぐ。受け口が無い間の切断の知らせは届かないので、ここで確かめ直す:
+        /// ホストが落ちていたら（ゲスト）引き継がずに抜け、抜けた参加者がいたら（ホスト）その人を外す
+        /// </summary>
+        private void AdoptCarriedRoom()
+        {
+            CarriedRoom room = _carried;
+            _carried = null;
+            if (room == null) return;
+
+            NetworkManager network = NetworkManager.Singleton;
+            bool alive = network != null && (room.IsHost ? network.IsListening : network.IsConnectedClient);
+            if (!alive)
+            {
+                Debug.LogWarning("[OnlineSession] 部屋を引き継ぐ前に接続が切れていたので抜けます");
+                Screen.sleepTimeout = SleepTimeout.SystemSetting;
+                _ = room.Session.LeaveAsync();
+                return;
+            }
+
+            _session = room.Session;
+            IsHost = room.IsHost;
+            _maxPlayers = room.MaxPlayers;
+            _peerConnected = true;
+            _memberIds.AddRange(room.MemberIds);
+            foreach (var pair in room.MemberNames) _memberNames[pair.Key] = pair.Value;
+            if (IsHost)
+            {
+                var connected = new HashSet<ulong>(network.ConnectedClientsIds);
+                _memberIds.RemoveAll(id => !connected.Contains(id));
+            }
+
+            SubscribeNetworkEvents();
+            RegisterMessageHandlers();
+        }
+
+        private void RegisterMessageHandlers()
+        {
+            var messaging = NetworkManager.Singleton.CustomMessagingManager;
+            messaging.RegisterNamedMessageHandler(NameMessage, ReceiveName);
+            if (IsHost) return;
+
+            messaging.RegisterNamedMessageHandler(StartMessage, ReceiveStart);
+            messaging.RegisterNamedMessageHandler(RoomMessage, ReceiveRoom);
         }
 
         /// <summary>
@@ -312,6 +450,7 @@ namespace PenmonScramble.Common.Online
             NetworkManager.Singleton.OnClientDisconnectCallback -= HandleClientDisconnected;
             NetworkManager.Singleton.CustomMessagingManager?.UnregisterNamedMessageHandler(StartMessage);
             NetworkManager.Singleton.CustomMessagingManager?.UnregisterNamedMessageHandler(NameMessage);
+            NetworkManager.Singleton.CustomMessagingManager?.UnregisterNamedMessageHandler(RoomMessage);
         }
 
         private void HandleClientConnected(ulong clientId)

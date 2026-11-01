@@ -13,6 +13,8 @@ namespace PenmonScramble.Common.Online
     /// </summary>
     public class ModeSelectPanel : MonoBehaviour
     {
+        private const string GuestWaitingStatus = "接続しました\nホストが開始するのを待っています";
+
         [SerializeField] private OnlineSession _session;
 
         [Header("Menu")]
@@ -119,6 +121,30 @@ namespace PenmonScramble.Common.Online
             _maxPlayers = maxPlayers;
             gameObject.SetActive(true);
             ShowMenu();
+            if (IsMultiRoom && _session.IsInRoom)
+            {
+                ResumeRoom();
+            }
+        }
+
+        /// <summary>
+        /// 試合の後、部屋をつないだままシーンを読み直して戻ってきた（OnlineSession.ReturnToRoom）。
+        /// 部屋を作った・参加した直後と同じ待機画面から、ホストが次の試合を始められるようにする
+        /// </summary>
+        private void ResumeRoom()
+        {
+            ShowWaiting(string.Empty);
+            if (_session.IsHost)
+            {
+                ShowCopyButton(_session.RoomCode);
+                RefreshLobby(_session.MemberCount);
+            }
+            else
+            {
+                SetStatus(GuestWaitingStatus);
+            }
+
+            RoomStateChanged?.Invoke(_session.IsHost, true);
         }
 
         private void SelectNpc()
@@ -244,7 +270,7 @@ namespace PenmonScramble.Common.Online
             {
                 if (!isHost)
                 {
-                    SetStatus("接続しました\nホストが開始するのを待っています");
+                    SetStatus(GuestWaitingStatus);
                     RoomStateChanged?.Invoke(false, true);
                 }
 

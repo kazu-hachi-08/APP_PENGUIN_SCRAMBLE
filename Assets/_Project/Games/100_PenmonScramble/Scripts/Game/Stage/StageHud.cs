@@ -31,7 +31,7 @@ namespace PenmonScramble.Game
         private int _shownIndex = -1;
         private int _shownSpecies = -1;
 
-        public event Action RetryRequested;
+        public event Action ResultNextRequested;
         public event Action TitleRequested;
 
         /// <summary>結果の演出が出そろった（ボタンまで出た）</summary>
@@ -42,7 +42,7 @@ namespace PenmonScramble.Game
 
         private void Awake()
         {
-            _result.RetryRequested += () => RetryRequested?.Invoke();
+            _result.NextRequested += () => ResultNextRequested?.Invoke();
             _result.TitleRequested += () => TitleRequested?.Invoke();
         }
 

@@ -60,7 +60,7 @@ namespace PenmonScramble.Game
 
         private bool HasAllParties => _seats.TrueForAll(_parties.ContainsKey);
 
-        /// <summary>「もう一度」。いま部屋にいる人数で作り直す（最初の挑戦は Update で始まる）</summary>
+        /// <summary>「もう一度」・メニューの「やり直す」。いま部屋にいる人数で作り直す（最初の挑戦は Update で始まる）</summary>
         public void StartRound()
         {
             _recorder?.Detach();

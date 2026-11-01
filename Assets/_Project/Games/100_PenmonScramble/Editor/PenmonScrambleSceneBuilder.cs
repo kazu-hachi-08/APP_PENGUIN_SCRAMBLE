@@ -227,6 +227,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_rushLobby").objectReferenceValue = title.GetComponent<RushLobby>();
             so.FindProperty("_menu").objectReferenceValue = stageMenu;
             so.FindProperty("_touch").objectReferenceValue = touch;
+            so.FindProperty("_musicClips").objectReferenceValue = CreateMusicClips(stageObj);
             so.ApplyModifiedProperties();
         }
 
