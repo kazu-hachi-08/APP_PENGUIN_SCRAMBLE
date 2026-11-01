@@ -73,6 +73,24 @@ namespace PenmonScramble.Core
         /// <summary>闘技場のエリア（巨大ペンモン・大ボスの戦い）</summary>
         public static AreaDef Arena(params WaveDef[] waves) => new AreaDef(true, waves);
 
+        /// <summary>敵の強さ（HP と攻撃の倍率）を決めた闘技場（ボスラッシュの1戦）。extremeScale は「げきむず」のときだけさらに掛ける</summary>
+        public static AreaDef Arena(float enemyScale, float extremeScale, params WaveDef[] waves)
+        {
+            return new AreaDef(true, waves) { EnemyScale = enemyScale, ExtremeScale = extremeScale };
+        }
+
+        /// <summary>
+        /// このエリアの敵の HP と攻撃に掛ける倍率（ふつうは 1）。ボスラッシュでは、ストーリーで出るワールドに合わせて作った大ボスを
+        /// 別のワールドの強さで出すので、1戦ごとにここで手ごたえをそろえる
+        /// </summary>
+        public float EnemyScale { get; private set; } = 1f;
+
+        /// <summary>
+        /// 「げきむず」のときだけ EnemyScale にさらに掛ける倍率（ふつうは 1）。予告を見てよけきれる大ボスは、うまい人には
+        /// 難易度の倍率を上げても楽になりやすいので、ステージごとに足りない分をここで足す
+        /// </summary>
+        public float ExtremeScale { get; private set; } = 1f;
+
         public IReadOnlyList<WaveDef> Waves { get; }
 
         /// <summary>

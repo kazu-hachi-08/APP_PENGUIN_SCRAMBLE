@@ -2,7 +2,7 @@ using System;
 
 namespace PenmonScramble.Core
 {
-    /// <summary>育成（強化・上限解放）の調整値。数値はフェーズ 7 のバランス調整で決め直す（案）</summary>
+    /// <summary>育成（強化・上限解放）の調整値。バランスの試験場（BalanceLab）の想定の編成は、この上限の式で育てた子を使う</summary>
     public static partial class Balance
     {
         /// <summary>1回の強化で選べる素材の数</summary>

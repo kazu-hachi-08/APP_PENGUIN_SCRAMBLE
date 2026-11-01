@@ -347,7 +347,7 @@ namespace PenmonScramble.Tests
 
             var enemy = FirstEnemy(world);
             var species = SpeciesTable.Get(enemy.SpeciesNo);
-            Assert.That(enemy.MaxHp, Is.EqualTo((int)System.MathF.Round(species.HpRate * Balance.EnemyPower * 2.8f)));
+            Assert.That(enemy.MaxHp, Is.EqualTo((int)System.MathF.Round(species.HpRate * Balance.EnemyPower * Balance.EnemyHpScale(4))));
         }
 
         [Test]

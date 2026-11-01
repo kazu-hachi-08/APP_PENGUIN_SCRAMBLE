@@ -14,6 +14,11 @@ namespace PenmonScramble.Core
         public const float GiantHpScale = 1.6f;
         /// <summary>体の半径 ＝ ペンギンの半径 × これ（ステージのボスは BossRadiusScale）</summary>
         public const float GiantRadiusScale = 3f;
+        /// <summary>
+        /// 技の待ち時間の倍率（ステージのボスは BossCooldownScale）。巨大ペンモンは大技も出すので、ふつうの技は間をあける。
+        /// ボスと同じ間だと、拡散の技（かまいたち・雷太鼓）が 1 秒おきに飛んできて、大技をよける余裕が無くなるため
+        /// </summary>
+        public const float GiantCooldownScale = 3.5f;
         /// <summary>闘技場の大技を出し終えてから、次の大技の予告までの秒数。この間はふつうの技1・技2で戦う</summary>
         public const float GiantBigAttackInterval = 6f;
         /// <summary>出てきてから最初の大技までの秒数。2体組の2体目は、1体目の大技の後に順番が回る</summary>

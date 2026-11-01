@@ -26,19 +26,19 @@ namespace PenmonScramble.Core
         private const int EscortsAfter = 2;
 
         /// <summary>海鳥の闘技場（ワールド1の色）: 氷の巨大ペンモン → ヒョウアザラシ → 本気のオオトウゾクカモメ</summary>
-        private static readonly StageDef Rush1 = Rush(101, "海鳥の闘技場", 1, Shore, 4, 5, BigBossTable.LeopardSealNo, BigBossTable.SkuaNo);
+        private static readonly StageDef Rush1 = Rush(101, "海鳥の闘技場", 1, Shore, 4, 5, BigBossTable.LeopardSealNo, BigBossTable.SkuaNo, new Scales(1.3f, 1.25f, 1f, 1.3f));
 
         /// <summary>氷の闘技場（ワールド2の色）: 水の巨大ペンモン → オオトウゾクカモメ → 本気のヒョウアザラシ</summary>
-        private static readonly StageDef Rush2 = Rush(102, "氷の闘技場", 2, Ice, 8, 10, BigBossTable.SkuaNo, BigBossTable.LeopardSealNo);
+        private static readonly StageDef Rush2 = Rush(102, "氷の闘技場", 2, Ice, 8, 10, BigBossTable.SkuaNo, BigBossTable.LeopardSealNo, new Scales(1.25f, 1.35f, 0.95f, 1.28f));
 
         /// <summary>深海の闘技場（ワールド3の色）: 風の巨大ペンモン → オオフルマカモメ → 本気のシャチ</summary>
-        private static readonly StageDef Rush3 = Rush(103, "深海の闘技場", 3, Deep, 14, 15, BigBossTable.FulmarNo, BigBossTable.OrcaNo);
+        private static readonly StageDef Rush3 = Rush(103, "深海の闘技場", 3, Deep, 14, 15, BigBossTable.FulmarNo, BigBossTable.OrcaNo, new Scales(1f, 0.85f, 0.9f, 1.5f));
 
         /// <summary>嵐の闘技場（ワールド4の色）: 雷の巨大ペンモン → シャチ → 本気のオオフルマカモメ</summary>
-        private static readonly StageDef Rush4 = Rush(104, "嵐の闘技場", 4, Storm, 19, 20, BigBossTable.OrcaNo, BigBossTable.FulmarNo);
+        private static readonly StageDef Rush4 = Rush(104, "嵐の闘技場", 4, Storm, 19, 20, BigBossTable.OrcaNo, BigBossTable.FulmarNo, new Scales(1.3f, 1.35f, 0.95f, 0.95f));
 
         /// <summary>火山の闘技場（ワールド5の色）: ★3 の巨大ペンモン（水の波と雷の帯）→ オオフルマカモメ → 本気のサメ</summary>
-        private static readonly StageDef Rush5 = Rush(105, "火山の闘技場", 5, Volcano, 10, 20, BigBossTable.FulmarNo, BigBossTable.SharkNo);
+        private static readonly StageDef Rush5 = Rush(105, "火山の闘技場", 5, Volcano, 10, 20, BigBossTable.FulmarNo, BigBossTable.SharkNo, new Scales(1.15f, 1.1f, 0.6f, 1f));
 
         /// <summary>番号の順に並べる（No は添字 + FirstNo）</summary>
         private static readonly StageDef[] All = { Rush1, Rush2, Rush3, Rush4, Rush5 };
@@ -67,17 +67,38 @@ namespace PenmonScramble.Core
             return stage.Areas[index].Waves[0].Bosses;
         }
 
-        private static StageDef Rush(int no, string name, int world, int[] escorts, int giantA, int giantB, int bigBoss, int seriousBoss)
+        /// <param name="scales">1戦目・2戦目・3戦目の敵の強さ（AreaDef.EnemyScale）</param>
+        private static StageDef Rush(int no, string name, int world, int[] escorts, int giantA, int giantB, int bigBoss, int seriousBoss, Scales scales)
         {
             return new StageDef(no, name, world,
-                Round(escorts, new BossSpawn(giantA, BossRank.Giant), new BossSpawn(giantB, BossRank.Giant)),
-                Round(escorts, new BossSpawn(bigBoss, BossRank.Normal)),
-                Round(escorts, new BossSpawn(seriousBoss, BossRank.Serious)));
+                Round(escorts, scales.Giants, scales.Extreme, new BossSpawn(giantA, BossRank.Giant), new BossSpawn(giantB, BossRank.Giant)),
+                Round(escorts, scales.BigBoss, scales.Extreme, new BossSpawn(bigBoss, BossRank.Normal)),
+                Round(escorts, scales.Serious, scales.Extreme, new BossSpawn(seriousBoss, BossRank.Serious)));
         }
 
-        private static AreaDef Round(int[] escorts, params BossSpawn[] bosses)
+        private static AreaDef Round(int[] escorts, float enemyScale, float extremeScale, params BossSpawn[] bosses)
         {
-            return AreaDef.Arena(new WaveDef(EscortsWithBoss, escorts, bosses), new WaveDef(EscortsAfter, escorts));
+            return AreaDef.Arena(enemyScale, extremeScale, new WaveDef(EscortsWithBoss, escorts, bosses), new WaveDef(EscortsAfter, escorts));
+        }
+
+        /// <summary>
+        /// 3戦それぞれの敵の強さと、「げきむず」の上乗せ（3戦とも同じ）。バランスの試験場（BalanceLab）で、
+        /// どのステージ・どの戦いも同じくらいの手ごたえになるよう合わせた値
+        /// </summary>
+        private readonly struct Scales
+        {
+            public Scales(float giants, float bigBoss, float serious, float extreme)
+            {
+                Giants = giants;
+                BigBoss = bigBoss;
+                Serious = serious;
+                Extreme = extreme;
+            }
+
+            public float Giants { get; }
+            public float BigBoss { get; }
+            public float Serious { get; }
+            public float Extreme { get; }
         }
     }
 }

@@ -149,6 +149,7 @@ namespace PenmonScramble.Core
             stats.Radius = Balance.PenguinRadius * Balance.GiantRadiusScale;
             stats.MaxHp = UnitStats.HpOf(stats.MaxHp * Balance.GiantHpScale);
             stats.KnockbackScale = Balance.BigBossKnockbackScale;
+            stats.CooldownScale = Balance.GiantCooldownScale;
             stats.GiantAttack = GiantAttacks.For(species.Element);
             return stats;
         }

@@ -15,7 +15,7 @@ namespace PenmonScramble.Core
         // 風: 3か所に竜巻が立ち、しばらく中へ吸い込む。歩けば抜け出せる速さで引き、中にいる間だけ少しずつ削る
         private static readonly BossAttackDef Wind = new BossAttackDef(BossAttackKind.Vortex, 1.0f, new SkillDef
         {
-            Shape = SkillShape.Zone, Power = 6f, AreaRadius = 2.2f, Count = 3, Duration = 3f, Interval = 0.5f, Pull = 2.2f,
+            Shape = SkillShape.Zone, Power = 4f, AreaRadius = 2.2f, Count = 3, Duration = 3f, Interval = 0.5f, Pull = 2.2f,
         });
 
         // 雷: 一番近いプレイヤーへ向けた稲妻の帯。柵まで届く

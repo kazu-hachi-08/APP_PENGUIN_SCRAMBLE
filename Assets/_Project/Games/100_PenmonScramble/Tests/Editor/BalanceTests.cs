@@ -12,9 +12,9 @@ namespace PenmonScramble.Tests
         }
 
         [TestCase(1, 1.0f)]
-        [TestCase(2, 1.6f)]
-        [TestCase(3, 2.2f)]
-        [TestCase(4, 2.8f)]
+        [TestCase(2, 1.9f)]
+        [TestCase(3, 2.7f)]
+        [TestCase(4, 3.4f)]
         public void EnemyHpScale_FollowsPlayerCount(int players, float expected)
         {
             Assert.That(Balance.EnemyHpScale(players), Is.EqualTo(expected).Within(0.001f));

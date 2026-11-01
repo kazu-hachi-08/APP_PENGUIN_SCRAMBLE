@@ -129,11 +129,11 @@ namespace PenmonScramble.Game
         /// <summary>報酬は見ている人の記録で決まる（初クリアのボーナスは、自分がまだクリアしていなければ付く）</summary>
         private void ShowReward(RushChoice choice)
         {
-            var clear = Balance.RushClearCoins(choice.Difficulty);
+            var clear = Balance.RushClearCoins(choice.StageNo, choice.Difficulty);
             var text = $"クリア報酬  {clear:N0}";
             if (!Record.IsRushCleared(choice.StageNo, choice.Difficulty))
             {
-                text += $"   初クリア +{Balance.RushFirstClearBonus(choice.Difficulty):N0}";
+                text += $"   初クリア +{Balance.RushFirstClearBonus(choice.StageNo, choice.Difficulty):N0}";
             }
 
             _rewardText.text = text;

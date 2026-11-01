@@ -15,10 +15,11 @@ namespace PenmonScramble.Core
     {
         public const int DifficultyCount = 3;
 
-        // 添字は Difficulty。予告は短くするほど難しい（よけるまでの間が減る）
-        private static readonly float[] DifficultyHpScales = { 1f, 1.8f, 3f };
-        private static readonly float[] DifficultyAttackScales = { 1f, 1.5f, 2.2f };
-        private static readonly float[] DifficultyTelegraphScales = { 1f, 0.9f, 0.8f };
+        // 添字は Difficulty。予告は短くするほど難しい（よけるまでの間が減る）。
+        // げきむずは予告をぐっと短くする: HP と攻撃を上げるだけだと、予告を見てよけきれるうまい人には楽なままになるため（バランスの試験場で決めた値）
+        private static readonly float[] DifficultyHpScales = { 1f, 2f, 3.5f };
+        private static readonly float[] DifficultyAttackScales = { 1f, 1.6f, 3f };
+        private static readonly float[] DifficultyTelegraphScales = { 1f, 0.9f, 0.65f };
 
         public static float DifficultyHpScale(Difficulty difficulty) => DifficultyHpScales[IndexOf(difficulty)];
 

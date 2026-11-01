@@ -177,8 +177,8 @@ namespace PenmonScramble.Tests
         }
 
         [TestCase(Difficulty.Normal, 1f, 1f, 1f)]
-        [TestCase(Difficulty.Hard, 1.8f, 1.5f, 0.9f)]
-        [TestCase(Difficulty.Extreme, 3f, 2.2f, 0.8f)]
+        [TestCase(Difficulty.Hard, 2f, 1.6f, 0.9f)]
+        [TestCase(Difficulty.Extreme, 3.5f, 3f, 0.65f)]
         public void Difficulty_ScalesEnemies(Difficulty difficulty, float hp, float attack, float telegraph)
         {
             Assert.That(Balance.DifficultyHpScale(difficulty), Is.EqualTo(hp));
@@ -193,6 +193,40 @@ namespace PenmonScramble.Tests
 
             Assert.That(enemy.MaxHp, Is.EqualTo(UnitStats.HpOf(normal.MaxHp * hp)));
             Assert.That(enemy.Attack, Is.EqualTo(normal.Attack * attack).Within(Tolerance));
+        }
+
+        [TestCase(Difficulty.Normal, 1.5f)]
+        [TestCase(Difficulty.Extreme, 1.5f * 2f)]
+        public void ArenaEnemyScale_MultipliesHpAndAttack_AndExtremeAddsMore(Difficulty difficulty, float scale)
+        {
+            var stage = new StageDef(1, "test", 1, AreaDef.Arena(1.5f, 2f, new WaveDef(1, Pool)));
+            var world = new StageWorld(stage, playerCount: 1, seed: 1, difficulty);
+            TickFor(world, Seconds(Balance.FirstWaveDelaySeconds) + 1);
+            var enemy = world.Units[0];
+            var normal = SpeciesTable.EnemyStats(SpeciesTable.Get(1), playerCount: 1);
+
+            Assert.That(enemy.MaxHp, Is.EqualTo(UnitStats.HpOf(normal.MaxHp * Balance.DifficultyHpScale(difficulty) * scale)));
+            Assert.That(enemy.Attack, Is.EqualTo(normal.Attack * Balance.DifficultyAttackScale(difficulty) * scale).Within(Tolerance));
+        }
+
+        [Test]
+        public void RushRounds_HaveTheirOwnEnemyScale()
+        {
+            for (var no = RushTable.FirstNo; no <= RushTable.LastNo; no++)
+            {
+                foreach (var area in RushTable.Get(no).Areas)
+                {
+                    Assert.That(area.EnemyScale, Is.GreaterThan(0f), $"ステージ {no}");
+                    Assert.That(area.ExtremeScale, Is.GreaterThan(0f), $"ステージ {no}");
+                }
+            }
+
+            // ストーリーのエリアは倍率を持たない
+            foreach (var area in StageTable.Stage1.Areas)
+            {
+                Assert.That(area.EnemyScale, Is.EqualTo(1f));
+                Assert.That(area.ExtremeScale, Is.EqualTo(1f));
+            }
         }
 
         [Test]
@@ -211,7 +245,7 @@ namespace PenmonScramble.Tests
             }
 
             Assert.That(enemy.WindUp, Is.Not.Null);
-            Assert.That(enemy.WindUp.TotalSeconds, Is.EqualTo(Balance.EnemyWindUpSeconds * 0.8f).Within(Tolerance));
+            Assert.That(enemy.WindUp.TotalSeconds, Is.EqualTo(Balance.EnemyWindUpSeconds * Balance.DifficultyTelegraphScale(Difficulty.Extreme)).Within(Tolerance));
         }
 
         [Test]

@@ -179,11 +179,12 @@ namespace PenmonScramble.Core
             return boss.Rank == BossRank.Giant ? SpeciesTable.GiantStats(species, _playerCount, World) : SpeciesTable.BossStats(species, _playerCount, World);
         }
 
-        /// <summary>難易度の倍率を掛けてから場に出す（定義表の数値は「ふつう」のまま持つ）</summary>
+        /// <summary>難易度とエリアの強さの倍率を掛けてから場に出す（定義表の数値は「ふつう」・倍率 1 のまま持つ）</summary>
         private void AddEnemy(UnitStats stats, Vec2 position)
         {
-            stats.MaxHp = UnitStats.HpOf(stats.MaxHp * Balance.DifficultyHpScale(Difficulty));
-            stats.Attack *= Balance.DifficultyAttackScale(Difficulty);
+            var scale = CurrentArea.EnemyScale * (Difficulty == Difficulty.Extreme ? CurrentArea.ExtremeScale : 1f);
+            stats.MaxHp = UnitStats.HpOf(stats.MaxHp * Balance.DifficultyHpScale(Difficulty) * scale);
+            stats.Attack *= Balance.DifficultyAttackScale(Difficulty) * scale;
             AddUnit(Team.Enemy, stats, position);
         }
 

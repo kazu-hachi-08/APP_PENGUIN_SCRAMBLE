@@ -124,8 +124,8 @@ namespace PenmonScramble.Tests
             var record = NewRecord();
             var reward = record.RecordRush(101, Difficulty.Normal, cleared: true, roundsWon: 3, enemiesDefeated: 10);
 
-            Assert.That(reward.Coins, Is.EqualTo(Balance.RushClearCoins(Difficulty.Normal)));
-            Assert.That(reward.FirstClearBonus, Is.EqualTo(Balance.RushClearCoins(Difficulty.Normal)));
+            Assert.That(reward.Coins, Is.EqualTo(Balance.RushClearCoins(101, Difficulty.Normal)));
+            Assert.That(reward.FirstClearBonus, Is.EqualTo(Balance.RushClearCoins(101, Difficulty.Normal)));
             Assert.That(reward.UnlockedStageNo, Is.EqualTo(102));
             Assert.That(reward.UnlockedDifficulty, Is.EqualTo(Difficulty.Hard));
             Assert.That(record.Coins, Is.EqualTo(reward.Total));
@@ -136,12 +136,32 @@ namespace PenmonScramble.Tests
             Assert.That(again.UnlockedDifficulty, Is.Null);
         }
 
-        [TestCase(Difficulty.Normal, 300)]
-        [TestCase(Difficulty.Hard, 800)]
-        [TestCase(Difficulty.Extreme, 2000)]
-        public void Reward_ClearCoins_DependOnDifficulty(Difficulty difficulty, int coins)
+        [TestCase(101, Difficulty.Normal, 210)]
+        [TestCase(103, Difficulty.Normal, 350)]
+        [TestCase(103, Difficulty.Hard, 600)]
+        [TestCase(103, Difficulty.Extreme, 900)]
+        [TestCase(105, Difficulty.Extreme, 1260)]
+        public void Reward_ClearCoins_DependOnStageAndDifficulty(int stageNo, Difficulty difficulty, int coins)
         {
-            Assert.That(Balance.RushClearCoins(difficulty), Is.EqualTo(coins));
+            Assert.That(Balance.RushClearCoins(stageNo, difficulty), Is.EqualTo(coins));
+        }
+
+        [Test]
+        public void Reward_ClearCoins_GrowWithStageAndDifficulty()
+        {
+            // 先のステージ・上の難易度ほど多い（育ちきった編成で前のステージを回すのが一番もうかる、にならないように）
+            for (var no = RushTable.FirstNo; no <= RushTable.LastNo; no++)
+            {
+                for (var d = 1; d < Balance.DifficultyCount; d++)
+                {
+                    Assert.That(Balance.RushClearCoins(no, (Difficulty)d), Is.GreaterThan(Balance.RushClearCoins(no, (Difficulty)(d - 1))));
+                }
+
+                if (no > RushTable.FirstNo)
+                {
+                    Assert.That(Balance.RushClearCoins(no, Difficulty.Normal), Is.GreaterThan(Balance.RushClearCoins(no - 1, Difficulty.Normal)));
+                }
+            }
         }
 
         [Test]
@@ -150,8 +170,8 @@ namespace PenmonScramble.Tests
             var record = NewRecord();
             var reward = record.RecordRush(101, Difficulty.Hard, cleared: false, roundsWon: 2, enemiesDefeated: 10);
 
-            // 800 × 15% = 120 を勝った戦いの数だけ ＋ 倒した数 × 1
-            Assert.That(reward.Coins, Is.EqualTo(2 * 120 + 10 * Balance.FailCoinsPerEnemy));
+            // 101 のむずかしいのクリア 360 × 15% = 54 を勝った戦いの数だけ ＋ 倒した数 × 1
+            Assert.That(reward.Coins, Is.EqualTo(2 * 54 + 10 * Balance.FailCoinsPerEnemy));
             Assert.That(reward.FirstClearBonus, Is.EqualTo(0));
             Assert.That(record.IsRushCleared(101, Difficulty.Hard), Is.False);
         }
@@ -178,7 +198,7 @@ namespace PenmonScramble.Tests
 
             Assert.That(guest.IsRushCleared(104, Difficulty.Hard), Is.True);
             Assert.That(guest.IsRushUnlocked(104, Difficulty.Extreme), Is.True);
-            Assert.That(reward.FirstClearBonus, Is.EqualTo(Balance.RushFirstClearBonus(Difficulty.Hard)));
+            Assert.That(reward.FirstClearBonus, Is.EqualTo(Balance.RushFirstClearBonus(104, Difficulty.Hard)));
             // ストーリーのクリア済みには何も付かない
             Assert.That(guest.Data.clearedStages, Is.Empty);
         }

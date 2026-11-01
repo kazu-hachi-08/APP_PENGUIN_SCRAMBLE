@@ -66,6 +66,9 @@ namespace PenmonScramble.Tests
             Assert.That(giant.IsBoss, Is.True);
             Assert.That(giant.Skills.Length, Is.EqualTo(2));
             Assert.That(giant.GiantAttack, Is.SameAs(GiantAttacks.For(Element.Ice)));
+            // 大技も出すので、ふつうの技はステージのボスより間をあける
+            Assert.That(giant.CooldownScale, Is.EqualTo(Balance.GiantCooldownScale));
+            Assert.That(giant.CooldownScale, Is.GreaterThan(boss.CooldownScale));
         }
 
         [TestCase(Element.Ice, BossAttackKind.Rain)]

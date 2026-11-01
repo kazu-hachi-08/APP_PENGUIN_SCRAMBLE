@@ -196,6 +196,33 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
+        public void LavaSplash_DoesNotHitOnTheTickItAppears()
+        {
+            var world = CreateArena();
+            AddBoss(world, BigBossTable.SharkNo, new Vec2(-6f, 0f), attackIndex: 1);
+            var player = AddPlayer(world, new Vec2(5f, 0f));
+            WaitForWarning(world);
+            TickUntil(world, () => world.AreaEffects.Any(e => e.Kind == AreaEffectKind.Lava), TelegraphOf(BigBossTable.SharkNo, 1) + 0.5f);
+
+            // よけた人が立っていそうな、しぶきの上に立たせる。出たばかりのしぶきは、すぐには当たらない
+            var splash = world.AreaEffects.First(e => e.Kind == AreaEffectKind.Lava);
+            player.Position = splash.Position;
+            // 食いつきで飛ばされた分と、当たった直後の無敵を消して、しぶきの効き目だけを見る
+            player.KnockbackVelocity = Vec2.Zero;
+            player.HitInvincibleSeconds = 0f;
+            var hp = player.Hp;
+            world.Tick();
+            Assert.That(player.Hp, Is.EqualTo(hp));
+
+            // 間隔の分だけ立ち続けると当たる
+            var leftover = BigBossTable.Get(BigBossTable.SharkNo).Attacks[1].Leftover;
+            player.Position = splash.Position;
+            player.KnockbackVelocity = Vec2.Zero;
+            TickFor(world, Seconds(leftover.Interval));
+            Assert.That(player.Hp, Is.LessThan(hp));
+        }
+
+        [Test]
         public void SharkBite_LeavesLavaSplashesAroundTheSpot_WhichFade()
         {
             var world = CreateArena();

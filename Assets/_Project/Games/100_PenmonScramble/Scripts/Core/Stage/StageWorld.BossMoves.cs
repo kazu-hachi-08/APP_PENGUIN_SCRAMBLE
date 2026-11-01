@@ -163,7 +163,9 @@ namespace PenmonScramble.Core
             {
                 var angle = start + MathF.PI * 2f * i / leftover.Count;
                 var point = Area.ClosestInside(spot.From + new Vec2(MathF.Cos(angle), MathF.Sin(angle)) * distance, leftover.AreaRadius);
-                _areaEffects.Add(new AreaEffect(_nextId++, boss, leftover, AreaEffectKind.Lava, point, 0f));
+                // しぶきは食いつきの円の縁のすぐ外（よけた人が立っている所）に出るので、出た瞬間には当てない。
+                // 予告なしに足元へ出てすぐ当たると、よけようがないため（1回目は間隔の分だけ待つ。その間に歩いて出られる）
+                _areaEffects.Add(new AreaEffect(_nextId++, boss, leftover, AreaEffectKind.Lava, point, 0f) { IntervalTimer = leftover.Interval });
             }
         }
 

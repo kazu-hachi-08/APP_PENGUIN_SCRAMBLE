@@ -39,7 +39,7 @@ namespace PenmonScramble.Core
                 return new StageReward(0, 0, 0);
             }
 
-            var coins = cleared ? Balance.RushClearCoins(difficulty) : Balance.RushFailCoins(difficulty, roundsWon, enemiesDefeated);
+            var coins = cleared ? Balance.RushClearCoins(stageNo, difficulty) : Balance.RushFailCoins(stageNo, difficulty, roundsWon, enemiesDefeated);
             var bonus = 0;
             var unlockedStage = 0;
             Difficulty? unlockedDifficulty = null;
@@ -47,7 +47,7 @@ namespace PenmonScramble.Core
             {
                 // 次のステージは前の「ふつう」、次の難易度は1つ下のクリアで開く（IsRushUnlocked）。初クリアなら、どちらも今まで閉じていた
                 Data.clearedRush.Add(RushKey(stageNo, difficulty));
-                bonus = Balance.RushFirstClearBonus(difficulty);
+                bonus = Balance.RushFirstClearBonus(stageNo, difficulty);
                 unlockedStage = difficulty == Difficulty.Normal && RushTable.IsRush(stageNo + 1) ? stageNo + 1 : 0;
                 unlockedDifficulty = difficulty < Difficulty.Extreme ? difficulty + 1 : (Difficulty?)null;
             }
