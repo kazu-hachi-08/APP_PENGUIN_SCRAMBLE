@@ -8,14 +8,26 @@ namespace PenmonScramble.Game
         /// <summary>測る場面1つ分（そのエリアだけの1エリアのステージ）と、その結果</summary>
         public sealed class Scenario
         {
-            public Scenario(string name, StageDef stage)
+            public Scenario(string name, StageDef stage, BalanceParty party = null)
             {
                 Name = name;
                 Stage = stage;
+                Party = party;
             }
 
             public string Name { get; }
             public StageDef Stage { get; }
+
+            /// <summary>
+            /// 連れていく編成の想定。null なら強めの3体をよけないボット（Brawler）に持たせる（敵を減らさず、一番混んだ所を測り続けるため）。
+            /// 想定があるときは、うまい人のボット（Expert）にその編成を持たせる（大ボスの戦いを本番どおりに長引かせ、本気の吠えた後まで測るため）
+            /// </summary>
+            public BalanceParty Party { get; }
+
+            public bool Dodges => Party != null;
+
+            /// <summary>大ボスの戦いは、吠えた後の大技まで入るよう長めに測る</summary>
+            public float MeasureSeconds => Dodges ? BossMeasureSeconds : CrowdMeasureSeconds;
             public FrameStats Frames { get; } = new FrameStats();
             public CounterStat Batches { get; } = new CounterStat();
             public CounterStat SetPass { get; } = new CounterStat();
@@ -49,17 +61,28 @@ namespace PenmonScramble.Game
                 }
             }
 
-            /// <summary>敵の合計が一番多いエリアと、最後のステージ（サメ）の大ボスのエリア</summary>
+            /// <summary>
+            /// 敵の合計が一番多いエリアと、ボスラッシュの闘技場で床に出るものが多い3つの戦い:
+            /// 風の巨大ペンモン2体（竜巻）・本気のオオフルマカモメ（吠えた後は竜巻が5つ）・本気のサメ（背びれ2本と溶岩のしぶき）
+            /// </summary>
             public static Scenario[] CreateAll()
             {
                 var crowd = HeaviestArea(out var crowdStage, out var crowdArea);
-                var last = StageTable.Get(StageTable.Count);
-                var bossArea = last.Areas[last.Areas.Count - 1];
                 return new[]
                 {
-                    new Scenario($"Crowd (stage {crowdStage.No} area {crowdArea + 1})", new StageDef(crowdStage.No, "BenchCrowd", crowd)),
-                    new Scenario($"Big boss (stage {last.No})", new StageDef(last.No, "BenchBoss", bossArea)),
+                    new Scenario($"Crowd (stage {crowdStage.No} area {crowdArea + 1})", new StageDef(crowdStage.No, "BenchCrowd", crowdStage.World, crowd)),
+                    RushRound("Wind giants", RushGiantsNo, 1),
+                    RushRound("Serious fulmar", RushFulmarNo, RushTable.RoundsPerStage),
+                    RushRound("Serious shark", RushTable.LastNo, RushTable.RoundsPerStage),
                 };
+            }
+
+            /// <summary>ボスラッシュの round 戦目だけを切り出した場。編成は、ふつうに挑む人の想定</summary>
+            private static Scenario RushRound(string label, int no, int round)
+            {
+                var rush = RushTable.Get(no);
+                var stage = new StageDef(rush.No, "BenchRush", rush.World, rush.Areas[round - 1]);
+                return new Scenario($"{label} (rush {no} round {round})", stage, BalanceParty.ForRush(rush.World, Difficulty.Normal));
             }
 
             /// <summary>波の敵の数の合計が一番多いエリア（同じなら先のステージ。ワールドが進むほど敵の見た目も重いので）</summary>

@@ -41,7 +41,7 @@ namespace PenmonScramble.Game
         /// </summary>
         private void FollowCamera(StageSnapshot snapshot, bool snap)
         {
-            var area = StageLayout.Area(Stages.Get(snapshot.StageNo), snapshot.AreaIndex);
+            var area = StageLayout.Area(StageOf(snapshot), snapshot.AreaIndex);
             if (snapshot.AreaIndex != _cameraArea)
             {
                 // 挑戦の始め（snap）は、闘技場から始まるとき（ボスラッシュ）も作り直しのときも演出をしない

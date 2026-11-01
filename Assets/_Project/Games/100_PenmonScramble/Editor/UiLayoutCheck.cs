@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using PenmonScramble.Common.UI;
+using PenmonScramble.Game;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,9 +28,11 @@ namespace PenmonScramble.Editor
             foreach (var text in Object.FindObjectsByType<Text>(FindObjectsInactive.Include))
             {
                 if (string.IsNullOrEmpty(text.text) || EditorUtility.IsPersistent(text)) continue;
-                CheckFit(text, font, issues);
+                CheckFit(text, text.text, font, issues);
                 CheckOverlap(text, font, issues);
             }
+
+            CheckRulePages(font, issues);
 
             if (issues.Count == 0)
             {
@@ -42,31 +45,49 @@ namespace PenmonScramble.Editor
             Debug.LogWarning(report.ToString());
         }
 
+        /// <summary>
+        /// 遊び方のルールのページ。シーンでは文が空で、開いたときに HowToPlayPages から入れるので、全ページを枠に当てて測る
+        /// </summary>
+        private static void CheckRulePages(Font font, List<string> issues)
+        {
+            foreach (var screen in Object.FindObjectsByType<HowToPlayScreen>(FindObjectsInactive.Include))
+            {
+                var so = new SerializedObject(screen);
+                var heading = so.FindProperty("_ruleHeading").objectReferenceValue as Text;
+                var body = so.FindProperty("_ruleBody").objectReferenceValue as Text;
+                foreach (var page in HowToPlayPages.All)
+                {
+                    if (heading != null) CheckFit(heading, page.Heading, font, issues);
+                    if (body != null) CheckFit(body, page.Body, font, issues);
+                }
+            }
+        }
+
         /// <summary>枠に入りきるか。Best Fit の文字はいちばん小さくしたときで測る（それでも入らなければ切れて消える）</summary>
-        private static void CheckFit(Text text, Font font, List<string> issues)
+        private static void CheckFit(Text text, string value, Font font, List<string> issues)
         {
             var size = text.rectTransform.rect.size;
             var settings = Settings(text, font, size);
 
             settings.horizontalOverflow = HorizontalWrapMode.Overflow;
             settings.verticalOverflow = VerticalWrapMode.Overflow;
-            var oneLine = Generate(text.text, settings);
+            var oneLine = Generate(value, settings);
             settings.horizontalOverflow = text.horizontalOverflow;
-            var wrapped = Generate(text.text, settings);
+            var wrapped = Generate(value, settings);
 
             if (text.horizontalOverflow == HorizontalWrapMode.Overflow && oneLine.width > size.x + Tolerance)
             {
-                issues.Add($"{PathOf(text)}: 横にはみ出す（文字 {oneLine.width:0} > 枠 {size.x:0}）「{Short(text.text)}」");
+                issues.Add($"{PathOf(text)}: 横にはみ出す（文字 {oneLine.width:0} > 枠 {size.x:0}）「{Short(value)}」");
             }
             else if (text.horizontalOverflow == HorizontalWrapMode.Wrap && wrapped.lines > oneLine.lines)
             {
-                issues.Add($"{PathOf(text)}: 幅が足りず途中で折り返す（{oneLine.lines} 行 → {wrapped.lines} 行）「{Short(text.text)}」");
+                issues.Add($"{PathOf(text)}: 幅が足りず途中で折り返す（{oneLine.lines} 行 → {wrapped.lines} 行）「{Short(value)}」");
             }
 
             if (wrapped.height > size.y + Tolerance)
             {
                 var result = text.verticalOverflow == VerticalWrapMode.Truncate && text.resizeTextForBestFit ? "切れて消える" : "はみ出す";
-                issues.Add($"{PathOf(text)}: 縦に{result}（文字 {wrapped.height:0} > 枠 {size.y:0}）「{Short(text.text)}」");
+                issues.Add($"{PathOf(text)}: 縦に{result}（文字 {wrapped.height:0} > 枠 {size.y:0}）「{Short(value)}」");
             }
         }
 

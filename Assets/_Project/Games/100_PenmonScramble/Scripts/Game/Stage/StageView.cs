@@ -69,6 +69,14 @@ namespace PenmonScramble.Game
 
         public Color SeatColor(int seat) => _seatColors[seat % _seatColors.Length];
 
+        /// <summary>
+        /// 床とカメラを、番号から引いたステージの代わりにこの定義で組む（重さの計測 StageBenchmark 用）。
+        /// 計測はステージの1エリアだけを切り出して回すので、番号から引くと形が Core の場と食い違う（闘技場が四角になる）ため
+        /// </summary>
+        public StageDef StageOverride { get; set; }
+
+        private StageDef StageOf(StageSnapshot snapshot) => StageOverride ?? Stages.Get(snapshot.StageNo);
+
         /// <summary>新しいスナップショットを受け取る。出来事の演出を出し、新しく出たものを作り、位置を受け取る</summary>
         public void Apply(StageSnapshot snapshot)
         {

@@ -45,7 +45,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var stage = Stages.Get(snapshot.StageNo);
+            var stage = StageOf(snapshot);
             var world = stage?.World ?? 1;
             var theme = StageTheme.ForWorld(world);
             var (texture, tint) = GroundArt(world, theme);

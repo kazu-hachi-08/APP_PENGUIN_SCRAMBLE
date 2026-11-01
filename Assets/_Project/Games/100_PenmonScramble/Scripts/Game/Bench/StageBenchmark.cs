@@ -6,7 +6,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// 重さの計測。4人をボット（StageBot）で戦わせ、場面ごとに fps と描画の回数を測って画面に出す。
-    /// 場面は「1エリアの敵が一番多い所」と「最後の大ボス戦」。タイトルの流れ（StageRunner）は使わず、ここで直接 Core を進める。
+    /// 場面は「1エリアの敵が一番多い所」と「ボスラッシュの闘技場の重い戦い」（Scenario.CreateAll）。タイトルの流れ（StageRunner）は使わず、ここで直接 Core を進める。
     /// 計測用のビルド（PENMON_BENCHMARK。Tools/PenmonScramble/Benchmark/Build *）と、Editor の Tools/PenmonScramble/Benchmark/Editor で動く。
     /// 配る版では何もしない
     /// </summary>
@@ -17,10 +17,14 @@ namespace PenmonScramble.Game
         private const string QuitArgument = "-benchmark-quit";
 
         private const float WarmupSeconds = 2f;
-        private const float MeasureSeconds = 20f;
+        private const float CrowdMeasureSeconds = 20f;
+        private const float BossMeasureSeconds = 30f;
         private const int Seed = 12345;
         // 世界3の敵に負けて場面が軽くならないよう、ボットは強めにする（敵が減る速さは、次の波が来るので変わらない）
         private const int BotPower = 400;
+        // ボスラッシュの場面: 竜巻を出す風の巨大ペンモンの組と、本気のオオフルマカモメの闘技場
+        private const int RushGiantsNo = 103;
+        private const int RushFulmarNo = 104;
         // 作り直した直後のフレームは組み立ての分だけ長いので、数えない
         private const int SkipFramesAfterRebuild = 3;
         // これより長く止まったフレームは、その場でログに出す（何が起きた瞬間か追えるように）
@@ -32,6 +36,7 @@ namespace PenmonScramble.Game
         private StageWorld _world;
         private StageRecorder _recorder;
         private Unit[] _players;
+        private StageBot[] _bots;
         private int _round;
         private float _time;
         private float _accumulator;
@@ -106,7 +111,7 @@ namespace PenmonScramble.Game
             Measure(dt);
             StepWorld(dt);
 
-            if (_time >= WarmupSeconds + MeasureSeconds)
+            if (_time >= WarmupSeconds + _scenarios[_index].MeasureSeconds)
             {
                 NextScenario();
             }
@@ -141,9 +146,9 @@ namespace PenmonScramble.Game
             // 処理の上限と刻みは StageHost と同じ（計測の結果が本番の進み方と食い違わないように）
             var interpolation = StageHost.StepFixedTicks(ref _accumulator, dt, null, () =>
             {
-                foreach (var player in _players)
+                for (var i = 0; i < _players.Length; i++)
                 {
-                    _world.SetInput(player.Id, StageBot.InputFor(_world, player, _time));
+                    _world.SetInput(_players[i].Id, BotInput(i));
                 }
 
                 _world.Tick();
@@ -181,17 +186,31 @@ namespace PenmonScramble.Game
             StartRound();
         }
 
+        private PlayerInput BotInput(int index)
+        {
+            var player = _players[index];
+            return _bots != null ? _bots[index].Next(_world, player, _time) : StageBot.InputFor(_world, player, _time);
+        }
+
         private void StartRound()
         {
+            var scenario = _scenarios[_index];
             var seats = new int[Balance.MaxPlayers];
             var parties = new UnitStats[seats.Length][];
+            var random = new System.Random(Seed + _round);
+            _bots = scenario.Dodges ? new StageBot[seats.Length] : null;
             for (var i = 0; i < seats.Length; i++)
             {
                 seats[i] = i;
-                parties[i] = BotParty(i, seats.Length);
+                parties[i] = scenario.Dodges ? scenario.Party.Create(random) : BotParty(i, seats.Length);
+                if (_bots != null)
+                {
+                    _bots[i] = new StageBot(BotSkill.Expert, Seed + _round * seats.Length + i);
+                }
             }
 
-            _players = TrialStage.Create(_scenarios[_index].Stage, Seed + _round, seats, parties, out _world);
+            _view.StageOverride = scenario.Stage;
+            _players = TrialStage.Create(scenario.Stage, Seed + _round, seats, parties, out _world);
             _round++;
             _recorder = new StageRecorder(_world, _round);
             _accumulator = 0f;
