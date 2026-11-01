@@ -29,6 +29,7 @@ namespace PenmonScramble.Game
         [SerializeField] private RushLobby _rushLobby;
         [SerializeField] private StageMenu _menu;
         [SerializeField] private TouchControlsView _touch;
+        [SerializeField] private MusicClips _musicClips;
 
         private readonly LocalInputSampler _input = new LocalInputSampler();
         private StageLink _link;
@@ -201,7 +202,7 @@ namespace PenmonScramble.Game
             }
 
             _music = track;
-            GameMusic.Play(track);
+            GameMusic.Play(track, _musicClips);
         }
 
         private void UpdateHud(StageSnapshot snapshot)

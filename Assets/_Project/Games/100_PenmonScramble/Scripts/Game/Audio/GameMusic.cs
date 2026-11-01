@@ -13,14 +13,15 @@ namespace PenmonScramble.Game
     }
 
     /// <summary>
-    /// 仮の BGM。素材がまだ無いので楽譜（GameMusic.Songs.cs）から曲をコードで作る。
+    /// BGM。素材の曲（MusicClips）があればそれを流し、無ければ楽譜（GameMusic.Songs.cs）からコードで作る仮の曲を流す。
+    /// 素材は規約でリポジトリに入れられないので、取り出した直後の環境でも音が鳴るように仮の曲を残している。
     /// 再生は共通基盤の AudioManager に任せる。同じ曲が続くときに頭から流し直さない判定とクロスフェードは、AudioManager がやってくれる。
-    /// 音の作り方は GameMusic.Synth.cs
+    /// 仮の曲の作り方は GameMusic.Synth.cs
     /// </summary>
     public static partial class GameMusic
     {
-        // 効果音が BGM に埋もれないよう、BGM は控えめにする
-        private const float MusicVolume = 0.45f;
+        // 効果音が BGM に埋もれないよう、仮の曲は控えめにする（素材の曲の大きさは MusicClips で曲ごとに決める）
+        private const float SynthVolume = 0.45f;
         private const float StopFadeSeconds = 0.3f;
 
         // 共通基盤の BgmId は「何番目の曲か」だけを表す汎用の名前なので、この作品の曲を順に割り当てる
@@ -31,14 +32,15 @@ namespace PenmonScramble.Game
             { MusicTrack.Boss, BgmId.GameBgm02 },
         };
 
-        private static readonly Dictionary<MusicTrack, AudioClip> Clips = new Dictionary<MusicTrack, AudioClip>();
+        private static readonly Dictionary<MusicTrack, AudioClip> SynthClips = new Dictionary<MusicTrack, AudioClip>();
 
-        public static void Play(MusicTrack track)
+        /// <param name="library">素材の曲。null や素材の無い曲は仮の曲にする</param>
+        public static void Play(MusicTrack track, MusicClips library)
         {
-            if (!Clips.TryGetValue(track, out var clip) || clip == null)
+            if (library == null || !library.TryGet(track, out var clip, out var volume))
             {
-                clip = Render(SongOf(track));
-                Clips[track] = clip;
+                clip = SynthClipOf(track);
+                volume = SynthVolume;
             }
 
             var audio = AudioManager.Instance;
@@ -48,8 +50,20 @@ namespace PenmonScramble.Game
             }
 
             // AudioManager が作り直されても鳴るよう、毎回登録し直す（辞書に入れるだけなので軽い）
-            audio.RegisterBgm(Ids[track], clip, MusicVolume);
+            audio.RegisterBgm(Ids[track], clip, volume);
             audio.PlayBgm(Ids[track]);
+        }
+
+        /// <summary>仮の曲は作るのに時間がかかるので、一度作ったら使い回す</summary>
+        private static AudioClip SynthClipOf(MusicTrack track)
+        {
+            if (!SynthClips.TryGetValue(track, out var clip) || clip == null)
+            {
+                clip = Render(SongOf(track));
+                SynthClips[track] = clip;
+            }
+
+            return clip;
         }
 
         /// <summary>クリア・失敗のジングルと重ならないよう、結果で止める</summary>

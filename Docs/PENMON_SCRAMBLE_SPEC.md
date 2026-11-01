@@ -574,8 +574,14 @@
 ### 9.7 気持ちよさ・音
 
 - 気持ちよさの演出: ヒットストップ（強い技・必殺・合体）、画面の揺れ、ダメージ数字、撃破時のコインと星
-- 音: ペンモンと同じく、楽譜・波形からコードで作るチップチューン（`Game/Audio/`。ペンモンの `GameMusic` / `BattleSounds` を移植）。素材がそろったら差し替える
+- 音: 効果音は、ペンモンと同じく波形からコードで作るチップチューン（`Game/Audio/`。ペンモンの `BattleSounds` を移植）。素材がそろったら差し替える
   - BGM: タイトル / ステージ / ボスエリア（ステージのボス・大ボス共通）の3曲。結果が出たら止めて、クリア・失敗のジングル
+  - BGM の曲は OpenTracks（旧DOVA-SYNDROME）の素材。規約で音源そのものの再配布が禁止されており、リポジトリは公開なので **Git に入れない**（`.gitignore` で `Music/` ごと除外）。リリースのビルドをする PC に、下の名前で `Games/100_PenmonScramble/Music/` に置く。ビルドすると Unity の形式に変換されるので、配る版に入れるのは問題ない。クレジット表記は3曲とも任意
+    - `Bgm_Title.mp3`: 「万国旗のマーチ」秦暁 https://opentracks.com/bgm/detail/20356
+    - `Bgm_Stage.mp3`: 「It's 8 AM! Speedy Start!」Addpico（通常版の Track1）https://opentracks.com/bgm/detail/23948
+    - `Bgm_Boss.mp3`: 「GraVity StrikeR」MAKOOTO https://opentracks.com/bgm/detail/10375
+  - 曲は SceneBuilder が `MusicClips` につなぎ、曲ごとの音量もそこで決める（`PenmonScrambleSceneBuilder.Music.cs`）。取り込み設定（ストリーミング・Vorbis）は `MusicImportSettings` がコードで決める（曲の .meta も Git に無いため）
+  - 曲が置かれていない環境では、楽譜からコードで作る仮の曲（`GameMusic.Songs.cs`）が代わりに鳴る
   - 効果音: 技（味方だけ）・当たり・被弾・撃破・必殺技・合体技・大ボスの予告・敵の構え（小さく上がる音。同時にいくつ構えても1回で、0.25 秒より詰めて鳴らさない）・ボス撃破・ガチャ（レバーのカチッ・カプセルのコトン・割れる音・★・★3 の光の柱）・メニューのボタン・タイトルのスタート・大ボスが闘技場に降りてきた（撃破より低く重い音）・結果（見出しを叩きつける・数え上げ・コインが札に届く・初クリアと解放）。1回のスナップショットで同じ音は1回だけ（乱戦で何十も重ならないように）
 
 ### 9.8 HUD（ステージ中の画面表示）
