@@ -6,7 +6,8 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ペンモン画面の技の実演の小窓。本番と同じ計算の練習場（SkillPractice）を進め、
-    /// 実演用の StageView（_preview）で描いたものを専用のカメラで撮って、RawImage に映す。音は出さない。
+    /// 実演用の StageView（_preview）で描いたものを専用のカメラで撮って、RawImage に映す。音は出さない・揺らさない。
+    /// 必殺技のカットインは、小窓の中に小さな帯で出す（本番の画面いっぱいの帯は StageView が出すが、実演用では出さない）。
     /// 練習場は3Dの空間の離れた所にあるので、タイトルのジオラマとは映り合わない
     /// </summary>
     public sealed class SkillDemoView : MonoBehaviour
@@ -19,6 +20,7 @@ namespace PenmonScramble.Game
         [SerializeField] private RawImage _screen;
         [SerializeField] private Camera _camera;
         [SerializeField] private StageView _view;
+        [SerializeField] private SpecialCutIn _cutIn;
 
         private SkillPractice _practice;
         private StageRecorder _recorder;
@@ -26,7 +28,7 @@ namespace PenmonScramble.Game
         private float _accumulator;
         private int _round;
 
-        /// <summary>この子の、この技（0 が技1）の実演を最初から始める</summary>
+        /// <summary>この子の、この技（0 が技1、SkillPractice.SpecialSlot が必殺技）の実演を最初から始める</summary>
         public void Play(UnitStats penguin, int slot)
         {
             _recorder?.Detach();
@@ -34,6 +36,7 @@ namespace PenmonScramble.Game
             // 練習場を作り直すたびに番号を進めて、前の実演の物を StageView に全部消させる
             _recorder = new StageRecorder(_practice.World, ++_round);
             _accumulator = 0f;
+            _cutIn.Hide();
             _view.gameObject.SetActive(true);
             _camera.enabled = true;
             FaceCamera.Override = _camera;
@@ -47,6 +50,7 @@ namespace PenmonScramble.Game
             _recorder?.Detach();
             _recorder = null;
             _practice = null;
+            if (_cutIn != null) _cutIn.Hide();
             if (_camera != null) _camera.enabled = false;
             if (_view != null) _view.gameObject.SetActive(false);
             if (FaceCamera.Override == _camera) FaceCamera.Override = null;
@@ -66,9 +70,19 @@ namespace PenmonScramble.Game
             var interpolation = StageHost.StepFixedTicks(ref _accumulator, Time.deltaTime, null, () =>
             {
                 _practice.Tick();
-                _view.Apply(_recorder.Capture());
+                var snapshot = _recorder.Capture();
+                _view.Apply(snapshot);
+                PlayCutIns(snapshot);
             });
             _view.Render(interpolation);
+        }
+
+        private void PlayCutIns(StageSnapshot snapshot)
+        {
+            foreach (var special in snapshot.SpecialsUsed)
+            {
+                _cutIn.Play(special);
+            }
         }
 
         /// <summary>小窓の大きさの絵を撮るようにして、練習場の映す範囲がちょうど収まる位置に構える</summary>

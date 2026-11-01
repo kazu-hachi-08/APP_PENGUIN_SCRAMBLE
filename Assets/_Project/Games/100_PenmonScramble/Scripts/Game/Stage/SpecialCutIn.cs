@@ -6,7 +6,8 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// 必殺技のカットイン。画面の真ん中に帯を横から滑り込ませ、ペンギンの顔（絵が無ければ色の丸）と技の名前を出す。
-    /// 長さは Core のヒットストップと同じにして、止まっている間だけ出す
+    /// 長さは Core のヒットストップと同じにして、止まっている間だけ出す。
+    /// ステージの画面いっぱいの帯と、ペンモン画面の実演の小窓の中の小さな帯（SkillDemoView）で使う
     /// </summary>
     public class SpecialCutIn : MonoBehaviour
     {
@@ -16,6 +17,8 @@ namespace PenmonScramble.Game
         [SerializeField] private Image _bandImage;
         [SerializeField] private Image _face;
         [SerializeField] private Text _text;
+        // 技の名前の文字の大きさ（帯の大きさに合わせる）
+        [SerializeField] private int _nameFontSize = 96;
 
         private float _seconds;
         private float _age = -1f;
@@ -25,12 +28,18 @@ namespace PenmonScramble.Game
         {
             CreatureArt.ShowFace(_face, special.SpeciesNo);
             _bandImage.color = Color.Lerp(PenguinPalette.ElementColor(special.Element), Color.black, 0.6f);
-            _text.text = $"{PenguinPalette.SpeciesName(special.SpeciesNo)}の必殺技！\n<size=96>{SpecialMoves.For(special.Element).Name}</size>";
+            _text.text = $"{PenguinPalette.SpeciesName(special.SpeciesNo)}の必殺技！\n<size={_nameFontSize}>{SpecialMoves.For(special.Element).Name}</size>";
             _seconds = Balance.SpecialCutInTicks * Balance.TickSeconds;
             _width = ((RectTransform)transform).rect.width;
             _age = 0f;
             gameObject.SetActive(true);
             Apply();
+        }
+
+        public void Hide()
+        {
+            _age = -1f;
+            gameObject.SetActive(false);
         }
 
         private void Update()

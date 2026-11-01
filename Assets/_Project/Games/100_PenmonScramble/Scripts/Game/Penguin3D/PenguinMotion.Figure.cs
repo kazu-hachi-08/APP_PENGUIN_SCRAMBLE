@@ -64,6 +64,7 @@ namespace PenmonScramble.Game
             var position = Vector3.zero;
             Lie(pose, center, ref position, ref rotation);
             var height = SpecialJump(pose, ref position, ref rotation);
+            height += CheerHop(pose, ref position, ref rotation);
             height += Tumble(pose, center, ref position, ref rotation);
             var scale = WindUpScale(pose);
             height += Vanish(pose, ref position, ref rotation, ref scale);

@@ -38,6 +38,7 @@ namespace PenmonScramble.Editor
             WriteUiSprite(HudSlantFramePath, DrawSlant(SlantFramePixel), SlantBorder, horizontalOnly: true);
             WriteUiSprite(HudSegmentRingPath, DrawIcon(SegmentRingPixel), 0);
             WriteUiSprite(HudMarkerPinPath, DrawIcon((p, px) => White(IconCoverage(PinDistance(p), px))), 0);
+            CreateResultArt();
         }
 
         /// <summary>丸と、先から丸へ引いた2本の接線で囲んだ三角を合わせた形（しずくを横に倒した形）の、縁からの距離</summary>

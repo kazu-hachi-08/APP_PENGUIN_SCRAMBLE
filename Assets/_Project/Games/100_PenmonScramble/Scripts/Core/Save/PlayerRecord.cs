@@ -87,18 +87,23 @@ namespace PenmonScramble.Core
             }
         }
 
-        /// <summary>ステージの結果を記録し、もらったコインを返す（協力ではホストの結果を各自の端末で記録する）</summary>
-        public int RecordStage(int stageNo, bool cleared, int enemiesDefeated)
+        /// <summary>ステージの結果を記録し、もらったものの内訳を返す（協力ではホストの結果を各自の端末で記録する）</summary>
+        public StageReward RecordStage(int stageNo, bool cleared, int enemiesDefeated)
         {
             var coins = cleared ? Balance.ClearCoins : Math.Max(0, enemiesDefeated) * Balance.FailCoinsPerEnemy;
+            var bonus = 0;
+            var unlocked = 0;
             if (cleared && StageTable.Get(stageNo) != null && !IsCleared(stageNo))
             {
                 Data.clearedStages.Add(stageNo);
-                coins += Balance.FirstClearBonusCoins;
+                bonus = Balance.FirstClearBonusCoins;
+                // 次のステージは「1つ前をクリアした」で解放される（IsUnlocked）。最後のステージの次は無い
+                unlocked = StageTable.Get(stageNo + 1) != null ? stageNo + 1 : 0;
             }
 
-            Data.coins += coins;
-            return coins;
+            var reward = new StageReward(coins, bonus, unlocked);
+            Data.coins += reward.Total;
+            return reward;
         }
 
         /// <summary>編成の3体（並びが交代の順）。足りなければ少ない数のまま返す</summary>

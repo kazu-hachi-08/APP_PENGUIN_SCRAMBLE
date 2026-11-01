@@ -1,7 +1,7 @@
 namespace PenmonScramble.Core
 {
     /// <summary>
-    /// ペンモン画面に出す文（個性と、技ごとの一言の説明）。
+    /// ペンモン画面に出す文（個性と、技ごと・必殺技ごとの一言の説明）。
     /// 数値の表（SpeciesTable）と分けて、文だけを直しやすくしている。説明は技の数値と食い違わないように書く
     /// </summary>
     public static class SpeciesTexts
@@ -107,6 +107,22 @@ namespace PenmonScramble.Core
             }
 
             return slot == 0 ? entry.Skill1 : entry.Skill2;
+        }
+
+        /// <summary>必殺技（属性ごとに1種類。SpecialMoves）の一言の説明</summary>
+        public static string Special(Element element)
+        {
+            switch (element)
+            {
+                case Element.Water:
+                    return "画面の端から大波を流し、敵をまとめて押し流す";
+                case Element.Wind:
+                    return "自分のまわりに大竜巻を起こし、敵を遠くまで吹っ飛ばす";
+                case Element.Thunder:
+                    return "すべての敵の頭上と、あちこちに雷を落とす";
+                default:
+                    return "画面の敵をすべて凍らせ、溶けるときに砕く";
+            }
         }
 
         private static Entry Find(int speciesNo)

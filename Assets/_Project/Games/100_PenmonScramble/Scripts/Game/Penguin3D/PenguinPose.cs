@@ -38,6 +38,10 @@ namespace PenmonScramble.Game
         public bool Defeated;
         public float Defeat;
 
+        /// <summary>結果の画面で喜んで跳ねている（0〜1。切り替えはなめらかに）。CheerTime は喜び始めてからの秒（負の間は待つ）</summary>
+        public float Cheer;
+        public float CheerTime;
+
         public float Blink;
         public float Time;
 

@@ -36,6 +36,14 @@ namespace PenmonScramble.Game
         GachaRare,
         /// <summary>大ボスが空から闘技場へ降りてきて、床に着いた</summary>
         BossLand,
+        /// <summary>結果の「クリア！」「やられた…」の札が叩きつけられた</summary>
+        ResultStamp,
+        /// <summary>結果の数字が数え上がる（1つ増えるたびではなく、間を空けて鳴らす）</summary>
+        ResultCount,
+        /// <summary>結果のコインが札に吸い込まれた</summary>
+        ResultCoin,
+        /// <summary>結果で初クリアのボーナス・次のステージの解放が出た</summary>
+        ResultUnlock,
     }
 
     /// <summary>
@@ -70,6 +78,11 @@ namespace PenmonScramble.Game
             { GameSound.GachaOpen, 0.5f },
             { GameSound.GachaRare, 0.55f },
             { GameSound.BossLand, 0.75f },
+            { GameSound.ResultStamp, 0.6f },
+            // 続けて何度も鳴るので小さく
+            { GameSound.ResultCount, 0.2f },
+            { GameSound.ResultCoin, 0.3f },
+            { GameSound.ResultUnlock, 0.55f },
         };
 
         public static void Play(GameSound sound)
@@ -111,6 +124,11 @@ namespace PenmonScramble.Game
                 case GameSound.GachaRare: return Jingle("Se_GachaRare", new[] { 1047f, 1319f, 1568f, 2093f });
                 // 撃破（BossDefeat）よりさらに低く、地面が鳴るような重い音
                 case GameSound.BossLand: return Impact("Se_BossLand", 0.5f, 42f);
+                // ドンと置く重さ。ジングル（Clear / Fail）と重なっても聞き分けられるよう、低く短く
+                case GameSound.ResultStamp: return Impact("Se_ResultStamp", 0.25f, 120f);
+                case GameSound.ResultCount: return Tone("Se_ResultCount", 0.03f, 1319f);
+                case GameSound.ResultCoin: return Tone("Se_ResultCoin", 0.06f, 2093f);
+                case GameSound.ResultUnlock: return Jingle("Se_ResultUnlock", new[] { 784f, 1047f, 1319f, 1568f });
                 default: return Jingle("Se_Fail", new[] { 392f, 330f, 262f, 196f });
             }
         }

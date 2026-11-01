@@ -27,6 +27,9 @@ namespace PenmonScramble.Game
         /// <summary>技を出す前に構えている（雑魚・ステージのボス）</summary>
         bool WindingUp { get; set; }
 
+        /// <summary>結果の画面で喜ぶ（クリアしたプレイヤー）</summary>
+        bool Cheering { get; set; }
+
         bool IsDefeatFinished { get; }
 
         void SnapFacing(Vector3 direction);

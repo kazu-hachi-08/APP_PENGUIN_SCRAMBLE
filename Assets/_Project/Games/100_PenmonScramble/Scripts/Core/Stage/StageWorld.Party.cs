@@ -12,6 +12,9 @@ namespace PenmonScramble.Core
         private readonly List<int> _pendingSpecials = new List<int>();
         private int _hitStopTicks;
 
+        /// <summary>必殺技のカットインで止まっている、またはカットインの後の効き目がまだ出ていない</summary>
+        internal bool IsSpecialPending => _hitStopTicks > 0 || _pendingSpecials.Count > 0;
+
         private void TrySwitch(Unit unit)
         {
             if (unit.SwitchCooldown > 0f || !unit.SwitchToNextAlive())

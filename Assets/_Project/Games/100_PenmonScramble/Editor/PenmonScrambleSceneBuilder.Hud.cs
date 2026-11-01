@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ステージ中の HUDの土台・画面の真ん中の知らせ・結果・右上のメニューボタンと、必殺技のカットイン。
+    /// ステージ中の HUDの土台・画面の真ん中の知らせ・右上のメニューボタンと、必殺技のカットイン。結果の画面は PenmonScrambleSceneBuilder.Result.cs。
     /// 自分のプレート・エリアの進み具合・ボスの HP は PenmonScrambleSceneBuilder.HudPlates.cs
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
@@ -36,15 +36,7 @@ namespace PenmonScramble.Editor
         private const float CutInFaceSize = 240f;
         private const float CutInFaceX = 360f;
         private const int CutInFontSize = 64;
-
-        private const int ResultFontSize = 120;
-        private static readonly Color ResultOverlayColor = new Color(0f, 0f, 0f, 0.55f);
-        private static readonly Vector2 RetryButtonSize = new Vector2(420f, 120f);
-        private static readonly Vector2 RetryButtonPosition = new Vector2(-240f, -200f);
-        private static readonly Vector2 TitleButtonPosition = new Vector2(240f, -200f);
-        private static readonly Color TitleButtonColor = new Color(0.45f, 0.5f, 0.6f);
-        private const int RetryFontSize = 48;
-        private static readonly Color RetryButtonColor = new Color(0.18f, 0.55f, 0.9f);
+        private const int CutInNameFontSize = 96;
 
         // 右上のメニューボタン。指で押しやすい大きさにして、進み具合はその左へずらす
         private const float HudMenuButtonSize = 120f;
@@ -72,11 +64,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_plates").objectReferenceValue = safe;
             so.FindProperty("_bannerText").objectReferenceValue = CreateBanner(hudObj.transform);
 
-            var (panel, resultText, retry, toTitle) = CreateResultPanel(hudObj.transform);
-            so.FindProperty("_resultPanel").objectReferenceValue = panel;
-            so.FindProperty("_resultText").objectReferenceValue = resultText;
-            so.FindProperty("_retryButton").objectReferenceValue = retry;
-            so.FindProperty("_titleButton").objectReferenceValue = toTitle;
+            so.FindProperty("_result").objectReferenceValue = CreateResultScreen(hudObj.transform);
             so.ApplyModifiedProperties();
             return hud;
         }
@@ -130,16 +118,40 @@ namespace PenmonScramble.Editor
             return view;
         }
 
+        /// <summary>カットインの帯の大きさ。ステージの画面いっぱいの帯と、ペンモン画面の実演の小窓の帯で変える</summary>
+        private readonly struct CutInLayout
+        {
+            public readonly float Height;
+            public readonly float FaceSize;
+            public readonly float FaceX;
+            public readonly int FontSize;
+            public readonly int NameFontSize;
+
+            public CutInLayout(float height, float faceSize, float faceX, int fontSize, int nameFontSize)
+            {
+                Height = height;
+                FaceSize = faceSize;
+                FaceX = faceX;
+                FontSize = fontSize;
+                NameFontSize = nameFontSize;
+            }
+        }
+
         /// <summary>画面の真ん中を横切る帯。出す間だけ有効にする（SpecialCutIn）</summary>
         private static SpecialCutIn CreateCutIn(Transform canvas)
         {
-            var root = CreateStretchGroup(canvas, "SpecialCutIn");
+            return CreateCutIn(canvas, new CutInLayout(CutInHeight, CutInFaceSize, CutInFaceX, CutInFontSize, CutInNameFontSize));
+        }
+
+        private static SpecialCutIn CreateCutIn(Transform parent, CutInLayout layout)
+        {
+            var root = CreateStretchGroup(parent, "SpecialCutIn");
 
             var band = UIDialogBuilder.CreateUIObject("Band", root.transform);
             var bandRect = band.GetComponent<RectTransform>();
             bandRect.anchorMin = new Vector2(0f, 0.5f);
             bandRect.anchorMax = new Vector2(1f, 0.5f);
-            bandRect.sizeDelta = new Vector2(0f, CutInHeight);
+            bandRect.sizeDelta = new Vector2(0f, layout.Height);
             var bandImage = band.AddComponent<Image>();
             // 帯の下のボタンを押せなくしない
             bandImage.raycastTarget = false;
@@ -147,13 +159,13 @@ namespace PenmonScramble.Editor
             var face = UIDialogBuilder.CreateUIObject("Face", band.transform);
             var faceRect = face.GetComponent<RectTransform>();
             faceRect.anchorMin = faceRect.anchorMax = new Vector2(0f, 0.5f);
-            faceRect.anchoredPosition = new Vector2(CutInFaceX, 0f);
-            faceRect.sizeDelta = Vector2.one * CutInFaceSize;
+            faceRect.anchoredPosition = new Vector2(layout.FaceX, 0f);
+            faceRect.sizeDelta = Vector2.one * layout.FaceSize;
             var faceImage = face.AddComponent<Image>();
             faceImage.raycastTarget = false;
 
             var textObj = CreateStretchGroup(band.transform, "Text");
-            var text = AddText(textObj, string.Empty, CutInFontSize);
+            var text = AddText(textObj, string.Empty, layout.FontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
             text.raycastTarget = false;
@@ -164,6 +176,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_bandImage").objectReferenceValue = bandImage;
             so.FindProperty("_face").objectReferenceValue = faceImage;
             so.FindProperty("_text").objectReferenceValue = text;
+            so.FindProperty("_nameFontSize").intValue = layout.NameFontSize;
             so.ApplyModifiedProperties();
             root.SetActive(false);
             return cutIn;
@@ -240,31 +253,6 @@ namespace PenmonScramble.Editor
             so.FindProperty("_howToPlay").objectReferenceValue = howToPlay;
             so.ApplyModifiedProperties();
             return menu;
-        }
-
-        private static (GameObject panel, Text text, Button retry, Button toTitle) CreateResultPanel(Transform parent)
-        {
-            var panel = CreateStretchGroup(parent, "Result");
-            panel.AddComponent<Image>().color = ResultOverlayColor;
-
-            var textObj = CreateStretchGroup(panel.transform, "Text");
-            var text = AddText(textObj, string.Empty, ResultFontSize);
-            text.alignment = TextAnchor.MiddleCenter;
-            text.color = Color.white;
-
-            var retry = CreateResultButton(panel.transform, "Retry", "もう一度", RetryButtonPosition, RetryButtonColor);
-            var toTitle = CreateResultButton(panel.transform, "Title", "タイトルへ", TitleButtonPosition, TitleButtonColor);
-
-            panel.SetActive(false);
-            return (panel, text, retry, toTitle);
-        }
-
-        private static Button CreateResultButton(Transform parent, string name, string label, Vector2 position, Color color)
-        {
-            var buttonObj = UIDialogBuilder.CreateButton(parent, name, label, RetryButtonSize.x, RetryButtonSize.y, color);
-            buttonObj.GetComponent<RectTransform>().anchoredPosition = position;
-            buttonObj.GetComponentInChildren<Text>().fontSize = RetryFontSize;
-            return buttonObj.GetComponent<Button>();
         }
     }
 }
