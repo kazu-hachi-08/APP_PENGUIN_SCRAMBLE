@@ -11,7 +11,8 @@ namespace PenmonScramble.Game
     /// <summary>
     /// タイトル（ひとりで / 部屋を作る / コードで参加）からステージを始め、入力・HUD・結果をつなぐ。
     /// 計算はソロとホストが StageHost、ゲストは StageGuest で、どちらもスナップショットを StageView に渡して描く。
-    /// ステージはホストがタイトルで選んだもの、連れていくのは各自の記録の編成。報酬は各自の記録に書く。
+    /// 「ひとりで遊ぶ」はロビーのカードで選んだストーリー、「みんなで遊ぶ」はホストが待ちの窓で選んだボスラッシュ（RushLobby）。
+    /// 連れていくのは各自の記録の編成。報酬は各自の記録に書く。
     /// BGM はタイトル・ステージ・ボスエリアで切り替え、結果で止めてジングルを鳴らす。
     /// 遊んでいる間はメニュー（StageMenu）を開ける。開いている間は自分の入力を「メニュー中」にする。
     /// スマホのボタンは遊んでいる間だけ出し、場に出ている子の技・待ち・ゲージを映す（TouchControlsView）
@@ -25,6 +26,7 @@ namespace PenmonScramble.Game
         [SerializeField] private OnlineSession _session;
         [SerializeField] private ModeSelectPanel _modeSelect;
         [SerializeField] private TitleMenu _titleMenu;
+        [SerializeField] private RushLobby _rushLobby;
         [SerializeField] private StageMenu _menu;
         [SerializeField] private TouchControlsView _touch;
 
@@ -103,14 +105,16 @@ namespace PenmonScramble.Game
             _session.OnPeerDisconnected += ReturnToTitle;
             _session.OnConnectionLost += ReturnToTitle;
 
-            // 「やり直し」は全員の挑戦を始め直すので、ホストだけが押せる
-            _menu.Bind(solo: false, canRestart: seat == StageHost.LocalSeat);
+            // 「やり直し」は全員の挑戦を始め直すので、ホストだけが押せる。
+            // ホストがひとりで始めたときは、ひとりで遊ぶのと同じくメニューで止める（待っている仲間がいないので）
+            _menu.Bind(solo: playerCount == 1, canRestart: seat == StageHost.LocalSeat);
             if (seat == StageHost.LocalSeat)
             {
                 _session.OnMemberLeft += OnMemberLeft;
                 _link.InputReceived += OnRemoteInput;
                 _link.PartyReceived += OnRemoteParty;
-                StartHost(playerCount, _link, SelectedStage, Difficulty.Normal);
+                var choice = _rushLobby.Choice;
+                StartHost(playerCount, _link, RushTable.Get(choice.StageNo) ?? RushTable.Get(RushTable.FirstNo), choice.Difficulty);
                 return;
             }
 
@@ -119,7 +123,7 @@ namespace PenmonScramble.Game
             _link.SendParty(StageCodec.EncodeParty(GameSave.Record.PartyPenguins()));
         }
 
-        /// <summary>ロビーのカードで選んだストーリーのステージ</summary>
+        /// <summary>ロビーのカードで選んだストーリーのステージ（ひとりで遊ぶ）</summary>
         private StageDef SelectedStage => StageTable.Get(_titleMenu.SelectedStageNo) ?? StageTable.Stage1;
 
         /// <summary>最初の挑戦は、ゲストの編成がそろってから StageHost が始める</summary>

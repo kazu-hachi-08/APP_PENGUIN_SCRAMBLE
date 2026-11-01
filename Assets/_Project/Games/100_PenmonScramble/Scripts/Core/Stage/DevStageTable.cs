@@ -44,10 +44,10 @@ namespace PenmonScramble.Core
         private static WaveDef Bosses(int escorts, params BossSpawn[] bosses) => new WaveDef(escorts, Escorts, bosses);
     }
 
-    /// <summary>番号からステージを引く入口。ストーリー（1〜）と開発用（99・100）。ボスラッシュ（101〜）もここに足す</summary>
+    /// <summary>番号からステージを引く入口。ストーリー（1〜）・開発用（99・100）・ボスラッシュ（101〜）</summary>
     public static class Stages
     {
-        public static StageDef Get(int no) => StageTable.Get(no) ?? DevStageTable.Get(no);
+        public static StageDef Get(int no) => StageTable.Get(no) ?? RushTable.Get(no) ?? DevStageTable.Get(no);
 
         /// <summary>記録に書かないステージ（開発用）か</summary>
         public static bool IsDev(int no) => DevStageTable.Get(no) != null;

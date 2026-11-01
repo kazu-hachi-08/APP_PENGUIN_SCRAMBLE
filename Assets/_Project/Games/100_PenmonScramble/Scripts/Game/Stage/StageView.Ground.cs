@@ -88,7 +88,10 @@ namespace PenmonScramble.Game
             var outsideHeight = ArenaOutsideFloorHeight - ArenaOutsideFloorStep * index;
             CreateFloor($"Outside{index}", _materials.Toon.Floor(worldTexture, StageTheme.OutsideTint * worldTint), min - outside, max + outside, outsideHeight);
 
-            var floor = ArenaFloor(world, theme, worldTexture, worldTint, index);
+            // ボスラッシュはコロシアム（石の舞台の床・石の柱と旗の柵）。ストーリーの闘技場と見分けがつくように
+            var colosseum = RushTable.IsRush(stage?.No ?? 0);
+            var style = colosseum ? ArenaFenceStyle.Colosseum : ArenaFenceStyle.Toy;
+            var floor = colosseum ? ColosseumFloor(world, theme, worldTexture, worldTint, index) : ArenaFloor(world, theme, worldTexture, worldTint, index);
             var size = max - min;
             var disc = ToyParts.AddMesh(new GameObject($"Area{index}"), ToyMeshes.FloorDisc, floor);
             disc.transform.SetParent(transform, false);
@@ -104,12 +107,12 @@ namespace PenmonScramble.Game
                 if (StageLayout.HasExitPassage(stage, index - 1))
                 {
                     // 闘技場どうしの通り道は、楕円の外に出ている所の両側に柵を立てる（壁が見えないと、どこまで歩けるか分からないため）
-                    ArenaFence.BuildCorridor(transform, StageLayout.Area(stage, index - 1), arena, _materials.Toon, theme);
+                    ArenaFence.BuildCorridor(transform, StageLayout.Area(stage, index - 1), arena, _materials.Toon, theme, style);
                 }
             }
 
             var exit = StageLayout.HasExitPassage(stage, index) ? StageLayout.Passage(stage, index + 1) : (AreaShape?)null;
-            var doors = ArenaFence.Build(transform, arena, entrance, exit, _materials.Toon, theme);
+            var doors = ArenaFence.Build(transform, arena, entrance, exit, _materials.Toon, theme, style);
             if (doors.entrance != null)
             {
                 _gates.Add((min.x, doors.entrance));
@@ -175,6 +178,18 @@ namespace PenmonScramble.Game
             return borrowed != null
                 ? _materials.Toon.Floor(borrowed.texture, theme.FallbackArtTint)
                 : _materials.Toon.Floor(worldTexture, StageTheme.AreaTintOf(index, true) * worldTint);
+        }
+
+        /// <summary>
+        /// ボスラッシュのコロシアムの床。1枚の石の舞台の絵に、その大ボスのワールドの色を掛ける。
+        /// 絵がまだ無ければ、ストーリーの闘技場の床で代わりにする
+        /// </summary>
+        private Material ColosseumFloor(int world, StageTheme theme, Texture worldTexture, Color worldTint, int index)
+        {
+            var art = CreatureArt.Colosseum();
+            return art != null
+                ? _materials.Toon.Floor(art.texture, theme.ColosseumTint)
+                : ArenaFloor(world, theme, worldTexture, worldTint, index);
         }
 
         /// <summary>絵を min〜max（床の上の長方形）いっぱいに引き伸ばして貼った板</summary>

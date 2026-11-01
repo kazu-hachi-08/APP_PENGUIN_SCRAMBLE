@@ -72,12 +72,41 @@ namespace PenmonScramble.Game
             GameSounds.Play(_resultCleared ? GameSound.Clear : GameSound.Fail);
             BeginSlowMotion();
 
-            var stageName = Stages.Get(snapshot.StageNo)?.Name ?? string.Empty;
-            var unlockedName = StageTable.Get(reward.UnlockedStageNo)?.Name;
-            _hud.ShowResult(new ResultInfo(_resultCleared, canRetry: _host != null, stageName, snapshot.EnemiesDefeated, reward, unlockedName));
+            _hud.ShowResult(ResultInfoOf(snapshot, reward));
         }
 
-        /// <summary>結果を自分の記録に書いて保存する。協力ではホストのクリアが全員の記録に付く。開発用のステージは何も書かない</summary>
+        private ResultInfo ResultInfoOf(StageSnapshot snapshot, StageReward reward)
+        {
+            var canRetry = _host != null;
+            var stage = Stages.Get(snapshot.StageNo);
+            if (!RushTable.IsRush(snapshot.StageNo))
+            {
+                var unlocked = StageTable.Get(reward.UnlockedStageNo)?.Name;
+                var names = unlocked != null ? new[] { unlocked } : null;
+                return new ResultInfo(_resultCleared, canRetry, stage?.Name ?? string.Empty, snapshot.EnemiesDefeated, reward, names);
+            }
+
+            var difficulty = DifficultyNames.NameOf(snapshot.Difficulty);
+            var title = $"ボスラッシュ {stage?.Name} {difficulty}";
+            var rushNames = new System.Collections.Generic.List<string>();
+            var next = RushTable.Get(reward.UnlockedStageNo);
+            if (next != null)
+            {
+                rushNames.Add(next.Name);
+            }
+
+            if (reward.UnlockedDifficulty.HasValue)
+            {
+                rushNames.Add($"{stage?.Name} {DifficultyNames.NameOf(reward.UnlockedDifficulty.Value)}");
+            }
+
+            return new ResultInfo(_resultCleared, canRetry, title, snapshot.EnemiesDefeated, reward, rushNames.ToArray(), snapshot.ArenaRoundsWon, stage?.ArenaCount ?? 0);
+        }
+
+        /// <summary>
+        /// 結果を自分の記録に書いて保存する。協力ではホストのクリアが全員の記録に付く（ボスラッシュも、ゲストが解放していなくても付く）。
+        /// 開発用のステージは何も書かない
+        /// </summary>
         private static StageReward RecordResult(StageSnapshot snapshot, bool cleared)
         {
             if (Stages.IsDev(snapshot.StageNo))
@@ -85,7 +114,10 @@ namespace PenmonScramble.Game
                 return new StageReward(0, 0, 0);
             }
 
-            var reward = GameSave.Record.RecordStage(snapshot.StageNo, cleared, snapshot.EnemiesDefeated);
+            var record = GameSave.Record;
+            var reward = RushTable.IsRush(snapshot.StageNo)
+                ? record.RecordRush(snapshot.StageNo, snapshot.Difficulty, cleared, snapshot.ArenaRoundsWon, snapshot.EnemiesDefeated)
+                : record.RecordStage(snapshot.StageNo, cleared, snapshot.EnemiesDefeated);
             GameSave.Save();
             return reward;
         }

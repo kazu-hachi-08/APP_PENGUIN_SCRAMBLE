@@ -165,9 +165,10 @@ namespace PenmonScramble.Common.Online
         /// 3人以上の部屋のホストが、集まったメンバーで試合を始める。席番号は参加順（ホスト=0）。
         /// 以降に入ってきた人は AddMember で切断する
         /// </summary>
-        public void StartMatch()
+        /// <param name="allowAlone">だれも来ていなくてもホストひとりで始める（友達を待たずに練習できるゲーム向け）</param>
+        public void StartMatch(bool allowAlone = false)
         {
-            if (!IsHost || _matchStarted || _memberIds.Count == 0) return;
+            if (!IsHost || _matchStarted || (_memberIds.Count == 0 && !allowAlone)) return;
 
             _matchStarted = true;
             int count = _memberIds.Count + 1;

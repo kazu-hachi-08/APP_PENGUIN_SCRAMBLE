@@ -7,10 +7,17 @@ namespace PenmonScramble.Core
     public readonly struct StageReward
     {
         public StageReward(int coins, int firstClearBonus, int unlockedStageNo)
+            : this(coins, firstClearBonus, unlockedStageNo, null)
+        {
+        }
+
+        /// <param name="unlockedDifficulty">ボスラッシュで、同じステージの次の難易度が開いたとき</param>
+        public StageReward(int coins, int firstClearBonus, int unlockedStageNo, Difficulty? unlockedDifficulty)
         {
             Coins = coins;
             FirstClearBonus = firstClearBonus;
             UnlockedStageNo = unlockedStageNo;
+            UnlockedDifficulty = unlockedDifficulty;
         }
 
         /// <summary>クリア・失敗で決まるコイン（初クリアのボーナスは含まない）</summary>
@@ -19,8 +26,14 @@ namespace PenmonScramble.Core
         /// <summary>初めてクリアしたときだけ付くコイン。それ以外は 0</summary>
         public int FirstClearBonus { get; }
 
-        /// <summary>今回のクリアで新しく遊べるようになったステージの番号。無ければ 0（最後のステージ・2回目以降のクリア・失敗）</summary>
+        /// <summary>
+        /// 今回のクリアで新しく遊べるようになったステージの番号（ボスラッシュは次のステージの「ふつう」）。
+        /// 無ければ 0（最後のステージ・2回目以降のクリア・失敗）
+        /// </summary>
         public int UnlockedStageNo { get; }
+
+        /// <summary>ボスラッシュで、今回のクリアで開いた同じステージの難易度。無ければ null</summary>
+        public Difficulty? UnlockedDifficulty { get; }
 
         public int Total => Coins + FirstClearBonus;
     }

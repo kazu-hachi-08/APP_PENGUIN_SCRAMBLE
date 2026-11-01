@@ -24,6 +24,8 @@ namespace PenmonScramble.Editor
             FillSprites(so.FindProperty("_bigBosses"), BigBossTable.Count, i => BossPortraitPath(BigBossTable.SkuaNo + i), CreatureArtMaxSize);
             FillSprites(so.FindProperty("_grounds"), Balance.WorldCount, i => $"{ArtFolder}Stage/World{i + 1}.png", GroundArtMaxSize);
             FillSprites(so.FindProperty("_arenaGrounds"), Balance.WorldCount, i => $"{ArtFolder}Stage/Arena{i + 1}.png", GroundArtMaxSize);
+            // ボスラッシュのコロシアム。無ければ null のまま（ワールドの闘技場の絵で代わりに敷く）
+            so.FindProperty("_colosseum").objectReferenceValue = LoadArtSprite($"{ArtFolder}Stage/Colosseum.png", GroundArtMaxSize);
             so.ApplyModifiedProperties();
         }
 

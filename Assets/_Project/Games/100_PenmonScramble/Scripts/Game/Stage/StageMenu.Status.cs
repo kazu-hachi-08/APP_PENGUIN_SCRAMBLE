@@ -51,7 +51,7 @@ namespace PenmonScramble.Game
             if (_snapshot != null)
             {
                 _stageText.text = Stages.Get(_snapshot.StageNo)?.Name ?? string.Empty;
-                _areaPips.Set(_snapshot.AreaIndex, _snapshot.AreaCount);
+                _areaPips.Set(_snapshot.AreaIndex, _snapshot.AreaCount, StageHud.IsRoundStage(_snapshot));
             }
 
             _party.Show(_partyState, _fallen, snap);

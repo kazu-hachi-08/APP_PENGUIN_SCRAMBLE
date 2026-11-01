@@ -17,6 +17,7 @@ namespace PenmonScramble.Game
         private const float BannerPopScale = 0.35f;
         private const string GateOpenMessage = "すすめ →";
         private const string RoundClearMessage = "ROUND CLEAR!";
+        private const string FinalRoundMessage = "FINAL ROUND";
         // 残りの敵のアイコンは、雑魚と同じく暗くしたペンモンの顔
         private const int EnemyIconSpecies = 1;
         private static readonly Color WildFaceColor = Color.Lerp(Color.white, Color.black, UnitView.EnemyDarkness);
@@ -48,7 +49,7 @@ namespace PenmonScramble.Game
 
         public void SetProgress(StageSnapshot snapshot)
         {
-            _areaPips.Set(snapshot.AreaIndex, snapshot.AreaCount);
+            _areaPips.Set(snapshot.AreaIndex, snapshot.AreaCount, IsRoundStage(snapshot));
             var gateOpen = snapshot.IsGateOpen;
             _enemyIcon.gameObject.SetActive(!gateOpen);
             _enemyText.text = gateOpen ? GateOpenMessage : $"のこり {snapshot.CountAlive(Team.Enemy)}";
@@ -86,12 +87,20 @@ namespace PenmonScramble.Game
             }
         }
 
+        /// <summary>闘技場の連戦のステージ（ボスラッシュ）か。エリアの進み具合を「ROUND」で数える</summary>
+        public static bool IsRoundStage(StageSnapshot snapshot)
+        {
+            var stage = Stages.Get(snapshot.StageNo);
+            return stage != null && stage.ArenaCount > 1 && stage.ArenaCount == stage.Areas.Count;
+        }
+
         private static string AreaBanner(StageSnapshot snapshot)
         {
             var stage = Stages.Get(snapshot.StageNo);
             if (stage != null && stage.ArenaCount > 1 && snapshot.ArenaRound > 0)
             {
-                return $"ROUND {snapshot.ArenaRound}";
+                // 最後の戦い（ボスラッシュは本気の大ボス）は、特別に知らせて気を引きしめる
+                return snapshot.ArenaRound == stage.ArenaCount ? FinalRoundMessage : $"ROUND {snapshot.ArenaRound}";
             }
 
             return snapshot.IsBossArea ? "ボスエリア！" : $"エリア {snapshot.AreaIndex + 1}";

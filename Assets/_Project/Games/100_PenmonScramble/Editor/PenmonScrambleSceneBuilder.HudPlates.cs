@@ -81,6 +81,8 @@ namespace PenmonScramble.Editor
         // 1ステージのエリアの数より少し多めに作っておく
         private const int MaxAreaPips = 8;
         private static readonly Vector2 BossTagSize = new Vector2(80f, 34f);
+        // ボスラッシュの3戦目（本気の大ボス）の王冠。つぶより大きく、札と同じくらいの高さ
+        private const float CrownSize = 42f;
         private const int BossTagFontSize = 22;
         private static readonly Vector2 EnemyPanelPosition = new Vector2(310f, -96f);
         private static readonly Vector2 EnemyPanelSize = new Vector2(260f, 52f);
@@ -217,7 +219,7 @@ namespace PenmonScramble.Editor
             var areaLabel = CreateHudLabel(areaPanel.transform, "Label", AreaLabelFontSize, TextAnchor.MiddleLeft, AreaLabelPaddingLeft, 0f);
             areaLabel.text = AreaLabel;
             areaLabel.color = HudGoldColor;
-            hud.FindProperty("_areaPips").objectReferenceValue = CreateAreaPips(areaPanel.rectTransform);
+            hud.FindProperty("_areaPips").objectReferenceValue = CreateAreaPips(areaPanel.rectTransform, areaLabel);
 
             var enemyPanel = CreateFramedSlant(group, "Enemies", HudBackColor, TopLeft, EnemyPanelPosition, EnemyPanelSize);
             var icon = CreateHudImage(enemyPanel.rectTransform, "Icon", null, Color.white, new Vector2(0f, 0.5f), new Vector2(EnemyIconX, 0f), Vector2.one * EnemyIconSize);
@@ -227,8 +229,9 @@ namespace PenmonScramble.Editor
             hud.FindProperty("_enemyText").objectReferenceValue = enemyText;
         }
 
-        /// <summary>つぶを右寄せで横に並べ、最後に「ボス」の札を置く（隠したつぶは詰める）</summary>
-        private static HudAreaPips CreateAreaPips(RectTransform panel)
+        /// <summary>つぶを右寄せで横に並べ、最後に「ボス」の札（ボスラッシュは王冠）を置く（隠したつぶは詰める）</summary>
+        /// <param name="label">「エリア」「ROUND」の見出し。無ければ書き換えない</param>
+        private static HudAreaPips CreateAreaPips(RectTransform panel, Text label = null)
         {
             var row = CreateHudRect(panel, "Pips", new Vector2(1f, 0.5f), new Vector2(PipRowRight, 0f), PipRowSize);
             row.pivot = new Vector2(1f, 0.5f);
@@ -246,11 +249,15 @@ namespace PenmonScramble.Editor
 
             var bossTag = CreateFramedSlant(row, "BossTag", BossNameColor, Middle, Vector2.zero, BossTagSize);
             CreateHudLabel(bossTag.transform, "Text", BossTagFontSize, TextAnchor.MiddleCenter, 0f, 0f).text = "ボス";
+            var crown = CreateHudImage(row, "Crown", CrownIconPath, BossNameColor, Middle, Vector2.zero, Vector2.one * CrownSize);
+            crown.gameObject.SetActive(false);
 
             var view = row.gameObject.AddComponent<HudAreaPips>();
             var so = new SerializedObject(view);
             SetObjectArray(so.FindProperty("_pips"), pips);
             so.FindProperty("_bossTag").objectReferenceValue = bossTag;
+            so.FindProperty("_crown").objectReferenceValue = crown;
+            so.FindProperty("_label").objectReferenceValue = label;
             so.FindProperty("_doneColor").colorValue = HudGoldColor;
             so.FindProperty("_bossColor").colorValue = BossNameColor;
             so.ApplyModifiedProperties();

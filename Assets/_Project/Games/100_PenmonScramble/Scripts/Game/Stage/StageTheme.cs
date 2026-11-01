@@ -71,6 +71,19 @@ namespace PenmonScramble.Game
                 1, new Color(0.62f, 0.40f, 0.32f)),
         };
 
+        // ボスラッシュのコロシアムの床（明るい石の絵）に掛ける色。添字はワールド-1。そのステージの大ボスのワールドの色に寄せる
+        private static readonly Color[] ColosseumTints =
+        {
+            new Color(1f, 0.93f, 0.80f),
+            new Color(0.82f, 0.92f, 1f),
+            new Color(0.55f, 0.66f, 0.86f),
+            new Color(0.74f, 0.80f, 0.87f),
+            new Color(0.88f, 0.62f, 0.50f),
+        };
+
+        /// <summary>コロシアムの床の絵に掛ける色</summary>
+        public Color ColosseumTint => ColosseumTints[Mathf.Clamp(System.Array.IndexOf(Worlds, this), 0, ColosseumTints.Length - 1)];
+
         private readonly struct FenceColors
         {
             public readonly Color Post;

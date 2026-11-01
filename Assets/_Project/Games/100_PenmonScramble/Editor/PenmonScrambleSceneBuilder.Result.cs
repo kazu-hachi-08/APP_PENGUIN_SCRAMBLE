@@ -35,12 +35,16 @@ namespace PenmonScramble.Editor
         private const float ResultRaysSize = 780f;
         private static readonly Color ResultRaysColor = new Color(1f, 0.9f, 0.5f, 0.4f);
         private static readonly Vector2 ResultStagePlatePosition = new Vector2(0f, -122f);
-        private static readonly Vector2 ResultStagePlateSize = new Vector2(380f, 58f);
+        // 「ボスラッシュ 火山の闘技場 むずかしい」まで入る幅。入りきらなければ字を縮める
+        private static readonly Vector2 ResultStagePlateSize = new Vector2(580f, 58f);
+        private const float ResultStagePadding = 36f;
         private const int ResultStageFontSize = 30;
 
         // 札: 一番上の位置と間隔は ResultScreen（出さない札を詰めて並べる）
         private const float ResultRowTop = 110f;
         private const float ResultRowSpacing = 96f;
+        // 一番下の札の位置。ボタン（ResultButtonsPosition）の上の端より札の半分だけ上
+        private const float ResultRowBottom = -226f;
         private static readonly Vector2 ResultRowSize = new Vector2(600f, 80f);
         private static readonly Vector2 ResultRowSlideFrom = new Vector2(520f, 0f);
         private const float ResultRowLabelPadding = 44f;
@@ -52,6 +56,7 @@ namespace PenmonScramble.Editor
         private const float ResultCoinLabelPadding = 104f;
         private static readonly Color ResultUnlockColor = new Color(0.22f, 0.68f, 0.45f);
         private const string DefeatedLabel = "倒した数";
+        private const string RoundsLabel = "勝った戦い";
         private const string CoinLabel = "コイン";
         private const string BonusLabel = "初クリア ボーナス";
 
@@ -118,6 +123,7 @@ namespace PenmonScramble.Editor
 
             so.FindProperty("_rowTop").floatValue = ResultRowTop;
             so.FindProperty("_rowSpacing").floatValue = ResultRowSpacing;
+            so.FindProperty("_rowBottom").floatValue = ResultRowBottom;
             so.ApplyModifiedProperties();
             root.SetActive(false);
             return screen;
@@ -145,7 +151,8 @@ namespace PenmonScramble.Editor
             shadow.effectDistance = ResultHeadlineShadow;
 
             var plate = CreateFramedSlant(group, "StagePlate", HudBackColor, Middle, ResultStagePlatePosition, ResultStagePlateSize);
-            var stageName = CreateHudLabel(plate.transform, "Text", ResultStageFontSize, TextAnchor.MiddleCenter, 0f, 0f);
+            var stageName = CreateHudLabel(plate.transform, "Text", ResultStageFontSize, TextAnchor.MiddleCenter, ResultStagePadding, ResultStagePadding);
+            SetBestFit(stageName, ResultStageFontSize);
 
             var so = new SerializedObject(headline);
             so.FindProperty("_title").objectReferenceValue = title;
@@ -156,10 +163,13 @@ namespace PenmonScramble.Editor
             screen.FindProperty("_headline").objectReferenceValue = headline;
         }
 
-        /// <summary>倒した数・コイン・初クリア ボーナス・次のステージの解放の札。位置は ResultScreen が出す札だけ詰めて決める</summary>
+        /// <summary>
+        /// 倒した数・勝った戦い（ボスラッシュ）・コイン・初クリア ボーナス・解放の札。位置は ResultScreen が出す札だけ詰めて決める
+        /// </summary>
         private static void CreateResultRows(RectTransform column, SerializedObject screen)
         {
             screen.FindProperty("_defeatedRow").objectReferenceValue = CreateResultRow(column, "Defeated", HudBackColor, DefeatedLabel, ResultRowLabelPadding, false, out _);
+            screen.FindProperty("_roundsRow").objectReferenceValue = CreateResultRow(column, "Rounds", HudBackColor, RoundsLabel, ResultRowLabelPadding, false, out _);
 
             var coin = CreateResultRow(column, "Coins", HudBackColor, CoinLabel, ResultCoinLabelPadding, false, out var coinPlate);
             var icon = CreateHudImage(coinPlate.rectTransform, "Icon", CoinIconPath, Color.white, new Vector2(0f, 0.5f), new Vector2(ResultCoinIconX, 0f), Vector2.one * ResultCoinIconSize);

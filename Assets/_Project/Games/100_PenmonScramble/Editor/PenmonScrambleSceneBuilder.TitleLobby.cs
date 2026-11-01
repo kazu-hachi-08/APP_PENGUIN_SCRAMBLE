@@ -17,7 +17,7 @@ namespace PenmonScramble.Editor
     public static partial class PenmonScrambleSceneBuilder
     {
         private const string SoloLabel = "ひとりで遊ぶ";
-        private const string OnlineLabel = "みんなで遊ぶ\n<size=28>最大4人で協力</size>";
+        private const string OnlineLabel = "みんなで遊ぶ\n<size=28>ボスラッシュ</size>";
         private const string NameHintLabel = "タップで変更";
 
         // 上の札
