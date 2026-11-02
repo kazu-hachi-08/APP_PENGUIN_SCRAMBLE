@@ -4,9 +4,11 @@
 
 ## ▶ ブラウザで遊ぶ
 
-**https://kazu-hachi-08.github.io/penmon-scramble-web/**（初回公開後に有効）
+**https://kazu-hachi-08.github.io/penmon-scramble-web/**
 
 * PCのブラウザ（Chrome / Edge 推奨）で開く。横画面のゲームなので、スマホは横向きで
+* 中身は `Tools/Release/release-web.bat` で公開した最新のビルド（公開物は別リポジトリ [penmon-scramble-web](https://github.com/kazu-hachi-08/penmon-scramble-web)）
+* 公開手順: [Docs/DEVELOPMENT_SETUP.md](Docs/DEVELOPMENT_SETUP.md) の「5. リリース」
 
 ## ▶ Windows版をダウンロード
 

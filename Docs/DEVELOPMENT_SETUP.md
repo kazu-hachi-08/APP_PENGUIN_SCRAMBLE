@@ -65,9 +65,17 @@ Tools/
 
 ### ブラウザ版（GitHub Pages）
 
-1. 初回だけ `Tools/Release/release-web.bat` を実行（公開用リポジトリ `penmon-scramble-web` の作成と clone を `..\penmon-scramble-web` に行う）
-2. Unity で `Tools > PenmonScramble > Release > Web`（`..\penmon-scramble-web` へビルドする。1 の clone が無いときはビルドせずに止まる）
-3. もう一度 `release-web.bat` を実行 → https://kazu-hachi-08.github.io/penmon-scramble-web/
+公開先: https://kazu-hachi-08.github.io/penmon-scramble-web/ （公開用リポジトリ [kazu-hachi-08/penmon-scramble-web](https://github.com/kazu-hachi-08/penmon-scramble-web)。2026-11-01 に初公開）
+
+更新するとき:
+
+1. Unity で `Tools > PenmonScramble > Release > Web`（リポジトリの隣の `..\penmon-scramble-web` へビルドする。ここは公開用リポジトリの clone そのもの）
+2. `Tools/Release/release-web.bat` をダブルクリック（コミットして push する。反映まで1〜2分）
+
+新しい PC で初めて公開するとき（`..\penmon-scramble-web` が無いとき）:
+
+- 先に `release-web.bat` を1回実行すると、公開用リポジトリを `..\penmon-scramble-web` に clone して止まる。そのあと上の 1・2 をする
+- clone が無いまま Unity でビルドすると、ビルドせずにエラーで止まる（中身のあるフォルダには clone できなくなるため）
 
 前提: `gh` CLI をインストールし `gh auth login` 済み。
 
