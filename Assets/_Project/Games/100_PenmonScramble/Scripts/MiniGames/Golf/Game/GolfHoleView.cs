@@ -7,140 +7,110 @@ using UnityEngine;
 namespace PenmonScramble.Golf.Game
 {
     /// <summary>
-    /// ホールの仮の見た目（板と球と点線）。ホールの定義表から組み、毎フレーム球の位置を写す。
-    /// 本番のおもちゃの見た目はフェーズ 3 で作り直す（Docs/MINIGAME_GOLF_PLAN.md）
+    /// ホールの見た目（おもちゃのミニゴルフの台）。ホールの定義表から地面・壁・カップを組み、毎フレーム球を写す。
+    /// 地面は GolfHoleView.Ground.cs、壁は .Walls.cs、カップと旗とティーは .Cup.cs。球・ガイド線・打つ子は別の部品
     /// </summary>
     public partial class GolfHoleView : MonoBehaviour
     {
-        // 点線の点の間（m）と、置いておく点の数（ガイド線の最大の長さ ÷ 間 より多く）
-        private const float GuideDotSpacing = 0.35f;
-        private const int GuideDotCount = 40;
-        private static readonly Vector3 GuideDotScale = new Vector3(0.12f, 0.01f, 0.12f);
-        private const float GuideDotHeight = 0.04f;
-
-        // カップの中の球は少し沈めて、入ったことが見て分かるようにする
-        private const float InCupSink = 0.12f;
-
-        // 席の色（オンラインで誰の球か見分ける）。本番は白い球に席の色の帯（フェーズ 3）
-        private static readonly Color[] SeatColors =
-        {
-            new Color(1f, 0.38f, 0.36f),
-            new Color(0.36f, 0.62f, 1f),
-            new Color(0.42f, 0.86f, 0.42f),
-            new Color(1f, 0.84f, 0.3f),
-        };
-
-        // トゥーンの色の名前（ToonMaterials と同じ。点ごとに色を変えても素材を増やさない）
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-
-        private static readonly Color GuideColor = Color.white;
-        private static readonly Color GuideBounceColor = new Color(1f, 0.9f, 0.45f);
-
         [SerializeField] private Shader _toonShader;
         [SerializeField] private Shader _blobShadowShader;
-        [SerializeField] private GolfOverviewCamera _camera;
 
         private readonly List<Mesh> _meshes = new List<Mesh>();
-        private readonly List<Transform> _balls = new List<Transform>();
-        private readonly List<Renderer> _guideDots = new List<Renderer>();
+        private readonly List<GolfBallView> _balls = new List<GolfBallView>();
         private ToonMaterials _materials;
         private Transform _course;
-        private MaterialPropertyBlock _dotBlock;
+        private GolfGuideView _guide;
+        private GolfShooter _shooter;
 
-        /// <summary>ホールを組み直す（前のホールの物は消す）</summary>
-        public void Build(GolfHoleDef hole, int playerCount)
+        public GolfSurface Surface { get; private set; }
+
+        /// <summary>打つ子（ペンモンとクラブ）。ホールを組み直しても同じものを使う</summary>
+        public GolfShooter Shooter => _shooter;
+
+        public ToonMaterials Materials => _materials ??= new ToonMaterials(_toonShader, _blobShadowShader);
+
+        /// <summary>ホールを組み直す（前のホールの物は消す）。world は景色（地面の絵と色）を決めるワールドの番号</summary>
+        public void Build(GolfHoleDef hole, int playerCount, int world)
         {
-            _materials ??= new ToonMaterials(_toonShader, _blobShadowShader);
-            _dotBlock ??= new MaterialPropertyBlock();
             Clear();
             _course = new GameObject("Course").transform;
             _course.SetParent(transform, false);
-            BuildCourse(hole);
-            BuildBalls(playerCount);
-            BuildGuideDots();
-            _camera.Frame(hole.Ground);
+            Surface = new GolfSurface(hole);
+            var theme = StageTheme.ForWorld(world);
+            if (Camera.main != null)
+            {
+                Camera.main.backgroundColor = theme.Background;
+            }
+
+            BuildGround(hole, world, theme);
+            BuildWalls(hole, theme);
+            BuildCup(hole, theme);
+            BuildTee(hole);
+            for (var i = 0; i < playerCount; i++)
+            {
+                _balls.Add(new GolfBallView(Materials, _course, GolfSeats.ColorOf(i)));
+            }
+
+            _guide ??= new GolfGuideView(Materials, transform);
+            if (_shooter == null)
+            {
+                _shooter = new GameObject("Shooter").AddComponent<GolfShooter>();
+                _shooter.transform.SetParent(transform, false);
+                _shooter.Init(Materials);
+            }
+
+            _shooter.Hide();
         }
 
-        /// <summary>球の位置・高さを写す。コースから外れた球は隠す</summary>
-        public void Sync(IReadOnlyList<GolfBall> balls)
+        /// <summary>球の位置・高さを写す（坂の上では見た目の地面に乗せる）</summary>
+        public void SyncBalls(IReadOnlyList<GolfBall> balls, float deltaTime)
         {
             for (var i = 0; i < _balls.Count && i < balls.Count; i++)
             {
-                var ball = balls[i];
-                _balls[i].gameObject.SetActive(ball.Active);
-                var height = GolfBalance.BallRadius + ball.Height - (ball.InCup ? InCupSink : 0f);
-                _balls[i].localPosition = GolfSpace.ToWorld(ball.Position, height);
+                _balls[i].Sync(balls[i], Surface, deltaTime);
             }
         }
 
         /// <summary>ガイド線の点線を出す。null で隠す</summary>
-        public void ShowGuide(GolfGuideLine? line)
-        {
-            var used = 0;
-            if (line.HasValue)
-            {
-                var guide = line.Value;
-                used = PlaceDots(guide.Start, guide.End, 0, GuideColor);
-                if (guide.Stop == GolfGuideStop.Wall)
-                {
-                    used = PlaceDots(guide.End, guide.BounceEnd, used, GuideBounceColor);
-                }
-            }
+        public void ShowGuide(GolfGuideLine? line, float deltaTime) => _guide.Show(line, Surface, deltaTime);
 
-            for (var i = used; i < _guideDots.Count; i++)
-            {
-                _guideDots[i].gameObject.SetActive(false);
-            }
+        /// <summary>球の中心の3Dの位置（見た目の地面の上）</summary>
+        public Vector3 BallPoint(GolfBall ball) => GolfSpace.ToWorld(ball.Position, Surface.HeightAt(ball.Position) + GolfBalance.BallRadius + ball.Height);
+
+        /// <summary>地面の上の位置（見た目の地面の高さ）</summary>
+        public Vector3 GroundPoint(Vec2 point) => GolfSpace.ToWorld(point, Surface.HeightAt(point));
+
+        private void Update()
+        {
+            var dt = Time.deltaTime;
+            WaveFlag(dt);
+            TickWallPops(dt);
+            TickSplashes(dt);
         }
 
-        /// <summary>from から to へ点を並べ、使い終わった点の番号を返す</summary>
-        private int PlaceDots(Vec2 from, Vec2 to, int first, Color color)
+        /// <summary>Unity の基本の形の代わりに、ToyMeshes の形を置く（当たり判定は Core が持つので Collider は付けない）</summary>
+        private Transform AddPart(string objectName, Mesh mesh, Transform parent, Vector3 position, Quaternion rotation, Vector3 scale, Material material)
         {
-            var length = Vec2.Distance(from, to);
-            var index = first;
-            _dotBlock.SetColor(BaseColorId, color);
-            for (var s = GuideDotSpacing; s <= length && index < _guideDots.Count; s += GuideDotSpacing)
-            {
-                var dot = _guideDots[index++];
-                dot.gameObject.SetActive(true);
-                dot.transform.localPosition = GolfSpace.ToWorld(from + (to - from) * (s / length), GuideDotHeight);
-                dot.SetPropertyBlock(_dotBlock);
-            }
-
-            return index;
-        }
-
-        private void BuildBalls(int playerCount)
-        {
-            for (var i = 0; i < playerCount; i++)
-            {
-                var ball = CreatePrimitive(PrimitiveType.Sphere, $"Ball{i + 1}", _materials.Get(SeatColors[i % SeatColors.Length], 1f));
-                ball.localScale = Vector3.one * (GolfBalance.BallRadius * 2f);
-                _balls.Add(ball);
-            }
-        }
-
-        private void BuildGuideDots()
-        {
-            var material = _materials.Floor(Texture2D.whiteTexture, Color.white);
-            for (var i = 0; i < GuideDotCount; i++)
-            {
-                var dot = CreatePrimitive(PrimitiveType.Cylinder, "GuideDot", material);
-                dot.localScale = GuideDotScale;
-                dot.gameObject.SetActive(false);
-                _guideDots.Add(dot.GetComponent<Renderer>());
-            }
-        }
-
-        /// <summary>Unity の基本形を置く。当たり判定は Core で計算するので、Collider は外す</summary>
-        private Transform CreatePrimitive(PrimitiveType type, string objectName, Material material)
-        {
-            var obj = GameObject.CreatePrimitive(type);
-            obj.name = objectName;
-            Destroy(obj.GetComponent<Collider>());
-            obj.GetComponent<Renderer>().sharedMaterial = material;
-            obj.transform.SetParent(_course, false);
+            var obj = new GameObject(objectName);
+            obj.transform.SetParent(parent, false);
+            obj.transform.localPosition = position;
+            obj.transform.localRotation = rotation;
+            obj.transform.localScale = scale;
+            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
+            obj.AddComponent<MeshRenderer>().sharedMaterial = material;
             return obj.transform;
+        }
+
+        /// <summary>このビューが作ったメッシュを置く（消すときに一緒に消す）</summary>
+        private MeshRenderer AddOwnedMesh(string objectName, Mesh mesh, params Material[] materials)
+        {
+            _meshes.Add(mesh);
+            var obj = new GameObject(objectName);
+            obj.transform.SetParent(_course, false);
+            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = obj.AddComponent<MeshRenderer>();
+            renderer.sharedMaterials = materials;
+            return renderer;
         }
 
         private void Clear()
@@ -157,7 +127,9 @@ namespace PenmonScramble.Golf.Game
 
             _meshes.Clear();
             _balls.Clear();
-            _guideDots.Clear();
+            _wallPops.Clear();
+            _splashes.Clear();
+            _flag = null;
         }
 
         private void OnDestroy()

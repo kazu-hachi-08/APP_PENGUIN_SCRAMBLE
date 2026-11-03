@@ -9,7 +9,7 @@ namespace PenmonScramble.Golf.Game
 {
     /// <summary>
     /// ゴルフのシーンの入口。ミニゲーム画面から来たときは、まだコースが無いので名前と「もどる」だけ。
-    /// エディタの Tools/PenmonScramble/Golf から開いたときは試しの1ホールを遊ぶ（Docs/MINIGAME_GOLF_PLAN.md フェーズ 2）。
+    /// エディタの Tools/PenmonScramble/Golf から開いたときは試しの1ホールを遊ぶ（Docs/MINIGAME_GOLF_PLAN.md フェーズ 2・3）。
     /// 「もどる」/ Esc で本編のシーンのミニゲーム画面へ戻る
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に Esc を見る
@@ -19,6 +19,8 @@ namespace PenmonScramble.Golf.Game
         [SerializeField] private GameObject _placeholder;
         [SerializeField] private Text _courseText;
         [SerializeField] private Button _backButton;
+        [Tooltip("遊んでいる間の右上の「もどる」（スマホで Esc の代わり）")]
+        [SerializeField] private Button _playBackButton;
         [SerializeField] private GolfTestHolePlay _testHole;
 
         private bool _leaving;
@@ -26,6 +28,7 @@ namespace PenmonScramble.Golf.Game
         private void Awake()
         {
             _backButton.onClick.AddListener(Leave);
+            _playBackButton.onClick.AddListener(Leave);
         }
 
         private void Start()

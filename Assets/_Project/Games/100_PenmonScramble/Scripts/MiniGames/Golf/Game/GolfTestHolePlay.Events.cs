@@ -1,0 +1,114 @@
+using PenmonScramble.Golf.Core;
+using UnityEngine;
+
+namespace PenmonScramble.Golf.Game
+{
+    /// <summary>ホールで起きたことの見せ方: 音・知らせ・打つ子の反応（喜ぶ・頭を抱える）・バンパーが弾む・水しぶき・旗が跳ねる</summary>
+    public partial class GolfTestHolePlay
+    {
+        // 喜ぶ・頭を抱えるのを見せる秒（この間は次の番を始めない）
+        private const float CheerHoldSeconds = 2.2f;
+        private const float DespairHoldSeconds = 1.5f;
+        private const float MessageSeconds = 1.6f;
+        private const float TurnMessageSeconds = 1.1f;
+        // カップインで喜ぶ子を出す所（カップからカメラの方へ）
+        private const float CheerDistance = 0.8f;
+
+        private static readonly Color GoodColor = new Color(1f, 0.88f, 0.3f);
+        private static readonly Color BadColor = new Color(0.65f, 0.85f, 1f);
+
+        private void OnHappened(GolfEvent e)
+        {
+            switch (e.Kind)
+            {
+                case GolfEventKind.Shot:
+                    GolfSounds.PlayShot(e.Strength);
+                    _view.Shooter.OnShot(e.Strength);
+                    break;
+                case GolfEventKind.WallHit:
+                    GolfSounds.PlayWall(e.Strength);
+                    _view.PopWallNear(e.Position);
+                    break;
+                case GolfEventKind.BallHit:
+                    GolfSounds.Play(GolfSound.BallHit);
+                    break;
+                case GolfEventKind.Jump:
+                    GolfSounds.Play(GolfSound.Jump);
+                    break;
+                case GolfEventKind.LipOut:
+                    GolfSounds.Play(GolfSound.LipOut);
+                    _hud.Flash("おしい！", BadColor, MessageSeconds);
+                    break;
+                case GolfEventKind.CupIn:
+                    OnCupIn(e);
+                    break;
+                case GolfEventKind.Fell:
+                    OnFell(e);
+                    break;
+                case GolfEventKind.GaveUp:
+                    _hud.Flash($"{GolfSeats.Label(e.Player)}  上限で終わり", BadColor, MessageSeconds);
+                    break;
+                case GolfEventKind.TurnStart:
+                    OnTurnStart(e);
+                    break;
+                case GolfEventKind.HoleFinished:
+                    _hud.Flash("ホール終了！\nSpace / LB でもう一度", Color.white, 30f);
+                    break;
+            }
+        }
+
+        private void OnCupIn(GolfEvent e)
+        {
+            GolfSounds.Play(GolfSound.CupIn);
+            _view.CelebrateCup();
+            var strokes = _world.Strokes(e.Player);
+            var name = GolfScoreNames.ForStrokes(strokes, _world.Hole.Par);
+            _hud.Flash($"{name}！", GoodColor, MessageSeconds + 0.6f);
+            // 打った本人が入れたときだけ喜ぶ（弾かれて入った人の子はいま出ていない）
+            if (e.Player != _world.CurrentPlayer)
+            {
+                return;
+            }
+
+            var cup = _view.GroundPoint(_world.Hole.Cup);
+            var toCamera = Camera.main != null ? Camera.main.transform.position - cup : Vector3.back;
+            toCamera.y = 0f;
+            var at = cup + (toCamera.sqrMagnitude > 0f ? toCamera.normalized : Vector3.back) * CheerDistance;
+            _view.Shooter.Cheer(at, at + toCamera);
+            _hold = CheerHoldSeconds;
+        }
+
+        private void OnFell(GolfEvent e)
+        {
+            GolfSounds.Play(GolfSound.Splash);
+            _view.SplashAt(e.Position);
+            if (e.Player != _world.CurrentPlayer)
+            {
+                _hud.Flash($"{GolfSeats.Label(e.Player)} の球が落ちた（もとの位置へ）", BadColor, MessageSeconds);
+                return;
+            }
+
+            _hud.Flash("ポチャン！  1打たす", BadColor, MessageSeconds);
+            _view.Shooter.Despair();
+            _hold = DespairHoldSeconds;
+        }
+
+        /// <summary>番が替わった。誰の番かの知らせは、喜ぶ・頭を抱えるのを見せ終わってから出す（カップインの知らせを消さないように）</summary>
+        private void OnTurnStart(GolfEvent e)
+        {
+            _camera.ResetOrbit();
+            _turnBanner = _teams.Count > 1 ? e.Player : -1;
+        }
+
+        private void ShowTurnBanner()
+        {
+            if (_turnBanner < 0)
+            {
+                return;
+            }
+
+            _hud.Flash($"{GolfSeats.Label(_turnBanner)} の番", GolfSeats.ColorOf(_turnBanner), TurnMessageSeconds);
+            _turnBanner = -1;
+        }
+    }
+}

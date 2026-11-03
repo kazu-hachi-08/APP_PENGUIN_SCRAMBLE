@@ -90,7 +90,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>角の丸み: 絵の半径に対して、画面でこの半径に見せる倍率（Image.pixelsPerUnitMultiplier）</summary>
-        private static float CornerScale(float radius) => RoundSpriteRadius / Mathf.Max(1f, radius);
+        internal static float CornerScale(float radius) => RoundSpriteRadius / Mathf.Max(1f, radius);
 
         private static Image AddSliced(GameObject obj, string spritePath, Color color, float cornerScale)
         {
@@ -101,7 +101,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>絵と色を付けた Image を置く。押せるか（raycast）もここで決める。型などの追加の設定は呼んだ側で行う</summary>
-        private static Image AddImage(GameObject obj, Sprite sprite, Color color, bool raycast)
+        internal static Image AddImage(GameObject obj, Sprite sprite, Color color, bool raycast)
         {
             var image = obj.AddComponent<Image>();
             image.sprite = sprite;
@@ -120,7 +120,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>濃い紺の半透明の板（うすい白の縁と下の影）。ステージのカード・コインの札・窓の中身に使う</summary>
-        private static GameObject CreatePanel(Transform parent, string name, Vector2 position, Vector2 size)
+        internal static GameObject CreatePanel(Transform parent, string name, Vector2 position, Vector2 size)
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);

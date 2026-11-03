@@ -92,7 +92,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>ボタン1つの部品。種類ごとに中身を足してから、見た目のコンポーネントにつなぐ</summary>
-        private readonly struct TouchButtonParts
+        internal readonly struct TouchButtonParts
         {
             public readonly VirtualButton Button;
             public readonly Transform Visual;
@@ -247,7 +247,7 @@ namespace PenmonScramble.Editor
         /// 厚みのある丸いボタンの土台: 影・下の厚み（Base）・押すと沈む面（Top: 白い縁と色の面）。
         /// 触れる範囲は親（透明な丸）が持ち、見た目は子の Visual にまとめる
         /// </summary>
-        private static TouchButtonParts CreateTouchButton(Transform parent, string name, Vector2 position, float size, Color color)
+        internal static TouchButtonParts CreateTouchButton(Transform parent, string name, Vector2 position, float size, Color color)
         {
             var hit = CreateTouchImage(parent, name, TouchCirclePath, Color.clear, size);
             var rect = hit.rectTransform;
@@ -276,14 +276,14 @@ namespace PenmonScramble.Editor
             return new TouchButtonParts(button, visual.transform, top.transform, rim, face, baseImage);
         }
 
-        private static Image CreateTouchImage(Transform parent, string name, string spritePath, Color color, float size)
+        internal static Image CreateTouchImage(Transform parent, string name, string spritePath, Color color, float size)
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             obj.GetComponent<RectTransform>().sizeDelta = Vector2.one * size;
             return AddImage(obj, spritePath != null ? UiSprite(spritePath) : null, color, true);
         }
 
-        private static Text CreateTouchLabel(Transform parent, string label, int fontSize)
+        internal static Text CreateTouchLabel(Transform parent, string label, int fontSize)
         {
             // 位置は呼んだ側が決める。字と縁の作りは CreateLabel と同じで、縁の距離だけ小さいボタン用にする
             var text = CreateLabel(parent, "Text", label, fontSize, Vector2.zero, new Vector2(fontSize * 4f, fontSize * 1.5f));
@@ -293,7 +293,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>上から時計回りに減っていく扇（待ちの残り・ゲージ）</summary>
-        private static void SetRadialFill(Image image)
+        internal static void SetRadialFill(Image image)
         {
             image.type = Image.Type.Filled;
             image.fillMethod = Image.FillMethod.Radial360;
@@ -302,7 +302,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>見た目の部品は押す邪魔をしない（触れる範囲はボタンの親が持つ）</summary>
-        private static void DisableRaycasts(Transform visual)
+        internal static void DisableRaycasts(Transform visual)
         {
             foreach (var image in visual.GetComponentsInChildren<Image>(true))
             {

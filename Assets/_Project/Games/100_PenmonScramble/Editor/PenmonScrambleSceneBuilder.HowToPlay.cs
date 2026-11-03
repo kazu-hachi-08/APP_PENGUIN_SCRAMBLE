@@ -109,14 +109,14 @@ namespace PenmonScramble.Editor
             screen.FindProperty("_nextPageButton").objectReferenceValue = next;
         }
 
-        private static GameObject CreateStretchGroup(Transform parent, string name)
+        internal static GameObject CreateStretchGroup(Transform parent, string name)
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
             return obj;
         }
 
-        private static void SetObjectArray(SerializedProperty property, Object[] values)
+        internal static void SetObjectArray(SerializedProperty property, Object[] values)
         {
             property.arraySize = values.Length;
             for (var i = 0; i < values.Length; i++)

@@ -8,8 +8,8 @@ namespace PenmonScramble.Editor
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private const string HudSlantPath = UiArtFolder + "HudSlant.png";
-        private const string HudSlantFramePath = UiArtFolder + "HudSlantFrame.png";
+        internal const string HudSlantPath = UiArtFolder + "HudSlant.png";
+        internal const string HudSlantFramePath = UiArtFolder + "HudSlantFrame.png";
         private const string HudSegmentRingPath = UiArtFolder + "HudSegmentRing.png";
         private const string HudMarkerPinPath = UiArtFolder + "HudMarkerPin.png";
         private const string CrownIconPath = UiArtFolder + "IconCrown.png";

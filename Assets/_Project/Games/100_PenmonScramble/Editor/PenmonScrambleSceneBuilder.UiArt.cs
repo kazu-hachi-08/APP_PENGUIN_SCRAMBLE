@@ -17,7 +17,7 @@ namespace PenmonScramble.Editor
         private const string ButtonBodyPath = UiArtFolder + "ButtonBody.png";
         private const string ButtonGlossPath = UiArtFolder + "ButtonGloss.png";
         private const string ButtonFramePath = UiArtFolder + "ButtonFrame.png";
-        private const string RoundRectPath = UiArtFolder + "RoundRect.png";
+        internal const string RoundRectPath = UiArtFolder + "RoundRect.png";
         private const string FadePath = UiArtFolder + "Fade.png";
         private const string GearIconPath = UiArtFolder + "IconGear.png";
         private const string CoinIconPath = UiArtFolder + "IconCoin.png";
@@ -65,7 +65,7 @@ namespace PenmonScramble.Editor
             CreateHudArt();
         }
 
-        private static Sprite UiSprite(string path) => AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        internal static Sprite UiSprite(string path) => AssetDatabase.LoadAssetAtPath<Sprite>(path);
 
         /// <param name="horizontalOnly">9スライスの境目を左右だけにする（HUD の斜めの板）</param>
         private static void WriteUiSprite(string path, Texture2D texture, int border, bool horizontalOnly = false)

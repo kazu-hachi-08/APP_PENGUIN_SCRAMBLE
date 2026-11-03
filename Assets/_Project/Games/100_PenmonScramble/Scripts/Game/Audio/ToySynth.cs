@@ -2,22 +2,24 @@ using UnityEngine;
 
 namespace PenmonScramble.Game
 {
-    /// <summary>効果音の波形</summary>
-    public static partial class GameSounds
+    /// <summary>
+    /// 効果音の波形をコードで作る（チップチューン）。本編の GameSounds と、ミニゲームの効果音で同じ作り方を使う
+    /// </summary>
+    public static class ToySynth
     {
-        private const int SampleRate = 44100;
+        public const int SampleRate = 44100;
 
         // 矩形波は音量が大きく聞こえるので、全体を少し抑える
         private const float SquareGain = 0.35f;
 
         /// <summary>短いピコッという矩形波</summary>
-        private static AudioClip Tone(string name, float duration, float frequency)
+        public static AudioClip Tone(string name, float duration, float frequency)
         {
             return CreateClip(name, duration, t => Square(frequency, t) * (1f - t / duration));
         }
 
         /// <summary>周波数を滑らせる矩形波。上がると「やった」、下がると「たおれる」</summary>
-        private static AudioClip Sweep(string name, float duration, float fromFrequency, float toFrequency)
+        public static AudioClip Sweep(string name, float duration, float fromFrequency, float toFrequency)
         {
             var phase = 0f;
             return CreateClip(name, duration, t =>
@@ -30,7 +32,7 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>だんだん低くなるノイズ。技を出すときの「シュッ」</summary>
-        private static AudioClip Whoosh(string name)
+        public static AudioClip Whoosh(string name)
         {
             const float duration = 0.12f;
             var random = new System.Random(1);
@@ -44,7 +46,7 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>低いドンという音にノイズを混ぜた打撃音。長く低いほど強く聞こえる</summary>
-        private static AudioClip Impact(string name, float duration, float frequency)
+        public static AudioClip Impact(string name, float duration, float frequency)
         {
             var decay = 4f / duration;
             var random = new System.Random(2);
@@ -53,7 +55,7 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>高い・低いを2回くり返す警報。大ボスの攻撃が来ると分かるようにする</summary>
-        private static AudioClip Alarm(string name)
+        public static AudioClip Alarm(string name)
         {
             const float duration = 0.36f;
             const float half = duration / 4f;
@@ -61,7 +63,7 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>音程を順に鳴らす短いジングル。最後の音だけ伸ばして、終わった感じを出す</summary>
-        private static AudioClip Jingle(string name, float[] frequencies)
+        public static AudioClip Jingle(string name, float[] frequencies)
         {
             const float noteDuration = 0.12f;
             var duration = noteDuration * frequencies.Length + noteDuration;
@@ -74,12 +76,12 @@ namespace PenmonScramble.Game
             });
         }
 
-        private static float Square(float frequency, float t)
+        public static float Square(float frequency, float t)
         {
             return (t * frequency % 1f < 0.5f ? 1f : -1f) * SquareGain;
         }
 
-        private static AudioClip CreateClip(string name, float duration, System.Func<float, float> sampler)
+        public static AudioClip CreateClip(string name, float duration, System.Func<float, float> sampler)
         {
             var sampleCount = Mathf.CeilToInt(SampleRate * duration);
             var data = new float[sampleCount];

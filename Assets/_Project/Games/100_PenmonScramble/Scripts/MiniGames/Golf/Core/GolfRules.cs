@@ -22,5 +22,13 @@ namespace PenmonScramble.Golf.Core
 
         /// <summary>ティーに並べる球どうしの間（m）。重ならないよう、カップの方向と直角にずらす</summary>
         public const float TeeSpacing = 0.55f;
+
+        /// <summary>
+        /// パワーゲージが 0 → 1 → 0 と1往復する秒数。止める間合いはオンラインで全員同じにしたいので Core に置く
+        /// </summary>
+        public const float GaugeCycleSeconds = 1.6f;
+
+        /// <summary>編成が空のとき（記録が壊れた等）に打つ子（アデリン・ジェンツ・オヤブン。タイトルのジオラマと同じ）</summary>
+        public static readonly int[] DefaultSpecies = { 1, 3, 5 };
     }
 }

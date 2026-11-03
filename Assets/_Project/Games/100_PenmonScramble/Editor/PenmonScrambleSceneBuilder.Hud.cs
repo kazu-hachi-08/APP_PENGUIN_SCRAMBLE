@@ -14,7 +14,7 @@ namespace PenmonScramble.Editor
     public static partial class PenmonScrambleSceneBuilder
     {
         // HUD の板や文字の縁取りの濃い紺
-        private static readonly Color HudBackColor = new Color(0.08f, 0.11f, 0.22f, 0.85f);
+        internal static readonly Color HudBackColor = new Color(0.08f, 0.11f, 0.22f, 0.85f);
 
         // 画面の端の印: 大ボス1・仲間3・予告がいくつか出ても足りる数。大きさはスマホでも指の先くらい
         private const int EdgeMarkerCount = 8;
