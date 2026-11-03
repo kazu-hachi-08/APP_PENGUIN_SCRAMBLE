@@ -124,6 +124,8 @@ namespace PenmonScramble.Core
             data.party ??= new List<int>();
             data.clearedStages ??= new List<int>();
             data.clearedRush ??= new List<int>();
+            // v2 の記録にはミニゲームが無い（空の表で始める）
+            data.miniGames ??= new List<MiniGameRecord>();
             if (data.version < SaveData.CurrentVersion)
             {
                 data.version = SaveData.CurrentVersion;

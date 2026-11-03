@@ -3,6 +3,7 @@ using PenmonScramble.Common.UI;
 using PenmonScramble.Common.Online;
 using PenmonScramble.Common.Profile;
 using PenmonScramble.Game;
+using PenmonScramble.MiniGames.Game;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,7 +11,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// タイトルのロビー: 上に名前の札・コイン・設定、左の列にガチャ・ペンモン・遊び方、
+    /// タイトルのロビー: 上に名前の札・コイン・設定、左の列にガチャ・ペンモン・ミニゲーム・遊び方、
     /// 右下にステージのカードと「みんなで遊ぶ」「ひとりで遊ぶ」。まん中は後ろのジオラマの自分の編成が見えるよう空けておく。
     /// 部品は3つの組（上・左・右下）に分け、ロビーに入るたびに外から時間差ですべり込ませる（UiSlideIn）
     /// </summary>
@@ -47,7 +48,7 @@ namespace PenmonScramble.Editor
 
         // 左の列
         private const float NavX = -800f;
-        private static readonly float[] NavY = { 220f, 20f, -180f };
+        private static readonly float[] NavY = { 300f, 100f, -100f, -300f };
         private const float NavButtonSize = 150f;
         private const string HelpGlyph = "？";
 
@@ -83,9 +84,9 @@ namespace PenmonScramble.Editor
 
         /// <summary>
         /// ロビーの中身と、設定・名前の入力を作り、TitleMenu（ロビー）・TitleFlow（スタート → ロビー）・ModeSelectPanel のメニューをつなぐ。
-        /// ガチャ・ペンモン・遊び方の画面はタイトルより手前に作るので、それらができてから呼ぶ
+        /// ガチャ・ペンモン・ミニゲーム・遊び方の画面はタイトルより手前に作るので、それらができてから呼ぶ
         /// </summary>
-        private static TitleMenu CreateTitleMenu(ModeSelectPanel title, GachaScreen gacha, PenguinListScreen penguins, HowToPlayScreen howToPlay, CommonDialog notice)
+        private static TitleMenu CreateTitleMenu(ModeSelectPanel title, GachaScreen gacha, PenguinListScreen penguins, MiniGameHubScreen miniGames, HowToPlayScreen howToPlay, CommonDialog notice)
         {
             var root = title.transform;
             var lobby = root.Find($"{MenuGroupName}/{LobbyName}");
@@ -97,7 +98,8 @@ namespace PenmonScramble.Editor
             var nav = CreateSlideGroup(lobby, "Nav", NavSlideFrom, SlideStagger);
             var gachaButton = CreateIconButton(nav, "Gacha", "ガチャ", new Vector2(NavX, NavY[0]), NavButtonSize, GachaColor, UiSprite(CapsuleIconPath));
             var penguinsButton = CreateIconButton(nav, "Penguins", "ペンモン", new Vector2(NavX, NavY[1]), NavButtonSize, PenguinsColor, LoadArtSprite(PenguinPortraitPath(1), CreatureArtMaxSize));
-            var howToPlayButton = CreateIconButton(nav, "HowToPlay", "遊び方", new Vector2(NavX, NavY[2]), NavButtonSize, HowToPlayColor, null, HelpGlyph);
+            var miniGamesButton = CreateIconButton(nav, "MiniGames", "ミニゲーム", new Vector2(NavX, NavY[2]), NavButtonSize, MiniGamesColor, UiSprite(MiniGameIconPath));
+            var howToPlayButton = CreateIconButton(nav, "HowToPlay", "遊び方", new Vector2(NavX, NavY[3]), NavButtonSize, HowToPlayColor, null, HelpGlyph);
 
             var play = CreateSlideGroup(lobby, "Play", PlaySlideFrom, SlideStagger * 2f);
             var card = CreateStageCard(play);
@@ -112,6 +114,8 @@ namespace PenmonScramble.Editor
             AddUpdateNotice(title.gameObject);
 
             WireModeSelectMenu(title, soloButton, host, join, codeInput);
+            // ミニゲーム画面は本編（TitleMenu）が知らなくて済むよう、開くボタンを画面の側に持たせる
+            WireMiniGameHub(miniGames, miniGamesButton);
             var menu = title.gameObject.AddComponent<TitleMenu>();
             var so = new SerializedObject(menu);
             so.FindProperty("_nameButton").objectReferenceValue = nameButton;

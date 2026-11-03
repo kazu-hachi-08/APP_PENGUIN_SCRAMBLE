@@ -1,0 +1,16 @@
+{
+    "name": "PenmonScramble.MiniGames.Core",
+    "rootNamespace": "PenmonScramble.MiniGames.Core",
+    "references": [
+        "PenmonScramble.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

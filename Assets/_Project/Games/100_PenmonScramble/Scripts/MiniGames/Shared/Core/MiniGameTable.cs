@@ -1,0 +1,49 @@
+using System.Collections.Generic;
+
+namespace PenmonScramble.MiniGames.Core
+{
+    /// <summary>
+    /// ミニゲームの定義表。1つのミニゲームにつき1行。ここに1行足せば、ミニゲーム画面にカードが並ぶ
+    /// （足すときの手順は Docs/MINIGAME_GOLF_PLAN.md の「新しいミニゲームを足すときの手順」）
+    /// </summary>
+    public static class MiniGameTable
+    {
+        /// <summary>記録に残るので一度配ったら変えない</summary>
+        public const string GolfId = "golf";
+
+        public static readonly IReadOnlyList<MiniGameDef> All = new[]
+        {
+            new MiniGameDef(
+                GolfId,
+                "ペンモンゴルフ",
+                "編成の3体で打って、少ない打数でカップへ",
+                "GolfScene",
+                maxPlayers: 4,
+                lowerIsBetter: true,
+                scoreUnit: "打",
+                courses: new[]
+                {
+                    // 景色はストーリーの5ワールド。そのワールドに入れたら開く
+                    new MiniGameCourseDef(1, "海岸", 1),
+                    new MiniGameCourseDef(2, "氷山", 2),
+                    new MiniGameCourseDef(3, "深海", 3),
+                    new MiniGameCourseDef(4, "嵐の崖", 4),
+                    new MiniGameCourseDef(5, "火山の入り江", 5),
+                }),
+        };
+
+        /// <summary>Id のミニゲーム。無ければ null（新しい版で増えたミニゲームの記録など）</summary>
+        public static MiniGameDef Get(string id)
+        {
+            foreach (var game in All)
+            {
+                if (game.Id == id)
+                {
+                    return game;
+                }
+            }
+
+            return null;
+        }
+    }
+}

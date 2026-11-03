@@ -42,7 +42,7 @@ namespace PenmonScramble.Editor
         /// 色の面に、上のつや・白い縁・下の影を重ねたボタン。色の面がボタンの targetGraphic（色を変える画面はここを塗る）。
         /// 文字はボタンの色を濃くした色で縁取る
         /// </summary>
-        private static Button CreateTitleButton(Transform parent, string name, string label, Vector2 position, Vector2 size, Color color, int fontSize)
+        internal static Button CreateTitleButton(Transform parent, string name, string label, Vector2 position, Vector2 size, Color color, int fontSize)
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);

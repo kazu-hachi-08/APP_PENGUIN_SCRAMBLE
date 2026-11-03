@@ -36,7 +36,7 @@ namespace PenmonScramble.Editor
         private static readonly Color OnlineColor = new Color(0.20f, 0.55f, 0.90f);
         private static readonly Color JoinColor = new Color(1f, 0.75f, 0.30f);
         private static readonly Color StartColor = new Color(0.30f, 0.75f, 0.40f);
-        private static readonly Color CancelColor = new Color(0.45f, 0.50f, 0.60f);
+        internal static readonly Color CancelColor = new Color(0.45f, 0.50f, 0.60f);
         private static readonly Color PlaceholderColor = new Color(0.55f, 0.55f, 0.60f);
         private static readonly Color InputFrameColor = new Color(0.96f, 0.97f, 1f);
 
@@ -213,7 +213,7 @@ namespace PenmonScramble.Editor
             return text;
         }
 
-        private static Text CreateLabel(Transform parent, string name, string value, int fontSize, Vector2 position, Vector2 size)
+        internal static Text CreateLabel(Transform parent, string name, string value, int fontSize, Vector2 position, Vector2 size)
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);

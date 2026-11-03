@@ -33,7 +33,7 @@ namespace PenmonScramble.Editor
         // カメラは斜め上から20マスほど離れて見下ろす。揺れても奥のエリアの外まで写るよう余裕を持たせる
         private const float CameraFarClip = 200f;
         // 左上の奥から照らす（試作の場 Penguin3DPreviewBuilder と同じ）。顔（手前）が明るく見える
-        private static readonly Vector3 SunAngles = new Vector3(50f, -35f, 0f);
+        internal static readonly Vector3 SunAngles = new Vector3(50f, -35f, 0f);
         private static readonly Color SunColor = new Color(1f, 0.97f, 0.92f);
         private const float SunIntensity = 1.1f;
 
@@ -73,10 +73,11 @@ namespace PenmonScramble.Editor
             // ガチャ・一覧はタイトルの上に開く
             var gacha = CreateGachaScreen(canvas.transform);
             var penguins = CreatePenguinListScreen(canvas.transform);
+            var miniGames = CreateMiniGameHub(canvas.transform);
             // ステージ中のメニューは HUD の上、遊び方はタイトルとメニューの両方から開くので一番上
             var confirm = UIDialogBuilder.CreateCommonDialog(canvas.transform);
             var howToPlay = CreateHowToPlayScreen(canvas.transform);
-            var titleMenu = CreateTitleMenu(title, gacha, penguins, howToPlay, confirm);
+            var titleMenu = CreateTitleMenu(title, gacha, penguins, miniGames, howToPlay, confirm);
             var stageMenu = CreateStageMenu(canvas.transform, menuButton, howToPlay);
             CreateVersionLabel(canvas.transform);
             CreateInputManager(touch);
@@ -86,6 +87,10 @@ namespace PenmonScramble.Editor
             EditorSceneManager.SaveScene(scene, ScenePath);
             AddToBuildSettings();
             Debug.Log($"[PenmonScrambleSceneBuilder] {ScenePath} を生成しました");
+
+            // ミニゲームは別のシーン。本編の絵（ボタンなど）を使うので本編の後に作り、最後に本編のシーンを開き直す
+            GolfSceneBuilder.BuildScene();
+            EditorSceneManager.OpenScene(ScenePath);
         }
 
         /// <summary>
@@ -161,13 +166,13 @@ namespace PenmonScramble.Editor
             return light;
         }
 
-        private static void CreateEventSystem()
+        internal static void CreateEventSystem()
         {
             // Input System のみの設定なので、StandaloneInputModule ではなくこちらを使う
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
         }
 
-        private static Canvas CreateCanvas()
+        internal static Canvas CreateCanvas()
         {
             var canvasObj = new GameObject("Canvas");
             var canvas = canvasObj.AddComponent<Canvas>();

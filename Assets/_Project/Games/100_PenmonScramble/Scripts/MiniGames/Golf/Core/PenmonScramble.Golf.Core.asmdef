@@ -1,0 +1,17 @@
+{
+    "name": "PenmonScramble.Golf.Core",
+    "rootNamespace": "PenmonScramble.Golf.Core",
+    "references": [
+        "PenmonScramble.Core",
+        "PenmonScramble.MiniGames.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
