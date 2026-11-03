@@ -40,6 +40,9 @@ namespace PenmonScramble.Editor
         private const byte BlankShotMinAlpha = 128;
         // 準備の空撮りは小さくてよい（シェーダーを読み込ませるだけ）
         private const int WarmUpShotSize = 64;
+        // 同じ物を撮っても、GPU の都合で縁の数画素がわずかにぶれる（測ると 512 四方で 1〜7 画素、1024 四方で 14 画素）。
+        // 見た目を変えればずっと多くの画素が変わるので、この割合以下の違いは同じ絵とみなして書き直さない（Rebuild のたびに差分が出ないように）
+        private const float ShotNoiseShare = 0.0005f;
 
         private static string PenguinPortraitPath(int speciesNo) => $"{PortraitFolder}Penguin{speciesNo:00}.png";
 
@@ -173,8 +176,11 @@ namespace PenmonScramble.Editor
             PoseForPortrait(camera, model, yaw, pitch);
             FramePortrait(camera, model, halfSize);
             var texture = RenderPortrait(camera, PortraitSize);
-            var blank = IsBlankShot(texture.GetPixels32());
+            var pixels = texture.GetPixels32();
+            var blank = IsBlankShot(pixels);
             var png = blank ? null : texture.EncodeToPNG();
+            var width = texture.width;
+            var height = texture.height;
             Object.DestroyImmediate(texture);
             Object.DestroyImmediate(model.gameObject);
             if (blank)
@@ -183,7 +189,47 @@ namespace PenmonScramble.Editor
                 return ShotResult.Failed;
             }
 
-            return WriteBytesIfChanged(path, png) ? ShotResult.Written : ShotResult.Unchanged;
+            return WriteShotIfChanged(path, pixels, width, height, png) ? ShotResult.Written : ShotResult.Unchanged;
+        }
+
+        /// <summary>3Dを撮った絵を書く。前の絵とのちがいが撮るたびのぶれ（ShotNoiseShare）ほどなら書き直さない。書き直したら true</summary>
+        private static bool WriteShotIfChanged(string path, Color32[] pixels, int width, int height, byte[] png)
+        {
+            return !IsSameShot(path, pixels, width, height) && WriteBytesIfChanged(path, png);
+        }
+
+        private static bool IsSameShot(string path, Color32[] pixels, int width, int height)
+        {
+            if (!File.Exists(path))
+            {
+                return false;
+            }
+
+            var previous = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            try
+            {
+                if (!previous.LoadImage(File.ReadAllBytes(path)) || previous.width != width || previous.height != height)
+                {
+                    return false;
+                }
+
+                var before = previous.GetPixels32();
+                var limit = (int)(pixels.Length * ShotNoiseShare);
+                var differ = 0;
+                for (var i = 0; i < pixels.Length; i++)
+                {
+                    if (!before[i].Equals(pixels[i]) && ++differ > limit)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            finally
+            {
+                Object.DestroyImmediate(previous);
+            }
         }
 
         /// <summary>

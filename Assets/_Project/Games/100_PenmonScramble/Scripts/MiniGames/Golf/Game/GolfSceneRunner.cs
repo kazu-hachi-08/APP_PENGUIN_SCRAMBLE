@@ -38,6 +38,7 @@ namespace PenmonScramble.Golf.Game
         private void Start()
         {
             MiniGameLaunch.EnsureSelected(MiniGameTable.GolfId);
+            _play.PlayMusic();
             if (GolfDevRequest.TryTakeTestHole(out var players))
             {
                 StartRound(GolfCourseTable.TestCourse(), players, record: false);

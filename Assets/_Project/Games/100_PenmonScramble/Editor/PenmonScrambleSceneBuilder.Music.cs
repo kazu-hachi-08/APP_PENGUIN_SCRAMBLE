@@ -18,9 +18,11 @@ namespace PenmonScramble.Editor
             ("_title", "Bgm_Title.mp3", "_titleVolume", 0.3f),
             ("_stage", "Bgm_Stage.mp3", "_stageVolume", 0.3f),
             ("_boss", "Bgm_Boss.mp3", "_bossVolume", 0.3f),
+            ("_golf", "Bgm_Golf.mp3", "_golfVolume", 0.3f),
         };
 
-        private static MusicClips CreateMusicClips(GameObject owner)
+        /// <summary>ミニゲームのシーン（GolfSceneBuilder）も同じ曲の入れ物を使う</summary>
+        internal static MusicClips CreateMusicClips(GameObject owner)
         {
             var clips = owner.AddComponent<MusicClips>();
             var so = new SerializedObject(clips);

@@ -19,11 +19,18 @@ namespace PenmonScramble.Golf.Game
         [SerializeField] private GolfScorecard _scorecard;
         [SerializeField] private GolfResultPanel _result;
         [SerializeField] private StageMenu _menu;
+        [SerializeField] private MusicClips _musicClips;
 
         private bool _record;
         private float _holeOver;
 
         private bool IsMenuOpen => _menu != null && _menu.IsOpen;
+
+        /// <summary>ゴルフの曲。本編から来たときの曲を引き継がず、ここで差し替える（AudioManager はシーンをまたいで残る）</summary>
+        public void PlayMusic()
+        {
+            GameMusic.Play(MusicTrack.Golf, _musicClips);
+        }
 
         private void BindFlow()
         {
@@ -82,6 +89,8 @@ namespace PenmonScramble.Golf.Game
         {
             _phase = Phase.Result;
             var info = RecordResult();
+            // 本編と同じく、結果の音が曲に埋もれないよう止める（「もう一度」で頭から流し直す）
+            GameMusic.Stop();
             GolfSounds.Play(GolfSound.CupIn);
             _scorecard.Show(_round, "ラウンド終了！", null, null);
             _result.Show(info);
@@ -119,6 +128,7 @@ namespace PenmonScramble.Golf.Game
                 case GolfResultPanel.RetryCard:
                     // 同じ顔ぶれ・同じコースで、スコアカードを空にしてはじめから
                     _round.Restart();
+                    PlayMusic();
                     break;
                 case GolfResultPanel.CoursesCard:
                     MiniGameLaunch.ReturnToHub();

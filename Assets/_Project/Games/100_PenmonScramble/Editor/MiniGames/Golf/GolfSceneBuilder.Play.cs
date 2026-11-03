@@ -46,6 +46,7 @@ namespace PenmonScramble.Editor
             playSo.FindProperty("_scorecard").objectReferenceValue = scorecard;
             playSo.FindProperty("_result").objectReferenceValue = result;
             playSo.FindProperty("_menu").objectReferenceValue = menu;
+            playSo.FindProperty("_musicClips").objectReferenceValue = PenmonScrambleSceneBuilder.CreateMusicClips(root);
             playSo.ApplyModifiedProperties();
             return play;
         }
