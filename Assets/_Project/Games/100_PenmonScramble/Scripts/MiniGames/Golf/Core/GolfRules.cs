@@ -8,6 +8,9 @@ namespace PenmonScramble.Golf.Core
         /// <summary>1コースのホールの数（1回の遊び＝1コース）</summary>
         public const int HolesPerCourse = 3;
 
+        /// <summary>打つ子の数（本編の編成の3体）</summary>
+        public const int TeamSize = 3;
+
         /// <summary>一緒に回れる最大の人数（オンライン）</summary>
         public const int MaxPlayers = 4;
 

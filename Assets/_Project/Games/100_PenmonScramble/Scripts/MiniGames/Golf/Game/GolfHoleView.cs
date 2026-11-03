@@ -71,8 +71,8 @@ namespace PenmonScramble.Golf.Game
             }
         }
 
-        /// <summary>ガイド線の点線を出す。null で隠す</summary>
-        public void ShowGuide(GolfGuideLine? line, float deltaTime) => _guide.Show(line, Surface, deltaTime);
+        /// <summary>ガイド線の点線を出す。null で隠す。special は特殊ショットを ON にしている（点の色を替える）</summary>
+        public void ShowGuide(GolfGuideLine? line, float deltaTime, bool special = false) => _guide.Show(line, Surface, deltaTime, special);
 
         /// <summary>球の中心の3Dの位置（見た目の地面の上）</summary>
         public Vector3 BallPoint(GolfBall ball) => GolfSpace.ToWorld(ball.Position, Surface.HeightAt(ball.Position) + GolfBalance.BallRadius + ball.Height);
@@ -86,6 +86,7 @@ namespace PenmonScramble.Golf.Game
             WaveFlag(dt);
             TickWallPops(dt);
             TickSplashes(dt);
+            TickSpecials(dt);
         }
 
         /// <summary>Unity の基本の形の代わりに、ToyMeshes の形を置く（当たり判定は Core が持つので Collider は付けない）</summary>
@@ -129,6 +130,7 @@ namespace PenmonScramble.Golf.Game
             _balls.Clear();
             _wallPops.Clear();
             _splashes.Clear();
+            ClearSpecials();
             _flag = null;
         }
 

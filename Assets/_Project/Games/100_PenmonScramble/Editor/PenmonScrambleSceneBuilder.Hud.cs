@@ -206,7 +206,7 @@ namespace PenmonScramble.Editor
         /// 右上の「‖」。角に寄せすぎると機種によって押せないので、セーフエリアの内側に置く。
         /// 遊んでいる間だけ StageMenu が出す
         /// </summary>
-        private static Button CreateMenuButton(Transform hud)
+        internal static Button CreateMenuButton(Transform hud)
         {
             var area = CreateStretchGroup(hud, "MenuButtonArea");
             area.AddComponent<SafeAreaFitter>();

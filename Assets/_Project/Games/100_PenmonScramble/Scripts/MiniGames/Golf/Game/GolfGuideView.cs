@@ -7,7 +7,7 @@ using UnityEngine;
 namespace PenmonScramble.Golf.Game
 {
     /// <summary>
-    /// ガイド線の点線。球から最初に当たる所まで白い点が流れ、壁で跳ね返った後の短い線は黄色。当たる所に小さな輪。
+    /// ガイド線の点線。球から最初に当たる所まで白い点（特殊ショットを ON にしているときは水色。風は曲がった線）が流れ、壁で跳ね返った後の短い線は黄色。当たる所に小さな輪。
     /// 点は少しずつ前へ流して、向きが一目で分かるようにする（線そのものの計算は Core の GolfGuide）
     /// </summary>
     public sealed class GolfGuideView
@@ -24,11 +24,13 @@ namespace PenmonScramble.Golf.Game
 
         private static readonly Color GuideColor = Color.white;
         private static readonly Color BounceColor = new Color(1f, 0.88f, 0.35f);
+        private static readonly Color SpecialColor = new Color(0.45f, 0.95f, 1f);
 
         private readonly List<Transform> _dots = new List<Transform>();
         private readonly List<MeshRenderer> _renderers = new List<MeshRenderer>();
         private readonly Material _guide;
         private readonly Material _bounce;
+        private readonly Material _special;
         private readonly Transform _marker;
         private float _flow;
 
@@ -38,6 +40,7 @@ namespace PenmonScramble.Golf.Game
             root.SetParent(parent, false);
             _guide = materials.Get(GuideColor, 0f);
             _bounce = materials.Get(BounceColor, 0f);
+            _special = materials.Get(SpecialColor, 0f);
             for (var i = 0; i < DotCount; i++)
             {
                 var dot = Create("Dot", ToyMeshes.Sphere, root, new Vector3(DotSize, DotSize * DotFlatten, DotSize), _guide);
@@ -49,7 +52,8 @@ namespace PenmonScramble.Golf.Game
             Hide();
         }
 
-        public void Show(GolfGuideLine? line, GolfSurface surface, float deltaTime)
+        /// <param name="special">特殊ショットを ON にしている（点を水色にして、ふつうの線と見分ける）</param>
+        public void Show(GolfGuideLine? line, GolfSurface surface, float deltaTime, bool special = false)
         {
             if (!line.HasValue)
             {
@@ -59,10 +63,20 @@ namespace PenmonScramble.Golf.Game
 
             _flow = Mathf.Repeat(_flow + deltaTime * FlowSpeed, DotSpacing);
             var guide = line.Value;
-            var used = Place(guide.Start, guide.End, StartGap + _flow, 0, _guide, surface);
+            var used = 0;
+            var offset = StartGap + _flow;
+            var path = guide.Path;
+            var material = special ? _special : _guide;
+            // 曲がった線は点を等間隔に保つよう、前の区間の余りを次の区間へ持ち越す
+            for (var i = 0; i + 1 < path.Count; i++)
+            {
+                used = Place(path[i], path[i + 1], ref offset, used, material, surface);
+            }
+
             if (guide.Stop == GolfGuideStop.Wall)
             {
-                used = Place(guide.End, guide.BounceEnd, _flow, used, _bounce, surface);
+                var bounceOffset = _flow;
+                used = Place(guide.End, guide.BounceEnd, ref bounceOffset, used, _bounce, surface);
             }
 
             for (var i = used; i < _dots.Count; i++)
@@ -84,8 +98,8 @@ namespace PenmonScramble.Golf.Game
             _marker.gameObject.SetActive(false);
         }
 
-        /// <summary>from から to へ、start の距離から点を並べ、使い終わった点の番号を返す</summary>
-        private int Place(Vec2 from, Vec2 to, float start, int first, Material material, GolfSurface surface)
+        /// <summary>from から to へ、start の距離から点を並べ、使い終わった点の番号を返す。start は次の区間で始める距離にする</summary>
+        private int Place(Vec2 from, Vec2 to, ref float start, int first, Material material, GolfSurface surface)
         {
             var length = Vec2.Distance(from, to);
             var index = first;
@@ -94,7 +108,8 @@ namespace PenmonScramble.Golf.Game
                 return index;
             }
 
-            for (var s = start; s <= length && index < _dots.Count; s += DotSpacing)
+            var s = start;
+            for (; s <= length && index < _dots.Count; s += DotSpacing)
             {
                 var point = from + (to - from) * (s / length);
                 var dot = _dots[index];
@@ -104,6 +119,7 @@ namespace PenmonScramble.Golf.Game
                 index++;
             }
 
+            start = s - length;
             return index;
         }
 

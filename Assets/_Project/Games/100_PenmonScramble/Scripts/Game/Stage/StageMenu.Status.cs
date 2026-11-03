@@ -22,6 +22,7 @@ namespace PenmonScramble.Game
         [SerializeField] private StageMenuParty _party;
 
         private StageSnapshot _snapshot;
+        private string _caption = string.Empty;
         private PlayerState _partyState;
         private bool _fallen;
 
@@ -32,6 +33,18 @@ namespace PenmonScramble.Game
             _snapshot = snapshot;
             _partyState = party;
             _fallen = fallen;
+            if (_shown)
+            {
+                ShowStatus(snap: false);
+            }
+        }
+
+        /// <summary>
+        /// ステージの様子（StageSnapshot）が無い所（ミニゲーム）で、上の帯の札に出す字。この字を出す間はエリアのつぶを隠す
+        /// </summary>
+        public void SetCaption(string caption)
+        {
+            _caption = caption ?? string.Empty;
             if (_shown)
             {
                 ShowStatus(snap: false);
@@ -53,8 +66,17 @@ namespace PenmonScramble.Game
                 _stageText.text = Stages.Get(_snapshot.StageNo)?.Name ?? string.Empty;
                 _areaPips.Set(_snapshot.AreaIndex, _snapshot.AreaCount, StageHud.IsRoundStage(_snapshot));
             }
+            else if (_caption.Length > 0)
+            {
+                _stageText.text = _caption;
+                _areaPips.gameObject.SetActive(false);
+            }
 
-            _party.Show(_partyState, _fallen, snap);
+            // 右の編成の欄はステージだけ（ミニゲームでは作らない）
+            if (_party != null)
+            {
+                _party.Show(_partyState, _fallen, snap);
+            }
         }
     }
 }

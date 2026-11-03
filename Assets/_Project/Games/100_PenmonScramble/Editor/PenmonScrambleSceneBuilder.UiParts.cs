@@ -189,7 +189,7 @@ namespace PenmonScramble.Editor
             image.raycastTarget = false;
         }
 
-        private static void SetSlideIn(GameObject obj, Vector2 from, float delay)
+        internal static void SetSlideIn(GameObject obj, Vector2 from, float delay)
         {
             var slide = obj.AddComponent<UiSlideIn>();
             var so = new SerializedObject(slide);

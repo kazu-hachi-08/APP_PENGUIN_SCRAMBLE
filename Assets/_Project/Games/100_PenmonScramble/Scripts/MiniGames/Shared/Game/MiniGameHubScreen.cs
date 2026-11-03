@@ -10,7 +10,8 @@ namespace PenmonScramble.MiniGames.Game
 {
     /// <summary>
     /// ミニゲームを選ぶ画面。ロビーの左の列の「ミニゲーム」から開く。
-    /// 1段目: MiniGameTable のカードが並ぶ → 押すと 2段目: そのミニゲームのコース選び（◀ ▶・鍵・ベスト）→「ひとりで」。
+    /// 1段目: MiniGameTable のカードが並ぶ → 押すと 2段目: そのミニゲームのコース選び（◀ ▶・鍵・ベスト・中身・報酬）→「ひとりで」。
+    /// コースの中身と報酬は、各ミニゲームが登録した IMiniGameCourseGuide から出す（共通側はミニゲームの中身を知らない）。
     /// 「もどる」/ Esc は1段ずつ戻る。ミニゲームのシーンから戻ったとき（LobbyReturn）は、遊んだコースを選んだ状態で開く。
     /// 本編（TitleMenu）はミニゲームを知らないので、開くボタンのつなぎはこちらで持つ
     /// </summary>
@@ -20,6 +21,7 @@ namespace PenmonScramble.MiniGames.Game
     {
         private const string HubHeading = "ミニゲーム";
         private const string NoRecordLabel = "まだ回っていません";
+        private const string ComingSoonLabel = "このコースは準備中";
         private static readonly Color LockedColor = new Color(1f, 0.70f, 0.45f);
         private static readonly Color InfoColor = new Color(1f, 0.92f, 0.6f);
 
@@ -44,6 +46,10 @@ namespace PenmonScramble.MiniGames.Game
         [SerializeField] private Text _courseNoText;
         [SerializeField] private Text _courseNameText;
         [SerializeField] private Text _courseInfoText;
+        [Tooltip("コースの中身（ゴルフならホールとパー）。ミニゲームが IMiniGameCourseGuide を登録していれば出す")]
+        [SerializeField] private Text _courseLayoutText;
+        [Tooltip("報酬と初回ボーナス")]
+        [SerializeField] private Text _rewardText;
         [SerializeField] private Button _prevCourseButton;
         [SerializeField] private Button _nextCourseButton;
         [SerializeField] private Button _soloButton;
@@ -155,7 +161,9 @@ namespace PenmonScramble.MiniGames.Game
                     return i;
                 }
 
-                if (MiniGameUnlock.IsUnlocked(game.Courses[i], Record))
+                // 開いていて遊べる（準備中でない）中で一番先
+                var guide = MiniGameGuides.Get(game.Id);
+                if (MiniGameUnlock.IsUnlocked(game.Courses[i], Record) && (guide == null || guide.IsReady(game.Courses[i].No)))
                 {
                     latest = i;
                 }
@@ -174,26 +182,43 @@ namespace PenmonScramble.MiniGames.Game
         private void RefreshCourse()
         {
             var course = _game.Courses[_courseIndex];
+            var guide = MiniGameGuides.Get(_game.Id);
             var unlocked = MiniGameUnlock.IsUnlocked(course, Record);
+            var ready = guide == null || guide.IsReady(course.No);
             _courseNoText.text = $"コース {course.No}";
             _courseNameText.text = course.Name;
-            _courseInfoText.text = unlocked ? BestLabel(course) : $"ワールド {course.World} に入ると解放";
-            _courseInfoText.color = unlocked ? InfoColor : LockedColor;
+            _courseInfoText.text = !unlocked ? $"ワールド {course.World} に入ると解放" : !ready ? ComingSoonLabel : BestLabel(course, guide);
+            _courseInfoText.color = unlocked && ready ? InfoColor : LockedColor;
+            var showDetails = guide != null && ready;
+            _courseLayoutText.text = showDetails ? guide.Layout(course.No) : string.Empty;
+            var firstPlay = new MiniGameRecords(Record.Data).Plays(_game.Id, course.No) == 0;
+            _rewardText.text = showDetails && unlocked ? guide.Reward(course.No, firstPlay) : string.Empty;
             _prevCourseButton.interactable = _courseIndex > 0;
             _nextCourseButton.interactable = _courseIndex < _game.Courses.Count - 1;
-            _soloButton.interactable = unlocked;
+            _soloButton.interactable = unlocked && ready;
         }
 
-        private string BestLabel(MiniGameCourseDef course)
+        private string BestLabel(MiniGameCourseDef course, IMiniGameCourseGuide guide)
         {
             var records = new MiniGameRecords(Record.Data);
-            return records.TryGetBest(_game.Id, course.No, out var best) ? $"ベスト {best}{_game.ScoreUnit}" : NoRecordLabel;
+            if (!records.TryGetBest(_game.Id, course.No, out var best))
+            {
+                return NoRecordLabel;
+            }
+
+            return guide != null ? $"ベスト {guide.FormatBest(course.No, best)}" : $"ベスト {best}{_game.ScoreUnit}";
+        }
+
+        private bool CanPlay(MiniGameCourseDef course)
+        {
+            var guide = MiniGameGuides.Get(_game.Id);
+            return MiniGameUnlock.IsUnlocked(course, Record) && (guide == null || guide.IsReady(course.No));
         }
 
         private void PlaySolo()
         {
             var course = _game.Courses[_courseIndex];
-            if (MiniGameUnlock.IsUnlocked(course, Record))
+            if (CanPlay(course))
             {
                 MiniGameLaunch.StartSolo(_game, course.No);
             }

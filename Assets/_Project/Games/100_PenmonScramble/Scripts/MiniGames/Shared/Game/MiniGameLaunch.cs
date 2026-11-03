@@ -52,6 +52,13 @@ namespace PenmonScramble.MiniGames.Game
             Load(SceneNames.Title);
         }
 
+        /// <summary>本編のシーンを読み直して、ロビーから始める（スタート画面は飛ばす）</summary>
+        public static void ReturnToLobby()
+        {
+            LobbyReturn.Request(LobbyScreen.Lobby);
+            Load(SceneNames.Title);
+        }
+
         private static void Load(string sceneName)
         {
             // SceneLoader は無ければその場で作られる（フェードつきで移る）。読み込み中の2度押しは SceneLoader が無視する

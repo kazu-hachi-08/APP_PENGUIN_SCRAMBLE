@@ -108,11 +108,18 @@ namespace PenmonScramble.Editor
             ("タイトルへ", ResetColor),
         };
 
-        private static StageMenu CreateStageMenu(Transform canvas, Button openButton, HowToPlayScreen howToPlay)
+        /// <param name="howToPlay">無ければ「遊び方」の札を出さない（遊び方のページがまだ無いミニゲーム）</param>
+        /// <param name="cardLabels">札の字（上から つづける・やり直す・遊び方・設定・タイトルへ の5つ）。null なら本編の字</param>
+        /// <param name="withParty">右の編成の欄を作る（ステージだけ。HP の無いミニゲームでは作らない）</param>
+        internal static StageMenu CreateStageMenu(Transform canvas, Button openButton, HowToPlayScreen howToPlay, string[] cardLabels = null, bool withParty = true)
         {
             var root = CreateStretchGroup(canvas, "StageMenuScreen");
             // 遊び方はメニューから開いて上に重ねるので、メニューは遊び方より奥に置く
-            root.transform.SetSiblingIndex(howToPlay.transform.GetSiblingIndex());
+            if (howToPlay != null)
+            {
+                root.transform.SetSiblingIndex(howToPlay.transform.GetSiblingIndex());
+            }
+
             var backdrop = CreateMenuBackdrop(root.transform);
             var rootGroup = root.AddComponent<CanvasGroup>();
             var content = CreateStretchGroup(root.transform, "Content");
@@ -122,9 +129,9 @@ namespace PenmonScramble.Editor
             var menu = new GameObject("StageMenu").AddComponent<StageMenu>();
             var so = new SerializedObject(menu);
             CreateMenuBand(safe.transform, so);
-            SetObjectArray(so.FindProperty("_cards"), CreateMenuCards(safe.transform));
+            SetObjectArray(so.FindProperty("_cards"), CreateMenuCards(safe.transform, cardLabels));
             so.FindProperty("_volume").objectReferenceValue = CreateMenuVolume(safe.transform);
-            so.FindProperty("_party").objectReferenceValue = CreateMenuParty(safe.transform);
+            so.FindProperty("_party").objectReferenceValue = withParty ? CreateMenuParty(safe.transform) : null;
             // 確認の窓は札より手前に出すので、後に作る
             so.FindProperty("_confirm").objectReferenceValue = CreateMenuConfirm(content.transform);
             so.FindProperty("_openButton").objectReferenceValue = openButton;
@@ -190,13 +197,14 @@ namespace PenmonScramble.Editor
             return text;
         }
 
-        private static Object[] CreateMenuCards(Transform safe)
+        private static Object[] CreateMenuCards(Transform safe, string[] labels)
         {
             var defs = MenuCards();
             var cards = new Object[defs.Length];
             for (var i = 0; i < defs.Length; i++)
             {
                 var (label, color) = defs[i];
+                label = labels != null && i < labels.Length ? labels[i] : label;
                 cards[i] = CreateMenuCard(safe, $"Card{i + 1}", label, color, new Vector2(0f, 0.5f), Vector2.zero, MenuCardSize, MenuCardFontSize, MenuCardSlideFrom, centered: false);
             }
 
@@ -207,7 +215,7 @@ namespace PenmonScramble.Editor
         /// 札1枚（StageMenuCard）: 押す当たり（透明）の中に、前へ出て大きくなる体（光・影・色の札・▶・文字）。
         /// 押す当たりは動かさない体の外に置き、札が大きくなってもとなりの札の当たりと重ならないようにする
         /// </summary>
-        private static StageMenuCard CreateMenuCard(Transform parent, string name, string label, Color color, Vector2 anchor, Vector2 position, Vector2 size, int fontSize, Vector2 slideFrom, bool centered)
+        internal static StageMenuCard CreateMenuCard(Transform parent, string name, string label, Color color, Vector2 anchor, Vector2 position, Vector2 size, int fontSize, Vector2 slideFrom, bool centered)
         {
             var root = CreateHudRect(parent, name, anchor, position, size);
             var hit = AddImage(root.gameObject, null, Color.clear, true);

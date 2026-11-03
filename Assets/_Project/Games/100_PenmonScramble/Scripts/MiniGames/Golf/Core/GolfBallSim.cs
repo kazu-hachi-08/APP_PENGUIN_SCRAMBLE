@@ -58,12 +58,47 @@ namespace PenmonScramble.Golf.Core
 
         private bool WillSlide(GolfBall ball)
         {
-            var ground = SampleGround(ball.Position);
+            var ground = SampleGround(ball, ball.Position);
             return ground.Push.Length > ground.Friction;
+        }
+
+        /// <summary>
+        /// 止まった球が池・場外の上にあれば落とす（凍った道の上で止まった球は、氷が消えると池に落ちる）。
+        /// 打順の終わりに呼ぶ。起きたことは events に足す
+        /// </summary>
+        public void SettleHazards(IReadOnlyList<GolfBall> balls, List<GolfEvent> events)
+        {
+            foreach (var ball in balls)
+            {
+                if (ball.IsInPlay && IsHazard(ball.Position))
+                {
+                    Fall(ball, events);
+                }
+            }
+        }
+
+        /// <summary>この位置が池・場外か（特殊ショットの効き目は見ない）</summary>
+        public bool IsHazard(Vec2 position)
+        {
+            if (!_hole.OnGround(position))
+            {
+                return true;
+            }
+
+            foreach (var area in _hole.Areas)
+            {
+                if (area.IsHazard && area.Contains(position))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void StepBall(GolfBall ball, List<GolfEvent> events)
         {
+            Curve(ball);
             if (ball.IsAirborne)
             {
                 StepAir(ball, events);
@@ -71,7 +106,7 @@ namespace PenmonScramble.Golf.Core
                 return;
             }
 
-            var ground = SampleGround(ball.Position);
+            var ground = SampleGround(ball, ball.Position);
             if (ground.Hazard)
             {
                 Fall(ball, events);
@@ -90,14 +125,21 @@ namespace PenmonScramble.Golf.Core
             }
 
             Roll(ball, ground.Push, ground.Friction);
-            ball.Position += ball.Velocity * Dt;
+            var step = ball.Velocity * Dt;
+            ball.Position += step;
+            MeltIce(ball, step.Length);
             CollideWalls(ball, events);
         }
 
-        /// <summary>球の下の地面がどうなっているか（摩擦・坂の押す力・落ちる所か・ジャンプ台か）</summary>
-        private GroundSample SampleGround(Vec2 position)
+        /// <summary>
+        /// 球の下の地面がどうなっているか（摩擦・坂の押す力・落ちる所か・ジャンプ台か）。
+        /// 氷の特殊ショットの道の上では、池も砂地も凍って、よく滑る地面になる（場外はそのまま落ちる）
+        /// </summary>
+        private GroundSample SampleGround(GolfBall ball, Vec2 position)
         {
-            var sample = new GroundSample { Friction = GolfBalance.RollDecel, Hazard = !_hole.OnGround(position) };
+            var iced = ball.IceLeft > 0f;
+            var friction = iced ? GolfBalance.RollDecel * GolfSpecialBalance.IceDecelScale : GolfBalance.RollDecel;
+            var sample = new GroundSample { Friction = friction, Hazard = !_hole.OnGround(position) };
             foreach (var area in _hole.Areas)
             {
                 if (!area.Contains(position))
@@ -108,11 +150,17 @@ namespace PenmonScramble.Golf.Core
                 switch (area.Kind)
                 {
                     case GolfAreaKind.Water:
+                        sample.Hazard |= !iced;
+                        break;
                     case GolfAreaKind.OutOfBounds:
                         sample.Hazard = true;
                         break;
                     case GolfAreaKind.Sand:
-                        sample.Friction = GolfBalance.RollDecel * GolfBalance.SandDecelScale;
+                        if (!iced)
+                        {
+                            sample.Friction = GolfBalance.RollDecel * GolfBalance.SandDecelScale;
+                        }
+
                         break;
                     case GolfAreaKind.Slope:
                         sample.Push += area.Push;
@@ -147,7 +195,7 @@ namespace PenmonScramble.Golf.Core
         }
 
         /// <summary>浮いている間は簡単な放物線。摩擦・坂・カップは効かない</summary>
-        private static void StepAir(GolfBall ball, List<GolfEvent> events)
+        private void StepAir(GolfBall ball, List<GolfEvent> events)
         {
             ball.VerticalSpeed -= GolfBalance.Gravity * Dt;
             ball.Height += ball.VerticalSpeed * Dt;
@@ -159,7 +207,69 @@ namespace PenmonScramble.Golf.Core
 
             ball.Height = 0f;
             ball.VerticalSpeed = 0f;
+            if (TrySkip(ball, events))
+            {
+                return;
+            }
+
             events.Add(new GolfEvent(GolfEventKind.Land, ball.Player, ball.Position));
+        }
+
+        /// <summary>
+        /// 水切り: 着いた所で、まだ跳ねる回数があればまた跳ぶ（池の上でも跳ねる＝水切り）。
+        /// 場外（地面の外・溶岩など）では跳ねずに落ちる
+        /// </summary>
+        private bool TrySkip(GolfBall ball, List<GolfEvent> events)
+        {
+            if (ball.SkipsLeft <= 0 || OutOfBounds(ball.Position))
+            {
+                return false;
+            }
+
+            ball.SkipsLeft--;
+            ball.VerticalSpeed = ball.SkipSpeed;
+            ball.SkipSpeed *= GolfSpecialBalance.SkipVerticalKeep;
+            ball.Velocity *= GolfSpecialBalance.SkipForwardKeep;
+            var onWater = InArea(ball.Position, GolfAreaKind.Water);
+            events.Add(new GolfEvent(GolfEventKind.Skip, ball.Player, ball.Position, onWater ? 1f : 0f));
+            return true;
+        }
+
+        private bool OutOfBounds(Vec2 position) => !_hole.OnGround(position) || InArea(position, GolfAreaKind.OutOfBounds);
+
+        private bool InArea(Vec2 position, GolfAreaKind kind)
+        {
+            foreach (var area in _hole.Areas)
+            {
+                if (area.Kind == kind && area.Contains(position))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>風: 進んだ距離に比べて向きを回す（球の速さは変えない）。地面でも空中でも曲がる</summary>
+        private static void Curve(GolfBall ball)
+        {
+            if (ball.CurveLeft <= 0f || ball.Velocity.IsNearlyZero)
+            {
+                return;
+            }
+
+            var distance = Math.Min(ball.Velocity.Length * Dt, ball.CurveLeft);
+            ball.Velocity = ball.Velocity.Rotated(ball.Curvature * distance);
+            ball.CurveLeft -= distance;
+        }
+
+        /// <summary>氷: 地面を進んだ分だけ凍った道が短くなる</summary>
+        private static void MeltIce(GolfBall ball, float distance)
+        {
+            if (ball.IceLeft > 0f)
+            {
+                ball.IceLeft = Math.Max(0f, ball.IceLeft - distance);
+            }
         }
 
         /// <summary>

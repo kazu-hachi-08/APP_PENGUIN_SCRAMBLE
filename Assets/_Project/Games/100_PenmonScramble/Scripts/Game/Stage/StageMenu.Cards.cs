@@ -26,6 +26,12 @@ namespace PenmonScramble.Game
         [SerializeField] private float _cardInStagger = 0.045f;
         [SerializeField] private float _cardOutStagger = 0.02f;
 
+        [Header("確認の言葉（ミニゲームでは「ホールをやり直す」「ミニゲームへ」にする。札の字は SceneBuilder が書く）")]
+        [SerializeField] private string _restartLabel = "やり直す";
+        [SerializeField] private string _restartSoloMessage = "はじめからやり直します。\nいまの進み具合は残りません";
+        [SerializeField] private string _exitLabel = "タイトルへ";
+        [SerializeField] private string _exitSoloMessage = "ステージをやめてタイトルに戻ります。\nいまの進み具合は残りません";
+
         private int _selected;
 
         private void AwakeCards()
@@ -53,7 +59,7 @@ namespace PenmonScramble.Game
             }
         }
 
-        private bool IsCardShown(int index) => index != RestartCard || _canRestart;
+        private bool IsCardShown(int index) => (index != RestartCard || _canRestart) && (index != HelpCard || _howToPlay != null);
 
         private void PlayCardsIn()
         {
@@ -249,13 +255,13 @@ namespace PenmonScramble.Game
 
         private void ConfirmRestart()
         {
-            var message = _solo ? "はじめからやり直します。\nいまの進み具合は残りません" : "全員ではじめからやり直します";
-            _confirm.Show("やり直す", message, "やり直す", OnRestartConfirmed, null);
+            var message = _solo ? _restartSoloMessage : "全員ではじめからやり直します";
+            _confirm.Show(_restartLabel, message, _restartLabel, OnRestartConfirmed, null);
         }
 
         private void ConfirmTitle()
         {
-            _confirm.Show("タイトルへ", TitleMessage(), "タイトルへ", OnTitleConfirmed, null);
+            _confirm.Show(_exitLabel, TitleMessage(), _exitLabel, OnTitleConfirmed, null);
         }
 
         /// <summary>協力では、抜けると何が起きるかを伝える（ゲストは部屋から抜け、ホストが抜けると全員が戻る）</summary>
@@ -263,7 +269,7 @@ namespace PenmonScramble.Game
         {
             if (_solo)
             {
-                return "ステージをやめてタイトルに戻ります。\nいまの進み具合は残りません";
+                return _exitSoloMessage;
             }
 
             return _canRestart

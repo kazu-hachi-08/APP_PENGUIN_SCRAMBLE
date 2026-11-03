@@ -23,6 +23,12 @@ namespace PenmonScramble.Golf.Game
         Jump,
         /// <summary>打つ子を替えた・ゲージを動かし始めた</summary>
         Select,
+        /// <summary>特殊ショットを ON にした・打った（キラッと上がる音）</summary>
+        Special,
+        /// <summary>雷の特殊ショットで加速した（ビリッ）</summary>
+        Boost,
+        /// <summary>水切りで跳ねた（ピチャッ）</summary>
+        Skip,
     }
 
     /// <summary>
@@ -50,6 +56,9 @@ namespace PenmonScramble.Golf.Game
             { GolfSound.Splash, 0.55f },
             { GolfSound.Jump, 0.4f },
             { GolfSound.Select, 0.3f },
+            { GolfSound.Special, 0.45f },
+            { GolfSound.Boost, 0.5f },
+            { GolfSound.Skip, 0.35f },
         };
 
         /// <summary>打つ音。power はゲージの強さ（0〜1）</summary>
@@ -97,6 +106,9 @@ namespace PenmonScramble.Golf.Game
                 case GolfSound.CupIn: return CupIn();
                 case GolfSound.Splash: return Splash();
                 case GolfSound.Jump: return ToySynth.Sweep("Golf_Jump", 0.14f, 400f, 1200f);
+                case GolfSound.Special: return ToySynth.Sweep("Golf_Special", 0.22f, 660f, 1760f);
+                case GolfSound.Boost: return Boost();
+                case GolfSound.Skip: return ToySynth.Sweep("Golf_Skip", 0.08f, 1400f, 700f);
                 default: return ToySynth.Tone("Golf_Select", 0.05f, 1319f);
             }
         }
@@ -122,6 +134,19 @@ namespace PenmonScramble.Golf.Game
                 var into = s - note * noteSeconds;
                 var length = note == notes.Length - 1 ? noteSeconds * 2f : noteSeconds;
                 return ToySynth.Square(notes[note], t) * Mathf.Max(0f, 1f - into / length);
+            });
+        }
+
+        /// <summary>「ビリッ」: 速く上下する矩形波に、ざらついたノイズを重ねる</summary>
+        private static AudioClip Boost()
+        {
+            const float duration = 0.28f;
+            var random = new System.Random(7);
+            return ToySynth.CreateClip("Golf_Boost", duration, t =>
+            {
+                var buzz = ToySynth.Square(Mathf.Lerp(300f, 1500f, t / duration) + Mathf.Sin(t * 180f) * 120f, t);
+                var noise = (float)random.NextDouble() * 2f - 1f;
+                return (buzz * 0.6f + noise * 0.3f) * (1f - t / duration);
             });
         }
 

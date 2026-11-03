@@ -106,7 +106,10 @@ namespace PenmonScramble.Golf.Core
         }
 
         /// <summary>打つ。番でない人・狙っている間でないときは何もせず false</summary>
-        public bool Shoot(int player, float radians, float power)
+        public bool Shoot(int player, float radians, float power) => Shoot(player, radians, power, GolfSpecial.None);
+
+        /// <summary>特殊ショットつきで打つ（1コース1回の管理は GolfRound。ここでは渡された効き目を載せるだけ）</summary>
+        public bool Shoot(int player, float radians, float power, GolfSpecial special)
         {
             if (Phase != GolfHolePhase.Aiming || player != CurrentPlayer)
             {
@@ -127,6 +130,51 @@ namespace PenmonScramble.Golf.Core
             _accumulator = 0f;
             _rollSeconds = 0f;
             Raise(new GolfEvent(GolfEventKind.Shot, player, shooter.Position, Math.Clamp(power, 0f, 1f)));
+            if (!special.IsNone)
+            {
+                shooter.ApplySpecial(special);
+                Raise(new GolfEvent(GolfEventKind.Special, player, shooter.Position, special.Stars, (int)special.Kind));
+            }
+
+            return true;
+        }
+
+        /// <summary>いまの人が雷の加速を使える（打った球がまだ転がっていて、まだ使っていない）</summary>
+        public bool CanBoost(int player)
+        {
+            if (Phase != GolfHolePhase.Rolling || player != CurrentPlayer)
+            {
+                return false;
+            }
+
+            var ball = _balls[player];
+            return ball.BoostReady && ball.IsInPlay && ball.Velocity.Length >= GolfSpecialBalance.BoostMinSpeed;
+        }
+
+        /// <summary>雷の加速で変えられる角度の上限（ラジアン）。使えなければ 0</summary>
+        public float BoostMaxTurn(int player)
+        {
+            return CanBoost(player) ? GolfSpecialBalance.BoostMaxTurn(_balls[player].BoostStars) : 0f;
+        }
+
+        /// <summary>
+        /// 雷: その場で一瞬加速し、いまの進む向きから turn（ラジアン。正で左回り）だけ向きを変える。
+        /// 変えられる角度は★で決まり、それより大きい値は丸める
+        /// </summary>
+        public bool Boost(int player, float turn)
+        {
+            if (!CanBoost(player))
+            {
+                return false;
+            }
+
+            var ball = _balls[player];
+            var max = GolfSpecialBalance.BoostMaxTurn(ball.BoostStars);
+            var speed = ball.Velocity.Length + GolfSpecialBalance.BoostSpeed(ball.BoostStars);
+            ball.Velocity = ball.Velocity.Normalized.Rotated(Math.Clamp(turn, -max, max)) * speed;
+            ball.Velocity = ball.Velocity.ClampLength(GolfBalance.MaxBallSpeed);
+            ball.BoostReady = false;
+            Raise(new GolfEvent(GolfEventKind.Boost, player, ball.Position, ball.BoostStars));
             return true;
         }
 
@@ -169,6 +217,15 @@ namespace PenmonScramble.Golf.Core
             _stepEvents.Clear();
             _sim.Step(_balls, _stepEvents);
             _rollSeconds += GolfBalance.StepSeconds;
+            RaiseStepEvents();
+            if (_sim.AllStopped(_balls) || _rollSeconds >= GolfBalance.MaxRollSeconds)
+            {
+                EndShot();
+            }
+        }
+
+        private void RaiseStepEvents()
+        {
             foreach (var e in _stepEvents)
             {
                 // 打った本人が落ちたら 1 打足す。弾かれて落ちた人は戻すだけ（自分で打っていないので）
@@ -179,11 +236,6 @@ namespace PenmonScramble.Golf.Core
 
                 Raise(e);
             }
-
-            if (_sim.AllStopped(_balls) || _rollSeconds >= GolfBalance.MaxRollSeconds)
-            {
-                EndShot();
-            }
         }
 
         private void EndShot()
@@ -192,6 +244,11 @@ namespace PenmonScramble.Golf.Core
             {
                 ball.Stop();
             }
+
+            // 凍った道の上で止まった球は、氷が消えて池に落ちる
+            _stepEvents.Clear();
+            _sim.SettleHazards(_balls, _stepEvents);
+            RaiseStepEvents();
 
             // 弾かれてカップに入った人も、そこで終わり
             for (var player = 0; player < PlayerCount; player++)

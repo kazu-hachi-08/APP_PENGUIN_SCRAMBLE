@@ -41,7 +41,7 @@ namespace PenmonScramble.Golf.Core
             foreach (var no in speciesNos ?? Array.Empty<int>())
             {
                 var member = GolfMember.FromSpecies(no);
-                if (member.HasValue && _members.Count < GolfRules.DefaultSpecies.Length)
+                if (member.HasValue && _members.Count < GolfRules.TeamSize)
                 {
                     _members.Add(member.Value);
                 }
@@ -77,5 +77,24 @@ namespace PenmonScramble.Golf.Core
 
         /// <summary>次の子へ（最後の次は最初）。1体しかいなければ false</summary>
         public bool SelectNext() => Select((Selected + 1) % _members.Count);
+
+        // ---- 特殊ショット（各子、1コースに1回） ----
+
+        private bool[] _used = new bool[GolfRules.TeamSize];
+
+        /// <summary>その子の特殊ショットをこのコースでもう使った</summary>
+        public bool IsSpecialUsed(int index) => index >= 0 && index < _members.Count && _used[index];
+
+        public bool CanUseSpecial(int index) => index >= 0 && index < _members.Count && !_used[index];
+
+        internal void MarkSpecialUsed(int index) => _used[index] = true;
+
+        /// <summary>いまの使った・使っていないを写す（ホールをやり直すときに、そのホールで使った分を戻すため）</summary>
+        internal bool[] SaveSpecials() => (bool[])_used.Clone();
+
+        internal void RestoreSpecials(bool[] used) => _used = (bool[])used.Clone();
+
+        /// <summary>コースの始めに戻す（全員の特殊ショットがまた使える）</summary>
+        internal void ResetSpecials() => _used = new bool[GolfRules.TeamSize];
     }
 }

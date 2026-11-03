@@ -32,10 +32,10 @@ namespace PenmonScramble.Editor
         // Relay の参加コードは英数字で、これより長くはならない
         private const int RoomCodeLimit = 12;
 
-        private static readonly Color SoloColor = new Color(1f, 0.55f, 0.30f);
-        private static readonly Color OnlineColor = new Color(0.20f, 0.55f, 0.90f);
+        internal static readonly Color SoloColor = new Color(1f, 0.55f, 0.30f);
+        internal static readonly Color OnlineColor = new Color(0.20f, 0.55f, 0.90f);
         private static readonly Color JoinColor = new Color(1f, 0.75f, 0.30f);
-        private static readonly Color StartColor = new Color(0.30f, 0.75f, 0.40f);
+        internal static readonly Color StartColor = new Color(0.30f, 0.75f, 0.40f);
         internal static readonly Color CancelColor = new Color(0.45f, 0.50f, 0.60f);
         private static readonly Color PlaceholderColor = new Color(0.55f, 0.55f, 0.60f);
         private static readonly Color InputFrameColor = new Color(0.96f, 0.97f, 1f);

@@ -25,6 +25,7 @@ namespace PenmonScramble.Game
         [SerializeField] private StageMenuBackdrop _backdrop;
         [SerializeField] private StageMenuConfirm _confirm;
         [SerializeField] private StageMenuVolume _volume;
+        [Tooltip("無ければ「遊び方」の札を出さない（遊び方のページがまだ無いミニゲーム）")]
         [SerializeField] private HowToPlayScreen _howToPlay;
         [Tooltip("札が抜けるのが早く終わっても、後ろの幕はこの秒をかけて消す")]
         [SerializeField] private float _minCloseSeconds = 0.15f;
@@ -50,7 +51,11 @@ namespace PenmonScramble.Game
         private void Awake()
         {
             _openButton.onClick.AddListener(Open);
-            _howToPlay.Closed += OnHowToPlayClosed;
+            if (_howToPlay != null)
+            {
+                _howToPlay.Closed += OnHowToPlayClosed;
+            }
+
             AwakeCards();
             // タイトルの間は出さない（ステージが始まったら StageRunner が SetAvailable で出す）
             _openButton.gameObject.SetActive(false);
@@ -59,7 +64,11 @@ namespace PenmonScramble.Game
 
         private void OnDestroy()
         {
-            _howToPlay.Closed -= OnHowToPlayClosed;
+            if (_howToPlay != null)
+            {
+                _howToPlay.Closed -= OnHowToPlayClosed;
+            }
+
             // 止めたまま画面を離れても、次の画面が止まらないように
             Time.timeScale = 1f;
         }
@@ -100,7 +109,7 @@ namespace PenmonScramble.Game
             }
 
             // 遊び方は自分で Esc を受けて閉じる。同じフレームでメニューまで閉じないよう、開いている間とその直後は見ない
-            if (!_available || !InputManager.HasInstance || _howToPlay.gameObject.activeSelf || _howToPlay.ClosedFrame == Time.frameCount)
+            if (!_available || !InputManager.HasInstance || IsHowToPlayBusy())
             {
                 return;
             }
@@ -192,7 +201,11 @@ namespace PenmonScramble.Game
             _closing = 0f;
             _confirm.Hide();
             _volume.Close();
-            _howToPlay.Close();
+            if (_howToPlay != null)
+            {
+                _howToPlay.Close();
+            }
+
             _backdrop.Hide();
             _root.gameObject.SetActive(false);
             _openButton.gameObject.SetActive(_available);
@@ -213,8 +226,15 @@ namespace PenmonScramble.Game
             }
         }
 
+        private bool IsHowToPlayBusy() => _howToPlay != null && (_howToPlay.gameObject.activeSelf || _howToPlay.ClosedFrame == Time.frameCount);
+
         private void OpenHowToPlay()
         {
+            if (_howToPlay == null)
+            {
+                return;
+            }
+
             // 遊び方は画面いっぱいに出るので、後ろの幕だけ残して中身を隠す
             _content.SetActive(false);
             _shown = false;

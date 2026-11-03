@@ -55,6 +55,8 @@ namespace PenmonScramble.Game
             if (_started || LobbyReturn.HasPending)
             {
                 _started = true;
+                // ロビーへ戻るだけの頼みは、ここで受け取って消す（ほかの画面の頼みはその画面が自分で受け取る）
+                LobbyReturn.Take(LobbyScreen.Lobby);
                 EnterLobby(instant: true);
                 return;
             }

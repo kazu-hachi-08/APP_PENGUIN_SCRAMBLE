@@ -12,7 +12,7 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// ゴルフのシーン（GolfScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編のシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
-    /// ミニゲーム画面から来たときの「準備中」の板と、1ホールを遊ぶ部品（3D・カメラ・操作・HUD。いまは開発用の試しのホールだけで動く）を置く
+    /// まだ作っていないコースのときの「準備中」の板と、コースを回る部品（3D・カメラ・操作・HUD・スコアカード・結果・メニュー）を置く
     /// （Docs/MINIGAME_GOLF_PLAN.md）
     /// </summary>
     public static partial class GolfSceneBuilder
@@ -48,16 +48,19 @@ namespace PenmonScramble.Editor
 
             var placeholder = CreatePlaceholder(canvas, out var course, out var back);
             var hud = CreateHud(canvas);
-            var play = CreatePlay(camera, hud);
-            CreateInputManager(hud.Shoot);
+            var scorecard = CreateScorecard(canvas);
+            var result = CreateResultPanel(canvas);
+            // メニューは HUD・スコアカードより手前に出す
+            var menu = CreateMenu(canvas, hud.Menu);
+            var play = CreatePlay(camera, hud, scorecard, result, menu);
+            CreateInputManager(hud.Shoot, hud.Special);
 
             var runner = new GameObject("Golf").AddComponent<GolfSceneRunner>();
             var so = new SerializedObject(runner);
             so.FindProperty("_placeholder").objectReferenceValue = placeholder;
             so.FindProperty("_courseText").objectReferenceValue = course;
             so.FindProperty("_backButton").objectReferenceValue = back;
-            so.FindProperty("_playBackButton").objectReferenceValue = hud.Back;
-            so.FindProperty("_testHole").objectReferenceValue = play;
+            so.FindProperty("_play").objectReferenceValue = play;
             so.ApplyModifiedProperties();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -65,7 +68,7 @@ namespace PenmonScramble.Editor
             Debug.Log($"[GolfSceneBuilder] {ScenePath} を生成しました");
         }
 
-        /// <summary>ミニゲーム画面から来たときの板（コースの名前・準備中・もどる）。試しのホールでは隠す</summary>
+        /// <summary>まだ作っていないコースのときの板（コースの名前・準備中・もどる）。コースを回るときは隠す</summary>
         private static GameObject CreatePlaceholder(Transform canvas, out UnityEngine.UI.Text course, out UnityEngine.UI.Button back)
         {
             var group = UIDialogBuilder.CreateUIObject("Placeholder", canvas);
@@ -80,13 +83,14 @@ namespace PenmonScramble.Editor
 
         /// <summary>
         /// 操作を読む。シーンごとに作り直す（本編の物は仮想ボタンがあるのでシーンをまたがない）。
-        /// スマホの打つ大ボタンは J / ×（Action1）と同じ扱いにする
+        /// スマホの打つ大ボタンは J / ×（Action1）、特殊のボタンは L / △（Action3）と同じ扱いにする
         /// </summary>
-        private static void CreateInputManager(VirtualButton shoot)
+        private static void CreateInputManager(VirtualButton shoot, VirtualButton special)
         {
             var manager = new GameObject("InputManager").AddComponent<InputManager>();
             var so = new SerializedObject(manager);
             so.FindProperty("_virtualAction1Button").objectReferenceValue = shoot;
+            so.FindProperty("_virtualAction3Button").objectReferenceValue = special;
             so.FindProperty("_dontDestroyOnLoad").boolValue = false;
             so.ApplyModifiedProperties();
         }

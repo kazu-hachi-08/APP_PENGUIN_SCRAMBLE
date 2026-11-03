@@ -42,7 +42,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>画面全体を覆う下地。Image で受けるので、後ろの物は押せなくなる（色が透明でも同じ）</summary>
-        private static GameObject CreateFullScreenBacking(Transform parent, string name, Color color)
+        internal static GameObject CreateFullScreenBacking(Transform parent, string name, Color color)
         {
             var obj = CreateStretchGroup(parent, name);
             obj.AddComponent<Image>().color = color;

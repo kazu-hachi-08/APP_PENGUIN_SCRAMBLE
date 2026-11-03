@@ -7,7 +7,7 @@ namespace PenmonScramble.Golf.Game
 {
     /// <summary>
     /// 打つ子のカード1枚: 属性の色の丸に顔・下に★。いま打つ子は大きくして金の輪。押すとその子に替える。
-    /// 特殊ショットを使った子は暗くする（特殊ショットはフェーズ 4。いまは used がいつも false）
+    /// 特殊ショットを使った子は暗くする。特殊を ON にしている子は、輪が水色に脈打つ
     /// </summary>
     public class GolfMemberCard : MonoBehaviour
     {
@@ -15,6 +15,8 @@ namespace PenmonScramble.Golf.Game
         private const string StarOff = "☆";
         private const int MaxStars = 3;
         private static readonly Color UsedTint = new Color(0.45f, 0.45f, 0.5f);
+        private static readonly Color RingColor = new Color(1f, 0.82f, 0.25f);
+        private static readonly Color ArmedColor = new Color(0.45f, 0.95f, 1f);
 
         [SerializeField] private Button _button;
         [SerializeField] private RectTransform _visual;
@@ -26,15 +28,18 @@ namespace PenmonScramble.Golf.Game
         [SerializeField] private float _scaleSpeed = 14f;
         [SerializeField] private float _bounceSeconds = 0.25f;
         [SerializeField] private float _bounceScale = 0.2f;
+        [SerializeField] private float _armedPulseRate = 3f;
 
         private int _species = -1;
         private bool _selected;
         private float _scale = 1f;
         private float _bounce;
+        private bool _armed;
+        private Image _ring;
 
         public Button Button => _button;
 
-        public void Show(GolfMember member, bool selected, bool used)
+        public void Show(GolfMember member, bool selected, bool used, bool armed)
         {
             gameObject.SetActive(true);
             if (member.SpeciesNo != _species)
@@ -51,6 +56,7 @@ namespace PenmonScramble.Golf.Game
 
             _selected = selected;
             _selectedRing.SetActive(selected);
+            _armed = armed && selected;
             var tint = used ? UsedTint : Color.white;
             _disc.color = PenguinPalette.ElementColor(member.Element) * tint;
             _face.color = tint;
@@ -65,6 +71,12 @@ namespace PenmonScramble.Golf.Game
             _bounce = Mathf.Max(0f, _bounce - dt);
             var bounce = _bounce > 0f ? Mathf.Sin((1f - _bounce / _bounceSeconds) * Mathf.PI) * _bounceScale : 0f;
             _visual.localScale = Vector3.one * (_scale + bounce);
+            _ring ??= _selectedRing.GetComponent<Image>();
+            if (_ring != null)
+            {
+                var pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * _armedPulseRate * Mathf.PI * 2f);
+                _ring.color = _armed ? Color.Lerp(ArmedColor, Color.white, pulse * 0.6f) : RingColor;
+            }
         }
 
         private static string Stars(int stars)

@@ -11,15 +11,15 @@ using B = PenmonScramble.Editor.PenmonScrambleSceneBuilder;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ゴルフの HUD（GolfHud）: 左上にホールの札・何打目・打順の表、上のまん中に持ち時間の輪、右上に「もどる」、
-    /// 左下に打つ子の3体のカード、右にパワーゲージ、スマホでは右下に打つ大ボタン、まん中に知らせ、PC では下に操作の説明。
+    /// ゴルフの HUD（GolfHud）: 左上にホールの札・何打目・打順の表、上のまん中に持ち時間の輪、右上にメニューの「‖」、
+    /// 左下に打つ子の3体のカードとその上に特殊ショットの札、右にパワーゲージ、スマホでは右下に打つ大ボタンと特殊のボタン、
+    /// まん中に知らせ、PC では下に操作の説明。
     /// 板・ボタン・顔の丸は本編の HUD と同じ部品（PenmonScrambleSceneBuilder）。画面のボタンの無い所はドラッグで狙う（GolfDragPad）
     /// </summary>
     public static partial class GolfSceneBuilder
     {
         private static readonly Vector2 TopLeft = new Vector2(0f, 1f);
         private static readonly Vector2 TopCenter = new Vector2(0.5f, 1f);
-        private static readonly Vector2 TopRight = new Vector2(1f, 1f);
         private static readonly Vector2 BottomLeft = new Vector2(0f, 0f);
         private static readonly Vector2 BottomCenter = new Vector2(0.5f, 0f);
         private static readonly Vector2 RightMiddle = new Vector2(1f, 0.5f);
@@ -48,11 +48,6 @@ namespace PenmonScramble.Editor
         private const float TimerSize = 116f;
         private const int TimerFontSize = 48;
 
-        // ---- 右上: もどる ----
-        private static readonly Vector2 BackPlayPosition = new Vector2(-130f, -66f);
-        private static readonly Vector2 BackPlaySize = new Vector2(220f, 96f);
-        private const int BackPlayFontSize = 40;
-
         // ---- 左下: 打つ子のカード ----
         private const int CardCount = 3;
         private static readonly Vector2 FirstCardPosition = new Vector2(130f, 170f);
@@ -65,6 +60,15 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 CardCaptionSize = new Vector2(500f, 50f);
         private const int CardCaptionFontSize = 28;
         private const string CardCaption = "打つ子（K / ○ で交代）";
+
+        // ---- 左下: 特殊ショットの札（カードの上。属性の色の斜めの板） ----
+        private static readonly Vector2 SpecialPlatePosition = new Vector2(330f, 370f);
+        private static readonly Vector2 SpecialPlateSize = new Vector2(600f, 104f);
+        private static readonly Vector2 SpecialNamePosition = new Vector2(0f, 22f);
+        private static readonly Vector2 SpecialStatePosition = new Vector2(0f, -24f);
+        private static readonly Vector2 SpecialTextSize = new Vector2(540f, 44f);
+        private const int SpecialNameFontSize = 34;
+        private const int SpecialStateFontSize = 26;
 
         // ---- 右: パワーゲージ ----
         private static readonly Vector2 GaugePosition = new Vector2(-96f, 60f);
@@ -81,6 +85,12 @@ namespace PenmonScramble.Editor
         private const int ShootFontSize = 60;
         private static readonly Color ShootColor = new Color(1f, 0.55f, 0.2f);
 
+        // ---- 右下: 特殊のボタン（スマホだけ。打つボタンの左上） ----
+        private static readonly Vector2 SpecialButtonPosition = new Vector2(-560f, 360f);
+        private const float SpecialButtonSize = 150f;
+        private const int SpecialButtonFontSize = 40;
+        private static readonly Color SpecialButtonColor = new Color(0.35f, 0.8f, 0.95f);
+
         // ---- まん中: 知らせ・下: 操作の説明 ----
         private static readonly Vector2 BannerPosition = new Vector2(0f, 200f);
         private static readonly Vector2 BannerSize = new Vector2(1500f, 220f);
@@ -88,21 +98,23 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 HelpPosition = new Vector2(0f, 34f);
         private static readonly Vector2 HelpSize = new Vector2(1500f, 48f);
         private const int HelpFontSize = 26;
-        private const string HelpText = "←→ / スティック: 向き　J / ×: ゲージ → もう一度で打つ　右スティック / 右ドラッグ: 見回す　Space / LB: やり直す　Esc: もどる";
+        private const string HelpText = "←→ / スティック: 向き　J / ×: ゲージ → もう一度で打つ　K / ○: 打つ子　L / △: 特殊　右スティック / 右ドラッグ: 見回す　Esc: メニュー";
 
         private readonly struct GolfHudParts
         {
             public readonly GolfHud Hud;
             public readonly GolfDragPad Pad;
             public readonly VirtualButton Shoot;
-            public readonly Button Back;
+            public readonly VirtualButton Special;
+            public readonly Button Menu;
 
-            public GolfHudParts(GolfHud hud, GolfDragPad pad, VirtualButton shoot, Button back)
+            public GolfHudParts(GolfHud hud, GolfDragPad pad, VirtualButton shoot, VirtualButton special, Button menu)
             {
                 Hud = hud;
                 Pad = pad;
                 Shoot = shoot;
-                Back = back;
+                Special = special;
+                Menu = menu;
             }
         }
 
@@ -122,19 +134,19 @@ namespace PenmonScramble.Editor
             CreateTurnRows(safe.transform, so);
             CreateTimer(safe.transform, so);
             CreateCards(safe.transform, so);
+            CreateSpecialPlate(safe.transform, so);
             CreateGauge(safe.transform, so);
-            var shoot = CreateShootButton(safe.transform, so);
+            var (shoot, special) = CreateTouchButtons(safe.transform, so);
             CreateBanner(safe.transform, so);
             var help = B.CreateLabel(safe.transform, "Help", HelpText, HelpFontSize, Vector2.zero, HelpSize);
             Place(help.rectTransform, BottomCenter, HelpPosition, HelpSize);
             so.FindProperty("_help").objectReferenceValue = help.gameObject;
-            var back = B.CreateTitleButton(safe.transform, "Back", "もどる", Vector2.zero, BackPlaySize, B.CancelColor, BackPlayFontSize);
-            Place(back.GetComponent<RectTransform>(), TopRight, BackPlayPosition, BackPlaySize);
-            back.navigation = new Navigation { mode = Navigation.Mode.None };
+            // 右上の「‖」は本編の HUD と同じ部品（メニューは StageMenu が出し入れする）
+            var menu = B.CreateMenuButton(root.transform);
 
             so.ApplyModifiedProperties();
             root.SetActive(false);
-            return new GolfHudParts(hud, pad, shoot, back);
+            return new GolfHudParts(hud, pad, shoot, special, menu);
         }
 
         private static GolfDragPad CreateDragPad(Transform parent)
@@ -295,19 +307,44 @@ namespace PenmonScramble.Editor
             root.gameObject.SetActive(false);
         }
 
-        /// <summary>スマホだけの打つ大ボタン（押すと沈む厚みのある丸。本編の技のボタンと同じ部品）。タッチできない端末では隠す</summary>
-        private static VirtualButton CreateShootButton(Transform safe, SerializedObject so)
+        /// <summary>
+        /// スマホだけの打つ大ボタンと特殊のボタン（押すと沈む厚みのある丸。本編の技のボタンと同じ部品）。タッチできない端末では隠す。
+        /// 特殊のボタンは L / △（Action3）と同じ扱いで、狙う間だけ出す
+        /// </summary>
+        private static (VirtualButton shoot, VirtualButton special) CreateTouchButtons(Transform safe, SerializedObject so)
         {
             var group = B.CreateStretchGroup(safe, "Touch");
             group.AddComponent<CanvasGroup>();
             var visibility = group.AddComponent<TouchControlsVisibility>();
-            var parts = B.CreateTouchButton(group.transform, "Shoot", ShootPosition, ShootSize, ShootColor);
-            B.CreateHudImage(parts.Top, "Gloss", B.TouchGlossPath, Color.white, Center, Vector2.zero, Vector2.one * ShootSize * 0.88f);
-            var label = B.CreateTouchLabel(parts.Top, "打つ", ShootFontSize);
+            var shoot = CreateTouchCircle(group.transform, "Shoot", "打つ", ShootPosition, ShootSize, ShootColor, ShootFontSize);
+            var special = CreateTouchCircle(group.transform, "Special", "特殊", SpecialButtonPosition, SpecialButtonSize, SpecialButtonColor, SpecialButtonFontSize);
+            so.FindProperty("_touch").objectReferenceValue = visibility;
+            so.FindProperty("_specialButton").objectReferenceValue = special.gameObject;
+            return (shoot, special);
+        }
+
+        private static VirtualButton CreateTouchCircle(Transform parent, string name, string text, Vector2 position, float size, Color color, int fontSize)
+        {
+            var parts = B.CreateTouchButton(parent, name, position, size, color);
+            B.CreateHudImage(parts.Top, "Gloss", B.TouchGlossPath, Color.white, Center, Vector2.zero, Vector2.one * size * 0.88f);
+            var label = B.CreateTouchLabel(parts.Top, text, fontSize);
             label.rectTransform.anchoredPosition = Vector2.zero;
             B.DisableRaycasts(parts.Visual);
-            so.FindProperty("_touch").objectReferenceValue = visibility;
             return parts.Button;
+        }
+
+        /// <summary>特殊ショットの札: 属性の色の斜めの板に、名前と★（上の行）と ON / OFF（下の行）</summary>
+        private static void CreateSpecialPlate(Transform safe, SerializedObject so)
+        {
+            var plate = B.CreateFramedSlant((RectTransform)safe, "SpecialPlate", Color.white, BottomLeft, SpecialPlatePosition, SpecialPlateSize);
+            var name = B.CreateLabel(plate.transform, "Name", string.Empty, SpecialNameFontSize, SpecialNamePosition, SpecialTextSize);
+            name.fontStyle = FontStyle.Bold;
+            var state = B.CreateLabel(plate.transform, "State", string.Empty, SpecialStateFontSize, SpecialStatePosition, SpecialTextSize);
+            so.FindProperty("_specialPlate").objectReferenceValue = plate.gameObject;
+            so.FindProperty("_specialPlateImage").objectReferenceValue = plate;
+            so.FindProperty("_specialName").objectReferenceValue = name;
+            so.FindProperty("_specialState").objectReferenceValue = state;
+            plate.gameObject.SetActive(false);
         }
 
         private static void CreateBanner(Transform safe, SerializedObject so)

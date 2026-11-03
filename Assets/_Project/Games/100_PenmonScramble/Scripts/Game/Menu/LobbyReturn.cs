@@ -9,6 +9,9 @@ namespace PenmonScramble.Game
 
         /// <summary>ミニゲームを選ぶ画面（ミニゲームのシーンから戻ったとき）</summary>
         MiniGames,
+
+        /// <summary>ロビー（ミニゲームの結果の「ロビーへ」。スタート画面を飛ばしてロビーに入るだけ）</summary>
+        Lobby,
     }
 
     /// <summary>

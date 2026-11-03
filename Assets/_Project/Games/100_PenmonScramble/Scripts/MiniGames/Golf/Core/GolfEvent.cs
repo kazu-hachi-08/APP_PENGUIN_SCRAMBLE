@@ -14,6 +14,12 @@ namespace PenmonScramble.Golf.Core
         Jump,
         /// <summary>浮いた球が地面に着いた</summary>
         Land,
+        /// <summary>水切りで跳ねた（Strength は池の上なら 1）</summary>
+        Skip,
+        /// <summary>特殊ショットを打った（Other は GolfSpecialKind、Strength は★）</summary>
+        Special,
+        /// <summary>雷の特殊ショットで加速した</summary>
+        Boost,
         /// <summary>カップの縁で曲がって入らなかった</summary>
         LipOut,
         /// <summary>カップに入った</summary>

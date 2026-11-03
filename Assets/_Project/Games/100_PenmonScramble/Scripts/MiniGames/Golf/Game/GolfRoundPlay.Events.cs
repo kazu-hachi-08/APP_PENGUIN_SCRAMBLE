@@ -1,10 +1,14 @@
+using PenmonScramble.Game;
 using PenmonScramble.Golf.Core;
 using UnityEngine;
 
 namespace PenmonScramble.Golf.Game
 {
-    /// <summary>ホールで起きたことの見せ方: 音・知らせ・打つ子の反応（喜ぶ・頭を抱える）・バンパーが弾む・水しぶき・旗が跳ねる</summary>
-    public partial class GolfTestHolePlay
+    /// <summary>
+    /// ホールで起きたことの見せ方: 音・知らせ・打つ子の反応（喜ぶ・頭を抱える）・バンパーが弾む・水しぶき・旗が跳ねる・
+    /// 特殊ショット（名前の知らせ・水切りの輪・雷の輪）
+    /// </summary>
+    public partial class GolfRoundPlay
     {
         // 喜ぶ・頭を抱えるのを見せる秒（この間は次の番を始めない）
         private const float CheerHoldSeconds = 2.2f;
@@ -24,6 +28,17 @@ namespace PenmonScramble.Golf.Game
                 case GolfEventKind.Shot:
                     GolfSounds.PlayShot(e.Strength);
                     _view.Shooter.OnShot(e.Strength);
+                    break;
+                case GolfEventKind.Special:
+                    OnSpecial(e);
+                    break;
+                case GolfEventKind.Boost:
+                    GolfSounds.Play(GolfSound.Boost);
+                    _view.BoostAt(e.Position);
+                    break;
+                case GolfEventKind.Skip:
+                    GolfSounds.Play(e.Strength > 0f ? GolfSound.Splash : GolfSound.Skip);
+                    _view.SkipAt(e.Position, e.Strength > 0f);
                     break;
                 case GolfEventKind.WallHit:
                     GolfSounds.PlayWall(e.Strength);
@@ -51,26 +66,32 @@ namespace PenmonScramble.Golf.Game
                 case GolfEventKind.TurnStart:
                     OnTurnStart(e);
                     break;
-                case GolfEventKind.HoleFinished:
-                    _hud.Flash("ホール終了！\nSpace / LB でもう一度", Color.white, 30f);
-                    break;
             }
+        }
+
+        /// <summary>特殊ショットの名前を、打った子の属性の色で出す</summary>
+        private void OnSpecial(GolfEvent e)
+        {
+            var kind = (GolfSpecialKind)e.Other;
+            GolfSounds.Play(GolfSound.Special);
+            var color = PenguinPalette.ElementColor(_teams[e.Player].Current.Element);
+            _hud.Flash($"{GolfSpecial.NameOf(kind)}！", Color.Lerp(color, Color.white, 0.35f), MessageSeconds);
         }
 
         private void OnCupIn(GolfEvent e)
         {
             GolfSounds.Play(GolfSound.CupIn);
             _view.CelebrateCup();
-            var strokes = _world.Strokes(e.Player);
-            var name = GolfScoreNames.ForStrokes(strokes, _world.Hole.Par);
+            var strokes = World.Strokes(e.Player);
+            var name = GolfScoreNames.ForStrokes(strokes, World.Hole.Par);
             _hud.Flash($"{name}！", GoodColor, MessageSeconds + 0.6f);
             // 打った本人が入れたときだけ喜ぶ（弾かれて入った人の子はいま出ていない）
-            if (e.Player != _world.CurrentPlayer)
+            if (e.Player != World.CurrentPlayer)
             {
                 return;
             }
 
-            var cup = _view.GroundPoint(_world.Hole.Cup);
+            var cup = _view.GroundPoint(World.Hole.Cup);
             var toCamera = Camera.main != null ? Camera.main.transform.position - cup : Vector3.back;
             toCamera.y = 0f;
             var at = cup + (toCamera.sqrMagnitude > 0f ? toCamera.normalized : Vector3.back) * CheerDistance;
@@ -82,7 +103,7 @@ namespace PenmonScramble.Golf.Game
         {
             GolfSounds.Play(GolfSound.Splash);
             _view.SplashAt(e.Position);
-            if (e.Player != _world.CurrentPlayer)
+            if (e.Player != World.CurrentPlayer)
             {
                 _hud.Flash($"{GolfSeats.Label(e.Player)} の球が落ちた（もとの位置へ）", BadColor, MessageSeconds);
                 return;
@@ -97,6 +118,8 @@ namespace PenmonScramble.Golf.Game
         private void OnTurnStart(GolfEvent e)
         {
             _camera.ResetOrbit();
+            _control.ResetForTurn();
+            _view.MeltIce();
             _turnBanner = _teams.Count > 1 ? e.Player : -1;
         }
 

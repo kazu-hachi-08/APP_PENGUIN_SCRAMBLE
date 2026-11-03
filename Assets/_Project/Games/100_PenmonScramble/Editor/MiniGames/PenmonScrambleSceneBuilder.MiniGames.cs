@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ミニゲームを選ぶ画面（MiniGameHubScreen）: 1段目はミニゲームのカードの列、2段目はコース選び（◀ ▶・ベスト・鍵）と「ひとりで」。
+    /// ミニゲームを選ぶ画面（MiniGameHubScreen）: 1段目はミニゲームのカードの列、2段目はコース選び（◀ ▶・ベスト・鍵・中身・報酬）と「ひとりで」。
     /// ロビーの左の列の「ミニゲーム」から開く（ボタンは CreateTitleMenu が作ってつなぐ）。
     /// ミニゲームのシーンは各ミニゲームの SceneBuilder（GolfSceneBuilder など）
     /// </summary>
@@ -38,20 +38,27 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 HubDescPosition = new Vector2(0f, 330f);
         private static readonly Vector2 HubDescSize = new Vector2(1400f, 70f);
         private const int HubDescFontSize = 40;
-        private static readonly Vector2 CourseCardPosition = new Vector2(0f, 20f);
-        private static readonly Vector2 CourseCardSize = new Vector2(1000f, 420f);
+        private static readonly Vector2 CourseCardPosition = new Vector2(0f, 40f);
+        private static readonly Vector2 CourseCardSize = new Vector2(1000f, 500f);
         private const float CourseArrowX = 410f;
         private static readonly Vector2 CourseArrowSize = new Vector2(110f, 220f);
         // 枠の高さは字の行の高さ（字の大きさの 1.45 倍）が収まるように
-        private static readonly Vector2 CourseNoPosition = new Vector2(0f, 140f);
+        private static readonly Vector2 CourseNoPosition = new Vector2(0f, 180f);
         private static readonly Vector2 CourseNoSize = new Vector2(680f, 70f);
-        private static readonly Vector2 CourseNamePosition = new Vector2(0f, 30f);
+        private static readonly Vector2 CourseNamePosition = new Vector2(0f, 85f);
         private static readonly Vector2 CourseNameSize = new Vector2(680f, 120f);
-        private static readonly Vector2 CourseInfoPosition = new Vector2(0f, -95f);
+        private static readonly Vector2 CourseInfoPosition = new Vector2(0f, -20f);
         private static readonly Vector2 CourseInfoSize = new Vector2(680f, 70f);
+        private static readonly Vector2 CourseLayoutPosition = new Vector2(0f, -95f);
+        private static readonly Vector2 CourseLayoutSize = new Vector2(700f, 56f);
+        private static readonly Vector2 CourseRewardPosition = new Vector2(0f, -170f);
+        private static readonly Vector2 CourseRewardSize = new Vector2(760f, 84f);
         private const int CourseNoFontSize = 40;
         private const int CourseNameFontSize = 80;
         private const int CourseInfoFontSize = 42;
+        private const int CourseLayoutFontSize = 36;
+        private const int CourseRewardFontSize = 28;
+        private static readonly Color CourseRewardColor = new Color(1f, 1f, 1f, 0.8f);
         private static readonly Vector2 HubSoloPosition = new Vector2(0f, -340f);
         private static readonly Vector2 HubSoloSize = new Vector2(420f, 160f);
         private const string HubSoloLabel = "ひとりで";
@@ -86,6 +93,9 @@ namespace PenmonScramble.Editor
             name.fontStyle = FontStyle.Bold;
             var info = CreateLabel(card, "Info", string.Empty, CourseInfoFontSize, CourseInfoPosition, CourseInfoSize);
             info.fontStyle = FontStyle.Bold;
+            var layout = CreateLabel(card, "Layout", string.Empty, CourseLayoutFontSize, CourseLayoutPosition, CourseLayoutSize);
+            var reward = CreateLabel(card, "Reward", string.Empty, CourseRewardFontSize, CourseRewardPosition, CourseRewardSize);
+            reward.color = CourseRewardColor;
             var prev = CreateTitleButton(card, "PrevCourse", "◀", new Vector2(-CourseArrowX, 0f), CourseArrowSize, ArrowColor, MenuFontSize);
             var next = CreateTitleButton(card, "NextCourse", "▶", new Vector2(CourseArrowX, 0f), CourseArrowSize, ArrowColor, MenuFontSize);
             var solo = CreateTitleButton(courses.transform, "Solo", HubSoloLabel, HubSoloPosition, HubSoloSize, SoloColor, SoloButtonFontSize);
@@ -105,6 +115,8 @@ namespace PenmonScramble.Editor
             so.FindProperty("_courseNoText").objectReferenceValue = no;
             so.FindProperty("_courseNameText").objectReferenceValue = name;
             so.FindProperty("_courseInfoText").objectReferenceValue = info;
+            so.FindProperty("_courseLayoutText").objectReferenceValue = layout;
+            so.FindProperty("_rewardText").objectReferenceValue = reward;
             so.FindProperty("_prevCourseButton").objectReferenceValue = prev;
             so.FindProperty("_nextCourseButton").objectReferenceValue = next;
             so.FindProperty("_soloButton").objectReferenceValue = solo;

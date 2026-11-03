@@ -8,9 +8,9 @@ using UnityEngine.UI;
 namespace PenmonScramble.Golf.Game
 {
     /// <summary>
-    /// ゴルフのシーンの入口。ミニゲーム画面から来たときは、まだコースが無いので名前と「もどる」だけ。
-    /// エディタの Tools/PenmonScramble/Golf から開いたときは試しの1ホールを遊ぶ（Docs/MINIGAME_GOLF_PLAN.md フェーズ 2・3）。
-    /// 「もどる」/ Esc で本編のシーンのミニゲーム画面へ戻る
+    /// ゴルフのシーンの入口。ミニゲーム画面から来たときは、選んだコースをひとりで回る（GolfRoundPlay）。
+    /// まだ作っていないコースなら「準備中」の板と「もどる」だけ。
+    /// エディタの Tools/PenmonScramble/Golf から開いたときは試しの1ホールを遊ぶ（記録には書かない）
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に Esc を見る
     [DefaultExecutionOrder(50)]
@@ -19,16 +19,20 @@ namespace PenmonScramble.Golf.Game
         [SerializeField] private GameObject _placeholder;
         [SerializeField] private Text _courseText;
         [SerializeField] private Button _backButton;
-        [Tooltip("遊んでいる間の右上の「もどる」（スマホで Esc の代わり）")]
-        [SerializeField] private Button _playBackButton;
-        [SerializeField] private GolfTestHolePlay _testHole;
+        [SerializeField] private GolfRoundPlay _play;
 
         private bool _leaving;
+
+        /// <summary>ミニゲーム画面のコース選びに、ゴルフのコースの中身（ホールとパー・報酬）を出せるようにする</summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RegisterGuide()
+        {
+            MiniGameGuides.Register(MiniGameTable.GolfId, new GolfCourseGuide());
+        }
 
         private void Awake()
         {
             _backButton.onClick.AddListener(Leave);
-            _playBackButton.onClick.AddListener(Leave);
         }
 
         private void Start()
@@ -36,18 +40,31 @@ namespace PenmonScramble.Golf.Game
             MiniGameLaunch.EnsureSelected(MiniGameTable.GolfId);
             if (GolfDevRequest.TryTakeTestHole(out var players))
             {
-                _placeholder.SetActive(false);
-                _testHole.Begin(players);
+                StartRound(GolfCourseTable.TestCourse(), players, record: false);
                 return;
             }
 
-            var course = MiniGameLaunch.Game?.Course(MiniGameLaunch.CourseNo);
-            _courseText.text = course != null ? $"コース {course.No}  {course.Name}（{GolfRules.HolesPerCourse}ホール）" : string.Empty;
+            var course = GolfCourseTable.Get(MiniGameLaunch.CourseNo);
+            if (course != null)
+            {
+                StartRound(course, 1, record: true);
+                return;
+            }
+
+            var row = MiniGameLaunch.Game?.Course(MiniGameLaunch.CourseNo);
+            _courseText.text = row != null ? $"コース {row.No}  {row.Name}" : string.Empty;
+        }
+
+        private void StartRound(GolfCourseDef course, int players, bool record)
+        {
+            _placeholder.SetActive(false);
+            _play.Begin(course, players, record);
         }
 
         private void Update()
         {
-            if (InputManager.HasInstance && InputManager.Instance.IsPauseDown)
+            // 遊んでいる間の Esc はメニュー（StageMenu）が受ける
+            if (_placeholder.activeSelf && InputManager.HasInstance && InputManager.Instance.IsPauseDown)
             {
                 Leave();
             }
