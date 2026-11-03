@@ -76,17 +76,23 @@ namespace PenmonScramble.Game
         private void ShowProfile()
         {
             CreatureArt.ShowFace(_face, _species.No);
-            _titleText.text = $"{PenguinLabels.ColoredStars(_species.Stars)} {_species.Name}";
+            _titleText.text = TitleOf(_species);
             _elementChip.color = PenguinPalette.ElementColor(_species.Element);
             _elementText.text = PenguinLabels.ElementName(_species.Element);
             _personalityText.text = SpeciesTexts.Personality(_species.No);
             var stats = PlayerRecord.StatsOf(_penguin);
-            _statsText.text = $"パワー <b>{_penguin.Power}</b><size={CapFontSize}> / 上限 {PlayerRecord.PowerCap(_penguin)}</size>　HP <b>{stats.MaxHp}</b>";
+            _statsText.text = StatsLine(_penguin.Power, PlayerRecord.PowerCap(_penguin), stats.MaxHp);
             _limitText.text = PenguinLabels.LimitPips(_penguin.limitBreak);
             _hpBar.fillAmount = SpeciesProfile.HpRatio(_species);
             _attackBar.fillAmount = SpeciesProfile.AttackRatio(_species);
             _speedBar.fillAmount = SpeciesProfile.SpeedRatio(_species);
         }
+
+        // 文の作り方は、エディタの UiLayoutCheck が全種類の文を枠に当てて測るときにも使う
+        public static string TitleOf(SpeciesDef species) => $"{PenguinLabels.ColoredStars(species.Stars)} {species.Name}";
+
+        public static string StatsLine(int power, int cap, int hp) =>
+            $"パワー <b>{power}</b><size={CapFontSize}> / 上限 {cap}</size>　HP <b>{hp}</b>";
 
         private void ShowSkills()
         {

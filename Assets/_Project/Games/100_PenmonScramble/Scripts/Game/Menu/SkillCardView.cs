@@ -32,6 +32,23 @@ namespace PenmonScramble.Game
 
         private Action<SkillCardView> _clicked;
 
+        /// <summary>カードに入る文。エディタの UiLayoutCheck も、全種類の文がカードに収まるかをこれで測る</summary>
+        public readonly struct Texts
+        {
+            public readonly string Name;
+            public readonly string Description;
+            public readonly string RatingLabels;
+            public readonly string Ratings;
+
+            public Texts(string name, string description, string ratingLabels, string ratings)
+            {
+                Name = name;
+                Description = description;
+                RatingLabels = ratingLabels;
+                Ratings = ratings;
+            }
+        }
+
         private void Awake()
         {
             _button.onClick.AddListener(() => _clicked?.Invoke(this));
@@ -45,38 +62,46 @@ namespace PenmonScramble.Game
         /// <param name="slot">0 が技1、SkillPractice.SpecialSlot が必殺技</param>
         public void Show(SpeciesDef species, int slot, bool selected)
         {
+            var special = slot == SkillPractice.SpecialSlot;
+            var texts = TextsFor(species, slot);
+            _nameText.text = texts.Name;
+            _descriptionText.text = texts.Description;
+            _ratingLabelsText.text = texts.RatingLabels;
+            _ratingsText.text = texts.Ratings;
+            _icon.sprite = SkillShapeIcons.Get(special ? SpecialMoves.For(species.Element).Shape : species.GetSkill(slot).Shape);
+            _icon.color = special ? _specialIconColor : PenguinPalette.ElementColor(species.Element);
+            _frame.color = special
+                ? selected ? _specialSelectedColor : _specialNormalColor
+                : selected ? _selectedColor : _normalColor;
+        }
+
+        public static Texts TextsFor(SpeciesDef species, int slot)
+        {
             if (slot == SkillPractice.SpecialSlot)
             {
-                ShowSpecial(species.Element, selected);
-                return;
+                return SpecialTexts(species.Element);
             }
 
             var skill = species.GetSkill(slot);
-            _icon.sprite = SkillShapeIcons.Get(skill.Shape);
-            _icon.color = PenguinPalette.ElementColor(species.Element);
-            _nameText.text = $"技{slot + 1}　<b>{skill.Name}</b>";
-            _descriptionText.text = $"<color={ShapeColor}>［{SkillProfile.ShapeLabel(skill)}］</color>{SpeciesTexts.Skill(species.No, slot)}";
-            _ratingLabelsText.text = SkillRatingLabels;
-            _ratingsText.text =
+            return new Texts(
+                $"技{slot + 1}　<b>{skill.Name}</b>",
+                $"<color={ShapeColor}>［{SkillProfile.ShapeLabel(skill)}］</color>{SpeciesTexts.Skill(species.No, slot)}",
+                SkillRatingLabels,
                 $"{PenguinLabels.Pips(SkillProfile.PowerRating(skill), SkillProfile.MaxRating)}\n" +
                 $"{PenguinLabels.Pips(SkillProfile.QuicknessRating(skill), SkillProfile.MaxRating)}\n" +
-                $"{PenguinLabels.Pips(SkillProfile.AreaRating(skill), SkillProfile.MaxRating)}";
-            _frame.color = selected ? _selectedColor : _normalColor;
+                $"{PenguinLabels.Pips(SkillProfile.AreaRating(skill), SkillProfile.MaxRating)}");
         }
 
-        private void ShowSpecial(Element element, bool selected)
+        private static Texts SpecialTexts(Element element)
         {
             var special = SpecialMoves.For(element);
-            _icon.sprite = SkillShapeIcons.Get(special.Shape);
-            _icon.color = _specialIconColor;
-            _nameText.text = $"必殺　<b>{special.Name}</b>";
-            _descriptionText.text = $"<color={ShapeColor}>［ゲージ満タンで1回］</color>{SpeciesTexts.Special(element)}";
             // 必殺技はゲージで出すので「出しやすさ」は比べられない。範囲は画面全体に効くものがあるので言葉で出す
-            _ratingLabelsText.text = SpecialRatingLabels;
-            _ratingsText.text =
+            return new Texts(
+                $"必殺　<b>{special.Name}</b>",
+                $"<color={ShapeColor}>［ゲージ満タンで1回］</color>{SpeciesTexts.Special(element)}",
+                SpecialRatingLabels,
                 $"{PenguinLabels.Pips(SkillProfile.PowerRating(special), SkillProfile.MaxRating)}\n" +
-                SkillProfile.SpecialReach(element);
-            _frame.color = selected ? _specialSelectedColor : _specialNormalColor;
+                SkillProfile.SpecialReach(element));
         }
     }
 }

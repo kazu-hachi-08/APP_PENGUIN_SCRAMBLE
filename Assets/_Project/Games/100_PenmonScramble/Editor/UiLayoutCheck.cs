@@ -13,7 +13,7 @@ namespace PenmonScramble.Editor
     /// SceneBuilder は位置と大きさを数値で決めるので、文字数やフォントが変わってもエディタ上では気づきにくい。
     /// 実行時は GameFontApplier が日本語フォントへ差し替えて字の幅・行の高さが変わるので、そのフォントで測る
     /// </summary>
-    public static class UiLayoutCheck
+    public static partial class UiLayoutCheck
     {
         // 縁取り（Outline）や丸めのぶんの、はみ出しとみなさない余裕（画面の単位）
         private const float Tolerance = 4f;
@@ -29,10 +29,11 @@ namespace PenmonScramble.Editor
             {
                 if (string.IsNullOrEmpty(text.text) || EditorUtility.IsPersistent(text)) continue;
                 CheckFit(text, text.text, font, issues);
-                CheckOverlap(text, font, issues);
+                CheckOverlap(text, NoSamples, font, issues);
             }
 
             CheckRulePages(font, issues);
+            CheckPenmonScreen(font, issues);
 
             if (issues.Count == 0)
             {
@@ -77,30 +78,38 @@ namespace PenmonScramble.Editor
 
             if (text.horizontalOverflow == HorizontalWrapMode.Overflow && oneLine.width > size.x + Tolerance)
             {
-                issues.Add($"{PathOf(text)}: 横にはみ出す（文字 {oneLine.width:0} > 枠 {size.x:0}）「{Short(value)}」");
+                AddOnce(issues, $"{PathOf(text)}: 横にはみ出す（文字 {oneLine.width:0} > 枠 {size.x:0}）「{Short(value)}」");
             }
             else if (text.horizontalOverflow == HorizontalWrapMode.Wrap && wrapped.lines > oneLine.lines)
             {
-                issues.Add($"{PathOf(text)}: 幅が足りず途中で折り返す（{oneLine.lines} 行 → {wrapped.lines} 行）「{Short(value)}」");
+                AddOnce(issues, $"{PathOf(text)}: 幅が足りず途中で折り返す（{oneLine.lines} 行 → {wrapped.lines} 行）「{Short(value)}」");
             }
 
             if (wrapped.height > size.y + Tolerance)
             {
                 var result = text.verticalOverflow == VerticalWrapMode.Truncate && text.resizeTextForBestFit ? "切れて消える" : "はみ出す";
-                issues.Add($"{PathOf(text)}: 縦に{result}（文字 {wrapped.height:0} > 枠 {size.y:0}）「{Short(value)}」");
+                AddOnce(issues, $"{PathOf(text)}: 縦に{result}（文字 {wrapped.height:0} > 枠 {size.y:0}）「{Short(value)}」");
             }
         }
+
+        private static readonly Dictionary<Text, string> NoSamples = new Dictionary<Text, string>();
+
+        /// <summary>シーンでは空で、実行時に入る文の見本（なければシーンの文のまま）</summary>
+        private static string ValueOf(Text text, Dictionary<Text, string> samples) =>
+            samples.TryGetValue(text, out var sample) ? sample : text.text;
 
         /// <summary>
         /// 実際に字が出る範囲が、同じ親の下のほかの部品に重なっていないか。わざと重ねているものは知らせない:
         /// 文字を丸ごと含む部品（背景の板）・ふだんは透明で一瞬だけ光る部品・
-        /// 文字の板の中にある部品（ボタンの面やアイコンの上に載せた名札）・文字の板が上に重なっている部品（枠の角に載せた札）
+        /// 文字の板の中にある部品（ボタンの面やアイコンの上に載せた名札）・文字の板が上に重なっている部品（枠の角に載せた札）。
+        /// samples の文字は、シーンの文の代わりに見本の文で測る
         /// </summary>
-        private static void CheckOverlap(Text text, Font font, List<string> issues)
+        private static void CheckOverlap(Text text, Dictionary<Text, string> samples, Font font, List<string> issues)
         {
             var parent = text.transform.parent;
             if (parent == null) return;
-            var glyphs = GlyphRect(text, font);
+            var value = ValueOf(text, samples);
+            var glyphs = GlyphRect(text, value, font);
             if (glyphs.width <= 0f) return;
             var backdrops = Backdrops(text, parent, glyphs);
 
@@ -110,7 +119,7 @@ namespace PenmonScramble.Editor
                 if (!IsVisible(sibling)) continue;
 
                 var other = sibling.GetComponent<Text>() is Text otherText
-                    ? GlyphRect(otherText, font)
+                    ? GlyphRect(otherText, ValueOf(otherText, samples), font)
                     : RectIn(sibling as RectTransform, parent);
                 if (other.width <= 0f || Contains(other, glyphs)) continue;
                 if (IsUnderOrInsideBackdrop(sibling, other, backdrops)) continue;
@@ -118,7 +127,7 @@ namespace PenmonScramble.Editor
                 var overlap = Intersect(glyphs, other);
                 if (overlap.width > OverlapTolerance && overlap.height > OverlapTolerance)
                 {
-                    issues.Add($"{PathOf(text)}: 「{sibling.name}」に重なる（{overlap.width:0} x {overlap.height:0}）「{Short(text.text)}」");
+                    AddOnce(issues, $"{PathOf(text)}: 「{sibling.name}」に重なる（{overlap.width:0} x {overlap.height:0}）「{Short(value)}」");
                 }
             }
         }
@@ -161,12 +170,13 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>字が出る範囲（親の座標で）。Best Fit の文字はいちばん小さくしたときで測る（それでも重なるなら必ず重なる）</summary>
-        private static Rect GlyphRect(Text text, Font font)
+        private static Rect GlyphRect(Text text, string value, Font font)
         {
+            if (string.IsNullOrEmpty(value)) return Rect.zero;
             var rect = text.rectTransform;
             var settings = Settings(text, font, rect.rect.size);
             var generator = new TextGenerator();
-            generator.Populate(text.text, settings);
+            generator.Populate(value, settings);
             if (generator.vertexCount == 0) return Rect.zero;
 
             var min = Vector2.positiveInfinity;

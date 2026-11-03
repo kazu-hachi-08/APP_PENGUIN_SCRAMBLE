@@ -52,12 +52,18 @@ namespace PenmonScramble.Game
             return $"<color={LimitOnColor}>{new string(LimitOn, on)}</color><color={LimitOffColor}>{new string(LimitOff, Balance.MaxLimitBreak - on)}</color>";
         }
 
-        /// <summary>カードに出す3行。知らない種類（新しい版で増えた子）は「？」</summary>
-        public static string Card(OwnedPenguin penguin)
+        /// <summary>
+        /// カードに出す3行（★・名前・パワー）。行ごとに別の文字の枠へ入れ、長い名前やパワーはその行だけ縮める
+        /// （1つの枠に3行まとめると、折り返した行が上下の行を押し出して枠からはみ出す）。知らない種類（新しい版で増えた子）は「？」
+        /// </summary>
+        public static (string stars, string name, string power) CardLines(OwnedPenguin penguin)
         {
             var species = SpeciesTable.Get(penguin.speciesNo);
-            var name = species != null ? $"{Stars(species.Stars)}\n{species.Name}" : "？\n？";
-            return $"{name}\nパワー {penguin.Power}";
+            return species != null
+                ? (Stars(species.Stars), species.Name, CardPower(penguin.Power))
+                : ("？", "？", CardPower(penguin.Power));
         }
+
+        public static string CardPower(int power) => $"パワー {power}";
     }
 }

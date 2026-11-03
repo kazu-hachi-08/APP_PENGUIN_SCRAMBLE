@@ -29,28 +29,30 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 PenmonHeadingPosition = new Vector2(-540f, 472f);
         private static readonly Vector2 PenmonHeadingSize = new Vector2(260f, 90f);
         private const int PenmonHeadingFontSize = 56;
-        private static readonly Vector2 CountPosition = new Vector2(-290f, 472f);
-        private static readonly Vector2 CountSize = new Vector2(280f, 70f);
+        private static readonly Vector2 CountPosition = new Vector2(-270f, 472f);
+        private static readonly Vector2 CountSize = new Vector2(260f, 70f);
         private const int CountFontSize = 40;
         private static readonly Vector2 SortPosition = new Vector2(-20f, 472f);
         private static readonly Vector2 SortSize = new Vector2(220f, 84f);
 
-        // 左: 編成の帯・案内・一覧（左の列の中心は x = -410、幅 1060）
-        private static readonly Vector2 BandPosition = new Vector2(-410f, 300f);
-        private static readonly Vector2 BandSize = new Vector2(1060f, 210f);
-        private static readonly Vector2 BandLabelPosition = new Vector2(-885f, 300f);
+        // 左: 編成の帯・案内・一覧（左の列の中心は x = -410、幅 1060）。部品どうしは 10px 以上あける
+        private static readonly Vector2 BandPosition = new Vector2(-410f, 305f);
+        private static readonly Vector2 BandSize = new Vector2(1060f, 220f);
+        private static readonly Vector2 BandLabelPosition = new Vector2(-885f, 305f);
         private static readonly Vector2 BandLabelSize = new Vector2(80f, 170f);
         private const int BandLabelFontSize = 44;
         private static readonly float[] PartySlotX = { -685f, -370f, -55f };
-        private static readonly Vector2 PartySlotSize = new Vector2(290f, 170f);
-        private static readonly Vector2 LeadTagOffset = new Vector2(90f, 85f);
-        private static readonly Vector2 LeadTagSize = new Vector2(100f, 40f);
+        // 枠は帯の下寄せにして、上に「先頭」の札を置く隙間を作る（札が枠の中の★や名前にかぶらないように）
+        private const float PartySlotY = 291f;
+        private static readonly Vector2 PartySlotSize = new Vector2(290f, 150f);
+        private const float LeadTagGap = 4f;
+        private static readonly Vector2 LeadTagSize = new Vector2(100f, 36f);
         private const int LeadTagFontSize = 26;
-        private static readonly Vector2 HintPosition = new Vector2(-410f, 168f);
-        private static readonly Vector2 HintSize = new Vector2(1060f, 44f);
+        private static readonly Vector2 HintPosition = new Vector2(-410f, 167f);
+        private static readonly Vector2 HintSize = new Vector2(1060f, 42f);
         private const int HintFontSize = 28;
-        private static readonly Vector2 GridPosition = new Vector2(-410f, -183f);
-        private static readonly Vector2 GridSize = new Vector2(1060f, 680f);
+        private static readonly Vector2 GridPosition = new Vector2(-410f, -193f);
+        private static readonly Vector2 GridSize = new Vector2(1060f, 658f);
         private static readonly Vector2 PenguinCardSize = new Vector2(255f, 130f);
         private const float CardSpacing = 10f;
         private const int CardColumns = 4;
@@ -64,45 +66,53 @@ namespace PenmonScramble.Editor
         private const int BadgeFontSize = 30;
         private const int ListCardFontSize = 26;
         private const int SlotCardFontSize = 30;
+        // ★とパワーは名前より小さく添える（主役は名前）
+        private const float CardStarsFontRatio = 0.8f;
+        private const float CardPowerFontRatio = 0.85f;
+        // 長い名前・桁の多いパワーは、その行だけこの割合まで縮める
+        private const float CardMinFontRatio = 0.7f;
         private const int CardLimitFontSize = 18;
         private const float CardLimitHeight = 22f;
         private const float CardTagHeight = 26f;
         private const int CardTagFontSize = 19;
         private static readonly Color LimitUpTagColor = new Color(1f, 0.78f, 0.25f);
-        // 右: 図鑑カード。中身の位置はパネルの中心から
+        // 右: 図鑑カード。中身の位置はパネルの中心から（パネルの高さ 946 = 上下 ±473）
         private static readonly Vector2 DetailPosition = new Vector2(545f, -52f);
         private static readonly Vector2 DetailSize = new Vector2(790f, 946f);
         private static readonly Vector2 FacePosition = new Vector2(-300f, 365f);
         private const float FaceSize = 150f;
-        private static readonly Vector2 TitlePosition = new Vector2(60f, 404f);
-        private static readonly Vector2 TitleSize = new Vector2(560f, 64f);
+        // 顔の右の文字の列。顔の右の端（-225）から 25px あけて始める
+        private static readonly Vector2 TitlePosition = new Vector2(70f, 404f);
+        private static readonly Vector2 TitleSize = new Vector2(540f, 64f);
         private const int TitleFontSize = 48;
-        private static readonly Vector2 ElementChipPosition = new Vector2(-170f, 340f);
+        private static readonly Vector2 ElementChipPosition = new Vector2(-155f, 340f);
         private static readonly Vector2 ElementChipSize = new Vector2(90f, 46f);
         private const int ElementFontSize = 30;
-        private static readonly Vector2 PersonalityPosition = new Vector2(110f, 340f);
-        private static readonly Vector2 PersonalitySize = new Vector2(460f, 46f);
+        private static readonly Vector2 PersonalityPosition = new Vector2(125f, 340f);
+        private static readonly Vector2 PersonalitySize = new Vector2(450f, 46f);
         private const int PersonalityFontSize = 28;
-        private static readonly Vector2 StatsPosition = new Vector2(60f, 284f);
-        private static readonly Vector2 StatsSize = new Vector2(560f, 50f);
+        private static readonly Vector2 StatsPosition = new Vector2(70f, 284f);
+        private static readonly Vector2 StatsSize = new Vector2(540f, 50f);
         private const int StatsFontSize = 34;
-        private static readonly float[] StatBarX = { -255f, 0f, 255f };
-        private const float StatLabelY = 215f;
-        private const float StatBarY = 185f;
-        private static readonly Vector2 StatLabelSize = new Vector2(230f, 36f);
-        private static readonly Vector2 StatBarSize = new Vector2(230f, 20f);
+        // 体力・攻撃・速さは、見出しと棒を横に並べて1段にする（2段だと下の技のカードの場所が足りない）
+        private static readonly float[] StatColumnX = { -255f, 0f, 255f };
+        private const float StatColumnWidth = 230f;
+        private const float StatRowY = 220f;
+        private static readonly Vector2 StatLabelSize = new Vector2(56f, 38f);
+        private const float StatLabelGap = 6f;
+        private const float StatBarHeight = 20f;
         private const int StatLabelFontSize = 26;
-        // 技1・技2・必殺技の3枚のカードが下のボタンの上に収まるよう、小窓は少し低くして上へ寄せる
-        private static readonly Vector2 DemoPosition = new Vector2(0f, 55f);
-        private static readonly Vector2 DemoSize = new Vector2(760f, 216f);
+        // 小窓・技のカード3枚・ボタンを、上から 12 / 8 / 12px の隙間で積む（ボタンの下はパネルの端まで 18px）
+        private static readonly Vector2 DemoPosition = new Vector2(0f, 83f);
+        private static readonly Vector2 DemoSize = new Vector2(760f, 200f);
         private const float DemoFrameWidth = 6f;
         private static readonly string[] SkillCardNames = { "Skill1", "Skill2", "Special" };
-        private static readonly float[] SkillCardY = { -113f, -213f, -313f };
-        private static readonly Vector2 SkillCardSize = new Vector2(760f, 92f);
+        private static readonly float[] SkillCardY = { -87f, -199f, -311f };
+        private static readonly Vector2 SkillCardSize = new Vector2(760f, 104f);
         // 編成に入れる・強化・売る
         private static readonly float[] DetailButtonX = { -255f, 0f, 255f };
         private const float DetailButtonY = -415f;
-        private static readonly Vector2 DetailButtonSize = new Vector2(240f, 96f);
+        private static readonly Vector2 DetailButtonSize = new Vector2(240f, 80f);
         private const int DetailButtonFontSize = 32;
         private static readonly Color EnhanceColor = new Color(0.62f, 0.40f, 0.90f);
         // 顔の下の上限解放の◆
@@ -111,27 +121,32 @@ namespace PenmonScramble.Editor
         private const int DetailLimitFontSize = 28;
         private static readonly Vector2 EmptyTextSize = new Vector2(700f, 100f);
 
-        // 技のカードの中身（カードの中心から）
+        // 技のカードの中身（カードの中心から。カードは 760 x 104 = 左右 ±380・上下 ±52）
         private static readonly Vector2 SkillIconPosition = new Vector2(-325f, 0f);
         private const float SkillIconSize = 78f;
-        private static readonly Vector2 SkillNamePosition = new Vector2(-37f, 24f);
-        private static readonly Vector2 SkillNameSize = new Vector2(475f, 38f);
-        private const int SkillNameFontSize = 30;
-        private static readonly Vector2 SkillTextPosition = new Vector2(-37f, -18f);
-        private static readonly Vector2 SkillTextSize = new Vector2(475f, 52f);
-        private const int SkillTextFontSize = 22;
-        private static readonly Vector2 RatingLabelPosition = new Vector2(262f, 0f);
-        private static readonly Vector2 RatingLabelSize = new Vector2(110f, 84f);
-        private static readonly Vector2 RatingPipsPosition = new Vector2(352f, 0f);
-        private static readonly Vector2 RatingPipsSize = new Vector2(70f, 84f);
-        private const int RatingFontSize = 20;
+        // 名前と説明の列は、アイコンの右（-274）から●の列の手前（200）まで
+        private static readonly Vector2 SkillNamePosition = new Vector2(-37f, 28f);
+        private static readonly Vector2 SkillNameSize = new Vector2(474f, 38f);
+        private const int SkillNameFontSize = 26;
+        private const int SkillNameMinFontSize = 20;
+        // 説明は［形・特徴］と合わせてどの技も2行になるので、2行ぶんの高さを取り、それでも長ければ縮める
+        private static readonly Vector2 SkillTextPosition = new Vector2(-37f, -21f);
+        private static readonly Vector2 SkillTextSize = new Vector2(474f, 58f);
+        private const int SkillTextFontSize = 20;
+        private const int SkillTextMinFontSize = 16;
+        // ●の列はカードの右の端から 10px 内側に収める
+        private static readonly Vector2 RatingLabelPosition = new Vector2(258f, 0f);
+        private static readonly Vector2 RatingLabelSize = new Vector2(96f, 84f);
+        private static readonly Vector2 RatingPipsPosition = new Vector2(340f, 0f);
+        private static readonly Vector2 RatingPipsSize = new Vector2(60f, 84f);
+        private const int RatingFontSize = 18;
 
-        // 実演の小窓の中の、必殺技のカットインの帯（小窓の高さ 216 に合わせて縮めたもの）
-        private const float DemoCutInHeight = 120f;
-        private const float DemoCutInFaceSize = 100f;
+        // 実演の小窓の中の、必殺技のカットインの帯（小窓の高さ 200 に合わせて縮めたもの）
+        private const float DemoCutInHeight = 112f;
+        private const float DemoCutInFaceSize = 92f;
         private const float DemoCutInFaceX = 90f;
         private const int DemoCutInFontSize = 24;
-        private const int DemoCutInNameFontSize = 44;
+        private const int DemoCutInNameFontSize = 42;
 
         private static PenguinListScreen CreatePenguinListScreen(Transform canvas)
         {
@@ -176,7 +191,7 @@ namespace PenmonScramble.Editor
             return screen;
         }
 
-        /// <summary>色の付いた帯に「編成」と3枠。1番目の枠には「先頭」の札（最初に場に出る子）</summary>
+        /// <summary>色の付いた帯に「編成」と3枠。1番目の枠の上には「先頭」の札（最初に場に出る子）</summary>
         private static PenguinCard[] CreatePartyBand(Transform parent)
         {
             CreatePanel(parent, "PartyBand", BandPosition, BandSize, BandColor);
@@ -185,10 +200,12 @@ namespace PenmonScramble.Editor
             for (var i = 0; i < slots.Length; i++)
             {
                 slots[i] = CreatePenguinCard(parent, $"Slot{i + 1}", PartySlotSize, SlotCardFontSize);
-                PlaceCenter(slots[i].GetComponent<RectTransform>(), new Vector2(PartySlotX[i], BandPosition.y), PartySlotSize);
+                PlaceCenter(slots[i].GetComponent<RectTransform>(), new Vector2(PartySlotX[i], PartySlotY), PartySlotSize);
             }
 
-            var tagPosition = new Vector2(PartySlotX[0], BandPosition.y) + LeadTagOffset;
+            // 札は枠の上の辺の外に置く（枠の中に載せると、右側の★・名前の行にかぶる）
+            var tagY = PartySlotY + (PartySlotSize.y + LeadTagSize.y) * 0.5f + LeadTagGap;
+            var tagPosition = new Vector2(PartySlotX[0], tagY);
             CreatePanel(parent, "LeadTag", tagPosition, LeadTagSize, LeadColor).raycastTarget = false;
             CreatePlainText(parent, "LeadTagText", "先頭", LeadTagFontSize, tagPosition, LeadTagSize, TextAnchor.MiddleCenter, DarkTextColor).fontStyle = FontStyle.Bold;
             return slots;
@@ -242,9 +259,7 @@ namespace PenmonScramble.Editor
             var faceX = -size.x * 0.5f + faceSize * 0.5f + CardPadding;
             var body = CreateCircle(obj.transform, "Body", new Vector2(faceX, CardStripHeight * 0.5f), faceSize, Color.white);
 
-            var labelX = faceSize + CardPadding * 2f;
-            var label = CreatePlainText(obj.transform, "Label", string.Empty, fontSize,
-                new Vector2(labelX * 0.5f, CardStripHeight * 0.5f), new Vector2(size.x - labelX, size.y - CardStripHeight), TextAnchor.MiddleLeft, Color.white);
+            var (stars, nameText, power) = CreateCardLines(obj.transform, size, faceSize, fontSize);
 
             var strip = CreatePanel(obj.transform, "ElementStrip", new Vector2(0f, (CardStripHeight - size.y) * 0.5f + CardPadding * 0.5f),
                 new Vector2(size.x - CardPadding * 2f, CardStripHeight), CardStripBack);
@@ -270,7 +285,9 @@ namespace PenmonScramble.Editor
             so.FindProperty("_button").objectReferenceValue = button;
             so.FindProperty("_frame").objectReferenceValue = frame;
             so.FindProperty("_body").objectReferenceValue = body;
-            so.FindProperty("_label").objectReferenceValue = label;
+            so.FindProperty("_starsText").objectReferenceValue = stars;
+            so.FindProperty("_nameText").objectReferenceValue = nameText;
+            so.FindProperty("_powerText").objectReferenceValue = power;
             so.FindProperty("_elementStrip").objectReferenceValue = strip;
             so.FindProperty("_badge").objectReferenceValue = badge.gameObject;
             so.FindProperty("_badgeText").objectReferenceValue = badgeText;
@@ -279,6 +296,46 @@ namespace PenmonScramble.Editor
             so.FindProperty("_group").objectReferenceValue = group;
             so.ApplyModifiedProperties();
             return card;
+        }
+
+        /// <summary>
+        /// 顔の右の★・名前・パワーの3行。行ごとに1行ぶんの高さの枠にし、長い文字はその行だけ縮める
+        /// （Best Fit は枠の高さで縮めるかを決めるので、1行の高さの枠なら折り返さずに縮む）
+        /// </summary>
+        private static (Text stars, Text name, Text power) CreateCardLines(Transform card, Vector2 size, float faceSize, int fontSize)
+        {
+            var left = -size.x * 0.5f + faceSize + CardPadding * 2f;
+            var width = size.x * 0.5f - CardPadding - left;
+            var starsSize = Mathf.RoundToInt(fontSize * CardStarsFontRatio);
+            var powerSize = Mathf.RoundToInt(fontSize * CardPowerFontRatio);
+            var heights = new[] { LineHeight(starsSize), LineHeight(fontSize), LineHeight(powerSize) };
+            // 3行の束を、属性の帯を除いたカードの縦のまん中に置く
+            var top = CardStripHeight * 0.5f + (heights[0] + heights[1] + heights[2]) * 0.5f;
+            var x = left + width * 0.5f;
+
+            var stars = CreateCardLine(card, "Stars", starsSize, new Vector2(x, top - heights[0] * 0.5f), new Vector2(width, heights[0]));
+            var name = CreateCardLine(card, "Name", fontSize, new Vector2(x, top - heights[0] - heights[1] * 0.5f), new Vector2(width, heights[1]));
+            name.fontStyle = FontStyle.Bold;
+            var power = CreateCardLine(card, "Power", powerSize, new Vector2(x, top - heights[0] - heights[1] - heights[2] * 0.5f), new Vector2(width, heights[2]));
+            return (stars, name, power);
+        }
+
+        private static Text CreateCardLine(Transform card, string name, int fontSize, Vector2 position, Vector2 size)
+        {
+            var text = CreatePlainText(card, name, string.Empty, fontSize, position, size, TextAnchor.MiddleLeft, Color.white);
+            ShrinkToFit(text, Mathf.RoundToInt(fontSize * CardMinFontRatio));
+            return text;
+        }
+
+        private static float LineHeight(int fontSize) => Mathf.Ceil(fontSize * FontLineHeightRatio);
+
+        /// <summary>枠に入りきらないときだけ、minSize まで字を小さくする（Unity の Best Fit は折り返しを許さないと縮めない）</summary>
+        private static void ShrinkToFit(Text text, int minSize)
+        {
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = minSize;
+            text.resizeTextMaxSize = text.fontSize;
         }
 
         /// <summary>強化の素材の一覧で、同じ種類の子の顔の上に出す金の「上限UP」の札（ふだんは隠す）</summary>
@@ -312,9 +369,9 @@ namespace PenmonScramble.Editor
             elementText.fontStyle = FontStyle.Bold;
             var personality = CreatePlainText(content, "Personality", string.Empty, PersonalityFontSize, PersonalityPosition, PersonalitySize, TextAnchor.MiddleLeft, SubTextColor);
             var stats = CreatePlainText(content, "Stats", string.Empty, StatsFontSize, StatsPosition, StatsSize, TextAnchor.MiddleLeft, Color.white);
-            var hpBar = CreateStatBar(content, "体力", StatBarX[0]);
-            var attackBar = CreateStatBar(content, "攻撃", StatBarX[1]);
-            var speedBar = CreateStatBar(content, "速さ", StatBarX[2]);
+            var hpBar = CreateStatBar(content, "体力", StatColumnX[0]);
+            var attackBar = CreateStatBar(content, "攻撃", StatColumnX[1]);
+            var speedBar = CreateStatBar(content, "速さ", StatColumnX[2]);
             var demo = CreateSkillDemo(content);
             // 並びの番号が SkillPractice の slot になる（最後が必殺技 = SpecialSlot）
             var skillCards = new SkillCardView[SkillCardY.Length];
@@ -349,12 +406,17 @@ namespace PenmonScramble.Editor
             return (panel, setParty, enhance, sell);
         }
 
-        /// <summary>見出しと、横に伸びる棒（Image の fillAmount で長さを出す）</summary>
+        /// <summary>左に見出し、その右に横に伸びる棒（Image の fillAmount で長さを出す）。x は列の中心</summary>
         private static Image CreateStatBar(Transform parent, string label, float x)
         {
-            CreatePlainText(parent, $"{label}Label", label, StatLabelFontSize, new Vector2(x, StatLabelY), StatLabelSize, TextAnchor.MiddleLeft, SubTextColor);
-            CreatePanel(parent, $"{label}Back", new Vector2(x, StatBarY), StatBarSize, BarBackColor).raycastTarget = false;
-            var fill = CreatePanel(parent, $"{label}Bar", new Vector2(x, StatBarY), StatBarSize, BarColor);
+            var columnLeft = x - StatColumnWidth * 0.5f;
+            var labelPosition = new Vector2(columnLeft + StatLabelSize.x * 0.5f, StatRowY);
+            CreatePlainText(parent, $"{label}Label", label, StatLabelFontSize, labelPosition, StatLabelSize, TextAnchor.MiddleLeft, SubTextColor);
+            var barWidth = StatColumnWidth - StatLabelSize.x - StatLabelGap;
+            var barSize = new Vector2(barWidth, StatBarHeight);
+            var barPosition = new Vector2(x + StatColumnWidth * 0.5f - barWidth * 0.5f, StatRowY);
+            CreatePanel(parent, $"{label}Back", barPosition, barSize, BarBackColor).raycastTarget = false;
+            var fill = CreatePanel(parent, $"{label}Bar", barPosition, barSize, BarColor);
             fill.raycastTarget = false;
             // 角の丸い絵は塗りつぶしで切ると端が欠けるので、棒は四角で描く
             fill.sprite = null;
@@ -380,7 +442,9 @@ namespace PenmonScramble.Editor
             icon.preserveAspect = true;
 
             var nameText = CreatePlainText(obj.transform, "Name", string.Empty, SkillNameFontSize, SkillNamePosition, SkillNameSize, TextAnchor.MiddleLeft, Color.white);
+            ShrinkToFit(nameText, SkillNameMinFontSize);
             var description = CreatePlainText(obj.transform, "Text", string.Empty, SkillTextFontSize, SkillTextPosition, SkillTextSize, TextAnchor.UpperLeft, SubTextColor);
+            ShrinkToFit(description, SkillTextMinFontSize);
             var ratingLabels = CreatePlainText(obj.transform, "RatingLabels", string.Empty, RatingFontSize, RatingLabelPosition, RatingLabelSize, TextAnchor.MiddleLeft, SubTextColor);
             var ratings = CreatePlainText(obj.transform, "Ratings", string.Empty, RatingFontSize, RatingPipsPosition, RatingPipsSize, TextAnchor.MiddleLeft, Color.white);
 
