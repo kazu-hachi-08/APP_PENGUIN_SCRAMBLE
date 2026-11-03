@@ -102,13 +102,17 @@ namespace PenmonScramble.Editor
         private const float StatLabelGap = 6f;
         private const float StatBarHeight = 20f;
         private const int StatLabelFontSize = 26;
-        // 小窓・技のカード3枚・ボタンを、上から 12 / 8 / 12px の隙間で積む（ボタンの下はパネルの端まで 18px）
-        private static readonly Vector2 DemoPosition = new Vector2(0f, 83f);
-        private static readonly Vector2 DemoSize = new Vector2(760f, 200f);
+        // 小窓・技のタブ・選んだ技の詳しい欄・ボタンを、上から 12 / 8 / 12px の隙間で積む（ボタンの下はパネルの端まで 18px）
+        private static readonly Vector2 DemoPosition = new Vector2(0f, 75f);
+        private static readonly Vector2 DemoSize = new Vector2(760f, 216f);
         private const float DemoFrameWidth = 6f;
-        private static readonly string[] SkillCardNames = { "Skill1", "Skill2", "Special" };
-        private static readonly float[] SkillCardY = { -87f, -199f, -311f };
-        private static readonly Vector2 SkillCardSize = new Vector2(760f, 104f);
+        // 技1・技2・必殺技のタブを横に3つ。並びの番号が SkillPractice の slot（最後が必殺技 = SpecialSlot）
+        private static readonly string[] SkillTabNames = { "Skill1", "Skill2", "Special" };
+        private static readonly float[] SkillTabX = { -257f, 0f, 257f };
+        private const float SkillTabY = -103f;
+        private static readonly Vector2 SkillTabSize = new Vector2(246f, 104f);
+        private const float SkillDetailY = -264f;
+        private static readonly Vector2 SkillDetailSize = new Vector2(760f, 202f);
         // 編成に入れる・強化・売る
         private static readonly float[] DetailButtonX = { -255f, 0f, 255f };
         private const float DetailButtonY = -415f;
@@ -117,36 +121,46 @@ namespace PenmonScramble.Editor
         private static readonly Color EnhanceColor = new Color(0.62f, 0.40f, 0.90f);
         // 顔の下の上限解放の◆
         private static readonly Vector2 DetailLimitOffset = new Vector2(0f, -88f);
-        private static readonly Vector2 DetailLimitSize = new Vector2(170f, 34f);
+        // 高さは字の大きさ 28 の1行ぶん（28 x 1.45）
+        private static readonly Vector2 DetailLimitSize = new Vector2(170f, 42f);
         private const int DetailLimitFontSize = 28;
         private static readonly Vector2 EmptyTextSize = new Vector2(700f, 100f);
 
-        // 技のカードの中身（カードの中心から。カードは 760 x 104 = 左右 ±380・上下 ±52）
-        private static readonly Vector2 SkillIconPosition = new Vector2(-325f, 0f);
-        private const float SkillIconSize = 78f;
-        // 名前と説明の列は、アイコンの右（-274）から●の列の手前（200）まで
-        private static readonly Vector2 SkillNamePosition = new Vector2(-37f, 28f);
-        private static readonly Vector2 SkillNameSize = new Vector2(474f, 38f);
-        private const int SkillNameFontSize = 26;
-        private const int SkillNameMinFontSize = 20;
-        // 説明は［形・特徴］と合わせてどの技も2行になるので、2行ぶんの高さを取り、それでも長ければ縮める
-        private static readonly Vector2 SkillTextPosition = new Vector2(-37f, -21f);
-        private static readonly Vector2 SkillTextSize = new Vector2(474f, 58f);
-        private const int SkillTextFontSize = 20;
-        private const int SkillTextMinFontSize = 16;
-        // ●の列はカードの右の端から 10px 内側に収める
-        private static readonly Vector2 RatingLabelPosition = new Vector2(258f, 0f);
-        private static readonly Vector2 RatingLabelSize = new Vector2(96f, 84f);
-        private static readonly Vector2 RatingPipsPosition = new Vector2(340f, 0f);
-        private static readonly Vector2 RatingPipsSize = new Vector2(60f, 84f);
-        private const int RatingFontSize = 18;
+        // 技のタブの中身（タブの中心から。タブは 246 x 104 = 左右 ±123・上下 ±52）。上の段にアイコンと「技1」、下の段に名前
+        private static readonly Vector2 TabIconPosition = new Vector2(-93f, 22f);
+        private const float TabIconSize = 44f;
+        private static readonly Vector2 TabHeaderPosition = new Vector2(26f, 22f);
+        private static readonly Vector2 TabHeaderSize = new Vector2(178f, 36f);
+        private const int TabHeaderFontSize = 24;
+        // 名前はタブの幅いっぱい。「ダイヤモンドダスト」のような長い名前だけ縮める
+        private static readonly Vector2 TabNamePosition = new Vector2(0f, -22f);
+        private static readonly Vector2 TabNameSize = new Vector2(230f, 42f);
+        private const int TabNameFontSize = 28;
+        private const int TabNameMinFontSize = 20;
 
-        // 実演の小窓の中の、必殺技のカットインの帯（小窓の高さ 200 に合わせて縮めたもの）
-        private const float DemoCutInHeight = 112f;
-        private const float DemoCutInFaceSize = 92f;
+        // 詳しい欄の中身（欄の中心から。欄は 760 x 202 = 左右 ±380・上下 ±101）。左に［形・特徴］と説明、右に●
+        private static readonly Vector2 DetailShapePosition = new Vector2(-111f, 68f);
+        private static readonly Vector2 DetailShapeSize = new Vector2(514f, 38f);
+        private const int DetailShapeFontSize = 26;
+        private const int DetailShapeMinFontSize = 20;
+        private static readonly Color ShapeTextColor = new Color(1f, 0.82f, 0.30f);
+        // 説明は3行まで入る高さ（今の文はどれも2行）
+        private static readonly Vector2 DetailTextPosition = new Vector2(-111f, -20f);
+        private static readonly Vector2 DetailTextSize = new Vector2(514f, 138f);
+        private const int DetailTextFontSize = 26;
+        private const int DetailTextMinFontSize = 22;
+        private static readonly Vector2 DetailRatingLabelPosition = new Vector2(223f, 0f);
+        private static readonly Vector2 DetailRatingLabelSize = new Vector2(130f, 112f);
+        private static readonly Vector2 DetailRatingPipsPosition = new Vector2(328f, 0f);
+        private static readonly Vector2 DetailRatingPipsSize = new Vector2(80f, 112f);
+        private const int DetailRatingFontSize = 24;
+
+        // 実演の小窓の中の、必殺技のカットインの帯（小窓の高さ 216 に合わせて縮めたもの）
+        private const float DemoCutInHeight = 120f;
+        private const float DemoCutInFaceSize = 100f;
         private const float DemoCutInFaceX = 90f;
         private const int DemoCutInFontSize = 24;
-        private const int DemoCutInNameFontSize = 42;
+        private const int DemoCutInNameFontSize = 44;
 
         private static PenguinListScreen CreatePenguinListScreen(Transform canvas)
         {
@@ -374,11 +388,12 @@ namespace PenmonScramble.Editor
             var speedBar = CreateStatBar(content, "速さ", StatColumnX[2]);
             var demo = CreateSkillDemo(content);
             // 並びの番号が SkillPractice の slot になる（最後が必殺技 = SpecialSlot）
-            var skillCards = new SkillCardView[SkillCardY.Length];
-            for (var i = 0; i < skillCards.Length; i++)
+            var skillTabs = new SkillTabView[SkillTabX.Length];
+            for (var i = 0; i < skillTabs.Length; i++)
             {
-                skillCards[i] = CreateSkillCard(content, SkillCardNames[i], new Vector2(0f, SkillCardY[i]));
+                skillTabs[i] = CreateSkillTab(content, SkillTabNames[i], new Vector2(SkillTabX[i], SkillTabY));
             }
+            var skillDetail = CreateSkillDetail(content);
 
             // ボタンは何も選んでいないときも出しておく（押せない状態で）ので、中身の外に置く
             var setParty = CreateTitleButton(panelObj.transform, "SetParty", string.Empty, new Vector2(DetailButtonX[0], DetailButtonY), DetailButtonSize, StartColor, DetailButtonFontSize);
@@ -399,7 +414,8 @@ namespace PenmonScramble.Editor
             so.FindProperty("_hpBar").objectReferenceValue = hpBar;
             so.FindProperty("_attackBar").objectReferenceValue = attackBar;
             so.FindProperty("_speedBar").objectReferenceValue = speedBar;
-            SetObjectArray(so.FindProperty("_skillCards"), skillCards);
+            SetObjectArray(so.FindProperty("_skillTabs"), skillTabs);
+            so.FindProperty("_skillDetail").objectReferenceValue = skillDetail;
 
             so.FindProperty("_demo").objectReferenceValue = demo;
             so.ApplyModifiedProperties();
@@ -426,39 +442,67 @@ namespace PenmonScramble.Editor
             return fill;
         }
 
-        /// <summary>技1つ分のカード: 左にアイコン、まん中に名前と説明、右に威力・出しやすさ・範囲の●（見出しの文は SkillCardView が入れる）</summary>
-        private static SkillCardView CreateSkillCard(Transform parent, string name, Vector2 position)
+        /// <summary>技のタブ: 上の段に形のアイコンと「技1」、下の段に名前（文と色は SkillTabView が入れる）</summary>
+        private static SkillTabView CreateSkillTab(Transform parent, string name, Vector2 position)
         {
-            var frame = CreatePanel(parent, name, position, SkillCardSize, CardFrameColor);
+            var frame = CreatePanel(parent, name, position, SkillTabSize, CardFrameColor);
             var obj = frame.gameObject;
-            frame.raycastTarget = true;
             var button = obj.AddComponent<Button>();
             button.targetGraphic = frame;
 
-            var iconObj = UIDialogBuilder.CreateUIObject("Icon", obj.transform);
-            PlaceCenter(iconObj.GetComponent<RectTransform>(), SkillIconPosition, Vector2.one * SkillIconSize);
-            var icon = iconObj.AddComponent<Image>();
-            icon.raycastTarget = false;
-            icon.preserveAspect = true;
+            var icon = CreateSkillIcon(obj.transform, TabIconPosition, TabIconSize);
+            var header = CreatePlainText(obj.transform, "Header", string.Empty, TabHeaderFontSize, TabHeaderPosition, TabHeaderSize, TextAnchor.MiddleLeft, SubTextColor);
+            header.fontStyle = FontStyle.Bold;
+            var nameText = CreatePlainText(obj.transform, "Name", string.Empty, TabNameFontSize, TabNamePosition, TabNameSize, TextAnchor.MiddleLeft, Color.white);
+            nameText.fontStyle = FontStyle.Bold;
+            ShrinkToFit(nameText, TabNameMinFontSize);
 
-            var nameText = CreatePlainText(obj.transform, "Name", string.Empty, SkillNameFontSize, SkillNamePosition, SkillNameSize, TextAnchor.MiddleLeft, Color.white);
-            ShrinkToFit(nameText, SkillNameMinFontSize);
-            var description = CreatePlainText(obj.transform, "Text", string.Empty, SkillTextFontSize, SkillTextPosition, SkillTextSize, TextAnchor.UpperLeft, SubTextColor);
-            ShrinkToFit(description, SkillTextMinFontSize);
-            var ratingLabels = CreatePlainText(obj.transform, "RatingLabels", string.Empty, RatingFontSize, RatingLabelPosition, RatingLabelSize, TextAnchor.MiddleLeft, SubTextColor);
-            var ratings = CreatePlainText(obj.transform, "Ratings", string.Empty, RatingFontSize, RatingPipsPosition, RatingPipsSize, TextAnchor.MiddleLeft, Color.white);
-
-            var card = obj.AddComponent<SkillCardView>();
-            var so = new SerializedObject(card);
+            var tab = obj.AddComponent<SkillTabView>();
+            var so = new SerializedObject(tab);
             so.FindProperty("_button").objectReferenceValue = button;
             so.FindProperty("_frame").objectReferenceValue = frame;
             so.FindProperty("_icon").objectReferenceValue = icon;
+            so.FindProperty("_headerText").objectReferenceValue = header;
             so.FindProperty("_nameText").objectReferenceValue = nameText;
+            so.ApplyModifiedProperties();
+            return tab;
+        }
+
+        /// <summary>選んでいる技の詳しい欄: 左に［形・特徴］と説明、右に威力・出しやすさ・範囲の●（文と色は SkillDetailView が入れる）</summary>
+        private static SkillDetailView CreateSkillDetail(Transform parent)
+        {
+            var frame = CreatePanel(parent, "SkillDetail", new Vector2(0f, SkillDetailY), SkillDetailSize, CardFrameColor);
+            frame.raycastTarget = false;
+            var obj = frame.gameObject;
+
+            var shape = CreatePlainText(obj.transform, "Shape", string.Empty, DetailShapeFontSize, DetailShapePosition, DetailShapeSize, TextAnchor.MiddleLeft, ShapeTextColor);
+            shape.fontStyle = FontStyle.Bold;
+            ShrinkToFit(shape, DetailShapeMinFontSize);
+            var description = CreatePlainText(obj.transform, "Text", string.Empty, DetailTextFontSize, DetailTextPosition, DetailTextSize, TextAnchor.UpperLeft, Color.white);
+            ShrinkToFit(description, DetailTextMinFontSize);
+            var ratingLabels = CreatePlainText(obj.transform, "RatingLabels", string.Empty, DetailRatingFontSize, DetailRatingLabelPosition, DetailRatingLabelSize, TextAnchor.MiddleLeft, SubTextColor);
+            var ratings = CreatePlainText(obj.transform, "Ratings", string.Empty, DetailRatingFontSize, DetailRatingPipsPosition, DetailRatingPipsSize, TextAnchor.MiddleLeft, Color.white);
+
+            var detail = obj.AddComponent<SkillDetailView>();
+            var so = new SerializedObject(detail);
+            so.FindProperty("_frame").objectReferenceValue = frame;
+            so.FindProperty("_shapeText").objectReferenceValue = shape;
             so.FindProperty("_descriptionText").objectReferenceValue = description;
             so.FindProperty("_ratingLabelsText").objectReferenceValue = ratingLabels;
             so.FindProperty("_ratingsText").objectReferenceValue = ratings;
             so.ApplyModifiedProperties();
-            return card;
+            return detail;
+        }
+
+        /// <summary>技の形のアイコン（絵と色は実行時に入れる）</summary>
+        private static Image CreateSkillIcon(Transform parent, Vector2 position, float size)
+        {
+            var iconObj = UIDialogBuilder.CreateUIObject("Icon", parent);
+            PlaceCenter(iconObj.GetComponent<RectTransform>(), position, Vector2.one * size);
+            var icon = iconObj.AddComponent<Image>();
+            icon.raycastTarget = false;
+            icon.preserveAspect = true;
+            return icon;
         }
 
         /// <summary>

@@ -49,6 +49,27 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 ResultHintSize = new Vector2(760f, 40f);
         private const string ResultHint = "編成はペンモン画面で変えられます";
 
+        // 結果の技のカード（技1・技2の2枚。中身の位置はカードの中心から。カードは 760 x 122 = 左右 ±380・上下 ±61）
+        private static readonly Vector2 ResultSkillSize = new Vector2(760f, 122f);
+        private static readonly Vector2 ResultSkillIconPosition = new Vector2(-325f, 0f);
+        private const float ResultSkillIconSize = 84f;
+        // 名前と説明の列は、アイコンの右（-274）から●の列の手前（180）まで
+        private static readonly Vector2 ResultSkillNamePosition = new Vector2(-47f, 34f);
+        private static readonly Vector2 ResultSkillNameSize = new Vector2(454f, 44f);
+        private const int ResultSkillNameFontSize = 30;
+        private const int ResultSkillNameMinFontSize = 22;
+        // 説明は［形・特徴］と合わせてどの技も2行になるので、2行ぶんの高さを取り、それでも長ければ縮める
+        private static readonly Vector2 ResultSkillTextPosition = new Vector2(-47f, -25f);
+        private static readonly Vector2 ResultSkillTextSize = new Vector2(454f, 70f);
+        private const int ResultSkillTextFontSize = 24;
+        private const int ResultSkillTextMinFontSize = 20;
+        // ●の列はカードの右の端から 10px 内側に収める
+        private static readonly Vector2 ResultRatingLabelPosition = new Vector2(245f, 0f);
+        private static readonly Vector2 ResultRatingLabelSize = new Vector2(110f, 100f);
+        private static readonly Vector2 ResultRatingPipsPosition = new Vector2(335f, 0f);
+        private static readonly Vector2 ResultRatingPipsSize = new Vector2(70f, 100f);
+        private const int ResultRatingFontSize = 22;
+
         // 下の段
         private static readonly Vector2 GachaPullPosition = new Vector2(690f, -415f);
         private static readonly Vector2 GachaPullSize = new Vector2(420f, 170f);
@@ -179,6 +200,35 @@ namespace PenmonScramble.Editor
             so.FindProperty("_newTag").objectReferenceValue = newTag;
             so.ApplyModifiedProperties();
             obj.SetActive(false);
+            return card;
+        }
+
+        /// <summary>結果の技1つ分のカード: 左にアイコン、まん中に名前と説明、右に威力・出しやすさ・範囲の●（文は SkillCardView が入れる）</summary>
+        private static SkillCardView CreateSkillCard(Transform parent, string name, Vector2 position)
+        {
+            var frame = CreatePanel(parent, name, position, ResultSkillSize, CardFrameColor);
+            var obj = frame.gameObject;
+            var button = obj.AddComponent<Button>();
+            button.targetGraphic = frame;
+
+            var icon = CreateSkillIcon(obj.transform, ResultSkillIconPosition, ResultSkillIconSize);
+            var nameText = CreatePlainText(obj.transform, "Name", string.Empty, ResultSkillNameFontSize, ResultSkillNamePosition, ResultSkillNameSize, TextAnchor.MiddleLeft, Color.white);
+            ShrinkToFit(nameText, ResultSkillNameMinFontSize);
+            var description = CreatePlainText(obj.transform, "Text", string.Empty, ResultSkillTextFontSize, ResultSkillTextPosition, ResultSkillTextSize, TextAnchor.UpperLeft, SubTextColor);
+            ShrinkToFit(description, ResultSkillTextMinFontSize);
+            var ratingLabels = CreatePlainText(obj.transform, "RatingLabels", string.Empty, ResultRatingFontSize, ResultRatingLabelPosition, ResultRatingLabelSize, TextAnchor.MiddleLeft, SubTextColor);
+            var ratings = CreatePlainText(obj.transform, "Ratings", string.Empty, ResultRatingFontSize, ResultRatingPipsPosition, ResultRatingPipsSize, TextAnchor.MiddleLeft, Color.white);
+
+            var card = obj.AddComponent<SkillCardView>();
+            var so = new SerializedObject(card);
+            so.FindProperty("_button").objectReferenceValue = button;
+            so.FindProperty("_frame").objectReferenceValue = frame;
+            so.FindProperty("_icon").objectReferenceValue = icon;
+            so.FindProperty("_nameText").objectReferenceValue = nameText;
+            so.FindProperty("_descriptionText").objectReferenceValue = description;
+            so.FindProperty("_ratingLabelsText").objectReferenceValue = ratingLabels;
+            so.FindProperty("_ratingsText").objectReferenceValue = ratings;
+            so.ApplyModifiedProperties();
             return card;
         }
 

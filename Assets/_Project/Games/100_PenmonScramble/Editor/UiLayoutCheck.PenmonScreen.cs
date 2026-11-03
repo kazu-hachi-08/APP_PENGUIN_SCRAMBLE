@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ペンモン画面（一覧・編成のカード、図鑑カード、技のカード）の文字は、シーンでは空で画面を開いたときに入る。
+    /// ペンモン画面（一覧・編成のカード、図鑑カード、技のタブと詳しい欄）とガチャの結果の技のカードの文字は、シーンでは空で画面を開いたときに入る。
     /// そのままでは測れないので、全種類の子の文を見本として入れて測る（画面と同じ作り方の文を使う）
     /// </summary>
     public static partial class UiLayoutCheck
@@ -21,11 +21,14 @@ namespace PenmonScramble.Editor
         {
             foreach (var species in SpeciesTable.Species)
             {
-                var samples = new Dictionary<Text, string>();
-                AddCardSamples(species, samples);
-                AddDetailSamples(species, samples);
-                AddSkillCardSamples(species, samples);
-                CheckSamples(samples, font, issues);
+                for (var slot = 0; slot <= SkillPractice.SpecialSlot; slot++)
+                {
+                    var samples = new Dictionary<Text, string>();
+                    AddCardSamples(species, samples);
+                    AddDetailSamples(species, samples);
+                    AddSkillCardSamples(species, samples, slot);
+                    CheckSamples(samples, font, issues);
+                }
             }
 
             // 空いた編成の枠
@@ -68,20 +71,45 @@ namespace PenmonScramble.Editor
             }
         }
 
-        /// <summary>技のカードは、並びの番号が技の slot（技1・技2・必殺技）</summary>
-        private static void AddSkillCardSamples(SpeciesDef species, Dictionary<Text, string> samples)
+        /// <summary>
+        /// 技のタブ・詳しい欄（ペンモン画面）と、技のカード（ガチャの結果）。タブとカードは並びの番号が技の slot（技1・技2・必殺技）。
+        /// 詳しい欄は選んだ技の文が入るので、3つの技を順に入れて測る
+        /// </summary>
+        private static void AddSkillCardSamples(SpeciesDef species, Dictionary<Text, string> samples, int detailSlot)
         {
             foreach (var panel in Object.FindObjectsByType<PenmonDetailPanel>(FindObjectsInactive.Include))
             {
-                var cards = new SerializedObject(panel).FindProperty("_skillCards");
+                var so = new SerializedObject(panel);
+                var tabs = so.FindProperty("_skillTabs");
+                for (var slot = 0; slot < tabs.arraySize; slot++)
+                {
+                    if (!(tabs.GetArrayElementAtIndex(slot).objectReferenceValue is SkillTabView tab)) continue;
+                    var lines = SkillTexts.For(species, slot);
+                    AddSample(tab, "_headerText", lines.Header, samples);
+                    AddSample(tab, "_nameText", lines.Name, samples);
+                }
+
+                if (so.FindProperty("_skillDetail").objectReferenceValue is SkillDetailView detail)
+                {
+                    var lines = SkillTexts.For(species, detailSlot);
+                    AddSample(detail, "_shapeText", lines.Shape, samples);
+                    AddSample(detail, "_descriptionText", lines.Description, samples);
+                    AddSample(detail, "_ratingLabelsText", lines.RatingLabels, samples);
+                    AddSample(detail, "_ratingsText", lines.Ratings, samples);
+                }
+            }
+
+            foreach (var result in Object.FindObjectsByType<GachaResultCard>(FindObjectsInactive.Include))
+            {
+                var cards = new SerializedObject(result).FindProperty("_skillCards");
                 for (var slot = 0; slot < cards.arraySize; slot++)
                 {
                     if (!(cards.GetArrayElementAtIndex(slot).objectReferenceValue is SkillCardView card)) continue;
-                    var texts = SkillCardView.TextsFor(species, slot);
-                    AddSample(card, "_nameText", texts.Name, samples);
-                    AddSample(card, "_descriptionText", texts.Description, samples);
-                    AddSample(card, "_ratingLabelsText", texts.RatingLabels, samples);
-                    AddSample(card, "_ratingsText", texts.Ratings, samples);
+                    var lines = SkillTexts.For(species, slot);
+                    AddSample(card, "_nameText", SkillCardView.NameLine(lines), samples);
+                    AddSample(card, "_descriptionText", SkillCardView.DescriptionLine(lines), samples);
+                    AddSample(card, "_ratingLabelsText", lines.RatingLabels, samples);
+                    AddSample(card, "_ratingsText", lines.Ratings, samples);
                 }
             }
         }

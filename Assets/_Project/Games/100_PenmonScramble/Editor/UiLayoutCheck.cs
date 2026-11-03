@@ -80,7 +80,7 @@ namespace PenmonScramble.Editor
             {
                 AddOnce(issues, $"{PathOf(text)}: 横にはみ出す（文字 {oneLine.width:0} > 枠 {size.x:0}）「{Short(value)}」");
             }
-            else if (text.horizontalOverflow == HorizontalWrapMode.Wrap && wrapped.lines > oneLine.lines)
+            else if (text.horizontalOverflow == HorizontalWrapMode.Wrap && wrapped.lines > oneLine.lines && !IsMultiLineBox(oneLine, size))
             {
                 AddOnce(issues, $"{PathOf(text)}: 幅が足りず途中で折り返す（{oneLine.lines} 行 → {wrapped.lines} 行）「{Short(value)}」");
             }
@@ -90,6 +90,16 @@ namespace PenmonScramble.Editor
                 var result = text.verticalOverflow == VerticalWrapMode.Truncate && text.resizeTextForBestFit ? "切れて消える" : "はみ出す";
                 AddOnce(issues, $"{PathOf(text)}: 縦に{result}（文字 {wrapped.height:0} > 枠 {size.y:0}）「{Short(value)}」");
             }
+        }
+
+        /// <summary>
+        /// 文の行数より1行以上多く入る高さの枠（技の説明など）は、折り返して読ませるつもりで作っているので、折り返しは知らせない。
+        /// 入りきるかは縦のはみ出しで確かめる
+        /// </summary>
+        private static bool IsMultiLineBox((float width, float height, int lines) oneLine, Vector2 size)
+        {
+            var lineHeight = oneLine.height / Mathf.Max(1, oneLine.lines);
+            return size.y + Tolerance >= lineHeight * (oneLine.lines + 1);
         }
 
         private static readonly Dictionary<Text, string> NoSamples = new Dictionary<Text, string>();

@@ -33,10 +33,14 @@ namespace PenmonScramble.Editor
         // 窓は下から少し持ち上がって開く
         private static readonly Vector2 ModalSlideFrom = new Vector2(0f, -120f);
 
-        // 丸いアイコンのボタン: アイコンは丸の中のこの割合、名前は丸の下
+        // 丸いアイコンのボタン（設定の歯車）: アイコンは丸の中のこの割合
         private const float IconButtonIconRatio = 0.66f;
-        private const float IconButtonLabelGap = 34f;
-        private const int IconButtonLabelFontSize = 34;
+        // 横長のボタン（ロビーの左の列）: 左にアイコン、右に名前。名前もボタンの中なので、名前を押しても反応する
+        private const float NavIconMargin = 18f;
+        private const float NavIconRatio = 0.74f;
+        private const float NavTextGap = 8f;
+        private const int NavFontSize = 40;
+        private const int NavGlyphFontSize = 72;
 
         /// <summary>
         /// 色の面に、上のつや・白い縁・下の影を重ねたボタン。色の面がボタンの targetGraphic（色を変える画面はここを塗る）。
@@ -149,26 +153,49 @@ namespace PenmonScramble.Editor
             return root;
         }
 
-        /// <summary>丸いボタンの中にアイコン、下に名前。アイコンの絵が無ければ glyph の文字を大きく出す</summary>
-        private static Button CreateIconButton(Transform parent, string name, string label, Vector2 position, float diameter, Color color, Sprite icon, string glyph = null)
+        /// <summary>丸いボタンの中にアイコン</summary>
+        private static Button CreateIconButton(Transform parent, string name, Vector2 position, float diameter, Color color, Sprite icon)
         {
-            var button = CreateTitleButton(parent, name, glyph ?? string.Empty, position, Vector2.one * diameter, color, Mathf.RoundToInt(diameter * 0.5f));
+            var button = CreateTitleButton(parent, name, string.Empty, position, Vector2.one * diameter, color, Mathf.RoundToInt(diameter * 0.5f));
+            AddButtonIcon(button.transform, icon, Vector2.zero, diameter * IconButtonIconRatio);
+            return button;
+        }
+
+        /// <summary>
+        /// 横長のボタン: 左にアイコン、残りの幅のまん中に名前。アイコンの絵が無ければ glyph の文字を大きく出す。
+        /// 名前の文字はボタンの文字の枠（CreateTitleButton の「Text」）を右へ寄せて置くので、縁取り・縮み方はほかのボタンと同じ
+        /// </summary>
+        private static Button CreateNavButton(Transform parent, string name, string label, Vector2 position, Vector2 size, Color color, Sprite icon, string glyph = null)
+        {
+            var button = CreateTitleButton(parent, name, label, position, size, color, NavFontSize);
+            var iconSize = size.y * NavIconRatio;
+            var iconPosition = new Vector2(-size.x * 0.5f + NavIconMargin + iconSize * 0.5f, 0f);
+            var text = (RectTransform)button.transform.Find("Text");
+            text.offsetMin = new Vector2(NavIconMargin + iconSize + NavTextGap, text.offsetMin.y);
+
             if (icon != null)
             {
-                var iconObj = UIDialogBuilder.CreateUIObject("Icon", button.transform);
-                PlaceCenter(iconObj.GetComponent<RectTransform>(), Vector2.zero, Vector2.one * diameter * IconButtonIconRatio);
-                var image = iconObj.AddComponent<Image>();
-                image.sprite = icon;
-                image.preserveAspect = true;
-                image.raycastTarget = false;
+                AddButtonIcon(button.transform, icon, iconPosition, iconSize);
             }
-
-            if (!string.IsNullOrEmpty(label))
+            else if (!string.IsNullOrEmpty(glyph))
             {
-                CreateLabel(button.transform, "Label", label, IconButtonLabelFontSize, new Vector2(0f, -diameter * 0.5f - IconButtonLabelGap), new Vector2(diameter * 1.6f, 50f)).fontStyle = FontStyle.Bold;
+                var mark = CreateLabel(button.transform, "Glyph", glyph, NavGlyphFontSize, iconPosition, Vector2.one * iconSize);
+                mark.fontStyle = FontStyle.Bold;
+                FitLineHeight(mark);
             }
 
             return button;
+        }
+
+        private static void AddButtonIcon(Transform button, Sprite icon, Vector2 position, float size)
+        {
+            if (icon == null) return;
+            var iconObj = UIDialogBuilder.CreateUIObject("Icon", button);
+            PlaceCenter(iconObj.GetComponent<RectTransform>(), position, Vector2.one * size);
+            var image = iconObj.AddComponent<Image>();
+            image.sprite = icon;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
         }
 
         /// <summary>画面の上か下の端に、端が濃く内側へ消える暗い帯を敷く（ジオラマの上でも文字やボタンを読めるように）</summary>

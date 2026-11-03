@@ -46,10 +46,10 @@ namespace PenmonScramble.Editor
         private const float SettingsButtonSize = 100f;
         private static readonly Color SettingsColor = new Color(0.40f, 0.47f, 0.62f);
 
-        // 左の列
-        private const float NavX = -800f;
-        private static readonly float[] NavY = { 300f, 100f, -100f, -300f };
-        private const float NavButtonSize = 150f;
+        // 左の列: 横長のボタンを 36px あけて縦に並べる。左の端は上の名前の札（-920）にそろえる
+        private const float NavX = -750f;
+        private static readonly float[] NavY = { 300f, 134f, -32f, -198f };
+        private static readonly Vector2 NavButtonSize = new Vector2(340f, 130f);
         private const string HelpGlyph = "？";
 
         // 右下: ステージのカード（◀ ▶ で選ぶ）とボタン
@@ -78,7 +78,7 @@ namespace PenmonScramble.Editor
 
         // ロビーに入るときのすべり込み: 上は上から、左の列は左から、右下は右から。少しずつ遅らせる
         private static readonly Vector2 TopSlideFrom = new Vector2(0f, 220f);
-        private static readonly Vector2 NavSlideFrom = new Vector2(-360f, 0f);
+        private static readonly Vector2 NavSlideFrom = new Vector2(-480f, 0f);
         private static readonly Vector2 PlaySlideFrom = new Vector2(600f, 0f);
         private const float SlideStagger = 0.06f;
 
@@ -93,13 +93,13 @@ namespace PenmonScramble.Editor
             var top = CreateSlideGroup(lobby, "Top", TopSlideFrom, 0f);
             var nameButton = CreateNamePlate(top, out var nameText, out var leaderFace);
             var coinText = CreateCoinPill(top);
-            var settingsButton = CreateIconButton(top, "Settings", null, SettingsButtonPosition, SettingsButtonSize, SettingsColor, UiSprite(GearIconPath));
+            var settingsButton = CreateIconButton(top, "Settings", SettingsButtonPosition, SettingsButtonSize, SettingsColor, UiSprite(GearIconPath));
 
             var nav = CreateSlideGroup(lobby, "Nav", NavSlideFrom, SlideStagger);
-            var gachaButton = CreateIconButton(nav, "Gacha", "ガチャ", new Vector2(NavX, NavY[0]), NavButtonSize, GachaColor, UiSprite(CapsuleIconPath));
-            var penguinsButton = CreateIconButton(nav, "Penguins", "ペンモン", new Vector2(NavX, NavY[1]), NavButtonSize, PenguinsColor, LoadArtSprite(PenguinPortraitPath(1), CreatureArtMaxSize));
-            var miniGamesButton = CreateIconButton(nav, "MiniGames", "ミニゲーム", new Vector2(NavX, NavY[2]), NavButtonSize, MiniGamesColor, UiSprite(MiniGameIconPath));
-            var howToPlayButton = CreateIconButton(nav, "HowToPlay", "遊び方", new Vector2(NavX, NavY[3]), NavButtonSize, HowToPlayColor, null, HelpGlyph);
+            var gachaButton = CreateNavButton(nav, "Gacha", "ガチャ", new Vector2(NavX, NavY[0]), NavButtonSize, GachaColor, UiSprite(CapsuleIconPath));
+            var penguinsButton = CreateNavButton(nav, "Penguins", "ペンモン", new Vector2(NavX, NavY[1]), NavButtonSize, PenguinsColor, LoadArtSprite(PenguinPortraitPath(1), CreatureArtMaxSize));
+            var miniGamesButton = CreateNavButton(nav, "MiniGames", "ミニゲーム", new Vector2(NavX, NavY[2]), NavButtonSize, MiniGamesColor, UiSprite(MiniGameIconPath));
+            var howToPlayButton = CreateNavButton(nav, "HowToPlay", "遊び方", new Vector2(NavX, NavY[3]), NavButtonSize, HowToPlayColor, null, HelpGlyph);
 
             var play = CreateSlideGroup(lobby, "Play", PlaySlideFrom, SlideStagger * 2f);
             var card = CreateStageCard(play);

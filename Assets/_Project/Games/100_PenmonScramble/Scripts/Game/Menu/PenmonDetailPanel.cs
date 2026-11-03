@@ -6,7 +6,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ペンモン画面の右側の、選んだ子の図鑑カード:顔・★・名前・属性・個性・パワー（上限）と HP・上限解放の◆・体力／攻撃／速さの棒・
-    /// 技の実演の小窓・技2つと必殺技のカード。カードを押すと、小窓の実演がその技に替わる
+    /// 技の実演の小窓・技1／技2／必殺技のタブと、選んでいる技の詳しい欄。タブを押すと、小窓の実演と詳しい欄がその技に替わる
     /// </summary>
     public class PenmonDetailPanel : MonoBehaviour
     {
@@ -25,22 +25,23 @@ namespace PenmonScramble.Game
         [SerializeField] private Image _hpBar;
         [SerializeField] private Image _attackBar;
         [SerializeField] private Image _speedBar;
-        [SerializeField] private SkillCardView[] _skillCards;
+        [SerializeField] private SkillTabView[] _skillTabs;
+        [SerializeField] private SkillDetailView _skillDetail;
         [SerializeField] private SkillDemoView _demo;
 
         private OwnedPenguin _penguin;
         private SpeciesDef _species;
         // 別の子を選んでも、見ている技（技1・技2・必殺技のどれか）はそのままにする（技2どうしを見比べやすいように）。
-        // カードの並びの番号が、そのまま SkillPractice の slot（最後が SpecialSlot）になる
+        // タブの並びの番号が、そのまま SkillPractice の slot（最後が SpecialSlot）になる
         private int _slot;
         // 強化でパワーが変わったら、実演のダメージの数字も新しい強さで出し直す
         private int _demoPower;
 
         private void Awake()
         {
-            foreach (var card in _skillCards)
+            foreach (var tab in _skillTabs)
             {
-                card.OnClick(SelectSkill);
+                tab.OnClick(SelectSkill);
             }
         }
 
@@ -96,15 +97,16 @@ namespace PenmonScramble.Game
 
         private void ShowSkills()
         {
-            for (var i = 0; i < _skillCards.Length; i++)
+            for (var i = 0; i < _skillTabs.Length; i++)
             {
-                _skillCards[i].Show(_species, i, i == _slot);
+                _skillTabs[i].Show(_species, i, i == _slot);
             }
+            _skillDetail.Show(_species, _slot);
         }
 
-        private void SelectSkill(SkillCardView card)
+        private void SelectSkill(SkillTabView tab)
         {
-            var slot = System.Array.IndexOf(_skillCards, card);
+            var slot = System.Array.IndexOf(_skillTabs, tab);
             if (slot < 0 || _species == null)
             {
                 return;
