@@ -29,6 +29,10 @@ namespace PenmonScramble.Editor
         public const string Dev = Root + "Dev/";
         public const int DevPriority = 52;
 
+        // ゴルフの開発用（試しのホールを開く）。開発用のステージの次に並べる
+        public const string Golf = Root + "Golf/";
+        public const int GolfPriority = 53;
+
         public const string Capture = Root + "Capture/";
         // 試作の場を開く項目と、そこで撮る項目の間に区切り線を入れる
         public const int CaptureOpenPriority = 60;
