@@ -8,7 +8,8 @@ namespace PenmonScramble.Golf.Game
 {
     /// <summary>
     /// 壁: 角の丸い柱を寝かせた、おもちゃの柵（本体と、上の色の帯）。種類で色を変える:
-    /// ふつう・低い壁＝ワールドの柵の色（本編の闘技場の柵と同じ）、バンパー＝黄色に赤い帯（当たると弾む）、柔らかい壁＝水色のスポンジ
+    /// ふつう・低い壁＝ワールドの柵の色（本編の闘技場の柵と同じ）、バンパー＝黄色に赤い帯（当たると弾む）、
+    /// 柔らかい壁＝水色のスポンジ（深海では海藻。色は GolfScenery）
     /// </summary>
     public partial class GolfHoleView
     {
@@ -23,7 +24,6 @@ namespace PenmonScramble.Golf.Game
         private const float PopReach = GolfBalance.BallRadius * 2.5f;
 
         private static readonly Color BumperColor = new Color(1f, 0.82f, 0.22f);
-        private static readonly Color SoftWallColor = new Color(0.60f, 0.82f, 0.98f);
 
         private readonly List<WallPart> _walls = new List<WallPart>();
         private readonly List<WallPart> _wallPops = new List<WallPart>();
@@ -46,14 +46,15 @@ namespace PenmonScramble.Golf.Game
             root.localRotation = Quaternion.LookRotation(along);
 
             var kind = KindOf(wall);
-            var body = kind == WallKind.Bumper ? BumperColor : kind == WallKind.Soft ? SoftWallColor : theme.FencePost;
+            var body = kind == WallKind.Bumper ? BumperColor : kind == WallKind.Soft ? _scenery.SoftWall : theme.FencePost;
             // 両端は丸いので、壁の厚みだけ長くして角を埋める
             var length = along.magnitude + WallThickness;
             AddPart("Body", ToyMeshes.Puck, root, Vector3.up * (wall.Height * 0.5f), Quaternion.identity,
                 new Vector3(WallThickness, wall.Height, length), Materials.Get(body, WallGloss));
-            if (kind != WallKind.Soft)
+            var softCap = kind == WallKind.Soft ? _scenery.SoftWallCap : null;
+            if (kind != WallKind.Soft || softCap.HasValue)
             {
-                var cap = kind == WallKind.Bumper ? theme.FenceCap : theme.FenceRail;
+                var cap = kind == WallKind.Bumper ? theme.FenceCap : kind == WallKind.Soft ? softCap.Value : theme.FenceRail;
                 AddPart("Cap", ToyMeshes.Puck, root, Vector3.up * wall.Height, Quaternion.identity,
                     new Vector3(WallThickness * CapWiden, CapHeight, length + WallThickness * (CapWiden - 1f)), Materials.Get(cap, WallGloss));
             }

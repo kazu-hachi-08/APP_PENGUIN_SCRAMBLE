@@ -321,40 +321,45 @@ namespace PenmonScramble.Tests
             Assert.That(new MiniGameRecords(data).TryGetBest(game.Id, 1, out var best) && best == 9, Is.True);
         }
 
+        /// <summary>表の5コースは全部作ってあり、どれも3ホール・パー 2〜4</summary>
         [Test]
-        public void CourseTable_Course1IsReadyOthersNotYet()
+        public void CourseTable_AllCoursesAreReady()
         {
-            var course = GolfCourseTable.Get(1);
+            foreach (var row in MiniGameTable.Get(MiniGameTable.GolfId).Courses)
+            {
+                var course = GolfCourseTable.Get(row.No);
 
-            Assert.That(course, Is.Not.Null);
-            Assert.That(course.Holes.Count, Is.EqualTo(GolfRules.HolesPerCourse));
-            Assert.That(course.Holes.Select(h => h.Par), Is.All.InRange(2, 4));
+                Assert.That(course, Is.Not.Null, row.Name);
+                Assert.That(course.World, Is.EqualTo(row.World));
+                Assert.That(course.Holes.Count, Is.EqualTo(GolfRules.HolesPerCourse), row.Name);
+                Assert.That(course.Holes.Select(h => h.Par), Is.All.InRange(2, 4), row.Name);
+                Assert.That(new GolfCourseGuide().IsReady(row.No), Is.True);
+                Assert.That(new GolfCourseGuide().Layout(row.No), Does.Contain($"合計 {course.TotalPar}"));
+            }
+
             Assert.That(GolfCourseTable.Get(99), Is.Null);
-            Assert.That(new GolfCourseGuide().IsReady(1), Is.True);
-            Assert.That(new GolfCourseGuide().Layout(1), Does.Contain($"合計 {course.TotalPar}"));
         }
 
-        [Test]
-        public void Course1_TeesAndCupsAreOnSafeGround()
+        /// <summary>どのホールも、4人分のティーとカップが池・壁・動く物・ワープに掛かっていない</summary>
+        [TestCaseSource(nameof(AllHoles))]
+        public void Holes_TeesAndCupsAreOnSafeGround(GolfHoleDef hole)
         {
-            foreach (var hole in GolfCourseTable.Get(1).Holes)
+            var sim = new GolfBallSim(hole);
+            Assert.That(sim.IsHazard(hole.Cup), Is.False, hole.Name);
+            for (var player = 0; player < GolfRules.MaxPlayers; player++)
             {
-                var sim = new GolfBallSim(hole);
-                Assert.That(sim.IsHazard(hole.Cup), Is.False, hole.Name);
-                for (var player = 0; player < GolfRules.MaxPlayers; player++)
-                {
-                    var tee = GolfHoleWorld.TeePosition(hole, player, GolfRules.MaxPlayers);
-                    Assert.That(sim.IsHazard(tee), Is.False, $"{hole.Name} {player}");
-                    Assert.That(hole.Walls.All(w => Vec2.Distance(GolfGeometry.ClosestOnSegment(w.A, w.B, tee), tee) > GolfBalance.BallRadius), Is.True, $"{hole.Name} {player}");
-                }
+                var tee = GolfHoleWorld.TeePosition(hole, player, GolfRules.MaxPlayers);
+                Assert.That(sim.IsHazard(tee), Is.False, $"{hole.Name} {player}");
+                Assert.That(hole.Walls.All(w => Vec2.Distance(GolfGeometry.ClosestOnSegment(w.A, w.B, tee), tee) > GolfBalance.BallRadius), Is.True, $"{hole.Name} {player}");
+                Assert.That(hole.Movers.All(m => !m.TryPushOutOfSweep(tee, out _)), Is.True, $"{hole.Name} {player}");
+                Assert.That(hole.Warps.All(w => !w.Catches(tee)), Is.True, $"{hole.Name} {player}");
             }
         }
 
-        /// <summary>コース1のどのホールも、どう打っても止まって次の番になる</summary>
-        [Test]
-        public void Course1_ShotsSettle()
+        /// <summary>どのホールも、どう打っても止まって次の番になる</summary>
+        [TestCaseSource(nameof(AllHoles))]
+        public void Holes_ShotsSettle(GolfHoleDef hole)
         {
-            foreach (var hole in GolfCourseTable.Get(1).Holes)
             {
                 var world = new GolfHoleWorld(hole, GolfTurnOrder.SeatOrder(1));
                 foreach (var angle in new[] { 0f, 0.8f, 1.57f, 2.4f, 4f })
@@ -372,6 +377,17 @@ namespace PenmonScramble.Tests
         }
 
         // ---- 道具 ----
+
+        private static IEnumerable<GolfHoleDef> AllHoles()
+        {
+            foreach (var row in MiniGameTable.Get(MiniGameTable.GolfId).Courses)
+            {
+                foreach (var hole in GolfCourseTable.Get(row.No)?.Holes ?? new GolfHoleDef[0])
+                {
+                    yield return hole;
+                }
+            }
+        }
 
         private static GolfHoleDef Flat(GolfWall[] walls = null, GolfArea[] areas = null)
         {

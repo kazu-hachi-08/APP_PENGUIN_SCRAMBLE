@@ -12,7 +12,7 @@ namespace PenmonScramble.Golf.Core
     public static class GolfCodec
     {
         /// <summary>中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えるより無視する方がよい</summary>
-        public const byte FormatVersion = 1;
+        public const byte FormatVersion = 2;
 
         // 壊れた値が届いても、配列を作りすぎないようにする
         private const int MaxHoles = 16;
@@ -49,6 +49,7 @@ namespace PenmonScramble.Golf.Core
                 }
 
                 writer.Write(snapshot.ShotTimeLeft);
+                writer.Write(snapshot.HoleTime);
                 WriteAim(writer, snapshot.Aim);
                 for (var player = 0; player < players; player++)
                 {
@@ -106,6 +107,7 @@ namespace PenmonScramble.Golf.Core
             }
 
             snapshot.ShotTimeLeft = reader.ReadSingle();
+            snapshot.HoleTime = reader.ReadSingle();
             snapshot.Aim = ReadAim(reader);
             snapshot.Balls = new GolfBallState[players];
             snapshot.Strokes = new int[players];

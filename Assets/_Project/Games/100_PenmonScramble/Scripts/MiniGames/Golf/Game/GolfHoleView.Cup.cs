@@ -116,7 +116,7 @@ namespace PenmonScramble.Golf.Game
         public void SplashAt(Vec2 point)
         {
             var ring = AddPart("Splash", ToyMeshes.Torus, _course, GroundPoint(point) + Vector3.up * AreaLift * 4f, Quaternion.identity,
-                Vector3.one * SplashStartSize, Materials.Get(FoamColor, 0.6f));
+                Vector3.one * SplashStartSize, Materials.Get(_scenery.OutRim ?? _scenery.Foam, 0.6f));
             _splashes.Add(new Splash(ring));
         }
 

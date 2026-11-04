@@ -37,6 +37,8 @@ namespace PenmonScramble.Tests
             Assert.That(got.Balls[0].Position.X, Is.EqualTo(sent.Balls[0].Position.X));
             Assert.That(got.Balls[0].Velocity.Y, Is.EqualTo(sent.Balls[0].Velocity.Y));
             Assert.That(got.Strokes, Is.EqualTo(sent.Strokes));
+            Assert.That(sent.HoleTime, Is.GreaterThan(0f));
+            Assert.That(got.HoleTime, Is.EqualTo(sent.HoleTime));
             Assert.That(got.Teams[1].Selected, Is.EqualTo(2));
             Assert.That(got.Teams[0].Species, Is.EqualTo(sent.Teams[0].Species));
             Assert.That(got.Aim.Power, Is.EqualTo(0.4f));

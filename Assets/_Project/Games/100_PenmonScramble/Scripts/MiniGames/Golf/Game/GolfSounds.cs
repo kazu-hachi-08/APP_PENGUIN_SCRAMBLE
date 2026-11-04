@@ -29,6 +29,10 @@ namespace PenmonScramble.Golf.Game
         Boost,
         /// <summary>水切りで跳ねた（ピチャッ）</summary>
         Skip,
+        /// <summary>間欠泉で跳んだ（シュワッ）</summary>
+        Geyser,
+        /// <summary>ワープの泡に入った（ポワン）</summary>
+        Warp,
     }
 
     /// <summary>
@@ -59,6 +63,8 @@ namespace PenmonScramble.Golf.Game
             { GolfSound.Special, 0.45f },
             { GolfSound.Boost, 0.5f },
             { GolfSound.Skip, 0.35f },
+            { GolfSound.Geyser, 0.5f },
+            { GolfSound.Warp, 0.45f },
         };
 
         /// <summary>打つ音。power はゲージの強さ（0〜1）</summary>
@@ -109,6 +115,8 @@ namespace PenmonScramble.Golf.Game
                 case GolfSound.Special: return ToySynth.Sweep("Golf_Special", 0.22f, 660f, 1760f);
                 case GolfSound.Boost: return Boost();
                 case GolfSound.Skip: return ToySynth.Sweep("Golf_Skip", 0.08f, 1400f, 700f);
+                case GolfSound.Geyser: return Geyser();
+                case GolfSound.Warp: return Warp();
                 default: return ToySynth.Tone("Golf_Select", 0.05f, 1319f);
             }
         }
@@ -147,6 +155,32 @@ namespace PenmonScramble.Golf.Game
                 var buzz = ToySynth.Square(Mathf.Lerp(300f, 1500f, t / duration) + Mathf.Sin(t * 180f) * 120f, t);
                 var noise = (float)random.NextDouble() * 2f - 1f;
                 return (buzz * 0.6f + noise * 0.3f) * (1f - t / duration);
+            });
+        }
+
+        /// <summary>「シュワッ」: 噴き上がるノイズに、上がっていく音を重ねる</summary>
+        private static AudioClip Geyser()
+        {
+            const float duration = 0.35f;
+            var random = new System.Random(11);
+            var filtered = 0f;
+            return ToySynth.CreateClip("Golf_Geyser", duration, t =>
+            {
+                filtered = Mathf.Lerp(filtered, (float)random.NextDouble() * 2f - 1f, 0.5f);
+                var rise = Mathf.Sin(2f * Mathf.PI * Mathf.Lerp(300f, 900f, t / duration) * t) * 0.3f;
+                var envelope = Mathf.Min(1f, t / 0.03f) * (1f - t / duration);
+                return (filtered * 0.6f + rise) * envelope;
+            });
+        }
+
+        /// <summary>「ポワン」: 揺れながら上がっていく丸い音</summary>
+        private static AudioClip Warp()
+        {
+            const float duration = 0.32f;
+            return ToySynth.CreateClip("Golf_Warp", duration, t =>
+            {
+                var pitch = Mathf.Lerp(500f, 1400f, t / duration) + Mathf.Sin(t * 70f) * 90f;
+                return Mathf.Sin(2f * Mathf.PI * pitch * t) * (1f - t / duration) * 0.8f;
             });
         }
 

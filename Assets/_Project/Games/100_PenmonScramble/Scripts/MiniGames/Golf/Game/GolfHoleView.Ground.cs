@@ -9,7 +9,9 @@ namespace PenmonScramble.Golf.Game
 {
     /// <summary>
     /// 地面: ワールドの地面の絵を貼った厚みのある台（おもちゃのミニゴルフの台）と、その下に暗く敷いた外の床。
-    /// 地面の種類は台の上に重ねる: 池（水色に白い波の縁）・場外（暗い色）・砂地（砂色）・坂（下る向きへ傾けた床に矢印）・ジャンプ台（赤い台に白い輪）
+    /// 地面の種類は台の上に重ねる: 池（水色に白い波の縁）・場外（暗い色。火山では光る縁の溶岩）・砂地（砂色。氷山では雪）・
+    /// 坂（下る向きへ傾けた床に矢印）・ジャンプ台（赤い台に白い輪）・氷の床（水色に白い縁）。色は景色ごと（GolfScenery）。
+    /// 押し流す帯と間欠泉は動くので GolfHoleView.Gimmicks.cs
     /// </summary>
     public partial class GolfHoleView
     {
@@ -36,11 +38,6 @@ namespace PenmonScramble.Golf.Game
         private const float JumpRingRatio = 0.6f;
 
         private static readonly Color SlabSideColor = new Color(0.55f, 0.40f, 0.28f);
-        private static readonly Color WaterColor = new Color(0.30f, 0.62f, 0.95f);
-        private static readonly Color FoamColor = new Color(0.88f, 0.96f, 1f);
-        private static readonly Color OutColor = new Color(0.20f, 0.17f, 0.18f);
-        private static readonly Color SandColor = new Color(0.98f, 0.87f, 0.58f);
-        private static readonly Color SandRimColor = new Color(0.86f, 0.72f, 0.45f);
         private static readonly Color SlopeTint = new Color(1.08f, 1.08f, 1f);
         private static readonly Color ChevronColor = new Color(1f, 1f, 1f, 1f);
         private static readonly Color JumpColor = new Color(0.95f, 0.36f, 0.30f);
@@ -116,15 +113,30 @@ namespace PenmonScramble.Golf.Game
             switch (area.Kind)
             {
                 case GolfAreaKind.Water:
-                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, WaterColor));
-                    BuildRim(area.Shape, lift, FoamColor);
+                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Water));
+                    BuildRim(area.Shape, lift, _scenery.Foam);
                     break;
                 case GolfAreaKind.OutOfBounds:
-                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, OutColor));
+                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Out));
+                    if (_scenery.OutRim.HasValue)
+                    {
+                        BuildRim(area.Shape, lift, _scenery.OutRim.Value);
+                    }
+
                     break;
                 case GolfAreaKind.Sand:
-                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, SandColor));
-                    BuildRim(area.Shape, lift, SandRimColor);
+                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Sand));
+                    BuildRim(area.Shape, lift, _scenery.SandRim);
+                    break;
+                case GolfAreaKind.Ice:
+                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.IceFloor));
+                    BuildRim(area.Shape, lift, _scenery.IceRim);
+                    break;
+                case GolfAreaKind.Flow:
+                    BuildFlow(area, lift, uv);
+                    break;
+                case GolfAreaKind.Geyser:
+                    BuildGeyser(area, lift, uv);
                     break;
                 case GolfAreaKind.Slope:
                     BuildSlope(area, lift, texture, tint, uv, side);

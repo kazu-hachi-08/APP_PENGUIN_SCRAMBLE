@@ -32,6 +32,12 @@ namespace PenmonScramble.Golf.Core
         GaveUp,
         /// <summary>全員が終わった</summary>
         HoleFinished,
+        /// <summary>間欠泉で跳んだ</summary>
+        Geyser,
+        /// <summary>ワープの泡に入った（Position は入口、Strength はワープの番号。球はもう出口にある）</summary>
+        Warp,
+        /// <summary>止まった球を、動く物の通る範囲の外へよけた</summary>
+        Nudged,
     }
 
     /// <summary>ホールで起きたこと。表示・音・通信へはこれで渡す（Core は見せ方を知らない）</summary>

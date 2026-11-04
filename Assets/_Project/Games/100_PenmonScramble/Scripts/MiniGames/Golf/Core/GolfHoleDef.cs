@@ -37,6 +37,12 @@ namespace PenmonScramble.Golf.Core
         Slope,
         /// <summary>ジャンプ台。上を通ると跳ぶ</summary>
         Jump,
+        /// <summary>氷の床。よく滑る（摩擦が小さい）</summary>
+        Ice,
+        /// <summary>押し流す帯（水流・風の帯）。坂と同じく球を押すが、床は平ら</summary>
+        Flow,
+        /// <summary>間欠泉。噴き出している間だけジャンプ台になる（決まった間隔で噴く）</summary>
+        Geyser,
     }
 
     /// <summary>地面の上の範囲（多角形）。種類ごとに球への効き目が違う</summary>
@@ -48,15 +54,19 @@ namespace PenmonScramble.Golf.Core
         /// <summary>坂が押す力（m/s²。坂の下る向き）。坂のときだけ使う</summary>
         public Vec2 Push { get; }
 
-        /// <summary>ジャンプ台で上へ跳ぶ速さ（m/s）。ジャンプ台のときだけ使う</summary>
+        /// <summary>ジャンプ台・間欠泉で上へ跳ぶ速さ（m/s）</summary>
         public float Launch { get; }
 
-        private GolfArea(GolfAreaKind kind, IReadOnlyList<Vec2> shape, Vec2 push, float launch)
+        /// <summary>間欠泉の噴く間合い（決まった間隔で噴く。時間だけで決まるので、オンラインで全員そろう）</summary>
+        public GolfCycle Cycle { get; }
+
+        private GolfArea(GolfAreaKind kind, IReadOnlyList<Vec2> shape, Vec2 push, float launch, GolfCycle cycle = default)
         {
             Kind = kind;
             Shape = shape;
             Push = push;
             Launch = launch;
+            Cycle = cycle;
         }
 
         public static GolfArea Water(IReadOnlyList<Vec2> shape) => new GolfArea(GolfAreaKind.Water, shape, Vec2.Zero, 0f);
@@ -64,6 +74,20 @@ namespace PenmonScramble.Golf.Core
         public static GolfArea Sand(IReadOnlyList<Vec2> shape) => new GolfArea(GolfAreaKind.Sand, shape, Vec2.Zero, 0f);
         public static GolfArea Slope(IReadOnlyList<Vec2> shape, Vec2 push) => new GolfArea(GolfAreaKind.Slope, shape, push, 0f);
         public static GolfArea Jump(IReadOnlyList<Vec2> shape, float launch) => new GolfArea(GolfAreaKind.Jump, shape, Vec2.Zero, launch);
+        public static GolfArea Ice(IReadOnlyList<Vec2> shape) => new GolfArea(GolfAreaKind.Ice, shape, Vec2.Zero, 0f);
+        public static GolfArea Flow(IReadOnlyList<Vec2> shape, Vec2 push) => new GolfArea(GolfAreaKind.Flow, shape, push, 0f);
+
+        /// <param name="cycle">噴く間合い（Period 秒ごとに Active 秒だけ噴く）</param>
+        public static GolfArea Geyser(IReadOnlyList<Vec2> shape, float launch, GolfCycle cycle) => new GolfArea(GolfAreaKind.Geyser, shape, Vec2.Zero, launch, cycle);
+
+        /// <summary>この時刻に球を跳ばすか（ジャンプ台はいつも、間欠泉は噴いている間だけ）</summary>
+        public bool LaunchesAt(float time)
+        {
+            return Kind == GolfAreaKind.Jump || (Kind == GolfAreaKind.Geyser && Cycle.IsActive(time));
+        }
+
+        /// <summary>球を押す範囲か（坂・押し流す帯）</summary>
+        public bool Pushes => Kind == GolfAreaKind.Slope || Kind == GolfAreaKind.Flow;
 
         public bool Contains(Vec2 point) => GolfGeometry.Contains(Shape, point);
 
@@ -85,7 +109,14 @@ namespace PenmonScramble.Golf.Core
         public IReadOnlyList<GolfWall> Walls { get; }
         public IReadOnlyList<GolfArea> Areas { get; }
 
-        public GolfHoleDef(string name, int par, Vec2 tee, Vec2 cup, IReadOnlyList<Vec2> ground, IReadOnlyList<GolfWall> walls, IReadOnlyList<GolfArea> areas)
+        /// <summary>動く物（動く壁・回る風車・動く岩）。動きは時間だけで決まる</summary>
+        public IReadOnlyList<GolfMover> Movers { get; }
+
+        /// <summary>ワープの泡（入口に入ると出口へ飛ぶ）</summary>
+        public IReadOnlyList<GolfWarp> Warps { get; }
+
+        public GolfHoleDef(string name, int par, Vec2 tee, Vec2 cup, IReadOnlyList<Vec2> ground, IReadOnlyList<GolfWall> walls, IReadOnlyList<GolfArea> areas,
+            IReadOnlyList<GolfMover> movers = null, IReadOnlyList<GolfWarp> warps = null)
         {
             Name = name;
             Par = par;
@@ -94,6 +125,34 @@ namespace PenmonScramble.Golf.Core
             Ground = ground;
             Walls = walls;
             Areas = areas;
+            Movers = movers ?? System.Array.Empty<GolfMover>();
+            Warps = warps ?? System.Array.Empty<GolfWarp>();
+        }
+
+        /// <summary>
+        /// 時間で様子が変わる物（動く物・間欠泉）の、一番長い1回りの秒。無ければ 0。
+        /// コースの確認（GolfCourseCheck）は、この間で打つ時刻をずらして試す
+        /// </summary>
+        public float GimmickPeriod
+        {
+            get
+            {
+                var period = 0f;
+                foreach (var mover in Movers)
+                {
+                    period = System.Math.Max(period, mover.Period);
+                }
+
+                foreach (var area in Areas)
+                {
+                    if (area.Kind == GolfAreaKind.Geyser)
+                    {
+                        period = System.Math.Max(period, area.Cycle.Period);
+                    }
+                }
+
+                return period;
+            }
         }
 
         /// <summary>打数の上限（これまで打っても入らなければ「上限 ＋ 1」で終わり）</summary>
@@ -108,6 +167,18 @@ namespace PenmonScramble.Golf.Core
             for (var i = 0; i < polygon.Count; i++)
             {
                 walls.Add(new GolfWall(polygon[i], polygon[(i + 1) % polygon.Count], bounce, height));
+            }
+
+            return walls;
+        }
+
+        /// <summary>折れ線に沿って壁を立てる（閉じない。柵の無い辺は崖として残す）</summary>
+        public static List<GolfWall> WallsAlong(IReadOnlyList<Vec2> line, float bounce = GolfBalance.WallBounce, float height = GolfBalance.TallWallHeight)
+        {
+            var walls = new List<GolfWall>();
+            for (var i = 0; i + 1 < line.Count; i++)
+            {
+                walls.Add(new GolfWall(line[i], line[i + 1], bounce, height));
             }
 
             return walls;

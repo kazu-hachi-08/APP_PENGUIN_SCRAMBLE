@@ -52,6 +52,9 @@ namespace PenmonScramble.Golf.Core
         public int[] TurnOrder;
         public float ShotTimeLeft;
 
+        /// <summary>ホールが始まってからの秒（動く物・間欠泉の様子。GolfHoleWorld.Time）</summary>
+        public float HoleTime;
+
         /// <summary>番の人の手元（向き・ゲージ・打つ子・特殊）</summary>
         public GolfAim Aim;
 
@@ -90,6 +93,7 @@ namespace PenmonScramble.Golf.Core
                 CurrentPlayer = world.CurrentPlayer,
                 TurnOrder = new int[players],
                 ShotTimeLeft = world.ShotTimeLeft,
+                HoleTime = world.Time,
                 Aim = new GolfAim(round.Teams[world.CurrentPlayer].Selected, world.AimAngle, aim.Power, aim.GaugeRunning, aim.Striking, aim.Special, aim.Curve),
                 Balls = new GolfBallState[players],
                 Strokes = new int[players],

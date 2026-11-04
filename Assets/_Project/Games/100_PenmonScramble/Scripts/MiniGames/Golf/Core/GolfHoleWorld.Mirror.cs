@@ -19,6 +19,12 @@ namespace PenmonScramble.Golf.Core
         private float[] _mirrorToHeight;
         private float _mirrorBlend = 1f;
 
+        // 届いた時刻と手元の時刻のずれ。一気に戻すと動く物がかくっと戻るので、寄せる間に少しずつ直す
+        private float _mirrorTimeError;
+
+        // これより大きくずれていたら、少しずつではなくその場で直す（ホールの始め・長い途切れの後）
+        private const float TimeSnapSeconds = 0.5f;
+
         /// <summary>出来事1つ分だけ写しを進める（その後に状態で上書きするので、ここは見せ方に要る所だけ）</summary>
         internal void MirrorEvent(GolfEvent e)
         {
@@ -63,6 +69,7 @@ namespace PenmonScramble.Golf.Core
             Phase = snapshot.Phase;
             SetCurrent(snapshot.CurrentPlayer);
             ShotTimeLeft = snapshot.ShotTimeLeft;
+            MirrorTime(snapshot.HoleTime);
             if (!keepLocalAim)
             {
                 AimAngle = snapshot.Aim.Angle;
@@ -99,6 +106,19 @@ namespace PenmonScramble.Golf.Core
             ball.BoostStars = state.BoostStars;
         }
 
+        private void MirrorTime(float hostTime)
+        {
+            var error = hostTime - Time;
+            if (Math.Abs(error) > TimeSnapSeconds)
+            {
+                Time = hostTime;
+                _mirrorTimeError = 0f;
+                return;
+            }
+
+            _mirrorTimeError = error;
+        }
+
         /// <summary>写しの時間を進める: 持ち時間を減らし（次のスナップショットで直る）、球を届いた位置へ寄せる</summary>
         /// <param name="blendSeconds">届いた位置へ寄せきるまでの秒（スナップショットを送る間隔）</param>
         internal void TickMirror(float seconds, float blendSeconds)
@@ -107,6 +127,11 @@ namespace PenmonScramble.Golf.Core
             {
                 ShotTimeLeft = Math.Max(0f, ShotTimeLeft - seconds);
             }
+
+            // 時刻は届いた時刻へ少しずつ寄せながら進める（動く物がかくっと戻らないように）
+            var fix = blendSeconds > 0f ? _mirrorTimeError * Math.Min(1f, seconds / blendSeconds) : _mirrorTimeError;
+            Time += seconds + fix;
+            _mirrorTimeError -= fix;
 
             if (_mirrorTo == null || _mirrorBlend >= 1f)
             {

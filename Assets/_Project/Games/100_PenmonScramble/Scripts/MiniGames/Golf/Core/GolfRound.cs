@@ -178,6 +178,15 @@ namespace PenmonScramble.Golf.Core
             }
         }
 
+        /// <summary>持ち時間は減らさずに、動く物の時刻だけ進める（全体を見せている間など。写しは TickMirror で進む）</summary>
+        public void Idle(float seconds)
+        {
+            if (!IsMirror)
+            {
+                World.Idle(seconds);
+            }
+        }
+
         /// <summary>書いたスコアカードの打数（いま回っているホールも、書き終えていなければ 0）</summary>
         internal int CardStrokes(int hole, int player) => _strokes[hole, player];
 

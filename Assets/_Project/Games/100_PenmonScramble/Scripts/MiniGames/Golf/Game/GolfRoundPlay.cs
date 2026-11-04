@@ -34,6 +34,8 @@ namespace PenmonScramble.Golf.Game
         private float _hold;
         // 番が替わったことを知らせる人（-1 なら知らせない）
         private int _turnBanner = -1;
+        // このフレームにラウンドの時間を進めたか（進めなかったフレームも、動く物の時刻だけは進める）
+        private bool _ticked;
 
         /// <summary>ひとりで（開発用は players 人が1台で交代に）回る。打つ子は全員、本編の編成の3体</summary>
         /// <param name="record">結果を記録に書く（開発用の試しのホールでは書かない）</param>
@@ -106,6 +108,7 @@ namespace PenmonScramble.Golf.Game
             }
 
             var dt = Time.deltaTime;
+            _ticked = false;
             if (!IsMenuOpen && (_phase == Phase.Intro || _phase == Phase.Play))
             {
                 _camera.Orbit(_control.TakeLook(dt));
@@ -123,9 +126,17 @@ namespace PenmonScramble.Golf.Game
                 TickHoleOver(dt);
             }
 
+            // 全体を見せている間・反応を見せている間・ホールの間も、動く物は止めずに動かす
+            // （ひとりでメニューを開いている間は止める。オンラインは止めない＝ホストの時刻はみんなの時刻）
+            if (!_ticked && (!IsMenuOpen || _mode.IsOnline))
+            {
+                _round.Idle(dt);
+            }
+
             // ゲストは計算しないので、メニューやホールの間でも、届いた位置へ球を寄せ続ける
             _round.TickMirror(dt, GolfNetRules.SnapshotSeconds);
             _view.SyncBalls(_round.World.Balls, dt);
+            _view.SyncGimmicks(World.Time);
             if (_phase == Phase.Intro || _phase == Phase.Play)
             {
                 _hud.Show(_round, DisplayAim, CanAct, _control.IsLocalTurn, _control.BoostAvailable);
@@ -180,6 +191,7 @@ namespace PenmonScramble.Golf.Game
             if (!(aiming && _control.Striking))
             {
                 _round.Tick(dt);
+                _ticked = true;
             }
 
             if (_phase != Phase.Play)

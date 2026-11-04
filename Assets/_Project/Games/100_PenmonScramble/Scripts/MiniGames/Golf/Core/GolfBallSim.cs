@@ -7,7 +7,8 @@ namespace PenmonScramble.Golf.Core
     /// <summary>
     /// 球の動きの計算。GolfBalance.StepSeconds ずつ進める（何歩進めても同じ打ち方なら同じ結果）。
     /// 全部を本当の3Dにせず、地面の上の2次元と「浮いている間だけの高さ」で計算する
-    /// （純C#で確かめやすく、オンラインで全員の見え方をそろえやすいため）
+    /// （純C#で確かめやすく、オンラインで全員の見え方をそろえやすいため）。
+    /// 動く物・間欠泉は時刻（ホールが始まってからの秒）だけで決まるので、Step に時刻を渡す
     /// </summary>
     public sealed class GolfBallSim
     {
@@ -16,10 +17,18 @@ namespace PenmonScramble.Golf.Core
         // 球の中心が壁の線の真上にあるとき（向きが決められない）の扱いの境目
         private const float Epsilon = 1e-6f;
 
+        // 壁に押しつけられた球を止まった扱いにする速さの上限と、壁に触れているとみなす隙間
+        private const float PinnedSpeed = 0.08f;
+        private const float PinnedReach = 0.02f;
+
         private readonly GolfHoleDef _hole;
 
         // 速すぎてカップの上を通っている球。抜けたときに「縁で曲がった」を1回だけ出す
         private readonly HashSet<GolfBall> _overCup = new HashSet<GolfBall>();
+
+        // この歩の時刻と、その時刻の動く物の壁（球ごとに作り直さないよう、歩の始めに1回だけ置く）
+        private readonly List<MovingWall> _movingWalls = new List<MovingWall>();
+        private float _time;
 
         public GolfBallSim(GolfHoleDef hole)
         {
@@ -27,8 +36,10 @@ namespace PenmonScramble.Golf.Core
         }
 
         /// <summary>全部の球を1歩進める。起きたことは events に足す</summary>
-        public void Step(IReadOnlyList<GolfBall> balls, List<GolfEvent> events)
+        /// <param name="time">この歩の時刻（ホールが始まってからの秒）。動く物・間欠泉の様子を決める</param>
+        public void Step(IReadOnlyList<GolfBall> balls, List<GolfEvent> events, float time = 0f)
         {
+            SetTime(time);
             foreach (var ball in balls)
             {
                 if (ball.IsInPlay)
@@ -43,11 +54,17 @@ namespace PenmonScramble.Golf.Core
         /// <summary>
         /// 全部の球が止まったか。止まっていても坂に押されて動き出す球は止まっていない扱い（次の歩で動く）
         /// </summary>
-        public bool AllStopped(IReadOnlyList<GolfBall> balls)
+        public bool AllStopped(IReadOnlyList<GolfBall> balls, float time = 0f)
         {
+            SetTime(time);
             foreach (var ball in balls)
             {
-                if (ball.IsMoving || (ball.IsInPlay && WillSlide(ball)))
+                if (!ball.IsInPlay || IsPinned(ball))
+                {
+                    continue;
+                }
+
+                if (ball.IsMoving || WillSlide(ball))
                 {
                     return false;
                 }
@@ -63,6 +80,43 @@ namespace PenmonScramble.Golf.Core
         }
 
         /// <summary>
+        /// 坂・押し流す帯に壁へ押しつけられて、ほとんど動いていない球（止まった扱い）。
+        /// 壁に押しつけられた球は、壁で跳ね返されては押し戻されるのをくり返し、速さがちょうど 0 にならないため
+        /// </summary>
+        private bool IsPinned(GolfBall ball)
+        {
+            if (ball.IsAirborne || ball.Velocity.Length > PinnedSpeed)
+            {
+                return false;
+            }
+
+            var ground = SampleGround(ball, ball.Position);
+            if (ground.Push.Length <= ground.Friction)
+            {
+                return false;
+            }
+
+            foreach (var wall in _hole.Walls)
+            {
+                var offset = ball.Position - GolfGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
+                if (offset.Length > GolfBalance.BallRadius + PinnedReach || offset.Length <= Epsilon)
+                {
+                    continue;
+                }
+
+                var normal = offset.Normalized;
+                var into = Vec2.Dot(ground.Push, normal);
+                var along = ground.Push - normal * into;
+                if (into < 0f && along.Length <= ground.Friction)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// 止まった球が池・場外の上にあれば落とす（凍った道の上で止まった球は、氷が消えると池に落ちる）。
         /// 打順の終わりに呼ぶ。起きたことは events に足す
         /// </summary>
@@ -73,6 +127,68 @@ namespace PenmonScramble.Golf.Core
                 if (ball.IsInPlay && IsHazard(ball.Position))
                 {
                     Fall(ball, events);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 止まった球が動く物の通る範囲に掛かっていれば、範囲の外へよける（打順の終わりに呼ぶ）。
+        /// 狙っている間は球を動かさないので、動く物が止まった球をすり抜けて見えないように
+        /// </summary>
+        public void ClearSweeps(IReadOnlyList<GolfBall> balls, List<GolfEvent> events)
+        {
+            if (_hole.Movers.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var ball in balls)
+            {
+                if (ball.IsInPlay && MoveOutOfSweeps(ball))
+                {
+                    events.Add(new GolfEvent(GolfEventKind.Nudged, ball.Player, ball.Position));
+                }
+            }
+        }
+
+        /// <summary>範囲が重なっていても抜けられるよう、何回かくり返す。よけた先が壁に掛かれば壁から離す</summary>
+        private bool MoveOutOfSweeps(GolfBall ball)
+        {
+            const int maxPasses = 4;
+            var moved = false;
+            for (var pass = 0; pass < maxPasses; pass++)
+            {
+                var pushed = false;
+                foreach (var mover in _hole.Movers)
+                {
+                    if (mover.TryPushOutOfSweep(ball.Position, out var away))
+                    {
+                        ball.Position = away;
+                        pushed = true;
+                    }
+                }
+
+                if (!pushed)
+                {
+                    break;
+                }
+
+                moved = true;
+                SeparateFromStaticWalls(ball);
+            }
+
+            return moved;
+        }
+
+        private void SeparateFromStaticWalls(GolfBall ball)
+        {
+            foreach (var wall in _hole.Walls)
+            {
+                var closest = GolfGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
+                var offset = ball.Position - closest;
+                if (offset.Length < GolfBalance.BallRadius && offset.Length > Epsilon)
+                {
+                    ball.Position = closest + offset.Normalized * GolfBalance.BallRadius;
                 }
             }
         }
@@ -121,7 +237,8 @@ namespace PenmonScramble.Golf.Core
             if (ground.Jump != null && ball.Velocity.Length >= GolfBalance.JumpMinSpeed)
             {
                 ball.VerticalSpeed = ground.Jump.Launch;
-                events.Add(new GolfEvent(GolfEventKind.Jump, ball.Player, ball.Position, ground.Jump.Launch));
+                var kind = ground.Jump.Kind == GolfAreaKind.Geyser ? GolfEventKind.Geyser : GolfEventKind.Jump;
+                events.Add(new GolfEvent(kind, ball.Player, ball.Position, ground.Jump.Launch));
             }
 
             Roll(ball, ground.Push, ground.Friction);
@@ -129,6 +246,25 @@ namespace PenmonScramble.Golf.Core
             ball.Position += step;
             MeltIce(ball, step.Length);
             CollideWalls(ball, events);
+            TryWarp(ball, events);
+        }
+
+        /// <summary>ワープの泡: 地面を転がる球が入口に入ると、速さと向きはそのままで出口へ</summary>
+        private void TryWarp(GolfBall ball, List<GolfEvent> events)
+        {
+            for (var i = 0; i < _hole.Warps.Count; i++)
+            {
+                var warp = _hole.Warps[i];
+                if (!warp.Catches(ball.Position))
+                {
+                    continue;
+                }
+
+                events.Add(new GolfEvent(GolfEventKind.Warp, ball.Player, warp.Entry, i));
+                _overCup.Remove(ball);
+                ball.Position = warp.Exit;
+                return;
+            }
         }
 
         /// <summary>
@@ -139,6 +275,7 @@ namespace PenmonScramble.Golf.Core
         {
             var iced = ball.IceLeft > 0f;
             var friction = iced ? GolfBalance.RollDecel * GolfSpecialBalance.IceDecelScale : GolfBalance.RollDecel;
+            var floor = GolfBalance.RollDecel * GolfBalance.IceFloorDecelScale;
             var sample = new GroundSample { Friction = friction, Hazard = !_hole.OnGround(position) };
             foreach (var area in _hole.Areas)
             {
@@ -163,10 +300,19 @@ namespace PenmonScramble.Golf.Core
 
                         break;
                     case GolfAreaKind.Slope:
+                    case GolfAreaKind.Flow:
                         sample.Push += area.Push;
                         break;
+                    case GolfAreaKind.Ice:
+                        sample.Friction = Math.Min(sample.Friction, floor);
+                        break;
                     case GolfAreaKind.Jump:
-                        sample.Jump = area;
+                    case GolfAreaKind.Geyser:
+                        if (area.LaunchesAt(_time))
+                        {
+                            sample.Jump = area;
+                        }
+
                         break;
                 }
             }
@@ -318,32 +464,61 @@ namespace PenmonScramble.Golf.Core
         {
             foreach (var wall in _hole.Walls)
             {
-                if (ball.Height >= wall.Height)
-                {
-                    continue;
-                }
+                CollideWall(ball, wall, null, events);
+            }
 
-                var closest = GolfGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
-                var offset = ball.Position - closest;
-                var distance = offset.Length;
-                if (distance >= GolfBalance.BallRadius)
-                {
-                    continue;
-                }
+            foreach (var moving in _movingWalls)
+            {
+                CollideWall(ball, moving.Wall, moving.Mover, events);
+            }
+        }
 
-                var normal = distance > Epsilon ? offset / distance : FacingNormal(wall, ball.Velocity);
-                ball.Position = closest + normal * GolfBalance.BallRadius;
-                var into = Vec2.Dot(ball.Velocity, normal);
-                if (into >= 0f)
-                {
-                    continue;
-                }
+        /// <summary>
+        /// 壁1本との当たり。動く壁（mover が null でない）なら、壁の動く速さに対して跳ね返る
+        /// （止まった球も、動く壁に押されれば動き出す）
+        /// </summary>
+        private void CollideWall(GolfBall ball, GolfWall wall, GolfMover mover, List<GolfEvent> events)
+        {
+            if (ball.Height >= wall.Height)
+            {
+                return;
+            }
 
-                ball.Velocity -= normal * (into * (1f + wall.Bounce));
-                ball.Velocity = ball.Velocity.ClampLength(GolfBalance.MaxBallSpeed);
-                if (-into >= GolfBalance.HitEventMinSpeed)
+            var closest = GolfGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
+            var offset = ball.Position - closest;
+            var distance = offset.Length;
+            if (distance >= GolfBalance.BallRadius)
+            {
+                return;
+            }
+
+            var wallVelocity = mover?.VelocityAt(closest, _time) ?? Vec2.Zero;
+            var normal = distance > Epsilon ? offset / distance : FacingNormal(wall, ball.Velocity - wallVelocity);
+            ball.Position = closest + normal * GolfBalance.BallRadius;
+            var into = Vec2.Dot(ball.Velocity - wallVelocity, normal);
+            if (into >= 0f)
+            {
+                return;
+            }
+
+            ball.Velocity -= normal * (into * (1f + wall.Bounce));
+            ball.Velocity = ball.Velocity.ClampLength(GolfBalance.MaxBallSpeed);
+            if (-into >= GolfBalance.HitEventMinSpeed)
+            {
+                events.Add(new GolfEvent(GolfEventKind.WallHit, ball.Player, closest, -into));
+            }
+        }
+
+        /// <summary>時刻を決めて、その時刻の動く物の壁を置き直す</summary>
+        private void SetTime(float time)
+        {
+            _time = time;
+            _movingWalls.Clear();
+            foreach (var mover in _hole.Movers)
+            {
+                for (var i = 0; i < mover.LocalWalls.Count; i++)
                 {
-                    events.Add(new GolfEvent(GolfEventKind.WallHit, ball.Player, closest, -into));
+                    _movingWalls.Add(new MovingWall(mover.WallAt(i, time), mover));
                 }
             }
         }
@@ -397,6 +572,18 @@ namespace PenmonScramble.Golf.Core
                         events.Add(new GolfEvent(GolfEventKind.BallHit, a.Player, a.Position + normal * GolfBalance.BallRadius, -closing, b.Player));
                     }
                 }
+            }
+        }
+
+        private readonly struct MovingWall
+        {
+            public readonly GolfWall Wall;
+            public readonly GolfMover Mover;
+
+            public MovingWall(GolfWall wall, GolfMover mover)
+            {
+                Wall = wall;
+                Mover = mover;
             }
         }
 

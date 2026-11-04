@@ -57,6 +57,20 @@ namespace PenmonScramble.Golf.Core
         /// <summary>1打で転がる時間の上限。坂の作りの誤りなどで止まらなくても、打順が進むように</summary>
         public const float MaxRollSeconds = 25f;
 
+        // ---- ギミック（フェーズ 6） ----
+
+        /// <summary>氷の床の摩擦は何倍か（よく滑る）</summary>
+        public const float IceFloorDecelScale = 0.35f;
+
+        /// <summary>ワープの泡の入口の大きさ（球の中心がこの距離に入ると出口へ飛ぶ）</summary>
+        public const float WarpRadius = 0.42f;
+
+        /// <summary>
+        /// 動く物が通る範囲の中で止まった球を、範囲の外へよける距離（球の縁から範囲の縁まで）。
+        /// 狙っている間は球を動かさないので、動く物が止まった球をすり抜けないよう、止まる所を範囲の外にする
+        /// </summary>
+        public const float SweepClearance = 0.08f;
+
         /// <summary>ガイド線の長さの上限と、跳ね返った後に見せる短い線の長さ</summary>
         public const float GuideMaxLength = 9f;
         public const float GuideBounceLength = 1.6f;

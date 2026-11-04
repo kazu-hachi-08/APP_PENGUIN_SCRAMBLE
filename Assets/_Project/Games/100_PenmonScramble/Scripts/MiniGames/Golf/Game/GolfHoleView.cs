@@ -8,7 +8,8 @@ namespace PenmonScramble.Golf.Game
 {
     /// <summary>
     /// ホールの見た目（おもちゃのミニゴルフの台）。ホールの定義表から地面・壁・カップを組み、毎フレーム球を写す。
-    /// 地面は GolfHoleView.Ground.cs、壁は .Walls.cs、カップと旗とティーは .Cup.cs。球・ガイド線・打つ子は別の部品
+    /// 地面は GolfHoleView.Ground.cs、壁は .Walls.cs、カップと旗とティーは .Cup.cs、
+    /// 動く物・押し流す帯・間欠泉・ワープの泡は .Gimmicks.cs。球・ガイド線・打つ子は別の部品
     /// </summary>
     public partial class GolfHoleView : MonoBehaviour
     {
@@ -21,6 +22,8 @@ namespace PenmonScramble.Golf.Game
         private Transform _course;
         private GolfGuideView _guide;
         private GolfShooter _shooter;
+        private GolfScenery _scenery = new GolfScenery();
+        private GolfHoleDef _hole;
 
         public GolfSurface Surface { get; private set; }
 
@@ -37,6 +40,8 @@ namespace PenmonScramble.Golf.Game
             _course.SetParent(transform, false);
             Surface = new GolfSurface(hole);
             var theme = StageTheme.ForWorld(world);
+            _scenery = GolfScenery.For(world);
+            _hole = hole;
             if (Camera.main != null)
             {
                 Camera.main.backgroundColor = theme.Background;
@@ -46,6 +51,7 @@ namespace PenmonScramble.Golf.Game
             BuildWalls(hole, theme);
             BuildCup(hole, theme);
             BuildTee(hole);
+            BuildGimmicks(hole);
             for (var i = 0; i < playerCount; i++)
             {
                 _balls.Add(new GolfBallView(Materials, _course, GolfSeats.ColorOf(i)));
@@ -131,6 +137,7 @@ namespace PenmonScramble.Golf.Game
             _wallPops.Clear();
             _splashes.Clear();
             ClearSpecials();
+            ClearGimmicks();
             _flag = null;
         }
 

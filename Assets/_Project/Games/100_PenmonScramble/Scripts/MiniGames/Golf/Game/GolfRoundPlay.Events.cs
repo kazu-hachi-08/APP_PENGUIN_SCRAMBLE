@@ -6,7 +6,7 @@ namespace PenmonScramble.Golf.Game
 {
     /// <summary>
     /// ホールで起きたことの見せ方: 音・知らせ・打つ子の反応（喜ぶ・頭を抱える）・バンパーが弾む・水しぶき・旗が跳ねる・
-    /// 特殊ショット（名前の知らせ・水切りの輪・雷の輪）
+    /// 特殊ショット（名前の知らせ・水切りの輪・雷の輪）・ギミック（間欠泉・ワープの泡・動く物からよけた球）
     /// </summary>
     public partial class GolfRoundPlay
     {
@@ -50,6 +50,17 @@ namespace PenmonScramble.Golf.Game
                     break;
                 case GolfEventKind.Jump:
                     GolfSounds.Play(GolfSound.Jump);
+                    break;
+                case GolfEventKind.Geyser:
+                    GolfSounds.Play(GolfSound.Geyser);
+                    _view.PuffAt(e.Position);
+                    break;
+                case GolfEventKind.Warp:
+                    GolfSounds.Play(GolfSound.Warp);
+                    _view.WarpAt((int)e.Strength);
+                    break;
+                case GolfEventKind.Nudged:
+                    _view.PuffAt(e.Position);
                     break;
                 case GolfEventKind.LipOut:
                     GolfSounds.Play(GolfSound.LipOut);

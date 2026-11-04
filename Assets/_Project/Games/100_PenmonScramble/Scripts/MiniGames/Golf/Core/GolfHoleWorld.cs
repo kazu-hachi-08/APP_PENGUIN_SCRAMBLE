@@ -51,6 +51,12 @@ namespace PenmonScramble.Golf.Core
 
         public float ShotTimeLeft { get; private set; }
 
+        /// <summary>
+        /// ホールが始まってからの秒。動く物・間欠泉はこの時刻だけで決まる（オンラインはホストの時刻を写す）。
+        /// 転がっている間は球と同じ決まった刻みで進む
+        /// </summary>
+        public float Time { get; private set; }
+
         /// <param name="turnOrder">打つ順の席の番号（0 〜 人数−1 を1回ずつ）。GolfTurnOrder で作る</param>
         /// <param name="absent">もう抜けた席（オンライン）。球を置かず、はじめから終わった扱いにする</param>
         public GolfHoleWorld(GolfHoleDef hole, IReadOnlyList<int> turnOrder, IReadOnlyCollection<int> absent = null)
@@ -77,6 +83,19 @@ namespace PenmonScramble.Golf.Core
 
             BeginTurn(FirstWaiting());
         }
+
+        /// <summary>コースの確かめ用: 球1つを from に置き、時刻 time から始める（GolfCourseCheck）</summary>
+        internal static GolfHoleWorld ForCheck(GolfHoleDef hole, Vec2 from, float time)
+        {
+            var world = new GolfHoleWorld(hole, new[] { 0 });
+            world._balls[0].Place(from);
+            world._balls[0].ReturnPoint = from;
+            world.Time = time;
+            return world;
+        }
+
+        /// <summary>最後の1打が転がった秒（上限まで転がったか、をコースの確かめで見る）</summary>
+        internal float LastRollSeconds => _rollSeconds;
 
         /// <summary>打つ順で最初の、まだ終わっていない人の並びの位置（全員終わっていれば 0）</summary>
         private int FirstWaiting()
@@ -244,11 +263,27 @@ namespace PenmonScramble.Golf.Core
                 case GolfHolePhase.Rolling:
                     TickRoll(seconds);
                     break;
+                default:
+                    Time += seconds;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 時刻だけを進める（ホールの全体を見せている間・振り下ろしている間など、持ち時間を減らさないとき）。
+        /// 動く物は止めずに動かし続ける。転がっている間は球と一緒に Tick で進むので何もしない
+        /// </summary>
+        public void Idle(float seconds)
+        {
+            if (Phase != GolfHolePhase.Rolling)
+            {
+                Time += seconds;
             }
         }
 
         private void TickAim(float seconds)
         {
+            Time += seconds;
             ShotTimeLeft -= seconds;
             if (ShotTimeLeft <= 0f)
             {
@@ -270,10 +305,11 @@ namespace PenmonScramble.Golf.Core
         private void StepOnce()
         {
             _stepEvents.Clear();
-            _sim.Step(_balls, _stepEvents);
+            _sim.Step(_balls, _stepEvents, Time);
+            Time += GolfBalance.StepSeconds;
             _rollSeconds += GolfBalance.StepSeconds;
             RaiseStepEvents();
-            if (_sim.AllStopped(_balls) || _rollSeconds >= GolfBalance.MaxRollSeconds)
+            if (_sim.AllStopped(_balls, Time) || _rollSeconds >= GolfBalance.MaxRollSeconds)
             {
                 EndShot();
             }
@@ -300,8 +336,10 @@ namespace PenmonScramble.Golf.Core
                 ball.Stop();
             }
 
+            // 動く物の通る範囲で止まった球はよけておき（狙っている間に動く物がすり抜けないように）、
             // 凍った道の上で止まった球は、氷が消えて池に落ちる
             _stepEvents.Clear();
+            _sim.ClearSweeps(_balls, _stepEvents);
             _sim.SettleHazards(_balls, _stepEvents);
             RaiseStepEvents();
 

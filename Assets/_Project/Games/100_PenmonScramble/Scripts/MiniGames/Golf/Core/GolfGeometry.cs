@@ -46,6 +46,38 @@ namespace PenmonScramble.Golf.Core
             return new[] { new Vec2(x0, y0), new Vec2(x1, y0), new Vec2(x1, y1), new Vec2(x0, y1) };
         }
 
+        /// <summary>点の集まりを囲む凸な多角形（左回り。並んだ点は省く）</summary>
+        public static Vec2[] ConvexHull(IReadOnlyList<Vec2> points)
+        {
+            var sorted = new List<Vec2>(points);
+            sorted.Sort((a, b) => a.X != b.X ? a.X.CompareTo(b.X) : a.Y.CompareTo(b.Y));
+            if (sorted.Count < 3)
+            {
+                return sorted.ToArray();
+            }
+
+            var hull = new List<Vec2>();
+            // 下側を左から右へ、上側を右から左へ（右へ曲がる点を取り除く）
+            for (var pass = 0; pass < 2; pass++)
+            {
+                var start = hull.Count;
+                for (var k = 0; k < sorted.Count; k++)
+                {
+                    var p = pass == 0 ? sorted[k] : sorted[sorted.Count - 1 - k];
+                    while (hull.Count >= start + 2 && Cross(hull[hull.Count - 1] - hull[hull.Count - 2], p - hull[hull.Count - 2]) <= 0f)
+                    {
+                        hull.RemoveAt(hull.Count - 1);
+                    }
+
+                    hull.Add(p);
+                }
+
+                hull.RemoveAt(hull.Count - 1);
+            }
+
+            return hull.ToArray();
+        }
+
         /// <summary>符号つきの面積。左回りなら正</summary>
         public static float SignedArea(IReadOnlyList<Vec2> polygon)
         {

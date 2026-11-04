@@ -48,6 +48,10 @@ namespace PenmonScramble.Golf.Core
         private static readonly Dictionary<int, IReadOnlyList<GolfHoleDef>> Holes = new Dictionary<int, IReadOnlyList<GolfHoleDef>>
         {
             { 1, GolfCourse1.Holes },
+            { 2, GolfCourse2.Holes },
+            { 3, GolfCourse3.Holes },
+            { 4, GolfCourse4.Holes },
+            { 5, GolfCourse5.Holes },
         };
 
         /// <summary>番号のコース。表に無い・まだ作っていなければ null</summary>
