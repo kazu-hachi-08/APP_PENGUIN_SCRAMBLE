@@ -30,7 +30,7 @@ namespace PenmonScramble.Golf.Core
     /// 1コース（3ホール）を続けて回る。ホールごとの打数を残し（スコアカード）、2ホール目からは前までの打数が少ない順に打つ。
     /// 特殊ショットは各子 1コースに1回（使ったかは GolfTeam が持つ）。ホールの進行は GolfHoleWorld で、起きたことは Happened でまとめて渡す
     /// </summary>
-    public sealed class GolfRound
+    public sealed partial class GolfRound
     {
         // まだ回っていないホールの打数
         private const int NotPlayed = 0;
@@ -38,8 +38,15 @@ namespace PenmonScramble.Golf.Core
         private readonly int[,] _strokes;
         private readonly bool[] _recorded;
         private readonly List<bool[]> _specialsAtHoleStart = new List<bool[]>();
+        private readonly bool[] _removed;
+        private readonly List<int> _absent = new List<int>();
 
-        public GolfRound(GolfCourseDef course, IReadOnlyList<GolfTeam> teams)
+        public GolfRound(GolfCourseDef course, IReadOnlyList<GolfTeam> teams) : this(course, teams, false)
+        {
+        }
+
+        /// <param name="mirror">オンラインのゲストの写し（GolfRound.Mirror.cs）。球の計算はせず、届いたスナップショットを写す</param>
+        private GolfRound(GolfCourseDef course, IReadOnlyList<GolfTeam> teams, bool mirror)
         {
             if (course == null || course.Holes.Count == 0)
             {
@@ -50,6 +57,8 @@ namespace PenmonScramble.Golf.Core
             Teams = teams;
             _strokes = new int[course.Holes.Count, teams.Count];
             _recorded = new bool[course.Holes.Count];
+            _removed = new bool[teams.Count];
+            IsMirror = mirror;
             StartHole(0);
         }
 
@@ -90,6 +99,11 @@ namespace PenmonScramble.Golf.Core
         /// <summary>書き終えたホールの打数の合計</summary>
         public int Total(int player)
         {
+            if (player < 0 || player >= PlayerCount)
+            {
+                return 0;
+            }
+
             var total = 0;
             for (var hole = 0; hole < HoleCount; hole++)
             {
@@ -128,7 +142,7 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         public bool Shoot(int player, GolfShot shot)
         {
-            if (World.Phase != GolfHolePhase.Aiming || player != World.CurrentPlayer)
+            if (IsMirror || World.Phase != GolfHolePhase.Aiming || player != World.CurrentPlayer)
             {
                 return false;
             }
@@ -154,14 +168,65 @@ namespace PenmonScramble.Golf.Core
             return true;
         }
 
-        public bool Boost(int player, float turn) => World.Boost(player, turn);
+        public bool Boost(int player, float turn) => !IsMirror && World.Boost(player, turn);
 
-        public void Tick(float seconds) => World.Tick(seconds);
+        public void Tick(float seconds)
+        {
+            if (!IsMirror)
+            {
+                World.Tick(seconds);
+            }
+        }
+
+        /// <summary>書いたスコアカードの打数（いま回っているホールも、書き終えていなければ 0）</summary>
+        internal int CardStrokes(int hole, int player) => _strokes[hole, player];
+
+        // ---- 抜けた人（オンライン） ----
+
+        /// <summary>途中で抜けた（オンラインの切断）。スコアカードには残すが、順位と打順からは外す</summary>
+        public bool IsRemoved(int player) => player >= 0 && player < PlayerCount && _removed[player];
+
+        /// <summary>抜けた人の球を消して打順から外す（このホールも、この後のホールも）</summary>
+        public void RemovePlayer(int player)
+        {
+            if (IsMirror || player < 0 || player >= PlayerCount || _removed[player])
+            {
+                return;
+            }
+
+            _removed[player] = true;
+            _absent.Add(player);
+            World.RemovePlayer(player);
+        }
+
+        /// <summary>
+        /// 順位（1 から。打数の合計が少ないほど上、同じ打数は同じ順位）。抜けた人は 0。
+        /// ひとりで回ったときも 1（順位のボーナスを付けるかは呼ぶ側が人数で決める）
+        /// </summary>
+        public int Rank(int player)
+        {
+            if (IsRemoved(player) || player < 0 || player >= PlayerCount)
+            {
+                return 0;
+            }
+
+            var rank = 1;
+            var total = Total(player);
+            for (var other = 0; other < PlayerCount; other++)
+            {
+                if (other != player && !_removed[other] && Total(other) < total)
+                {
+                    rank++;
+                }
+            }
+
+            return rank;
+        }
 
         /// <summary>いまのホールを書き終えていれば、次のホールへ。最後のホールの後・まだ途中なら false</summary>
         public bool NextHole()
         {
-            if (!_recorded[HoleIndex] || IsLastHole)
+            if (IsMirror || !_recorded[HoleIndex] || IsLastHole)
             {
                 return false;
             }
@@ -173,7 +238,7 @@ namespace PenmonScramble.Golf.Core
         /// <summary>いまのホールをはじめから（そのホールで使った特殊ショットも戻す）。書き終えたホールはやり直さない</summary>
         public void RestartHole()
         {
-            if (_recorded[HoleIndex])
+            if (IsMirror || _recorded[HoleIndex])
             {
                 return;
             }
@@ -189,6 +254,11 @@ namespace PenmonScramble.Golf.Core
         /// <summary>コースをはじめから（スコアカードも特殊ショットも空に戻す）</summary>
         public void Restart()
         {
+            if (IsMirror)
+            {
+                return;
+            }
+
             Array.Clear(_strokes, 0, _strokes.Length);
             Array.Clear(_recorded, 0, _recorded.Length);
             foreach (var team in Teams)
@@ -233,10 +303,15 @@ namespace PenmonScramble.Golf.Core
                 _specialsAtHoleStart.Add(team.SaveSpecials());
             }
 
-            World = new GolfHoleWorld(Course.Holes[hole], TurnOrderFor(hole));
+            World = new GolfHoleWorld(Course.Holes[hole], TurnOrderFor(hole), _absent);
             World.Happened += OnHappened;
             HoleStarted?.Invoke(hole);
-            // 作った時点で最初の人の番が始まっているので、そのことも渡す
+            // 作った時点で最初の人の番が始まっているので、そのことも渡す（写しはホストから届く出来事で知る）
+            if (IsMirror)
+            {
+                return;
+            }
+
             Happened?.Invoke(new GolfEvent(GolfEventKind.TurnStart, World.CurrentPlayer, World.Balls[World.CurrentPlayer].Position));
         }
 

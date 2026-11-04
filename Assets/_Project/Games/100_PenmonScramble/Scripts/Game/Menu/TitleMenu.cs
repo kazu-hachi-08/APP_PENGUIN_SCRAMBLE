@@ -63,7 +63,7 @@ namespace PenmonScramble.Game
             _howToPlayButton.onClick.AddListener(_howToPlay.Open);
             _settingsButton.onClick.AddListener(_settings.Open);
             _nameButton.onClick.AddListener(() => _nameEntry.Show(Refresh, Refresh));
-            _onlineButton.onClick.AddListener(() => _onlinePanel.SetActive(true));
+            _onlineButton.onClick.AddListener(OpenOnline);
             _onlineCloseButton.onClick.AddListener(() => _onlinePanel.SetActive(false));
             _gacha.Closed += Refresh;
             _penguins.Closed += Refresh;
@@ -107,6 +107,9 @@ namespace PenmonScramble.Game
                 _onlinePanel.SetActive(false);
             }
         }
+
+        /// <summary>「みんなで遊ぶ」の窓（部屋を作る / コードで参加）を開く。ミニゲーム画面の「みんなで」からも開く</summary>
+        public void OpenOnline() => _onlinePanel.SetActive(true);
 
         /// <summary>初期化したら、初回と同じく無料ガチャを3回引くまで閉じられない（名前は残っているので聞かない）</summary>
         private void OnRecordReset()

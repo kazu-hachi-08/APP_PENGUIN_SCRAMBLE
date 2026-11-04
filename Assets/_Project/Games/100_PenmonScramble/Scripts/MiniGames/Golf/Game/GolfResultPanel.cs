@@ -53,9 +53,12 @@ namespace PenmonScramble.Golf.Game
         [SerializeField] private Text _coinTotal;
         [Tooltip("左から もう一度・コースを選ぶ・ロビーへ")]
         [SerializeField] private StageMenuCard[] _cards;
+        [Tooltip("オンラインのゲストに出す一言（コースを選ぶのはホスト）")]
+        [SerializeField] private Text _note;
         [SerializeField] private float _cardStagger = 0.06f;
 
         private readonly MenuNavigator _navigator = new MenuNavigator();
+        private readonly bool[] _available = { true, true, true };
         private int _selected;
         private int _shownFrame;
 
@@ -71,19 +74,42 @@ namespace PenmonScramble.Golf.Game
             }
         }
 
+        /// <summary>
+        /// オンラインでは「もう一度」を出さない（同じコースをもう一度回るときも、待ちの窓でそのまま「開始」）。
+        /// 「コースを選ぶ」（全員で待ちの窓へ戻る）はホストだけ。ゲストは「ロビーへ」（部屋から抜ける）だけで、ホストを待つ
+        /// </summary>
+        public void SetOnline(bool online, bool host)
+        {
+            _available[RetryCard] = !online;
+            _available[CoursesCard] = !online || host;
+            _available[LobbyCard] = true;
+            for (var i = 0; i < _cards.Length; i++)
+            {
+                _cards[i].gameObject.SetActive(_available[i]);
+            }
+
+            _note.gameObject.SetActive(online && !host);
+        }
+
         public void Show(GolfResultInfo info)
         {
             gameObject.SetActive(true);
             _shownFrame = Time.frameCount;
             _navigator.Reset();
-            _score.text = $"{info.Strokes} 打（{GolfScoreNames.Difference(info.Strokes, info.Par)}）";
+            var rank = info.Reward.Rank > 0 ? $"{info.Reward.Rank}位  " : string.Empty;
+            _score.text = $"{rank}{info.Strokes} 打（{GolfScoreNames.Difference(info.Strokes, info.Par)}）";
             _best.text = BestLine(info);
             _best.color = info.NewBest ? GoodColor : Color.white;
             ShowReward(info.Reward);
             _coinTotal.text = info.Recorded ? $"+{info.Reward.Total:N0} コイン" : "試しのホールは記録しません";
-            Select(RetryCard);
+            Select(FirstAvailable());
             for (var i = 0; i < _cards.Length; i++)
             {
+                if (!_available[i])
+                {
+                    continue;
+                }
+
                 _cards[i].SnapSelection();
                 _cards[i].PlayIn(0.3f + i * _cardStagger);
             }
@@ -101,7 +127,7 @@ namespace PenmonScramble.Golf.Game
 
             if (_navigator.Step.x != 0)
             {
-                Select(Mathf.Clamp(_selected + _navigator.Step.x, 0, _cards.Length - 1));
+                Select(NextAvailable(_selected, _navigator.Step.x));
                 GameSounds.Play(GameSound.Click);
             }
             else if (_navigator.Submit || (InputManager.HasInstance && InputManager.Instance.IsActionDown(0)))
@@ -148,8 +174,30 @@ namespace PenmonScramble.Golf.Game
                 values += $"\n+{reward.FirstPlayBonus}";
             }
 
+            if (reward.RankBonus > 0)
+            {
+                labels += $"\n{reward.Rank}位";
+                values += $"\n+{reward.RankBonus}";
+            }
+
             _rewardLabels.text = labels;
             _rewardValues.text = values;
+        }
+
+        private int FirstAvailable() => NextAvailable(-1, 1);
+
+        /// <summary>出している札の中で、step の向きに次の札（端なら今のまま）</summary>
+        private int NextAvailable(int from, int step)
+        {
+            for (var i = from + step; i >= 0 && i < _cards.Length; i += step)
+            {
+                if (_available[i])
+                {
+                    return i;
+                }
+            }
+
+            return from < 0 ? LobbyCard : from;
         }
 
         private void Select(int index)
@@ -168,7 +216,7 @@ namespace PenmonScramble.Golf.Game
 
         private void Press(int index)
         {
-            if (index < 0 || !gameObject.activeSelf)
+            if (index < 0 || !gameObject.activeSelf || !_available[index])
             {
                 return;
             }

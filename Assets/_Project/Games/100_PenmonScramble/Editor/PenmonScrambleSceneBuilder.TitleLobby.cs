@@ -18,7 +18,7 @@ namespace PenmonScramble.Editor
     public static partial class PenmonScrambleSceneBuilder
     {
         private const string SoloLabel = "ひとりで遊ぶ";
-        private const string OnlineLabel = "みんなで遊ぶ\n<size=28>ボスラッシュ</size>";
+        private const string OnlineLabel = "みんなで遊ぶ\n<size=28>ボスラッシュ・ゴルフ</size>";
         private const string NameHintLabel = "タップで変更";
 
         // 上の札
@@ -140,6 +140,8 @@ namespace PenmonScramble.Editor
             so.FindProperty("_settings").objectReferenceValue = settings;
             so.FindProperty("_nameEntry").objectReferenceValue = nameEntry;
             so.ApplyModifiedProperties();
+            // ミニゲーム画面の「みんなで」は、待ちの窓で遊ぶものを選んでおいてから「みんなで遊ぶ」の窓を開く
+            WireMiniGameHubTogether(miniGames, menu, title.GetComponent<RoomModeSelector>());
 
             AddTitleFlow(title, lobby.gameObject, menu, nameEntry, gacha, notice);
             return menu;

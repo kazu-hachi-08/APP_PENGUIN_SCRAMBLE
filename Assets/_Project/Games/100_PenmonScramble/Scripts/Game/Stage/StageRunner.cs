@@ -12,6 +12,7 @@ namespace PenmonScramble.Game
     /// タイトル（ひとりで / 部屋を作る / コードで参加）からステージを始め、入力・HUD・結果をつなぐ。
     /// 計算はソロとホストが StageHost、ゲストは StageGuest で、どちらもスナップショットを StageView に渡して描く。
     /// 「ひとりで遊ぶ」はロビーのカードで選んだストーリー、「みんなで遊ぶ」はホストが待ちの窓で選んだボスラッシュ（RushLobby）。
+    /// 待ちの窓でミニゲームが選ばれていたら、ステージは始めずにミニゲームのシーンへ移る（RoomModeSelector）。
     /// 連れていくのは各自の記録の編成。報酬は各自の記録に書く。
     /// BGM はタイトル・ステージ・ボスエリアで切り替え、結果で止めてジングルを鳴らす。
     /// 遊んでいる間はメニュー（StageMenu）を開ける。開いている間は自分の入力を「メニュー中」にする。
@@ -27,6 +28,7 @@ namespace PenmonScramble.Game
         [SerializeField] private ModeSelectPanel _modeSelect;
         [SerializeField] private TitleMenu _titleMenu;
         [SerializeField] private RushLobby _rushLobby;
+        [SerializeField] private RoomModeSelector _roomModes;
         [SerializeField] private StageMenu _menu;
         [SerializeField] private TouchControlsView _touch;
         [SerializeField] private MusicClips _musicClips;
@@ -100,6 +102,13 @@ namespace PenmonScramble.Game
 
         private void StartOnline(int seat, int playerCount)
         {
+            if (_roomModes.StartElsewhere(seat, playerCount))
+            {
+                // 移るまでの暗転の間は、空のステージではなく待ちの窓を見せておく
+                _modeSelect.gameObject.SetActive(true);
+                return;
+            }
+
             // ホストは開始直後から送ってくるので、このコールバックの中ですぐに受け取れるようにする
             _link = new StageLink();
             _link.Open();

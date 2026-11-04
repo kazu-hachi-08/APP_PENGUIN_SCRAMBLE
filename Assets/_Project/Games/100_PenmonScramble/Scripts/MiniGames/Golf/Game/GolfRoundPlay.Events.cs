@@ -28,6 +28,7 @@ namespace PenmonScramble.Golf.Game
                 case GolfEventKind.Shot:
                     GolfSounds.PlayShot(e.Strength);
                     _view.Shooter.OnShot(e.Strength);
+                    ResetSwingHold();
                     break;
                 case GolfEventKind.Special:
                     OnSpecial(e);
@@ -74,7 +75,7 @@ namespace PenmonScramble.Golf.Game
         {
             var kind = (GolfSpecialKind)e.Other;
             GolfSounds.Play(GolfSound.Special);
-            var color = PenguinPalette.ElementColor(_teams[e.Player].Current.Element);
+            var color = PenguinPalette.ElementColor(_round.Teams[e.Player].Current.Element);
             _hud.Flash($"{GolfSpecial.NameOf(kind)}！", Color.Lerp(color, Color.white, 0.35f), MessageSeconds);
         }
 
@@ -120,7 +121,9 @@ namespace PenmonScramble.Golf.Game
             _camera.ResetOrbit();
             _control.ResetForTurn();
             _view.MeltIce();
-            _turnBanner = _teams.Count > 1 ? e.Player : -1;
+            ResetSwingHold();
+            ResetRemoteAim(e.Player);
+            _turnBanner = _round.PlayerCount > 1 ? e.Player : -1;
         }
 
         private void ShowTurnBanner()
@@ -130,7 +133,8 @@ namespace PenmonScramble.Golf.Game
                 return;
             }
 
-            _hud.Flash($"{GolfSeats.Label(_turnBanner)} の番", GolfSeats.ColorOf(_turnBanner), TurnMessageSeconds);
+            var label = _mode.IsOnline && _turnBanner == _mode.LocalSeat ? "あなたの番" : $"{GolfSeats.Label(_turnBanner)} の番";
+            _hud.Flash(label, GolfSeats.ColorOf(_turnBanner), TurnMessageSeconds);
             _turnBanner = -1;
         }
     }

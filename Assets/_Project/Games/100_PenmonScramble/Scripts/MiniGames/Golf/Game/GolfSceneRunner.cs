@@ -1,4 +1,5 @@
 using PenmonScramble.Common.Input;
+using PenmonScramble.Common.Online;
 using PenmonScramble.Golf.Core;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
@@ -9,6 +10,7 @@ namespace PenmonScramble.Golf.Game
 {
     /// <summary>
     /// ゴルフのシーンの入口。ミニゲーム画面から来たときは、選んだコースをひとりで回る（GolfRoundPlay）。
+    /// 部屋の待ちの窓から来たときは、引き継いだ部屋でみんなで回る（GolfOnlinePlay）。部屋が切れていたらロビーへ。
     /// まだ作っていないコースなら「準備中」の板と「もどる」だけ。
     /// エディタの Tools/PenmonScramble/Golf から開いたときは試しの1ホールを遊ぶ（記録には書かない）
     /// </summary>
@@ -20,6 +22,8 @@ namespace PenmonScramble.Golf.Game
         [SerializeField] private Text _courseText;
         [SerializeField] private Button _backButton;
         [SerializeField] private GolfRoundPlay _play;
+        [SerializeField] private GolfOnlinePlay _online;
+        [SerializeField] private OnlineSession _session;
 
         private bool _leaving;
 
@@ -45,6 +49,12 @@ namespace PenmonScramble.Golf.Game
                 return;
             }
 
+            if (MiniGameLaunch.IsOnline)
+            {
+                StartOnline();
+                return;
+            }
+
             var course = GolfCourseTable.Get(MiniGameLaunch.CourseNo);
             if (course != null)
             {
@@ -59,7 +69,22 @@ namespace PenmonScramble.Golf.Game
         private void StartRound(GolfCourseDef course, int players, bool record)
         {
             _placeholder.SetActive(false);
-            _play.Begin(course, players, record);
+            _play.BeginSolo(course, players, record);
+        }
+
+        /// <summary>移っている間にホストが落ちて部屋を引き継げなかったら、ロビーへ戻る</summary>
+        private void StartOnline()
+        {
+            if (!_session.IsInRoom || !_session.IsMatchStarted)
+            {
+                Debug.LogWarning("[GolfSceneRunner] 部屋を引き継げなかったのでロビーへ戻ります");
+                _leaving = true;
+                MiniGameLaunch.ReturnToLobby();
+                return;
+            }
+
+            _placeholder.SetActive(false);
+            _online.Begin(MiniGameLaunch.CourseNo);
         }
 
         private void Update()

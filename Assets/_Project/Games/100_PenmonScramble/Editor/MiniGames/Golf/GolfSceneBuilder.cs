@@ -1,6 +1,7 @@
 using System.Linq;
 using PenmonScramble.Common.Editor;
 using PenmonScramble.Common.Input;
+using PenmonScramble.Common.Online;
 using PenmonScramble.Golf.Game;
 using PenmonScramble.MiniGames.Core;
 using UnityEditor;
@@ -12,7 +13,8 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// ゴルフのシーン（GolfScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編のシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
-    /// まだ作っていないコースのときの「準備中」の板と、コースを回る部品（3D・カメラ・操作・HUD・スコアカード・結果・メニュー）を置く
+    /// まだ作っていないコースのときの「準備中」の板と、コースを回る部品（3D・カメラ・操作・HUD・スコアカード・結果・メニュー）、
+    /// みんなで回るための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの GolfOnlinePlay・始まるまでの「待っています」）を置く
     /// （Docs/MINIGAME_GOLF_PLAN.md）
     /// </summary>
     public static partial class GolfSceneBuilder
@@ -34,6 +36,9 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 BackPosition = new Vector2(0f, -260f);
         private static readonly Vector2 BackSize = new Vector2(360f, 130f);
         private const int BackFontSize = 52;
+        private static readonly Color WaitingBackColor = new Color(0.02f, 0.03f, 0.10f, 0.7f);
+        private static readonly Vector2 WaitingTextSize = new Vector2(1400f, 120f);
+        private const int WaitingFontSize = 60;
 
         /// <summary>バッチモードからも呼べるよう、保存の確認はしない（呼ぶ側の Rebuild が済ませている）</summary>
         public static void BuildScene()
@@ -54,6 +59,9 @@ namespace PenmonScramble.Editor
             var menu = CreateMenu(canvas, hud.Menu);
             var play = CreatePlay(camera, hud, scorecard, result, menu);
             CreateInputManager(hud.Shoot, hud.Special);
+            // 本編のシーンが預けた部屋を、起きたときに引き継ぐ（ひとりで遊ぶときは何もしない）
+            var session = new GameObject("OnlineSession").AddComponent<OnlineSession>();
+            var online = CreateOnline(canvas, session, play);
 
             var runner = new GameObject("Golf").AddComponent<GolfSceneRunner>();
             var so = new SerializedObject(runner);
@@ -61,6 +69,8 @@ namespace PenmonScramble.Editor
             so.FindProperty("_courseText").objectReferenceValue = course;
             so.FindProperty("_backButton").objectReferenceValue = back;
             so.FindProperty("_play").objectReferenceValue = play;
+            so.FindProperty("_online").objectReferenceValue = online;
+            so.FindProperty("_session").objectReferenceValue = session;
             so.ApplyModifiedProperties();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -79,6 +89,24 @@ namespace PenmonScramble.Editor
             PenmonScrambleSceneBuilder.CreateLabel(parent, "ComingSoon", ComingSoon, ComingSoonFontSize, ComingSoonPosition, ComingSoonSize);
             back = PenmonScrambleSceneBuilder.CreateTitleButton(parent, "Back", "もどる", BackPosition, BackSize, PenmonScrambleSceneBuilder.CancelColor, BackFontSize);
             return group;
+        }
+
+        /// <summary>みんなで回るときの通信の段取りと、始まるまで（全員の準備・ホストを待つ間）画面を覆う「待っています」</summary>
+        private static GolfOnlinePlay CreateOnline(Transform canvas, OnlineSession session, GolfRoundPlay play)
+        {
+            var waiting = PenmonScrambleSceneBuilder.CreateFullScreenBacking(canvas, "Waiting", WaitingBackColor);
+            var text = PenmonScrambleSceneBuilder.CreateLabel(waiting.transform, "Text", string.Empty, WaitingFontSize, Vector2.zero, WaitingTextSize);
+            text.fontStyle = FontStyle.Bold;
+            waiting.SetActive(false);
+
+            var online = play.gameObject.AddComponent<GolfOnlinePlay>();
+            var so = new SerializedObject(online);
+            so.FindProperty("_session").objectReferenceValue = session;
+            so.FindProperty("_play").objectReferenceValue = play;
+            so.FindProperty("_waiting").objectReferenceValue = waiting;
+            so.FindProperty("_waitingText").objectReferenceValue = text;
+            so.ApplyModifiedProperties();
+            return online;
         }
 
         /// <summary>

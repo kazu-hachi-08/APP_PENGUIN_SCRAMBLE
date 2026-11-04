@@ -33,6 +33,9 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 NextCardPosition = new Vector2(0f, -330f);
         private static readonly Vector2 NextCardSize = new Vector2(520f, 116f);
         private const int NextCardFontSize = 52;
+        private static readonly Vector2 ScorecardNoteSize = new Vector2(1200f, 80f);
+        private const int ScorecardNoteFontSize = 44;
+        private static readonly Color NoteColor = new Color(0.75f, 0.85f, 1f);
         private static readonly Vector2 PanelSlideFrom = new Vector2(0f, -120f);
         private static readonly Vector2 CardSlideFrom = new Vector2(0f, -200f);
 
@@ -57,6 +60,7 @@ namespace PenmonScramble.Editor
         private const float ResultCardSpacing = 520f;
         private static readonly Vector2 ResultCardSize = new Vector2(460f, 116f);
         private const int ResultCardFontSize = 50;
+        private const int ResultNoteFontSize = 38;
 
         private static GolfScorecard CreateScorecard(Transform canvas)
         {
@@ -93,6 +97,11 @@ namespace PenmonScramble.Editor
             }
 
             var next = B.CreateMenuCard(root.transform, "Next", string.Empty, B.StartColor, Center, NextCardPosition, NextCardSize, NextCardFontSize, CardSlideFrom, centered: true);
+            // オンラインのゲストは、つぎの札の代わりに「ホストが進めるのを待っています」
+            var note = B.CreateLabel(root.transform, "Note", string.Empty, ScorecardNoteFontSize, NextCardPosition, ScorecardNoteSize);
+            note.fontStyle = FontStyle.Bold;
+            note.color = NoteColor;
+            note.gameObject.SetActive(false);
 
             var scorecard = root.AddComponent<GolfScorecard>();
             var so = new SerializedObject(scorecard);
@@ -101,6 +110,7 @@ namespace PenmonScramble.Editor
             B.SetObjectArray(so.FindProperty("_cells"), cells);
             B.SetObjectArray(so.FindProperty("_playerPlates"), plates);
             so.FindProperty("_nextCard").objectReferenceValue = next;
+            so.FindProperty("_note").objectReferenceValue = note;
             so.FindProperty("_centerPosition").vector2Value = ScorecardCenter;
             so.FindProperty("_dockedPosition").vector2Value = ScorecardDocked;
             so.ApplyModifiedProperties();
@@ -135,8 +145,16 @@ namespace PenmonScramble.Editor
                 cards[i] = B.CreateMenuCard(root.transform, $"Card{i + 1}", label, color, Center, position, ResultCardSize, ResultCardFontSize, CardSlideFrom, centered: true);
             }
 
+            // オンラインのゲストは「もう一度」「コースを選ぶ」の代わりに一言（札2枚分の幅に出す）
+            var note = B.CreateLabel(root.transform, "Note", "ホストがコースを選ぶと、みんなで待ちの窓へ戻ります", ResultNoteFontSize,
+                new Vector2(-ResultCardSpacing * 0.5f, ResultCardY), new Vector2(ResultCardSpacing * 2f - 80f, ResultCardSize.y));
+            note.fontStyle = FontStyle.Bold;
+            note.color = NoteColor;
+            note.gameObject.SetActive(false);
+
             var result = root.AddComponent<GolfResultPanel>();
             var so = new SerializedObject(result);
+            so.FindProperty("_note").objectReferenceValue = note;
             so.FindProperty("_score").objectReferenceValue = score;
             so.FindProperty("_best").objectReferenceValue = best;
             so.FindProperty("_rewardLabels").objectReferenceValue = labels;
@@ -161,6 +179,9 @@ namespace PenmonScramble.Editor
             so.FindProperty("_restartSoloMessage").stringValue = "このホールをはじめからやり直します。\nこのホールで使った特殊ショットは戻ります";
             so.FindProperty("_exitLabel").stringValue = "ミニゲームへ";
             so.FindProperty("_exitSoloMessage").stringValue = "コースをやめてミニゲームの画面に戻ります。\nいまのスコアは残りません";
+            so.FindProperty("_exitHostMessage").stringValue = "部屋を閉じてミニゲームの画面に戻ります。\nほかの人も全員ロビーに戻ります";
+            so.FindProperty("_exitGuestMessage").stringValue = "部屋から抜けてミニゲームの画面に戻ります。\nいまのスコアは残りません";
+            so.FindProperty("_coopNote").stringValue = "みんなで遊んでいる間は 止まりません";
             so.ApplyModifiedProperties();
             return menu;
         }

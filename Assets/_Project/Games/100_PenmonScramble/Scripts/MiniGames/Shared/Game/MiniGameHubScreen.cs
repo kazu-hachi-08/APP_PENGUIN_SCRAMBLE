@@ -10,7 +10,8 @@ namespace PenmonScramble.MiniGames.Game
 {
     /// <summary>
     /// ミニゲームを選ぶ画面。ロビーの左の列の「ミニゲーム」から開く。
-    /// 1段目: MiniGameTable のカードが並ぶ → 押すと 2段目: そのミニゲームのコース選び（◀ ▶・鍵・ベスト・中身・報酬）→「ひとりで」。
+    /// 1段目: MiniGameTable のカードが並ぶ → 押すと 2段目: そのミニゲームのコース選び（◀ ▶・鍵・ベスト・中身・報酬）→「ひとりで」/「みんなで」。
+    /// 「みんなで」は、そのミニゲームとコースを待ちの窓で選んでおいて、ロビーの「みんなで遊ぶ」の窓（部屋を作る / コードで参加）を開く。
     /// コースの中身と報酬は、各ミニゲームが登録した IMiniGameCourseGuide から出す（共通側はミニゲームの中身を知らない）。
     /// 「もどる」/ Esc は1段ずつ戻る。ミニゲームのシーンから戻ったとき（LobbyReturn）は、遊んだコースを選んだ状態で開く。
     /// 本編（TitleMenu）はミニゲームを知らないので、開くボタンのつなぎはこちらで持つ
@@ -53,6 +54,12 @@ namespace PenmonScramble.MiniGames.Game
         [SerializeField] private Button _prevCourseButton;
         [SerializeField] private Button _nextCourseButton;
         [SerializeField] private Button _soloButton;
+        [Tooltip("みんなで遊べる（待ちの窓に札がある）ミニゲームだけ押せる")]
+        [SerializeField] private Button _multiButton;
+
+        [Header("みんなで")]
+        [SerializeField] private TitleMenu _titleMenu;
+        [SerializeField] private RoomModeSelector _roomModes;
 
         private readonly List<MiniGameCard> _cards = new List<MiniGameCard>();
         private MiniGameDef _game;
@@ -69,6 +76,7 @@ namespace PenmonScramble.MiniGames.Game
             _prevCourseButton.onClick.AddListener(() => MoveCourse(-1));
             _nextCourseButton.onClick.AddListener(() => MoveCourse(1));
             _soloButton.onClick.AddListener(PlaySolo);
+            _multiButton.onClick.AddListener(PlayTogether);
             _cardTemplate.gameObject.SetActive(false);
             CreateCards();
             _screen.SetActive(false);
@@ -196,6 +204,7 @@ namespace PenmonScramble.MiniGames.Game
             _prevCourseButton.interactable = _courseIndex > 0;
             _nextCourseButton.interactable = _courseIndex < _game.Courses.Count - 1;
             _soloButton.interactable = unlocked && ready;
+            _multiButton.interactable = unlocked && ready && _game.MaxPlayers > 1 && _roomModes.Has(_game.Id);
         }
 
         private string BestLabel(MiniGameCourseDef course, IMiniGameCourseGuide guide)
@@ -222,6 +231,20 @@ namespace PenmonScramble.MiniGames.Game
             {
                 MiniGameLaunch.StartSolo(_game, course.No);
             }
+        }
+
+        /// <summary>待ちの窓でこのミニゲームとコースを選んでおき、ロビーの「みんなで遊ぶ」の窓を開く（ゲストはホストの選んだものを遊ぶ）</summary>
+        private void PlayTogether()
+        {
+            var course = _game.Courses[_courseIndex];
+            if (!CanPlay(course) || !_roomModes.Has(_game.Id))
+            {
+                return;
+            }
+
+            _roomModes.Preselect(_game.Id, course.No);
+            _screen.SetActive(false);
+            _titleMenu.OpenOnline();
         }
     }
 }

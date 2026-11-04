@@ -94,6 +94,21 @@ namespace PenmonScramble.Golf.Core
 
         internal void RestoreSpecials(bool[] used) => _used = (bool[])used.Clone();
 
+        /// <summary>オンラインのゲストの写し: ホストから届いた選んでいる子と、特殊ショットを使ったか</summary>
+        /// <param name="keepSelected">自分の番で狙っている途中なら、選んでいる子は手元のものを使う</param>
+        internal void MirrorState(GolfTeamState state, bool keepSelected)
+        {
+            if (!keepSelected && state.Selected >= 0 && state.Selected < _members.Count)
+            {
+                Selected = state.Selected;
+            }
+
+            for (var i = 0; i < _used.Length; i++)
+            {
+                _used[i] = state.SpecialUsed != null && i < state.SpecialUsed.Length && state.SpecialUsed[i];
+            }
+        }
+
         /// <summary>コースの始めに戻す（全員の特殊ショットがまた使える）</summary>
         internal void ResetSpecials() => _used = new bool[GolfRules.TeamSize];
     }

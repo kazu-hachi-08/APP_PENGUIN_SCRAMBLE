@@ -77,22 +77,25 @@ namespace PenmonScramble.Golf.Game
             CardPressed?.Invoke(index);
         }
 
+        /// <param name="aim">番の人の手元（自分の番なら手元の操作、ほかの人の番ならその人から届いたもの）</param>
         /// <param name="canAct">いまの番の人が操作できる（ホールの始めの全体を見せている間・喜んでいる間は false）</param>
-        public void Show(GolfRound round, GolfShotControl control, bool canAct)
+        /// <param name="localTurn">いまの番がこの端末の人か。ほかの人の番は、ゲージと札を見せるだけで、スマホのボタンは出さない</param>
+        /// <param name="boost">この端末の人が雷の加速を使える</param>
+        public void Show(GolfRound round, GolfAim aim, bool canAct, bool localTurn, bool boost)
         {
             var world = round.World;
             var team = round.Teams[world.CurrentPlayer];
             var aiming = world.Phase == GolfHolePhase.Aiming && canAct;
-            var boost = canAct && control.BoostAvailable;
+            boost = canAct && boost;
             ShowHole(round);
-            ShowTimer(world, aiming && !control.Striking);
+            ShowTimer(world, aiming && !aim.Striking);
             ShowRows(world);
-            ShowCards(team, control, world.Phase != GolfHolePhase.Finished);
-            ShowSpecial(team, control, aiming, boost);
-            _gauge.Show(aiming, control.Gauge.Power, control.Gauge.Running);
+            ShowCards(team, aim, world.Phase != GolfHolePhase.Finished);
+            ShowSpecial(team, aim, aiming, boost);
+            _gauge.Show(aiming, aim.Power, aim.GaugeRunning);
             // 雷の加速は打つボタンで押すので、転がっている間も打つボタンを出す（特殊のボタンは狙う間だけ）
-            _touch.SetShown((aiming && !control.Striking) || boost);
-            _specialButton.SetActive(aiming && team.CanUseSpecial(team.Selected));
+            _touch.SetShown(localTurn && ((aiming && !aim.Striking) || boost));
+            _specialButton.SetActive(localTurn && aiming && team.CanUseSpecial(team.Selected));
         }
 
         /// <summary>ホールの間・結果の間は、ホールの札と打順の表だけ残して隠す（スコアカードと重ねない）</summary>
@@ -104,7 +107,7 @@ namespace PenmonScramble.Golf.Game
             _touch.SetShown(false);
             if (!playing)
             {
-                ShowCards(null, null, false);
+                ShowCards(null, default, false);
             }
         }
 
@@ -161,7 +164,7 @@ namespace PenmonScramble.Golf.Game
             }
         }
 
-        private void ShowCards(GolfTeam team, GolfShotControl control, bool visible)
+        private void ShowCards(GolfTeam team, GolfAim aim, bool visible)
         {
             for (var i = 0; i < _cards.Length; i++)
             {
@@ -172,7 +175,7 @@ namespace PenmonScramble.Golf.Game
                 }
 
                 var selected = i == team.Selected;
-                _cards[i].Show(team.Members[i], selected, team.IsSpecialUsed(i), selected && control.SpecialArmed);
+                _cards[i].Show(team.Members[i], selected, team.IsSpecialUsed(i), selected && aim.Special);
             }
         }
 
@@ -180,7 +183,7 @@ namespace PenmonScramble.Golf.Game
         /// 特殊ショットの札: いま選んでいる子の特殊の名前と★、ON / OFF（風は曲げる向き）。使った子は「使った」。
         /// 雷の加速が使える間は、その案内に替える
         /// </summary>
-        private void ShowSpecial(GolfTeam team, GolfShotControl control, bool aiming, bool boost)
+        private void ShowSpecial(GolfTeam team, GolfAim aim, bool aiming, bool boost)
         {
             _specialPlate.SetActive(aiming || boost);
             if (!aiming && !boost)
@@ -201,8 +204,8 @@ namespace PenmonScramble.Golf.Game
 
             _specialName.text = $"{GolfSpecial.NameOf(kind)} {new string('★', Mathf.Clamp(member.Stars, 0, 3))}";
             var used = team.IsSpecialUsed(team.Selected);
-            _specialState.text = used ? UsedLabel : !control.SpecialArmed ? OffLabel : StateLabel(kind, control.Curve);
-            _specialState.color = control.SpecialArmed ? ArmedColor : used ? UsedColor : Color.white;
+            _specialState.text = used ? UsedLabel : !aim.Special ? OffLabel : StateLabel(kind, aim.Curve);
+            _specialState.color = aim.Special ? ArmedColor : used ? UsedColor : Color.white;
         }
 
         private static string StateLabel(GolfSpecialKind kind, int curve)

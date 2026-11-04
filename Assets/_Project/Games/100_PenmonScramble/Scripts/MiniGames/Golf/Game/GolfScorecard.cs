@@ -25,6 +25,7 @@ namespace PenmonScramble.Golf.Game
         private static readonly Color UnderColor = new Color(1f, 0.85f, 0.3f);
         private static readonly Color OverColor = new Color(0.65f, 0.85f, 1f);
         private static readonly Color EvenColor = Color.white;
+        private static readonly Color LeftColor = new Color(0.6f, 0.6f, 0.65f);
 
         [SerializeField] private RectTransform _panel;
         [SerializeField] private Text _title;
@@ -33,6 +34,8 @@ namespace PenmonScramble.Golf.Game
         [Tooltip("全員の行の帯（席の色）")]
         [SerializeField] private Image[] _playerPlates;
         [SerializeField] private StageMenuCard _nextCard;
+        [Tooltip("つぎの札の代わりに出す一言（オンラインのゲストが、ホストが進めるのを待つ間）")]
+        [SerializeField] private Text _note;
         [SerializeField] private Vector2 _centerPosition = new Vector2(0f, 60f);
         [SerializeField] private Vector2 _dockedPosition = new Vector2(-420f, 40f);
 
@@ -47,16 +50,20 @@ namespace PenmonScramble.Golf.Game
             _nextCard.Pressed += _ => Next();
         }
 
-        /// <param name="onNext">「つぎのホールへ」を押したとき。null ならつぎの札を出さない（結果の画面で使うとき）</param>
-        public void Show(GolfRound round, string title, string nextLabel, Action onNext)
+        /// <param name="onNext">「つぎのホールへ」を押したとき。null ならつぎの札を出さない（結果の画面・ホストを待つゲスト）</param>
+        /// <param name="docked">左へ寄せる（結果の画面）。省略すると、つぎの札が無ければ寄せる</param>
+        /// <param name="note">つぎの札の代わりに出す一言</param>
+        public void Show(GolfRound round, string title, string nextLabel, Action onNext, bool? docked = null, string note = null)
         {
             gameObject.SetActive(true);
             _shownFrame = Time.frameCount;
             _navigator.Reset();
             _title.text = title;
             _onNext = onNext;
-            _panel.anchoredPosition = onNext != null ? _centerPosition : _dockedPosition;
+            _panel.anchoredPosition = (docked ?? onNext == null) ? _dockedPosition : _centerPosition;
             _nextCard.gameObject.SetActive(onNext != null);
+            _note.text = note ?? string.Empty;
+            _note.gameObject.SetActive(!string.IsNullOrEmpty(note));
             if (onNext != null)
             {
                 _nextCard.SetLabel(nextLabel);
@@ -139,7 +146,8 @@ namespace PenmonScramble.Golf.Game
             }
 
             _playerPlates[seat].color = GolfSeats.ColorOf(seat) * new Color(1f, 1f, 1f, 0.35f);
-            SetCell(row, 0, GolfSeats.Label(seat), EvenColor);
+            var removed = round.IsRemoved(seat);
+            SetCell(row, 0, NameOf(round, seat), removed ? LeftColor : EvenColor);
             for (var hole = 0; hole < GolfRules.HolesPerCourse; hole++)
             {
                 if (hole >= round.HoleCount)
@@ -149,14 +157,32 @@ namespace PenmonScramble.Golf.Game
                 }
 
                 var par = round.Course.Holes[hole].Par;
-                var recorded = round.IsRecorded(hole);
+                var recorded = round.IsRecorded(hole) && !removed;
                 var strokes = round.Strokes(hole, seat);
                 SetCell(row, hole + 1, recorded ? strokes.ToString() : NotPlayed, recorded ? ColorFor(strokes, par) : EvenColor);
+            }
+
+            if (removed)
+            {
+                SetCell(row, Columns - 1, NotPlayed, LeftColor);
+                return;
             }
 
             var total = round.Total(seat);
             var parSoFar = round.ParThroughRecorded();
             SetCell(row, Columns - 1, $"{total}（{GolfScoreNames.Difference(total, parSoFar)}）", ColorFor(total, parSoFar));
+        }
+
+        /// <summary>回り終えたら、名前の前に順位（2人以上のとき）。抜けた人は「ぬけた」</summary>
+        private static string NameOf(GolfRound round, int seat)
+        {
+            var name = GolfSeats.Label(seat);
+            if (round.IsRemoved(seat))
+            {
+                return $"{name}（ぬけた）";
+            }
+
+            return round.IsFinished && round.PlayerCount > 1 ? $"{round.Rank(seat)}位 {name}" : name;
         }
 
         private static Color ColorFor(int strokes, int par) => strokes < par ? UnderColor : strokes > par ? OverColor : EvenColor;

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ミニゲームを選ぶ画面（MiniGameHubScreen）: 1段目はミニゲームのカードの列、2段目はコース選び（◀ ▶・ベスト・鍵・中身・報酬）と「ひとりで」。
+    /// ミニゲームを選ぶ画面（MiniGameHubScreen）: 1段目はミニゲームのカードの列、2段目はコース選び（◀ ▶・ベスト・鍵・中身・報酬）と「ひとりで」「みんなで」。
     /// ロビーの左の列の「ミニゲーム」から開く（ボタンは CreateTitleMenu が作ってつなぐ）。
     /// ミニゲームのシーンは各ミニゲームの SceneBuilder（GolfSceneBuilder など）
     /// </summary>
@@ -59,9 +59,11 @@ namespace PenmonScramble.Editor
         private const int CourseLayoutFontSize = 36;
         private const int CourseRewardFontSize = 28;
         private static readonly Color CourseRewardColor = new Color(1f, 1f, 1f, 0.8f);
-        private static readonly Vector2 HubSoloPosition = new Vector2(0f, -340f);
+        private static readonly Vector2 HubSoloPosition = new Vector2(-240f, -340f);
         private static readonly Vector2 HubSoloSize = new Vector2(420f, 160f);
         private const string HubSoloLabel = "ひとりで";
+        private static readonly Vector2 HubMultiPosition = new Vector2(240f, -340f);
+        private const string HubMultiLabel = "みんなで";
 
         // ページを切り替えるたびに、下から少し持ち上がって出る
         private static readonly Vector2 HubPageSlideFrom = new Vector2(0f, -120f);
@@ -99,6 +101,7 @@ namespace PenmonScramble.Editor
             var prev = CreateTitleButton(card, "PrevCourse", "◀", new Vector2(-CourseArrowX, 0f), CourseArrowSize, ArrowColor, MenuFontSize);
             var next = CreateTitleButton(card, "NextCourse", "▶", new Vector2(CourseArrowX, 0f), CourseArrowSize, ArrowColor, MenuFontSize);
             var solo = CreateTitleButton(courses.transform, "Solo", HubSoloLabel, HubSoloPosition, HubSoloSize, SoloColor, SoloButtonFontSize);
+            var multi = CreateTitleButton(courses.transform, "Multi", HubMultiLabel, HubMultiPosition, HubSoloSize, OnlineColor, SoloButtonFontSize);
 
             var hub = root.AddComponent<MiniGameHubScreen>();
             var so = new SerializedObject(hub);
@@ -120,6 +123,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_prevCourseButton").objectReferenceValue = prev;
             so.FindProperty("_nextCourseButton").objectReferenceValue = next;
             so.FindProperty("_soloButton").objectReferenceValue = solo;
+            so.FindProperty("_multiButton").objectReferenceValue = multi;
             so.ApplyModifiedProperties();
             screen.SetActive(false);
             return hub;
@@ -130,6 +134,15 @@ namespace PenmonScramble.Editor
         {
             var so = new SerializedObject(hub);
             so.FindProperty("_openButton").objectReferenceValue = openButton;
+            so.ApplyModifiedProperties();
+        }
+
+        /// <summary>「みんなで」: 待ちの窓で遊ぶものを選んでおいて、ロビーの「みんなで遊ぶ」の窓を開く（TitleMenu ができてからつなぐ）</summary>
+        private static void WireMiniGameHubTogether(MiniGameHubScreen hub, TitleMenu titleMenu, RoomModeSelector roomModes)
+        {
+            var so = new SerializedObject(hub);
+            so.FindProperty("_titleMenu").objectReferenceValue = titleMenu;
+            so.FindProperty("_roomModes").objectReferenceValue = roomModes;
             so.ApplyModifiedProperties();
         }
 

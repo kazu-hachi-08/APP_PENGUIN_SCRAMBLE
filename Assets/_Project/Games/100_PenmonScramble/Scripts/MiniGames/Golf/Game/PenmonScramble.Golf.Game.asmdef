@@ -9,7 +9,9 @@
         "PenmonScramble.MiniGames.Game",
         "PenmonScramble.Golf.Core",
         "Unity.InputSystem",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.Collections",
+        "Unity.Netcode.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -13,7 +13,6 @@ namespace PenmonScramble.Game
     {
         private const string SoloHeading = "いちじていし";
         private const string CoopHeading = "メニュー";
-        private const string CoopNote = "協力中は ゲームが止まりません";
 
         [SerializeField] private Text _headingText;
         [SerializeField] private Text _noteText;
@@ -54,7 +53,7 @@ namespace PenmonScramble.Game
         private void BindStatus()
         {
             _headingText.text = _solo ? SoloHeading : CoopHeading;
-            _noteText.text = _solo ? string.Empty : CoopNote;
+            _noteText.text = _solo ? string.Empty : _coopNote;
         }
 
         private void ShowStatusNow() => ShowStatus(snap: true);

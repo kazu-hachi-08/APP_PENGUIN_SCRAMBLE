@@ -18,7 +18,7 @@ namespace PenmonScramble.Golf.Core
     /// 1ホールの進行（打順・打数・持ち時間・上限・カップイン・池の戻し）。
     /// 作った時点で最初の人の番が始まっている。表示と音へは Happened で起きたことを渡す
     /// </summary>
-    public sealed class GolfHoleWorld
+    public sealed partial class GolfHoleWorld
     {
         // 描画が止まった後などに、溜まった時間を一気に進めて固まらないようにする上限
         private const float MaxCatchUpSeconds = 0.25f;
@@ -27,7 +27,7 @@ namespace PenmonScramble.Golf.Core
         private readonly List<GolfBall> _balls = new List<GolfBall>();
         private readonly int[] _strokes;
         private readonly bool[] _done;
-        private readonly IReadOnlyList<int> _order;
+        private IReadOnlyList<int> _order;
         private readonly List<GolfEvent> _stepEvents = new List<GolfEvent>();
         private int _orderIndex;
         private float _accumulator;
@@ -43,13 +43,17 @@ namespace PenmonScramble.Golf.Core
         /// <summary>いま打つ（または打った球が転がっている）人</summary>
         public int CurrentPlayer => _order[_orderIndex];
 
+        /// <summary>このホールの打つ順（席の番号）</summary>
+        public IReadOnlyList<int> TurnOrder => _order;
+
         /// <summary>いまの人が向いている向き（ラジアン。0 が +X、左回り）。持ち時間切れの自動の1打もこの向き</summary>
         public float AimAngle { get; private set; }
 
         public float ShotTimeLeft { get; private set; }
 
         /// <param name="turnOrder">打つ順の席の番号（0 〜 人数−1 を1回ずつ）。GolfTurnOrder で作る</param>
-        public GolfHoleWorld(GolfHoleDef hole, IReadOnlyList<int> turnOrder)
+        /// <param name="absent">もう抜けた席（オンライン）。球を置かず、はじめから終わった扱いにする</param>
+        public GolfHoleWorld(GolfHoleDef hole, IReadOnlyList<int> turnOrder, IReadOnlyCollection<int> absent = null)
         {
             ValidateOrder(turnOrder);
             Hole = hole;
@@ -62,7 +66,58 @@ namespace PenmonScramble.Golf.Core
                 _balls.Add(new GolfBall(player, TeePosition(hole, player, turnOrder.Count)));
             }
 
-            BeginTurn(0);
+            foreach (var seat in absent ?? Array.Empty<int>())
+            {
+                if (seat >= 0 && seat < turnOrder.Count)
+                {
+                    _done[seat] = true;
+                    _balls[seat].Active = false;
+                }
+            }
+
+            BeginTurn(FirstWaiting());
+        }
+
+        /// <summary>打つ順で最初の、まだ終わっていない人の並びの位置（全員終わっていれば 0）</summary>
+        private int FirstWaiting()
+        {
+            for (var index = 0; index < _order.Count; index++)
+            {
+                if (!_done[_order[index]])
+                {
+                    return index;
+                }
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// 抜けた人（オンラインの切断）の球を消して、打順から外す。狙っている途中ならその場で次の人へ。
+        /// 転がっている途中なら、止まってから次の人へ（打った球の結果は残す）
+        /// </summary>
+        public void RemovePlayer(int player)
+        {
+            if (player < 0 || player >= PlayerCount || !_balls[player].Active && _done[player])
+            {
+                return;
+            }
+
+            _balls[player].Stop();
+            _balls[player].Active = false;
+            _done[player] = true;
+            if (Phase != GolfHolePhase.Aiming || player != CurrentPlayer)
+            {
+                return;
+            }
+
+            if (Array.TrueForAll(_done, done => done))
+            {
+                FinishHole();
+                return;
+            }
+
+            NextTurn();
         }
 
         public int Strokes(int player) => _strokes[player];
@@ -262,12 +317,17 @@ namespace PenmonScramble.Golf.Core
             GiveUpIfOutOfStrokes(CurrentPlayer);
             if (Array.TrueForAll(_done, done => done))
             {
-                Phase = GolfHolePhase.Finished;
-                Raise(new GolfEvent(GolfEventKind.HoleFinished, -1, Hole.Cup));
+                FinishHole();
                 return;
             }
 
             NextTurn();
+        }
+
+        private void FinishHole()
+        {
+            Phase = GolfHolePhase.Finished;
+            Raise(new GolfEvent(GolfEventKind.HoleFinished, -1, Hole.Cup));
         }
 
         /// <summary>上限まで打っても入らなければ「上限 ＋ 1」打で終わり、球をコースから外す</summary>

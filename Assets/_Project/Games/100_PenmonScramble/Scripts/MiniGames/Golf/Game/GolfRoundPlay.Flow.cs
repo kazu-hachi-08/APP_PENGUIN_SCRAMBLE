@@ -9,7 +9,9 @@ namespace PenmonScramble.Golf.Game
     /// <summary>
     /// ホールの間と結果とメニュー: 全員がホールを終えたら少し見せてからスコアカード →「つぎのホールへ」。
     /// 最後のホールの後は、コインと記録を書いて保存し、結果（スコアカード ＋ 内訳 ＋「もう一度」「コースを選ぶ」「ロビーへ」）。
-    /// ステージ中のメニュー（本編の StageMenu の見た目）の「ホールをやり直す」「ミニゲームへ」もここで受ける
+    /// ステージ中のメニュー（本編の StageMenu の見た目）の「ホールをやり直す」「ミニゲームへ」もここで受ける。
+    /// オンラインは、次のホールへ進めるのも結果で「コースを選ぶ」（全員で待ちの窓へ）もホストだけ。ゲストはホストを待つ。
+    /// メニューは止めず、「ホールをやり直す」は出さない（ほかの人が打っている途中なので）
     /// </summary>
     public partial class GolfRoundPlay
     {
@@ -36,8 +38,10 @@ namespace PenmonScramble.Golf.Game
         {
             _result.Chosen += OnResultChosen;
             _menu.RestartRequested += () => _round.RestartHole();
+            // オンラインでも、ミニゲーム画面へ戻ると部屋から抜ける（ホストが抜けると全員の試合が終わる）
             _menu.TitleRequested += MiniGameLaunch.ReturnToHub;
-            _menu.Bind(solo: true, canRestart: true);
+            _menu.Bind(solo: !_mode.IsOnline, canRestart: !_mode.IsOnline, isHost: _mode.Role == GolfRole.Host);
+            _result.SetOnline(_mode.IsOnline, _mode.Role == GolfRole.Host);
             HidePanels();
         }
 
@@ -82,7 +86,15 @@ namespace PenmonScramble.Golf.Game
             }
 
             _phase = Phase.Scorecard;
-            _scorecard.Show(_round, $"ホール {_round.HoleIndex + 1} おわり", $"ホール {_round.HoleIndex + 2} へ", () => _round.NextHole());
+            var title = $"ホール {_round.HoleIndex + 1} おわり";
+            if (_mode.IsGuest)
+            {
+                // 次のホールはホストが始める（届いたら BuildHole がスコアカードを閉じる）
+                _scorecard.Show(_round, title, null, null, docked: false, note: "ホストが次のホールへ進めるのを待っています");
+                return;
+            }
+
+            _scorecard.Show(_round, title, $"ホール {_round.HoleIndex + 2} へ", () => _round.NextHole());
         }
 
         private void ShowResult()
@@ -97,12 +109,14 @@ namespace PenmonScramble.Golf.Game
         }
 
         /// <summary>
-        /// 自分（席 0）の結果からコインを決め、記録に書いて保存する（CLAUDE.md §3.5: 項目は足すだけ。ここでは今ある表に書くだけ）。
-        /// 開発用の試しのホールでは書かない
+        /// 自分（ひとりなら席 0、オンラインは自分の席）の結果からコインを決め、記録に書いて保存する
+        /// （CLAUDE.md §3.5: 項目は足すだけ。ここでは今ある表に書くだけ）。報酬は各自の端末で書く。
+        /// オンラインは順位のボーナスも付ける。開発用の試しのホールでは書かない
         /// </summary>
         private GolfResultInfo RecordResult()
         {
-            const int seat = 0;
+            var seat = _mode.RecordSeat;
+            var rank = _mode.IsOnline && _round.PlayerCount > 1 ? _round.Rank(seat) : 0;
             var strokes = _round.Total(seat);
             var par = _round.Course.TotalPar;
             var holeInOnes = _round.HoleInOnes(seat);
@@ -110,7 +124,7 @@ namespace PenmonScramble.Golf.Game
             var records = new MiniGameRecords(GameSave.Record.Data);
             var hadBest = records.TryGetBest(game.Id, _round.Course.No, out var previousBest);
             var firstPlay = records.Plays(game.Id, _round.Course.No) == 0;
-            var reward = GolfReward.Compute(strokes, par, holeInOnes, _record && firstPlay);
+            var reward = GolfReward.Compute(strokes, par, holeInOnes, _record && firstPlay, rank);
             if (!_record)
             {
                 return new GolfResultInfo(strokes, par, reward, false, false, 0, false);
@@ -131,6 +145,12 @@ namespace PenmonScramble.Golf.Game
                     PlayMusic();
                     break;
                 case GolfResultPanel.CoursesCard:
+                    if (_mode.IsOnline)
+                    {
+                        RequestRoom();
+                        break;
+                    }
+
                     MiniGameLaunch.ReturnToHub();
                     break;
                 case GolfResultPanel.LobbyCard:

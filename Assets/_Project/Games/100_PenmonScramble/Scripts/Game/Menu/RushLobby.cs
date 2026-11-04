@@ -8,11 +8,14 @@ namespace PenmonScramble.Game
     /// <summary>
     /// 「みんなで遊ぶ」の部屋の待ちの窓に出す、ボスラッシュのステージと難易度の選択。
     /// ホストが ◀ ▶ と難易度の札で選び、選び直すたびにゲストへ送る（ゲストは見るだけ）。解放はホストの記録で決め、
-    /// 開いていないものを選んでいる間は「開始」を押せない。部屋に入っている間だけ出す（ModeSelectPanel.RoomStateChanged）。
+    /// 開いていないものを選んでいる間は「開始」を押せない。部屋に入っていて、遊ぶものの札でボスラッシュが選ばれている間だけ出す
+    /// （ModeSelectPanel.RoomStateChanged・RoomModeSelector）。ボスラッシュは本編のシーンの中で遊ぶ（StageRunner が始める）。
     /// 見た目の書き換えは RushLobby.View.cs
     /// </summary>
-    public partial class RushLobby : MonoBehaviour
+    public partial class RushLobby : MonoBehaviour, IRoomMode
     {
+        public const string ModeId = "rush";
+
         [SerializeField] private ModeSelectPanel _modeSelect;
         [SerializeField] private Button _prevButton;
         [SerializeField] private Button _nextButton;
@@ -25,7 +28,12 @@ namespace PenmonScramble.Game
         private readonly RushLobbyLink _link = new RushLobbyLink();
         private bool _inRoom;
         private bool _isHost;
+        private bool _selected;
         private RushChoice? _guestChoice;
+
+        public string Id => ModeId;
+
+        public string Label => "ボスラッシュ";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -69,6 +77,20 @@ namespace PenmonScramble.Game
             _inRoom = false;
             _link.Close();
         }
+
+        public void SetSelected(bool selected)
+        {
+            _selected = selected;
+            Refresh();
+        }
+
+        /// <summary>ボスラッシュはミニゲーム画面から頼まれることがない（選ぶものはステージのカードで選ぶ）</summary>
+        public void Preselect(int option)
+        {
+        }
+
+        /// <summary>本編のシーンの中で遊ぶので、StageRunner に任せる</summary>
+        public bool StartMatch(int seat, int playerCount) => false;
 
         private void OnRoomStateChanged(bool isHost, bool inRoom)
         {

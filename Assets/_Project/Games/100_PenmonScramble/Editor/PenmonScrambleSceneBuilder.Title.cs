@@ -20,7 +20,7 @@ namespace PenmonScramble.Editor
         private const string LobbyName = "Lobby";
         private const string SplashName = "Splash";
 
-        private const string HostLabel = "部屋を作る\n<size=34>コードを友だちに送って\n最大4人でボスラッシュ</size>";
+        private const string HostLabel = "部屋を作る\n<size=34>コードを友だちに送って\n最大4人で遊ぶ</size>";
         private const string JoinCaption = "コードで参加";
         private const string JoinLabel = "参加する";
         private const string CodePlaceholder = "参加コード";
@@ -64,7 +64,8 @@ namespace PenmonScramble.Editor
         private const float CloseButtonInset = 20f;
 
         // 接続待ちの窓: 上に状態と参加コード（文面は ModeSelectPanel が入れる）、下に「コピー」「開始」「キャンセル」。
-        // 部屋に入ったら、右にボスラッシュの選択（RushLobby）が出て、状態の文字は左へ寄る。窓の上の端はロゴの下にそろえる
+        // 部屋に入ったら、右に遊ぶものの札（ボスラッシュ / ゴルフ）と選んだ遊びの板が出て、状態の文字は左へ寄る（RoomModes.cs）。
+        // 窓の上の端はロゴの下にそろえる
         private static readonly Vector2 WaitingPanelSize = new Vector2(1600f, 760f);
         private static readonly Vector2 WaitingPanelPosition = new Vector2(0f, -90f);
         private static readonly Vector2 StatusPosition = new Vector2(0f, 80f);
@@ -107,7 +108,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_copyButtonLabel").objectReferenceValue = copy.GetComponentInChildren<Text>();
             so.FindProperty("_startButton").objectReferenceValue = start;
             so.ApplyModifiedProperties();
-            CreateRushLobby(panel, status.transform.parent, status);
+            CreateRoomModes(panel, session, status.transform.parent, status);
             return panel;
         }
 

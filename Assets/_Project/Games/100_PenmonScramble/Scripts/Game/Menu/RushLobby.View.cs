@@ -5,8 +5,7 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ボスラッシュの選択の見た目: ステージのカード（番号・名前・3戦の顔・鍵）、難易度の3つの札、報酬のコイン。
-    /// カードを出す間は、接続の状態（参加コード・人数）の文字を左へ寄せる
+    /// ボスラッシュの選択の見た目: ステージのカード（番号・名前・3戦の顔・鍵）、難易度の3つの札、報酬のコイン
     /// </summary>
     public partial class RushLobby
     {
@@ -17,12 +16,6 @@ namespace PenmonScramble.Game
 
         [Header("見た目")]
         [SerializeField] private GameObject _card;
-        [Tooltip("接続の状態の文字（ModeSelectPanel が文面を入れる）。カードを出す間は左の列へ寄せる")]
-        [SerializeField] private RectTransform _status;
-        [SerializeField] private Vector2 _statusAlonePosition;
-        [SerializeField] private Vector2 _statusAloneSize;
-        [SerializeField] private Vector2 _statusBesideCardPosition;
-        [SerializeField] private Vector2 _statusBesideCardSize;
         [SerializeField] private Text _stageNoText;
         [SerializeField] private Text _stageNameText;
         [Tooltip("1戦目の巨大ペンモン2体・2戦目の大ボス・3戦目の本気の大ボス")]
@@ -44,10 +37,8 @@ namespace PenmonScramble.Game
         private void Refresh()
         {
             var shown = Shown;
-            var showCard = _inRoom && shown.HasValue;
+            var showCard = _inRoom && _selected && shown.HasValue;
             _card.SetActive(showCard);
-            _status.anchoredPosition = showCard ? _statusBesideCardPosition : _statusAlonePosition;
-            _status.sizeDelta = showCard ? _statusBesideCardSize : _statusAloneSize;
             if (!showCard)
             {
                 return;

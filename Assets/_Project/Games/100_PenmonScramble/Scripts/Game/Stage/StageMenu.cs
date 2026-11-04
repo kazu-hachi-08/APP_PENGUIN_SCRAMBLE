@@ -33,6 +33,7 @@ namespace PenmonScramble.Game
         private readonly MenuNavigator _navigator = new MenuNavigator();
         private bool _solo;
         private bool _canRestart;
+        private bool _isHost;
         private bool _available;
         // 中身を出したか（ソロは後ろを撮り終わるまで出さない）
         private bool _shown;
@@ -75,10 +76,12 @@ namespace PenmonScramble.Game
 
         /// <param name="solo">ソロは開いている間、全体を止める</param>
         /// <param name="canRestart">「やり直す」を出すのはソロとホストだけ</param>
-        public void Bind(bool solo, bool canRestart)
+        /// <param name="isHost">みんなでのホストか（抜けるときの確認の言葉を変える）。省略すると canRestart と同じ（本編のステージはホストだけがやり直せる）</param>
+        public void Bind(bool solo, bool canRestart, bool? isHost = null)
         {
             _solo = solo;
             _canRestart = canRestart;
+            _isHost = isHost ?? canRestart;
             BindCards();
             BindStatus();
         }

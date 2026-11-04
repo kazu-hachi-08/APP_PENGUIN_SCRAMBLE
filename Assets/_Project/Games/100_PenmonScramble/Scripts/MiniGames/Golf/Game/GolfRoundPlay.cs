@@ -7,9 +7,10 @@ using UnityEngine;
 namespace PenmonScramble.Golf.Game
 {
     /// <summary>
-    /// 1コース（3ホール）を回る進行役。打つ子は本編の編成の3体（開発用の2人のときも同じ3体）。
+    /// 1コース（3ホール）を回る進行役。打つ子は本編の編成の3体（開発用の2人のときも同じ3体。オンラインは各自の3体）。
     /// ラウンド（Core）を毎フレーム進め、操作・見た目・カメラ・HUD・音へ渡す。
-    /// 起きたことの見せ方は GolfRoundPlay.Events.cs、ホールの間のスコアカードと結果・メニューは GolfRoundPlay.Flow.cs
+    /// 起きたことの見せ方は GolfRoundPlay.Events.cs、ホールの間のスコアカードと結果・メニューは GolfRoundPlay.Flow.cs、
+    /// オンライン（ほかの人の狙い・ゲストの写し・ホストへの入力）は GolfRoundPlay.Online.cs
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後、StageMenu が開け閉めした後に動く
     [DefaultExecutionOrder(60)]
@@ -25,8 +26,8 @@ namespace PenmonScramble.Golf.Game
         // ホールの始めに全体を見せる秒（打つボタンで飛ばせる）
         [SerializeField] private float _introSeconds = 2.4f;
 
-        private readonly List<GolfTeam> _teams = new List<GolfTeam>();
         private GolfRound _round;
+        private GolfPlayMode _mode = GolfPlayMode.Solo;
         private Phase _phase;
         private float _intro;
         // カップイン・池の後、喜ぶ・頭を抱えるのを見せる間は、次の人の番を始めない（持ち時間も減らさない）
@@ -34,19 +35,26 @@ namespace PenmonScramble.Golf.Game
         // 番が替わったことを知らせる人（-1 なら知らせない）
         private int _turnBanner = -1;
 
+        /// <summary>ひとりで（開発用は players 人が1台で交代に）回る。打つ子は全員、本編の編成の3体</summary>
         /// <param name="record">結果を記録に書く（開発用の試しのホールでは書かない）</param>
-        public void Begin(GolfCourseDef course, int players, bool record)
+        public void BeginSolo(GolfCourseDef course, int players, bool record)
         {
             var count = Mathf.Clamp(players, 1, GolfRules.MaxPlayers);
-            _teams.Clear();
-            var party = PartySpecies();
+            var teams = new List<GolfTeam>();
             for (var i = 0; i < count; i++)
             {
-                _teams.Add(new GolfTeam(party));
+                teams.Add(new GolfTeam(PartySpecies()));
             }
 
+            Begin(new GolfRound(course, teams), record, GolfPlayMode.Solo);
+        }
+
+        /// <summary>作ったラウンドを回り始める（オンラインのホストは各自の3体で作ったもの、ゲストは写しのラウンド）</summary>
+        public void Begin(GolfRound round, bool record, GolfPlayMode mode)
+        {
             _record = record;
-            _round = new GolfRound(course, _teams);
+            _mode = mode;
+            _round = round;
             _round.Happened += OnHappened;
             _round.HoleStarted += _ => BuildHole();
             _round.HoleCompleted += OnHoleCompleted;
@@ -54,12 +62,13 @@ namespace PenmonScramble.Golf.Game
             _hud.CardPressed += index => _control.SelectMember(index);
             _control.MemberChanged += () => GolfSounds.Play(GolfSound.Select);
             _control.SpecialChanged += () => GolfSounds.Play(_control.SpecialArmed ? GolfSound.Special : GolfSound.Select);
+            BindShots();
             BindFlow();
             // ラウンドは作った時点で1ホール目が始まっている（見た目はここで組む）
             BuildHole();
         }
 
-        private static List<int> PartySpecies()
+        public static List<int> PartySpecies()
         {
             var species = new List<int>();
             foreach (var penguin in GameSave.Record.PartyPenguins())
@@ -74,13 +83,14 @@ namespace PenmonScramble.Golf.Game
         private void BuildHole()
         {
             var hole = _round.Hole;
-            _view.Build(hole, _teams.Count, _round.Course.World);
-            _control.Bind(_round, _view.Shooter);
+            _view.Build(hole, _round.PlayerCount, _round.Course.World);
+            _control.Bind(_round, _view.Shooter, _mode.LocalSeat);
             _camera.ShowHole(hole.Ground);
             _phase = Phase.Intro;
             _intro = _introSeconds;
             _hold = 0f;
             _turnBanner = -1;
+            ResetSwingHold();
             _hud.SetPlaying(true);
             HidePanels();
             var label = _round.HoleCount > 1 ? $"ホール {_round.HoleIndex + 1}  パー {hole.Par}" : $"{hole.Name}  パー {hole.Par}";
@@ -113,16 +123,18 @@ namespace PenmonScramble.Golf.Game
                 TickHoleOver(dt);
             }
 
+            // ゲストは計算しないので、メニューやホールの間でも、届いた位置へ球を寄せ続ける
+            _round.TickMirror(dt, GolfNetRules.SnapshotSeconds);
             _view.SyncBalls(_round.World.Balls, dt);
             if (_phase == Phase.Intro || _phase == Phase.Play)
             {
-                _hud.Show(_round, _control, CanAct);
+                _hud.Show(_round, DisplayAim, CanAct, _control.IsLocalTurn, _control.BoostAvailable);
             }
         }
 
         private GolfHoleWorld World => _round.World;
 
-        private GolfTeam CurrentTeam => _teams[World.CurrentPlayer];
+        private GolfTeam CurrentTeam => _round.Teams[World.CurrentPlayer];
 
         /// <summary>番の人が操作できる（全体を見せている間・反応を見せている間でない）</summary>
         private bool CanAct => _phase == Phase.Play && _hold <= 0f;
@@ -132,7 +144,8 @@ namespace PenmonScramble.Golf.Game
         {
             _intro -= dt;
             var input = InputManager.HasInstance ? InputManager.Instance : null;
-            if (input != null && input.IsActionDown(ShootAction))
+            // オンラインは全員で同じ時間だけ見せる（ひとりだけ飛ばして先に打ち始めないように）
+            if (!_mode.IsOnline && input != null && input.IsActionDown(ShootAction))
             {
                 _intro = 0f;
             }
@@ -160,7 +173,9 @@ namespace PenmonScramble.Golf.Game
                 ShowTurnBanner();
             }
 
+            TickSwingHold(dt);
             _control.Tick(dt);
+            SendLocalAim();
             // 振り下ろしている間は持ち時間を止める（ゲージを止めたのに、当たる前に時間切れで自動の1打にならないように）
             if (!(aiming && _control.Striking))
             {
@@ -189,14 +204,16 @@ namespace PenmonScramble.Golf.Game
         {
             var aim = GolfSpace.ToWorld(GolfHoleWorld.Direction(World.AimAngle));
             _camera.Aim(point, aim);
-            if (_control.Striking)
+            // 振り下ろしている間・打った球が動き出すのを待つ間（オンライン）は、構え直さずに振り抜いたまま
+            if (_control.Striking || SwingHeld)
             {
                 _view.ShowGuide(null, Time.deltaTime);
                 return;
             }
 
-            _view.Shooter.Address(CurrentTeam.Current, point, aim, _view.Surface, _control.Gauge.Power);
-            var special = _control.ArmedSpecial;
+            var hands = DisplayAim;
+            _view.Shooter.Address(CurrentTeam.Current, point, aim, _view.Surface, hands.GaugeRunning ? hands.Power : 0f);
+            var special = hands.Special ? GolfSpecial.For(CurrentTeam.Current, hands.Curve) : GolfSpecial.None;
             var guide = GolfGuide.Compute(World.Hole, World.Balls, World.CurrentPlayer, World.AimAngle, special);
             _view.ShowGuide(guide, Time.deltaTime, !special.IsNone);
         }

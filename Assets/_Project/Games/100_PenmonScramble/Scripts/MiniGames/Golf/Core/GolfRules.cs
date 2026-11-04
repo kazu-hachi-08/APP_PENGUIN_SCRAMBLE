@@ -35,3 +35,25 @@ namespace PenmonScramble.Golf.Core
         public static readonly int[] DefaultSpecies = { 1, 3, 5 };
     }
 }
+
+namespace PenmonScramble.Golf.Core
+{
+    /// <summary>オンラインの数値（送る間隔・待つ時間）</summary>
+    public static class GolfNetRules
+    {
+        /// <summary>
+        /// ホストがスナップショットを送る間隔（秒）。ゲストはこの間をかけて球を届いた位置へ寄せる。
+        /// 起きたことがあったフレームは間隔を待たずに送る（音や知らせが遅れないように）
+        /// </summary>
+        public const float SnapshotSeconds = 0.05f;
+
+        /// <summary>ゲストが狙っている様子（向き・ゲージ）を送る間隔の下限（秒）。変わったときだけ送る</summary>
+        public const float AimSendSeconds = 0.1f;
+
+        /// <summary>ゲストがシーンに入ってから「準備できた（編成）」を送り直す間隔（秒）。最初のスナップショットが届くまで</summary>
+        public const float ReadyResendSeconds = 0.5f;
+
+        /// <summary>ホストが全員の準備を待つ上限（秒）。過ぎたら、届いていない人は仮の3体で始める</summary>
+        public const float ReadyTimeoutSeconds = 6f;
+    }
+}

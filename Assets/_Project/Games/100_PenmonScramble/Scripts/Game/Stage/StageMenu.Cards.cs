@@ -31,6 +31,10 @@ namespace PenmonScramble.Game
         [SerializeField] private string _restartSoloMessage = "はじめからやり直します。\nいまの進み具合は残りません";
         [SerializeField] private string _exitLabel = "タイトルへ";
         [SerializeField] private string _exitSoloMessage = "ステージをやめてタイトルに戻ります。\nいまの進み具合は残りません";
+        [SerializeField] private string _exitHostMessage = "部屋を閉じてタイトルに戻ります。\nほかの人も全員タイトルに戻ります";
+        [SerializeField] private string _exitGuestMessage = "部屋から抜けてタイトルに戻ります";
+        [Tooltip("みんなで遊んでいる間のメニューの一言")]
+        [SerializeField] private string _coopNote = "協力中は ゲームが止まりません";
 
         private int _selected;
 
@@ -272,9 +276,7 @@ namespace PenmonScramble.Game
                 return _exitSoloMessage;
             }
 
-            return _canRestart
-                ? "部屋を閉じてタイトルに戻ります。\nほかの人も全員タイトルに戻ります"
-                : "部屋から抜けてタイトルに戻ります";
+            return _isHost ? _exitHostMessage : _exitGuestMessage;
         }
 
         private void OnRestartConfirmed()

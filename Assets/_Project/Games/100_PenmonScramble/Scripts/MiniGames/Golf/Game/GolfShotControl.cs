@@ -12,7 +12,9 @@ namespace PenmonScramble.Golf.Game
     /// 打つ＝J / ×（南）/ 右の大ボタンでゲージを動かし始め、もう一度で止めて振り下ろす（クラブが当たった瞬間に打つ）。
     /// 打つ子の切り替え＝K / ○（東）/ 子のカードを押す。特殊＝L / △（北）/ 特殊のボタン（風は 右 → 左 → OFF の順に替わる）。
     /// 雷の特殊ショットは、転がっている間に向き（±★の角度まで）を決めて、打つボタンでもう一度押すと加速する。
-    /// 見回す＝右スティック / 画面の2本指（マウスの右ドラッグ）
+    /// 見回す＝右スティック / 画面の2本指（マウスの右ドラッグ）。
+    /// 操作できるのは自分の番だけ（オンライン）。打つ・加速するは自分では行わず、出来事で進行役（GolfRoundPlay）に渡す
+    /// （ひとり・ホストはその場でラウンドに打たせ、ゲストはホストへ送るため）
     /// </summary>
     public class GolfShotControl : MonoBehaviour
     {
@@ -44,12 +46,35 @@ namespace PenmonScramble.Golf.Game
         private GolfShooter _shooter;
         private float _turnHeld;
         private float _boostTurn;
+        // この端末で操作する席。-1 なら全員（ひとり・開発用の2人）
+        private int _localSeat = -1;
 
         /// <summary>打つ子を替えた（HUD のカードを弾ませる・音）</summary>
         public event Action MemberChanged;
 
         /// <summary>特殊の ON / OFF・風の向きを替えた</summary>
         public event Action SpecialChanged;
+
+        /// <summary>ゲージを止めて振り下ろし始めた（席・1打）。ゲストはここでホストへ送る</summary>
+        public event Action<int, GolfShot> StrikeStarted;
+
+        /// <summary>クラブが球に当たった（席・1打）。ひとり・ホストはここで打つ</summary>
+        public event Action<int, GolfShot> Impact;
+
+        /// <summary>雷の加速を頼んだ（席・変える向き）</summary>
+        public event Action<int, float> BoostRequested;
+
+        /// <summary>
+        /// 打った後、ホストから球が動き出したと届くまでなど、手元では何もさせない間（進行役が決める）。
+        /// この間は振り抜いたまま待ち、打ち直させない
+        /// </summary>
+        public bool Blocked { get; set; }
+
+        /// <summary>いまの番がこの端末の人か（ひとり・開発用の2人はいつも true）</summary>
+        public bool IsLocalTurn => _round != null && (_localSeat < 0 || World.CurrentPlayer == _localSeat);
+
+        /// <summary>この端末の手元（向き・ゲージ・打つ子・特殊）。HUD と、ほかの人へ見せるのに使う</summary>
+        public GolfAim Aim => new GolfAim(CurrentTeam.Selected, World.AimAngle, _gauge.Power, _gauge.Running, Striking, SpecialArmed, Curve);
 
         public GolfPowerGauge Gauge => _gauge;
 
@@ -71,7 +96,7 @@ namespace PenmonScramble.Golf.Game
         public GolfSpecial ArmedSpecial => SpecialArmed ? GolfSpecial.For(CurrentTeam.Current, Curve) : GolfSpecial.None;
 
         /// <summary>雷の加速を使える（打った球が転がっている間）</summary>
-        public bool BoostAvailable => _round != null && World.CanBoost(World.CurrentPlayer);
+        public bool BoostAvailable => IsLocalTurn && !Blocked && World.CanBoost(World.CurrentPlayer);
 
         /// <summary>加速する向き（ラジアン。いまの進む向き ＋ 合わせた分）</summary>
         public float BoostAngle
@@ -83,10 +108,12 @@ namespace PenmonScramble.Golf.Game
             }
         }
 
-        public void Bind(GolfRound round, GolfShooter shooter)
+        /// <param name="localSeat">この端末で操作する席。-1 なら全員（ひとり・開発用の2人）</param>
+        public void Bind(GolfRound round, GolfShooter shooter, int localSeat = -1)
         {
             _round = round;
             _shooter = shooter;
+            _localSeat = localSeat;
             ResetForTurn();
         }
 
@@ -114,6 +141,20 @@ namespace PenmonScramble.Golf.Game
         {
             if (_round == null || !InputManager.HasInstance)
             {
+                return;
+            }
+
+            // ほかの人の番は、自分のゲージを動かさない（見えているゲージはその人のもの）
+            if (!IsLocalTurn || Blocked)
+            {
+                _gauge.Reset();
+                _boostTurn = 0f;
+                // 溜まったドラッグは読み捨てる（番が来たときに、前のドラッグで向きが飛ばないように）
+                if (_pad != null)
+                {
+                    _pad.TakeAim();
+                }
+
                 return;
             }
 
@@ -206,7 +247,7 @@ namespace PenmonScramble.Golf.Game
             MemberChanged?.Invoke();
         }
 
-        private bool CanSwitch() => _round != null && World.Phase == GolfHolePhase.Aiming && !_gauge.Running && !Striking;
+        private bool CanSwitch() => IsLocalTurn && !Blocked && World.Phase == GolfHolePhase.Aiming && !_gauge.Running && !Striking;
 
         /// <summary>1回目でゲージを動かし始め、2回目で止めて振り下ろす。打つのはクラブが当たった瞬間</summary>
         private void Press()
@@ -220,9 +261,10 @@ namespace PenmonScramble.Golf.Game
             var power = _gauge.Stop();
             var player = World.CurrentPlayer;
             var shot = new GolfShot(CurrentTeam.Selected, World.AimAngle, power, SpecialArmed, Curve);
+            StrikeStarted?.Invoke(player, shot);
             _shooter.Strike(power, () =>
             {
-                _round.Shoot(player, shot);
+                Impact?.Invoke(player, shot);
                 _gauge.Reset();
                 SpecialArmed = false;
             });
@@ -243,7 +285,7 @@ namespace PenmonScramble.Golf.Game
             _boostTurn = Mathf.Clamp(_boostTurn + turn, -max, max);
             if (input.IsActionDown(ShootAction))
             {
-                _round.Boost(World.CurrentPlayer, _boostTurn);
+                BoostRequested?.Invoke(World.CurrentPlayer, _boostTurn);
                 _boostTurn = 0f;
             }
         }
