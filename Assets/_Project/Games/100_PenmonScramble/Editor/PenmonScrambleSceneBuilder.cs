@@ -22,7 +22,7 @@ namespace PenmonScramble.Editor
         public const string ScenePath = "Assets/_Project/Games/100_PenmonScramble/Scenes/" + SceneNames.PenmonScramble + ".unity";
 
         // 横画面の基準解像度。共通基盤のダイアログと同じ値にそろえる
-        private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
+        internal static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
         private static readonly Color BackgroundColor = new Color(0.55f, 0.70f, 0.80f);
         private static readonly Color TextColor = new Color(0.15f, 0.20f, 0.30f);
         private const int VersionFontSize = 32;

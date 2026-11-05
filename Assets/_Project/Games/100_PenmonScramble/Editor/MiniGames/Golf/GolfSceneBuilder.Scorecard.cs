@@ -167,13 +167,13 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>
-        /// ステージ中のメニュー（本編の StageMenu の見た目）。札は つづける・ホールをやり直す・設定・ミニゲームへ
-        /// （遊び方はゴルフのページができるフェーズ 7 で足す。いまは札を出さない）。右の編成の欄は作らない
+        /// ステージ中のメニュー（本編の StageMenu の見た目）。札は つづける・ホールをやり直す・遊び方（ゴルフのページ）・設定・ミニゲームへ。
+        /// 右の編成の欄は作らない
         /// </summary>
-        private static StageMenu CreateMenu(Transform canvas, Button openButton)
+        private static StageMenu CreateMenu(Transform canvas, Button openButton, HowToPlayScreen howToPlay)
         {
             var labels = new[] { "つづける", "ホールをやり直す", "遊び方", "設定", "ミニゲームへ" };
-            var menu = B.CreateStageMenu(canvas, openButton, null, labels, withParty: false);
+            var menu = B.CreateStageMenu(canvas, openButton, howToPlay, labels, withParty: false);
             var so = new SerializedObject(menu);
             so.FindProperty("_restartLabel").stringValue = "ホールをやり直す";
             so.FindProperty("_restartSoloMessage").stringValue = "このホールをはじめからやり直します。\nこのホールで使った特殊ショットは戻ります";

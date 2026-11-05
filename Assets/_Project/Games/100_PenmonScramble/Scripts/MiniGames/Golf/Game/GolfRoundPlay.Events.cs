@@ -51,6 +51,9 @@ namespace PenmonScramble.Golf.Game
                 case GolfEventKind.Jump:
                     GolfSounds.Play(GolfSound.Jump);
                     break;
+                case GolfEventKind.Land:
+                    GolfSounds.Play(GolfSound.Land);
+                    break;
                 case GolfEventKind.Geyser:
                     GolfSounds.Play(GolfSound.Geyser);
                     _view.PuffAt(e.Position);
@@ -60,6 +63,7 @@ namespace PenmonScramble.Golf.Game
                     _view.WarpAt((int)e.Strength);
                     break;
                 case GolfEventKind.Nudged:
+                    GolfSounds.Play(GolfSound.Nudge);
                     _view.PuffAt(e.Position);
                     break;
                 case GolfEventKind.LipOut:
@@ -73,6 +77,7 @@ namespace PenmonScramble.Golf.Game
                     OnFell(e);
                     break;
                 case GolfEventKind.GaveUp:
+                    GolfSounds.Play(GolfSound.GaveUp);
                     _hud.Flash($"{GolfSeats.Label(e.Player)}  上限で終わり", BadColor, MessageSeconds);
                     break;
                 case GolfEventKind.TurnStart:
@@ -92,9 +97,10 @@ namespace PenmonScramble.Golf.Game
 
         private void OnCupIn(GolfEvent e)
         {
-            GolfSounds.Play(GolfSound.CupIn);
-            _view.CelebrateCup();
             var strokes = World.Strokes(e.Player);
+            // ホールインワンは特別なジングル（ふつうのカップインと聞き分けられるように）
+            GolfSounds.Play(strokes == 1 ? GolfSound.HoleInOne : GolfSound.CupIn);
+            _view.CelebrateCup();
             var name = GolfScoreNames.ForStrokes(strokes, World.Hole.Par);
             _hud.Flash($"{name}！", GoodColor, MessageSeconds + 0.6f);
             // 打った本人が入れたときだけ喜ぶ（弾かれて入った人の子はいま出ていない）
@@ -146,7 +152,26 @@ namespace PenmonScramble.Golf.Game
 
             var label = _mode.IsOnline && _turnBanner == _mode.LocalSeat ? "あなたの番" : $"{GolfSeats.Label(_turnBanner)} の番";
             _hud.Flash(label, GolfSeats.ColorOf(_turnBanner), TurnMessageSeconds);
+            GolfSounds.Play(GolfSound.Turn);
             _turnBanner = -1;
+        }
+
+        /// <summary>
+        /// 自分の番の持ち時間が残り少ないとき、1 秒ごとにカチッと鳴らす（持ち時間の輪が赤く脈打つのと同じ秒から）。
+        /// ほかの人の番では鳴らさない（自分が急がされているように聞こえないように）
+        /// </summary>
+        private void TickHurrySound()
+        {
+            var counting = _phase == Phase.Play && CanAct && _control.IsLocalTurn
+                && World.Phase == GolfHolePhase.Aiming && !DisplayAim.Striking
+                && World.ShotTimeLeft <= GolfHud.HurrySeconds;
+            var second = counting ? Mathf.CeilToInt(World.ShotTimeLeft) : -1;
+            if (second >= 1 && second != _hurrySecond)
+            {
+                GolfSounds.Play(GolfSound.Tick);
+            }
+
+            _hurrySecond = second;
         }
     }
 }

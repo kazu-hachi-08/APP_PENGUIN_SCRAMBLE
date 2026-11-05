@@ -36,6 +36,8 @@ namespace PenmonScramble.Golf.Game
         private int _turnBanner = -1;
         // このフレームにラウンドの時間を進めたか（進めなかったフレームも、動く物の時刻だけは進める）
         private bool _ticked;
+        // 持ち時間のカチッを最後に鳴らした秒（-1 は数えていない）
+        private int _hurrySecond = -1;
 
         /// <summary>ひとりで（開発用は players 人が1台で交代に）回る。打つ子は全員、本編の編成の3体</summary>
         /// <param name="record">結果を記録に書く（開発用の試しのホールでは書かない）</param>
@@ -97,6 +99,7 @@ namespace PenmonScramble.Golf.Game
             HidePanels();
             var label = _round.HoleCount > 1 ? $"ホール {_round.HoleIndex + 1}  パー {hole.Par}" : $"{hole.Name}  パー {hole.Par}";
             _hud.Flash(label, Color.white, _introSeconds - 0.3f);
+            GolfSounds.Play(GolfSound.HoleStart);
             UpdateMenuCaption();
         }
 
@@ -141,6 +144,8 @@ namespace PenmonScramble.Golf.Game
             {
                 _hud.Show(_round, DisplayAim, CanAct, _control.IsLocalTurn, _control.BoostAvailable);
             }
+
+            TickHurrySound();
         }
 
         private GolfHoleWorld World => _round.World;

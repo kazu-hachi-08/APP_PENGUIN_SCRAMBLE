@@ -103,7 +103,7 @@ namespace PenmonScramble.Golf.Game
             var info = RecordResult();
             // 本編と同じく、結果の音が曲に埋もれないよう止める（「もう一度」で頭から流し直す）
             GameMusic.Stop();
-            GolfSounds.Play(GolfSound.CupIn);
+            GameSounds.Play(GameSound.Clear);
             _scorecard.Show(_round, "ラウンド終了！", null, null);
             _result.Show(info);
         }

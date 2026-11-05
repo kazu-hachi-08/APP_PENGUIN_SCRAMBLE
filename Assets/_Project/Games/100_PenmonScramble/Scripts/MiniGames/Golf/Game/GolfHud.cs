@@ -17,7 +17,8 @@ namespace PenmonScramble.Golf.Game
     public class GolfHud : MonoBehaviour
     {
         // 持ち時間がこれより少なくなったら赤くして脈打たせる（秒）
-        private const float HurrySeconds = 5f;
+        /// <summary>持ち時間がこの秒を切ると輪が赤く脈打つ（GolfRoundPlay はここからカチッと鳴らす）</summary>
+        public const float HurrySeconds = 5f;
         private static readonly Color TimerColor = new Color(1f, 1f, 1f);
         private static readonly Color HurryColor = new Color(1f, 0.38f, 0.32f);
         private static readonly Color ArmedColor = new Color(0.45f, 0.95f, 1f);

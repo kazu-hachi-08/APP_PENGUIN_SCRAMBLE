@@ -1,5 +1,6 @@
 using PenmonScramble.Common.Input;
 using PenmonScramble.Common.Online;
+using PenmonScramble.Game;
 using PenmonScramble.Golf.Core;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
@@ -24,6 +25,8 @@ namespace PenmonScramble.Golf.Game
         [SerializeField] private GolfRoundPlay _play;
         [SerializeField] private GolfOnlinePlay _online;
         [SerializeField] private OnlineSession _session;
+        [Tooltip("メニューから開く遊び方（本編と同じ画面）。ルールのページをゴルフのものに差し替える")]
+        [SerializeField] private HowToPlayScreen _howToPlay;
 
         private bool _leaving;
 
@@ -37,6 +40,10 @@ namespace PenmonScramble.Golf.Game
         private void Awake()
         {
             _backButton.onClick.AddListener(Leave);
+            if (_howToPlay != null)
+            {
+                _howToPlay.UsePages(GolfHowToPlayPages.All);
+            }
         }
 
         private void Start()

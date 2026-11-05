@@ -13,7 +13,7 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// ゴルフのシーン（GolfScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編のシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
-    /// まだ作っていないコースのときの「準備中」の板と、コースを回る部品（3D・カメラ・操作・HUD・スコアカード・結果・メニュー）、
+    /// まだ作っていないコースのときの「準備中」の板と、コースを回る部品（3D・カメラ・操作・HUD・スコアカード・結果・メニュー・遊び方）、
     /// みんなで回るための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの GolfOnlinePlay・始まるまでの「待っています」）を置く
     /// （Docs/MINIGAME_GOLF_PLAN.md）
     /// </summary>
@@ -55,8 +55,9 @@ namespace PenmonScramble.Editor
             var hud = CreateHud(canvas);
             var scorecard = CreateScorecard(canvas);
             var result = CreateResultPanel(canvas);
-            // メニューは HUD・スコアカードより手前に出す
-            var menu = CreateMenu(canvas, hud.Menu);
+            // メニューは HUD・スコアカードより手前に、遊び方はメニューよりさらに手前に出す（CreateStageMenu が並べ替える）
+            var howToPlay = CreateHowToPlay(canvas);
+            var menu = CreateMenu(canvas, hud.Menu, howToPlay);
             var play = CreatePlay(camera, hud, scorecard, result, menu);
             CreateInputManager(hud.Shoot, hud.Special);
             // 本編のシーンが預けた部屋を、起きたときに引き継ぐ（ひとりで遊ぶときは何もしない）
@@ -71,6 +72,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_play").objectReferenceValue = play;
             so.FindProperty("_online").objectReferenceValue = online;
             so.FindProperty("_session").objectReferenceValue = session;
+            so.FindProperty("_howToPlay").objectReferenceValue = howToPlay;
             so.ApplyModifiedProperties();
 
             EditorSceneManager.SaveScene(scene, ScenePath);

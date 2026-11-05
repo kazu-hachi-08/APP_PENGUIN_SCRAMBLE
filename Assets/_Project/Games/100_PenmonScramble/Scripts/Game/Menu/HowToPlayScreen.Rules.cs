@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -6,7 +7,8 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// 遊び方の「ルール」タブ: 1ページに1つのことを、短い文と顔の絵で見せる（HowToPlayPages）。
-    /// ◀ ▶ のボタンのほか、キーボードの ← → / A D とコントローラーの方向キーでもめくれる
+    /// ◀ ▶ のボタンのほか、キーボードの ← → / A D とコントローラーの方向キーでもめくれる。
+    /// ミニゲームは UsePages で自分のページに差し替える（本編の Game はミニゲームを知らないので、ミニゲームの側から渡す）
     /// </summary>
     public partial class HowToPlayScreen
     {
@@ -18,6 +20,13 @@ namespace PenmonScramble.Game
         [SerializeField] private Button _nextPageButton;
 
         private int _page;
+        private IReadOnlyList<HowToPlayPages.Page> _pages = HowToPlayPages.All;
+
+        /// <summary>ルールのページを差し替える（ミニゲームのシーンが起動時に呼ぶ）</summary>
+        public void UsePages(IReadOnlyList<HowToPlayPages.Page> pages)
+        {
+            _pages = pages ?? HowToPlayPages.All;
+        }
 
         private void AwakeRules()
         {
@@ -27,7 +36,7 @@ namespace PenmonScramble.Game
 
         private void ShowPage(int page)
         {
-            var pages = HowToPlayPages.All;
+            var pages = _pages;
             _page = Mathf.Clamp(page, 0, pages.Count - 1);
             var current = pages[_page];
             _ruleHeading.text = current.Heading;

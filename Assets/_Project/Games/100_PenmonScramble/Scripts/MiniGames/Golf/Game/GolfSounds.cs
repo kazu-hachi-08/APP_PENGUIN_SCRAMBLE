@@ -33,6 +33,20 @@ namespace PenmonScramble.Golf.Game
         Geyser,
         /// <summary>ワープの泡に入った（ポワン）</summary>
         Warp,
+        /// <summary>浮いた球が地面に着いた（ポン）</summary>
+        Land,
+        /// <summary>打数の上限で終わった（下がる2音）</summary>
+        GaveUp,
+        /// <summary>番が回ってきた（2人以上。ピンポン）</summary>
+        Turn,
+        /// <summary>ホールの始めの「ホール 1  パー 2」（短いファンファーレ）</summary>
+        HoleStart,
+        /// <summary>自分の番の持ち時間の残り 5 秒から、1 秒ごとのカチッ</summary>
+        Tick,
+        /// <summary>ホールインワン（カップインより長く華やかなジングル）</summary>
+        HoleInOne,
+        /// <summary>止まった球が動く物の範囲の外へよけた（ぽふっ）</summary>
+        Nudge,
     }
 
     /// <summary>
@@ -65,6 +79,13 @@ namespace PenmonScramble.Golf.Game
             { GolfSound.Skip, 0.35f },
             { GolfSound.Geyser, 0.5f },
             { GolfSound.Warp, 0.45f },
+            { GolfSound.Land, 0.3f },
+            { GolfSound.GaveUp, 0.45f },
+            { GolfSound.Turn, 0.4f },
+            { GolfSound.HoleStart, 0.45f },
+            { GolfSound.Tick, 0.3f },
+            { GolfSound.HoleInOne, 0.65f },
+            { GolfSound.Nudge, 0.25f },
         };
 
         /// <summary>打つ音。power はゲージの強さ（0〜1）</summary>
@@ -117,6 +138,17 @@ namespace PenmonScramble.Golf.Game
                 case GolfSound.Skip: return ToySynth.Sweep("Golf_Skip", 0.08f, 1400f, 700f);
                 case GolfSound.Geyser: return Geyser();
                 case GolfSound.Warp: return Warp();
+                // 着地の「ポン」: 壁より低く柔らかい
+                case GolfSound.Land: return ToySynth.Impact("Golf_Land", 0.06f, 180f);
+                // 下がる2音。「ブブー」ほど強くしない（責める感じにしない）
+                case GolfSound.GaveUp: return ToySynth.Jingle("Golf_GaveUp", new[] { 523f, 392f });
+                // 「ピンポン」: よそ見をしていても自分の番に気づけるように
+                case GolfSound.Turn: return ToySynth.Jingle("Golf_Turn", new[] { 1319f, 1047f });
+                case GolfSound.HoleStart: return ToySynth.Jingle("Golf_HoleStart", new[] { 659f, 784f, 1047f });
+                // 時計の「カチッ」: 短く高い
+                case GolfSound.Tick: return ToySynth.Tone("Golf_Tick", 0.03f, 2093f);
+                case GolfSound.HoleInOne: return HoleInOne();
+                case GolfSound.Nudge: return ToySynth.Sweep("Golf_Nudge", 0.08f, 500f, 800f);
                 default: return ToySynth.Tone("Golf_Select", 0.05f, 1319f);
             }
         }
@@ -141,6 +173,32 @@ namespace PenmonScramble.Golf.Game
                 var note = Mathf.Min(notes.Length - 1, Mathf.FloorToInt(s / noteSeconds));
                 var into = s - note * noteSeconds;
                 var length = note == notes.Length - 1 ? noteSeconds * 2f : noteSeconds;
+                return ToySynth.Square(notes[note], t) * Mathf.Max(0f, 1f - into / length);
+            });
+        }
+
+        /// <summary>
+        /// ホールインワン: カップインの「カラン」の後に、上がっていく音を2回重ねてから高い音を伸ばす（ふつうのカップインと聞き分けられるように）
+        /// </summary>
+        private static AudioClip HoleInOne()
+        {
+            const float rattle = 0.16f;
+            float[] notes = { 784f, 988f, 1175f, 1568f, 1175f, 1568f, 2093f };
+            const float noteSeconds = 0.085f;
+            const float lastSeconds = 0.45f;
+            var duration = rattle + noteSeconds * (notes.Length - 1) + lastSeconds;
+            return ToySynth.CreateClip("Golf_HoleInOne", duration, t =>
+            {
+                if (t < rattle)
+                {
+                    var local = t % (rattle * 0.5f);
+                    return ToySynth.Square(2349f, t) * Mathf.Exp(-local * 60f);
+                }
+
+                var s = t - rattle;
+                var note = Mathf.Min(notes.Length - 1, Mathf.FloorToInt(s / noteSeconds));
+                var into = s - note * noteSeconds;
+                var length = note == notes.Length - 1 ? lastSeconds : noteSeconds;
                 return ToySynth.Square(notes[note], t) * Mathf.Max(0f, 1f - into / length);
             });
         }
