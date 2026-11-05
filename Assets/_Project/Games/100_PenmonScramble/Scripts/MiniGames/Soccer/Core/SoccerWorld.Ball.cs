@@ -89,6 +89,7 @@ namespace PenmonScramble.Soccer.Core
                 var isNet = wall.Kind == SoccerWallKind.Net;
                 var bounce = isNet ? SoccerBalance.NetBounce : SoccerBalance.WallBounce;
                 velocity += normal * (into * (1f + bounce));
+                _trajectoryChanged = true;
                 if (into >= SoccerBalance.HitEventMinSpeed)
                 {
                     var kind = isNet ? SoccerEventKind.NetHit : SoccerEventKind.WallHit;
@@ -129,7 +130,7 @@ namespace PenmonScramble.Soccer.Core
             var scorer = SoccerRules.Opponent(goal.Team);
             _score[scorer]++;
             IsGoalScored = true;
-            if (Ball.IsHeld)
+            if (Ball.IsHeldByPlayer)
             {
                 var holder = _players[Ball.Holder];
                 holder.ResetCharge();
@@ -160,6 +161,7 @@ namespace PenmonScramble.Soccer.Core
             var nearest = Nearest(Ball.Position, SoccerBall.NoPlayer);
             Ball.Velocity = (nearest.Position - Ball.Position).Normalized * SoccerBalance.IdleNudgeSpeed;
             Ball.IdleSeconds = 0f;
+            _trajectoryChanged = true;
             events.Add(new SoccerEvent(SoccerEventKind.Nudge, nearest.Index, nearest.Team, Ball.Position));
         }
 

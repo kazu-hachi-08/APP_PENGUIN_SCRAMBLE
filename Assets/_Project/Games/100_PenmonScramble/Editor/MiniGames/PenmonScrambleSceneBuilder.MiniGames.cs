@@ -202,7 +202,7 @@ namespace PenmonScramble.Editor
         private static void CreateMiniGameArt()
         {
             WriteUiSprite(MiniGameIconPath, DrawIcon(MiniGamePixel), 0);
-            CreateSoccerCardArt();
+            CreateSoccerArt();
         }
 
         /// <summary>奥から重ねる: 芝の丸 → カップ → 旗の棒 → 旗 → 球</summary>

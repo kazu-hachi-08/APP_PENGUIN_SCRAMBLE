@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PenmonScramble.Core;
 using PenmonScramble.Game;
 using PenmonScramble.Golf.Core;
+using PenmonScramble.MiniGames.Game;
 using UnityEngine;
 
 namespace PenmonScramble.Golf.Game
@@ -173,7 +174,7 @@ namespace PenmonScramble.Golf.Game
         /// <summary>平らな帯（景色の色）に、流れる向きへ動く印を並べる（海流は「く」の字、風は細い筋）</summary>
         private void BuildFlow(GolfArea area, float lift, Func<Vec2, Vector2> uv)
         {
-            AddOwnedMesh("Flow", GolfMeshes.Flat("GolfFlow", area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Flow));
+            AddOwnedMesh("Flow", MiniGameMeshes.Flat("GolfFlow", area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Flow));
             var along = area.Push.Normalized;
             var across = new Vec2(-along.Y, along.X);
             var (min, max) = Bounds(area.Shape);
@@ -232,7 +233,7 @@ namespace PenmonScramble.Golf.Game
         /// <summary>暗い噴き出し口と縁の輪、噴いている間だけ伸びる白い柱</summary>
         private void BuildGeyser(GolfArea area, float lift, Func<Vec2, Vector2> uv)
         {
-            AddOwnedMesh("Geyser", GolfMeshes.Flat("GolfGeyser", area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Vent));
+            AddOwnedMesh("Geyser", MiniGameMeshes.Flat("GolfGeyser", area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Vent));
             var (min, max) = Bounds(area.Shape);
             var size = Mathf.Min(max.x - min.x, max.y - min.y);
             var center = GolfSpace.ToWorld(Centroid(area.Shape), lift);

@@ -92,5 +92,79 @@ namespace PenmonScramble.Soccer.Core
 
         /// <summary>地面の種類ごとの転がりの摩擦の倍率。今は芝だけ（氷の床などの仕掛けはフェーズ 6 でここに分けて足す）</summary>
         public static float RollDecelScale(SoccerGround ground) => 1f;
+
+        // ---- キーパー（両チーム同じ強さ。スタジアムでも変えない）----
+
+        /// <summary>体の当たりの半径。ペンモンはキーパーを通り抜けない</summary>
+        public const float KeeperRadius = 0.45f;
+
+        /// <summary>動ける線の、ゴールの線からピッチの中への距離</summary>
+        public const float KeeperLineOffset = 0.7f;
+
+        /// <summary>動ける幅は、ゴールの口の端からこれだけ内側まで</summary>
+        public const float KeeperGuardInset = 0.4f;
+
+        /// <summary>構えて横に動く速さ</summary>
+        public const float KeeperGuardSpeed = 3.5f;
+
+        /// <summary>シュートが来ていないとき、ボールの Y の何倍の所に立つか（ゴールの真ん中とボールの間に入る）</summary>
+        public const float KeeperFollowRatio = 0.45f;
+
+        /// <summary>シュートに気づいて動き出すまでの秒（近くからの球ほど間に合わない）</summary>
+        public const float KeeperReactSeconds = 0.2f;
+
+        /// <summary>飛びつく速さと、飛びついて動ける距離の上限</summary>
+        public const float KeeperDiveSpeed = 4f;
+        public const float KeeperDiveReach = 1.7f;
+
+        /// <summary>立ったまま腕で届く距離（体の中心から）</summary>
+        public const float KeeperBodyReach = 0.55f;
+
+        /// <summary>ボールを取れる距離（体の中心からボールの縁まで）と高さ（バーより少し上まで手が届く）</summary>
+        public const float KeeperCatchRadius = 0.55f;
+        public const float KeeperReachHeight = 1.7f;
+
+        /// <summary>止めるか決めるのは、ボールがキーパーの線に着くこの秒前から（遠くの球は寄るだけで、近づいてから決める）</summary>
+        public const float KeeperDiveLeadSeconds = 0.6f;
+
+        /// <summary>止める割合: 余裕（動ける距離 − 要る距離）がこの長さ変わると 0.5 から 1（または 0）まで動く（案）</summary>
+        public const float KeeperSaveSpread = 1f;
+
+        /// <summary>バーの高さの球は、止める割合をこれだけ下げる（浮いた球を蹴る意味を持たせる）</summary>
+        public const float KeeperHighBallPenalty = 0.3f;
+
+        /// <summary>止める割合の下限と上限（どんな球にも少しだけ運の余地を残す）</summary>
+        public const float KeeperMinSave = 0.03f;
+        public const float KeeperMaxSave = 0.97f;
+
+        /// <summary>止めないと決めたときに、ボールの縁から空けるすき間（指先をかすめて入る）</summary>
+        public const float KeeperMissGap = 0.12f;
+
+        /// <summary>これより遅い球は、止めないと決めた後でも取る（ゆるい転がりがキーパーをすり抜けないように）</summary>
+        public const float KeeperEasyCatchSpeed = 5f;
+
+        /// <summary>止められなかった球が体に当たったとき、勢いを何倍で返すか（はじく）</summary>
+        public const float KeeperParryBounce = 0.5f;
+
+        /// <summary>飛びついてから倒れているまでの長さの上限と、倒れてから起き上がるまでの秒</summary>
+        public const float KeeperDiveMaxSeconds = 0.6f;
+        public const float KeeperDownSeconds = 0.7f;
+
+        /// <summary>取ってから投げるまでの秒・持っているボールの位置（体の前・胸の高さ）</summary>
+        public const float KeeperHoldSeconds = 0.9f;
+        public const float KeeperHoldDistance = 0.5f;
+        public const float KeeperHoldHeight = 0.45f;
+
+        /// <summary>投げた後、このキーパーがボールを取らない秒</summary>
+        public const float KeeperThrowLockSeconds = 0.6f;
+
+        /// <summary>味方の足元へ投げる速さ（着いたときにこれだけ残る）と、速さの範囲</summary>
+        public const float KeeperThrowArriveSpeed = 1.5f;
+        public const float KeeperThrowMinSpeed = 5f;
+        public const float KeeperThrowMaxSpeed = 12f;
+
+        /// <summary>味方がいないときに投げる距離（前へ、相手のいない側へ少し寄せる）</summary>
+        public const float KeeperThrowFallbackDistance = 7f;
+        public const float KeeperThrowFallbackSide = 3f;
     }
 }

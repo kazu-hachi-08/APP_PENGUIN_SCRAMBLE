@@ -5,7 +5,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ペンギンの動きの状態。PenguinMotion.Apply はこれだけから姿勢を決めるので、試作の場のスクショでは時刻を止めた姿勢を直接置ける。
-    /// 1回きりの動き（Attack・Special・Hit・Knock・Blink）は始まってからの割合（0〜1、1 で終わり）。Defeat は Defeated の間だけ使う
+    /// 1回きりの動き（Attack・Special・Hit・Knock・Blink・Kick）は始まってからの割合（0〜1、1 で終わり）。Defeat は Defeated の間だけ使う
     /// </summary>
     public struct PenguinPose
     {
@@ -52,9 +52,18 @@ namespace PenmonScramble.Game
         /// <summary>しくじって頭を抱えている（0〜1。切り替えはなめらかに）</summary>
         public float Despair;
 
+        /// <summary>
+        /// ボールを蹴る（ミニゲームのサッカー）。KickCharge はためて足を引いている深さ（0〜1。なめらかに追う）、
+        /// Kick は振り抜きの割合（1回きり）、KickPower はその強さ（0〜1）、KickFrom は振り始めたときのため
+        /// </summary>
+        public float KickCharge;
+        public float Kick;
+        public float KickPower;
+        public float KickFrom;
+
         public float Blink;
         public float Time;
 
-        public static PenguinPose Idle => new PenguinPose { Attack = 1f, Special = 1f, Hit = 1f, Knock = 1f, Blink = 1f };
+        public static PenguinPose Idle => new PenguinPose { Attack = 1f, Special = 1f, Hit = 1f, Knock = 1f, Blink = 1f, Kick = 1f };
     }
 }

@@ -9,7 +9,7 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>持っているボールは子の向いている向きの足元の少し前に付いてくる</summary>
         private void CarryBall(List<SoccerEvent> events)
         {
-            if (!Ball.IsHeld)
+            if (!Ball.IsHeldByPlayer)
             {
                 return;
             }
@@ -66,6 +66,7 @@ namespace PenmonScramble.Soccer.Core
             Ball.LockedPlayer = player.Index;
             Ball.LockSeconds = SoccerBalance.RepickLockSeconds;
             Ball.IdleSeconds = 0f;
+            _trajectoryChanged = true;
             events.Add(new SoccerEvent(SoccerEventKind.Kick, player.Index, player.Team, Ball.Position, charge, lofted));
         }
 

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
-    /// 1歩ぶんの位置の写し（ボールと子）。前の歩と今の歩の写しの間を補間して描く
+    /// 1歩ぶんの位置の写し（ボール・子・キーパー）。前の歩と今の歩の写しの間を補間して描く
     /// （計算は 1/30 秒ごとなので、そのまま描くと画面のフレームによってはカクつくため）
     /// </summary>
     public readonly struct SoccerFrame
@@ -14,10 +14,13 @@ namespace PenmonScramble.Soccer.Game
 
         public readonly Vector3[] Players;
 
-        private SoccerFrame(Vector3 ball, Vector3[] players)
+        public readonly Vector3[] Keepers;
+
+        private SoccerFrame(Vector3 ball, Vector3[] players, Vector3[] keepers)
         {
             Ball = ball;
             Players = players;
+            Keepers = keepers;
         }
 
         public static SoccerFrame Capture(SoccerWorld world)
@@ -26,12 +29,23 @@ namespace PenmonScramble.Soccer.Game
             var players = new Vector3[world.Players.Count];
             for (var i = 0; i < players.Length; i++)
             {
-                var p = world.Players[i].Position;
-                players[i] = new Vector3(p.X, 0f, p.Y);
+                players[i] = SoccerSpace.ToWorld(world.Players[i].Position);
             }
 
-            var center = new Vector3(ball.Position.X, ball.Height + SoccerBalance.BallRadius, ball.Position.Y);
-            return new SoccerFrame(center, players);
+            var keepers = new Vector3[world.Keepers.Count];
+            for (var i = 0; i < keepers.Length; i++)
+            {
+                keepers[i] = SoccerSpace.ToWorld(world.Keepers[i].Position);
+            }
+
+            var center = SoccerSpace.ToWorld(ball.Position, ball.Height + SoccerBalance.BallRadius);
+            return new SoccerFrame(center, players, keepers);
+        }
+
+        /// <summary>prev と next の間の t（0〜1）の写し</summary>
+        public static Vector3 Lerp(Vector3[] previous, Vector3[] next, int index, float t)
+        {
+            return Vector3.Lerp(previous[index], next[index], t);
         }
     }
 }

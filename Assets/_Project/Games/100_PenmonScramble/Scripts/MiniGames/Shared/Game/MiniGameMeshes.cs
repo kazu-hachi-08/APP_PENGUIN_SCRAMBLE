@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using PenmonScramble.Core;
-using PenmonScramble.Golf.Core;
 using PenmonScramble.MiniGames.Core;
 using UnityEngine;
 
-namespace PenmonScramble.Golf.Game
+namespace PenmonScramble.MiniGames.Game
 {
     /// <summary>
-    /// コースの形のメッシュ: 多角形の上面（高さは位置ごとに決められる）と、上面の縁から下へ下ろした側面。
-    /// 上面と側面は別の素材で塗れるよう、サブメッシュを分ける（0 が上面、1 が側面）
+    /// ミニゲームの地面の形のメッシュ（ゴルフのコース・サッカーのピッチ）: 多角形の上面（高さは位置ごとに決められる）と、
+    /// 上面の縁から下へ下ろした側面。上面と側面は別の素材で塗れるよう、サブメッシュを分ける（0 が上面、1 が側面）。
+    /// Core の地面の座標（X が右・Y が奥）を Unity の3D（Y が上）へ置く
     /// </summary>
-    public static class GolfMeshes
+    public static class MiniGameMeshes
     {
         public const int TopSubmesh = 0;
         public const int SideSubmesh = 1;
@@ -51,12 +51,14 @@ namespace PenmonScramble.Golf.Game
             return mesh;
         }
 
+        private static Vector3 ToWorld(Vec2 point, float height) => new Vector3(point.X, height, point.Y);
+
         private static List<int> BuildTop(IReadOnlyList<Vec2> shape, Func<Vec2, float> top, Func<Vec2, Vector2> uv, List<Vector3> vertices, List<Vector2> uvs)
         {
             var first = vertices.Count;
             foreach (var point in shape)
             {
-                vertices.Add(GolfSpace.ToWorld(point, top(point)));
+                vertices.Add(ToWorld(point, top(point)));
                 uvs.Add(uv(point));
             }
 
@@ -84,10 +86,10 @@ namespace PenmonScramble.Golf.Game
                 // 左回りの多角形なら、辺の右側が外
                 var outward = counterClockwise ? new Vector3(edge.Y, 0f, -edge.X) : new Vector3(-edge.Y, 0f, edge.X);
                 var first = vertices.Count;
-                vertices.Add(GolfSpace.ToWorld(a, top(a)));
-                vertices.Add(GolfSpace.ToWorld(b, top(b)));
-                vertices.Add(GolfSpace.ToWorld(b, bottom));
-                vertices.Add(GolfSpace.ToWorld(a, bottom));
+                vertices.Add(ToWorld(a, top(a)));
+                vertices.Add(ToWorld(b, top(b)));
+                vertices.Add(ToWorld(b, bottom));
+                vertices.Add(ToWorld(a, bottom));
                 for (var k = 0; k < 4; k++)
                 {
                     uvs.Add(Vector2.zero);

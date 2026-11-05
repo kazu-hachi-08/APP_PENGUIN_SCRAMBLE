@@ -9,7 +9,8 @@ namespace PenmonScramble.Soccer.Core
     /// ピッチの上の計算（子の移動・ボールの転がり・壁の跳ね返り・浮いた球・持つ / 離す・シュート・ゴールの判定）。
     /// SoccerRules.StepSeconds ずつ進める（同じ入力なら同じ結果）。表示と音へは起きたこと（SoccerEvent）で渡す。
     /// 試合の流れ（時間・ゴールの演出・PK戦）はここに持たない（フェーズ 4 の SoccerMatch）。
-    /// 点が入ったら Kickoff を呼ぶまでボールは誰も持てない（網の中で転がるだけ）
+    /// 点が入ったら Kickoff を呼ぶまでボールは誰も持てない（網の中で転がるだけ）。
+    /// キーパーの動きと止める判定は SoccerWorld.Keeper.cs
     /// </summary>
     public sealed partial class SoccerWorld
     {
@@ -23,9 +24,13 @@ namespace PenmonScramble.Soccer.Core
 
         /// <param name="redPlayers">赤のフィールドの子の数（試しのピッチは 1）</param>
         /// <param name="bluePlayers">青のフィールドの子の数</param>
-        public SoccerWorld(SoccerPitchDef pitch, int redPlayers, int bluePlayers)
+        /// <param name="keepers">両チームにキーパーを置くか（ボールの動きだけを確かめるテストでは置かない）</param>
+        /// <param name="seed">キーパーが止めるかの乱数の種（オンラインではホストだけが計算する）</param>
+        public SoccerWorld(SoccerPitchDef pitch, int redPlayers, int bluePlayers, bool keepers = false, int seed = 0)
         {
             Pitch = pitch;
+            _random = new Random(seed);
+            _keepers = keepers ? CreateKeepers(pitch) : new SoccerKeeper[0];
             _players = new SoccerPlayer[redPlayers + bluePlayers];
             for (var i = 0; i < _players.Length; i++)
             {
@@ -63,9 +68,15 @@ namespace PenmonScramble.Soccer.Core
                 player.ResetCharge();
             }
 
+            foreach (var keeper in _keepers)
+            {
+                keeper.Reset();
+            }
+
             Ball.Place(Vec2.Zero);
             Ball.LastToucher = SoccerBall.NoPlayer;
             IsGoalScored = false;
+            _trajectoryChanged = true;
             events?.Add(new SoccerEvent(SoccerEventKind.Kickoff, SoccerBall.NoPlayer, kickingTeam, Vec2.Zero));
         }
 
@@ -78,6 +89,7 @@ namespace PenmonScramble.Soccer.Core
                 MovePlayer(player, InputOf(inputs, player.Index));
             }
 
+            StepKeepers(events);
             CarryBall(events);
             foreach (var player in _players)
             {
@@ -89,6 +101,7 @@ namespace PenmonScramble.Soccer.Core
                 StepFreeBall(events);
             }
 
+            KeepersTouchBall(events);
             CheckGoal(events);
             TryPickup(events);
             UpdateIdle(events);
@@ -117,6 +130,7 @@ namespace PenmonScramble.Soccer.Core
             }
 
             PushPlayerOutOfWalls(player);
+            PushPlayerOutOfKeepers(player);
         }
 
         /// <summary>子は壁・ゴールの口・網のどれも通れない（ゴールの中へは入らない）</summary>

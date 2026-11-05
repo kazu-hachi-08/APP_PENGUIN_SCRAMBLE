@@ -35,7 +35,16 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>誰も触っていない秒（SoccerBalance.IdleNudgeSeconds で自分で転がる）</summary>
         public float IdleSeconds { get; internal set; }
 
-        public bool IsHeld => Holder != NoPlayer;
+        /// <summary>ボールを持っているキーパーのチーム。誰のキーパーも持っていなければ NoTeam</summary>
+        public int KeeperTeam { get; internal set; } = NoTeam;
+
+        public const int NoTeam = -1;
+
+        /// <summary>ペンモンかキーパーが持っている</summary>
+        public bool IsHeld => Holder != NoPlayer || KeeperTeam != NoTeam;
+
+        /// <summary>ペンモン（フィールドの子）が持っている</summary>
+        public bool IsHeldByPlayer => Holder != NoPlayer;
 
         public bool IsAirborne => Height > 0f || VerticalSpeed > 0f;
 
@@ -46,6 +55,7 @@ namespace PenmonScramble.Soccer.Core
             Height = 0f;
             VerticalSpeed = 0f;
             Holder = NoPlayer;
+            KeeperTeam = NoTeam;
             LockedPlayer = NoPlayer;
             LockSeconds = 0f;
             IdleSeconds = 0f;
