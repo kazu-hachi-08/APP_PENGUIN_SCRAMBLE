@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using PenmonScramble.Game;
+using PenmonScramble.Soccer.Core;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -7,7 +9,7 @@ namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
     /// サッカーの HUD（仮。試合の流れを作るフェーズ 4 で作り直す）: 上のまん中に赤・青の点と時間、まん中に知らせ（「ゴール！」など）、
-    /// PC では下に操作の説明、スマホでは仮想スティックとシュートのボタン
+    /// PC では下に操作の説明、スマホでは仮想スティックと技1（シュート / スライディング）・技2（パス / ダッシュ）・交代のボタン
     /// </summary>
     public class SoccerHud : MonoBehaviour
     {
@@ -17,6 +19,7 @@ namespace PenmonScramble.Soccer.Game
         [SerializeField] private Text _banner;
         [SerializeField] private GameObject _help;
         [SerializeField] private TouchControlsVisibility _touch;
+        [SerializeField] private SoccerTouchView _touchView;
 
         [Header("知らせ")]
         [SerializeField] private float _bannerPopSeconds = 0.25f;
@@ -65,6 +68,12 @@ namespace PenmonScramble.Soccer.Game
             _blue = blue;
             _redScore.text = red.ToString();
             _blueScore.text = blue.ToString();
+        }
+
+        /// <summary>スマホのボタンの中身を、動かしている子に合わせる（毎フレーム）</summary>
+        public void ShowControls(SoccerWorld world, SoccerControl control, IReadOnlyList<int> species)
+        {
+            _touchView.Show(world, control, species);
         }
 
         /// <summary>始まってからの時間（m:ss）</summary>

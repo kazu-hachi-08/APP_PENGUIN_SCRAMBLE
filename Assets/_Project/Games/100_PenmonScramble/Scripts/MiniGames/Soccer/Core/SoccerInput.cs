@@ -13,13 +13,17 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>歩く向きと強さ（長さ 1 まで）</summary>
         public readonly Vec2 Move;
 
-        /// <summary>シュートのボタン（押している間ためて、離すと蹴る）</summary>
+        /// <summary>シュートのボタン（持っている: 押している間ためて、離すと蹴る。持っていない: 押すとスライディング）</summary>
         public readonly bool Shoot;
 
-        public SoccerInput(Vec2 move, bool shoot)
+        /// <summary>パスのボタン（持っている: 押すとパス。持っていない: 押すとダッシュ）</summary>
+        public readonly bool Pass;
+
+        public SoccerInput(Vec2 move, bool shoot, bool pass = false)
         {
             Move = move;
             Shoot = shoot;
+            Pass = pass;
         }
     }
 }

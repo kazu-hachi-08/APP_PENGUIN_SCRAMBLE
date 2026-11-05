@@ -5,8 +5,9 @@ using UnityEngine;
 namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
-    /// フィールドの子1体: 本編の3Dのペンモン（PenguinMotion で歩く・ためる・蹴る・喜ぶ・悔しがる）と、
-    /// 足元の輪（動かしている子は席の色の太い輪、AI の子はチームの色の細い輪）とためゲージの弧
+    /// フィールドの子1体: 本編の3Dのペンモン（PenguinMotion で歩く・ためる・蹴る・すべる・転ぶ・喜ぶ・悔しがる）と、
+    /// 足元の輪（動かしている子は席の色の太い輪、AI の子はチームの色の細い輪）とためゲージの弧。
+    /// CPU のチームの子は本編の雑魚と同じく暗い色にする
     /// </summary>
     public sealed class SoccerPlayerView
     {
@@ -27,7 +28,7 @@ namespace PenmonScramble.Soccer.Game
         private readonly int _team;
         private bool _controlled;
 
-        public SoccerPlayerView(SoccerPlayer player, int speciesNo, ToonMaterials materials, Transform parent)
+        public SoccerPlayerView(SoccerPlayer player, int speciesNo, bool wild, ToonMaterials materials, Transform parent)
         {
             _materials = materials;
             _team = player.Team;
@@ -42,6 +43,11 @@ namespace PenmonScramble.Soccer.Game
             var model = PenguinModelBuilder.Build(look, materials, body);
             // 太陽の影は切っているので、足元の丸い影にする（本編のステージと同じ）
             model.SetRealShadows(false);
+            if (wild)
+            {
+                model.SetTint(PenguinTint.Dark(UnitView.EnemyDarkness));
+            }
+
             _motion = model.gameObject.AddComponent<PenguinMotion>();
             _motion.SnapFacing(SoccerSpace.Direction(player.Facing));
 
@@ -74,6 +80,9 @@ namespace PenmonScramble.Soccer.Game
             _motion.Facing = SoccerSpace.Direction(player.Facing);
             var charge = player.IsCharging ? player.Charge01 : 0f;
             _motion.KickCharge = charge;
+            _motion.Sliding = player.State == SoccerPlayerState.Slide;
+            // 奪われて転ぶ・外して起き上がるところは、本編のダウンの姿（腹ばい）
+            _motion.Down = player.IsDown;
             _charge.Show(_controlled ? charge : 0f, SoccerSpace.Direction(player.Facing), deltaTime);
         }
 

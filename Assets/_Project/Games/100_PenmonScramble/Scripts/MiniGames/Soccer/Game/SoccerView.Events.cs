@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
-    /// 起きたことへの見た目の反応: 蹴る動き・柵が弾む・網が揺れる・キーパーが取る / 投げる、
+    /// 起きたことへの見た目の反応: 蹴る動き（パスは小さく）・柵が弾む・網が揺れる・キーパーが取る / 投げる、
     /// ゴールで点を取った側が喜び、取られた側（子とキーパー）が悔しがる。キックオフで元に戻す
     /// </summary>
     public partial class SoccerView
@@ -12,12 +12,18 @@ namespace PenmonScramble.Soccer.Game
         // 網・柵を揺らす当たりの速さの下限（壁沿いに転がるだけでは揺らさない）
         private const float BoardPopMinSpeed = 4f;
 
+        // パスの蹴る動きの大きさ（シュートより小さく振る）
+        private const float PassKickPower = 0.25f;
+
         public void OnEvent(SoccerEvent e, SoccerWorld world)
         {
             switch (e.Kind)
             {
                 case SoccerEventKind.Kick:
                     PlayerAt(e.Player)?.Kick(e.Strength);
+                    break;
+                case SoccerEventKind.Pass:
+                    PlayerAt(e.Player)?.Kick(PassKickPower);
                     break;
                 case SoccerEventKind.WallHit:
                     if (e.Team < 0 && e.Strength >= BoardPopMinSpeed)

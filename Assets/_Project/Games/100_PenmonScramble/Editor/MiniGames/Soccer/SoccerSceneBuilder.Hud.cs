@@ -11,7 +11,7 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// サッカーの HUD（仮。SoccerHud）: 上のまん中に赤・青の丸の点と、その間の時間。まん中に知らせ、PC では下に操作の説明、
-    /// スマホでは仮想スティックとシュートのボタン（PenmonScrambleSceneBuilder.SoccerTouch.cs）。
+    /// スマホでは仮想スティックと技1・技2・交代のボタン（PenmonScrambleSceneBuilder.SoccerTouch.cs）。
     /// 試合の流れ・必殺のゲージ・PK戦の表はフェーズ 4 で足す
     /// </summary>
     public static partial class SoccerSceneBuilder
@@ -33,7 +33,7 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 HelpPosition = new Vector2(0f, 34f);
         private static readonly Vector2 HelpSize = new Vector2(1700f, 48f);
         private const int HelpFontSize = 26;
-        private const string HelpText = "移動: WASD / 左スティック　シュート: J / × を押してためて離す（満タンで浮く）　もどる: Esc";
+        private const string HelpText = "移動: WASD / 左スティック　シュート（ためて離す）/ スライディング: J / ×　パス / ダッシュ: K / ○　交代: Space / L1　もどる: Esc";
 
         private readonly struct SoccerHudParts
         {
@@ -66,6 +66,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_help").objectReferenceValue = help.gameObject;
             var touch = B.CreateSoccerTouchControls(root.transform);
             so.FindProperty("_touch").objectReferenceValue = touch.Visibility;
+            so.FindProperty("_touchView").objectReferenceValue = touch.View;
             so.ApplyModifiedProperties();
 
             root.SetActive(false);

@@ -16,6 +16,9 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>1チームのフィールドの子の数（キーパーは別）</summary>
         public const int PlayersPerTeam = 3;
 
+        /// <summary>1試合の長さ（秒。案。試合の流れはフェーズ 4 の SoccerMatch。今は CPU の試合の確認で使う）</summary>
+        public const float MatchSeconds = 180f;
+
         /// <summary>赤（左のゴールを守り、右へ攻める）</summary>
         public const int Red = 0;
 

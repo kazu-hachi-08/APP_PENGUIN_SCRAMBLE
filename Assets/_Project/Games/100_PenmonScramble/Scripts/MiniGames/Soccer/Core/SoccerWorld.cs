@@ -6,11 +6,11 @@ using PenmonScramble.MiniGames.Core;
 namespace PenmonScramble.Soccer.Core
 {
     /// <summary>
-    /// ピッチの上の計算（子の移動・ボールの転がり・壁の跳ね返り・浮いた球・持つ / 離す・シュート・ゴールの判定）。
+    /// ピッチの上の計算（子の移動・ボールの転がり・壁の跳ね返り・浮いた球・持つ / 離す・シュート・パス・スライディング・ゴールの判定）。
     /// SoccerRules.StepSeconds ずつ進める（同じ入力なら同じ結果）。表示と音へは起きたこと（SoccerEvent）で渡す。
     /// 試合の流れ（時間・ゴールの演出・PK戦）はここに持たない（フェーズ 4 の SoccerMatch）。
     /// 点が入ったら Kickoff を呼ぶまでボールは誰も持てない（網の中で転がるだけ）。
-    /// キーパーの動きと止める判定は SoccerWorld.Keeper.cs
+    /// ボタンで出す技（パス・スライディング・ダッシュ）は SoccerWorld.Actions.cs、キーパーの動きと止める判定は SoccerWorld.Keeper.cs
     /// </summary>
     public sealed partial class SoccerWorld
     {
@@ -65,7 +65,7 @@ namespace PenmonScramble.Soccer.Core
                 player.Position = Pitch.KickoffSpot(player.Team, index, player.Team == kickingTeam);
                 player.Velocity = Vec2.Zero;
                 player.Facing = new Vec2(SoccerPitchDef.AttackDirection(player.Team), 0f);
-                player.ResetCharge();
+                player.ResetActions();
             }
 
             foreach (var keeper in _keepers)
@@ -86,16 +86,20 @@ namespace PenmonScramble.Soccer.Core
             Time += Dt;
             foreach (var player in _players)
             {
+                TickPlayer(player, events);
                 MovePlayer(player, InputOf(inputs, player.Index));
             }
 
+            SeparatePlayers();
             StepKeepers(events);
             CarryBall(events);
+            StealBySlides(events);
             foreach (var player in _players)
             {
-                UpdateShot(player, InputOf(inputs, player.Index), events);
+                HandleButtons(player, InputOf(inputs, player.Index), events);
             }
 
+            var ballFrom = Ball.Position;
             if (!Ball.IsHeld)
             {
                 StepFreeBall(events);
@@ -103,7 +107,7 @@ namespace PenmonScramble.Soccer.Core
 
             KeepersTouchBall(events);
             CheckGoal(events);
-            TryPickup(events);
+            TryPickup(ballFrom, events);
             UpdateIdle(events);
         }
 
@@ -114,23 +118,85 @@ namespace PenmonScramble.Soccer.Core
 
         /// <summary>
         /// 入力の向きへ歩く速さを近づける（急に止まる・曲がるときも少しだけなめらかに）。
-        /// 種類の速さは効かせない。ボールを持っている子だけ少し遅い
+        /// 種類の速さは効かせない。ボールを持っている子だけ少し遅く、ダッシュ中だけ速い。
+        /// すべっている間は向いている向きへまっすぐ、転んでいる間は止まっていく
         /// </summary>
         private void MovePlayer(SoccerPlayer player, SoccerInput input)
         {
-            var move = input.Move.ClampLength(1f);
-            var speed = SoccerBalance.RunSpeed * (Ball.Holder == player.Index ? SoccerBalance.CarrySpeedScale : 1f);
-            var target = move * speed;
-            var change = (target - player.Velocity).ClampLength(SoccerBalance.RunAccel * Dt);
-            player.Velocity += change;
+            switch (player.State)
+            {
+                case SoccerPlayerState.Slide:
+                    player.Velocity = player.Facing * SoccerBalance.SlideSpeed;
+                    break;
+                case SoccerPlayerState.Down:
+                case SoccerPlayerState.Recover:
+                    player.Velocity -= player.Velocity.ClampLength(SoccerBalance.DownBrake * Dt);
+                    break;
+                default:
+                    Walk(player, input.Move.ClampLength(1f));
+                    break;
+            }
+
             player.Position += player.Velocity * Dt;
+            PushPlayerOutOfWalls(player);
+            PushPlayerOutOfKeepers(player);
+        }
+
+        private void Walk(SoccerPlayer player, Vec2 move)
+        {
+            var speed = SoccerBalance.RunSpeed;
+            if (Ball.Holder == player.Index)
+            {
+                speed *= SoccerBalance.CarrySpeedScale;
+            }
+            else if (player.IsDashing)
+            {
+                speed *= SoccerBalance.DashSpeedScale;
+            }
+
+            var change = (move * speed - player.Velocity).ClampLength(SoccerBalance.RunAccel * Dt);
+            player.Velocity += change;
             if (!move.IsNearlyZero)
             {
                 player.Facing = move.Normalized;
             }
+        }
 
-            PushPlayerOutOfWalls(player);
-            PushPlayerOutOfKeepers(player);
+        /// <summary>
+        /// 重なった子どうしを半分ずつ押し離す（団子になって1体に見えないように・体でコースを切れるように）。
+        /// すべっている子は押されない（横から足を出して奪えるように）
+        /// </summary>
+        private void SeparatePlayers()
+        {
+            var reach = SoccerBalance.PlayerRadius * 2f;
+            for (var i = 0; i < _players.Length; i++)
+            {
+                for (var j = i + 1; j < _players.Length; j++)
+                {
+                    var a = _players[i];
+                    var b = _players[j];
+                    if (a.State == SoccerPlayerState.Slide || b.State == SoccerPlayerState.Slide)
+                    {
+                        continue;
+                    }
+
+                    var away = b.Position - a.Position;
+                    var distanceSquared = away.LengthSquared;
+                    if (distanceSquared >= reach * reach)
+                    {
+                        continue;
+                    }
+
+                    var distance = MathF.Sqrt(distanceSquared);
+                    // 同じ所に重なったら、番号で決まる向きへ離す（同じ入力なら同じ結果に）
+                    var normal = distance > Epsilon ? away / distance : new Vec2(0f, 1f);
+                    var push = normal * ((reach - distance) * 0.5f);
+                    a.Position -= push;
+                    b.Position += push;
+                    PushPlayerOutOfWalls(a);
+                    PushPlayerOutOfWalls(b);
+                }
+            }
         }
 
         /// <summary>子は壁・ゴールの口・網のどれも通れない（ゴールの中へは入らない）</summary>

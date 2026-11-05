@@ -31,6 +31,12 @@ namespace PenmonScramble.Soccer.Game
         Whistle,
         /// <summary>点が入った（上がっていくファンファーレ）</summary>
         Goal,
+        /// <summary>スライディングで芝をすべる（ザザッ）</summary>
+        Slide,
+        /// <summary>スライディングでボールを奪った（ドスッ）</summary>
+        Tackle,
+        /// <summary>ダッシュで駆け出す（タタッ）</summary>
+        Dash,
     }
 
     /// <summary>
@@ -63,6 +69,9 @@ namespace PenmonScramble.Soccer.Game
             { SoccerSound.Throw, 0.25f },
             { SoccerSound.Whistle, 0.45f },
             { SoccerSound.Goal, 0.6f },
+            { SoccerSound.Slide, 0.3f },
+            { SoccerSound.Tackle, 0.55f },
+            { SoccerSound.Dash, 0.2f },
         };
 
         /// <summary>蹴る音。strength はため（0〜1）</summary>
@@ -114,6 +123,11 @@ namespace PenmonScramble.Soccer.Game
                 case SoccerSound.Parry: return ToySynth.Impact("Soccer_Parry", 0.09f, 200f);
                 case SoccerSound.Throw: return ToySynth.Sweep("Soccer_Throw", 0.1f, 300f, 600f);
                 case SoccerSound.Whistle: return Whistle();
+                case SoccerSound.Slide: return Slide();
+                // 奪った「ドスッ」: 低い打撃（転ぶ重さ）
+                case SoccerSound.Tackle: return ToySynth.Impact("Soccer_Tackle", 0.12f, 110f);
+                // 駆け出す「タタッ」: 短い打撃を2つ
+                case SoccerSound.Dash: return Dash();
                 default: return ToySynth.Jingle("Soccer_Goal", new[] { 523f, 659f, 784f, 1047f, 1319f });
             }
         }
@@ -166,6 +180,34 @@ namespace PenmonScramble.Soccer.Game
                 filtered = Mathf.Lerp(filtered, (float)random.NextDouble() * 2f - 1f, 0.2f);
                 var thump = Mathf.Sin(2f * Mathf.PI * 130f * t) * Mathf.Exp(-t * 25f);
                 return (thump * 0.7f + filtered * 0.6f) * Mathf.Exp(-t * 18f);
+            });
+        }
+
+        /// <summary>芝をすべる「ザザッ」: 高めのノイズが擦れるように続いて消える</summary>
+        private static AudioClip Slide()
+        {
+            const float duration = 0.3f;
+            var random = new System.Random(17);
+            var previous = 0f;
+            return ToySynth.CreateClip("Soccer_Slide", duration, t =>
+            {
+                // 前の値との差を取って高い音だけ残す（芝の擦れる音）
+                var noise = (float)random.NextDouble() * 2f - 1f;
+                var high = noise - previous;
+                previous = noise;
+                var scrape = 0.7f + 0.3f * Mathf.Sin(2f * Mathf.PI * 38f * t);
+                return high * 0.5f * scrape * Mathf.Min(1f, t / 0.02f) * Mathf.Exp(-t * 7f);
+            });
+        }
+
+        private static AudioClip Dash()
+        {
+            const float step = 0.07f;
+            const float duration = step * 2f;
+            return ToySynth.CreateClip("Soccer_Dash", duration, t =>
+            {
+                var local = t % step;
+                return Mathf.Sin(2f * Mathf.PI * 260f * local) * Mathf.Exp(-local * 60f);
             });
         }
 

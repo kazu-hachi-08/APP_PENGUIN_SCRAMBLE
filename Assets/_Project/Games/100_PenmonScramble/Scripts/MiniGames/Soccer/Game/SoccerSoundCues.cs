@@ -58,6 +58,19 @@ namespace PenmonScramble.Soccer.Game
                 case SoccerEventKind.KeeperThrow:
                     SoccerSounds.Play(SoccerSound.Throw);
                     break;
+                case SoccerEventKind.Pass:
+                    // パスは弱く蹴る音（速いパスほど少し強く）
+                    SoccerSounds.PlayKick(e.Strength / SoccerBalance.MaxShotSpeed);
+                    break;
+                case SoccerEventKind.Slide:
+                    SoccerSounds.Play(SoccerSound.Slide);
+                    break;
+                case SoccerEventKind.Tackle:
+                    SoccerSounds.Play(SoccerSound.Tackle);
+                    break;
+                case SoccerEventKind.Dash:
+                    SoccerSounds.Play(SoccerSound.Dash);
+                    break;
             }
         }
     }

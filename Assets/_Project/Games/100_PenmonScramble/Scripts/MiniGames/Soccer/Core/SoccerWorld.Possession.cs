@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Soccer.Core
 {
@@ -15,32 +16,35 @@ namespace PenmonScramble.Soccer.Core
             }
 
             var holder = _players[Ball.Holder];
-            Ball.Position = holder.Position + holder.Facing * SoccerBalance.DribbleDistance;
-            Ball.Velocity = Vec2.Zero;
-            BounceBallOffWalls(events);
+            SweepBall(holder.Position, holder.Position + holder.Facing * SoccerBalance.DribbleDistance);
             // 跳ねる速さは持たせず、離したときに子の歩く勢いで転がり出すように
             Ball.Velocity = holder.Velocity;
         }
 
-        /// <summary>持っている子がシュートを押している間ためて、離したら蹴る。持っていない子のためは消す</summary>
-        private void UpdateShot(SoccerPlayer player, SoccerInput input, List<SoccerEvent> events)
+        /// <summary>
+        /// 持っている子が押した瞬間からためて、離したら蹴る（持つ前から押しっぱなしのボタンではためない。
+        /// スライディングで奪ったあと、押したままのボタンを離した瞬間に勝手に蹴らないように）
+        /// </summary>
+        private void UpdateShot(SoccerPlayer player, SoccerInput input, bool pressed, List<SoccerEvent> events)
         {
-            if (Ball.Holder != player.Index)
-            {
-                player.ResetCharge();
-                return;
-            }
-
-            if (input.Shoot)
-            {
-                player.IsCharging = true;
-                player.ChargeSeconds += Dt;
-                return;
-            }
-
             if (player.IsCharging)
             {
-                Kick(player, input.Move, events);
+                if (input.Shoot)
+                {
+                    player.ChargeSeconds += Dt;
+                }
+                else
+                {
+                    Kick(player, input.Move, events);
+                }
+
+                return;
+            }
+
+            if (pressed)
+            {
+                player.IsCharging = true;
+                player.ChargeSeconds = Dt;
             }
         }
 
@@ -55,25 +59,32 @@ namespace PenmonScramble.Soccer.Core
             var direction = SoccerAim.Assist(player.Position, aim, Pitch.GoalOf(SoccerRules.Opponent(player.Team)));
             var speed = SoccerBalance.MinShotSpeed + (SoccerBalance.MaxShotSpeed - SoccerBalance.MinShotSpeed) * charge;
             var lofted = charge >= SoccerBalance.LoftCharge;
+            Release(player, direction, speed, lofted ? SoccerBalance.LoftUpSpeed : 0f);
+            events.Add(new SoccerEvent(SoccerEventKind.Kick, player.Index, player.Team, Ball.Position, charge, lofted));
+        }
 
+        /// <summary>持っているボールを direction へ speed で蹴り出す（シュート・パス共通）。蹴った子は少しの間また持てない</summary>
+        private void Release(SoccerPlayer player, Vec2 direction, float speed, float verticalSpeed)
+        {
             player.Facing = direction;
             player.ResetCharge();
             Ball.Holder = SoccerBall.NoPlayer;
-            Ball.Position = player.Position + direction * SoccerBalance.DribbleDistance;
+            SweepBall(player.Position, player.Position + direction * SoccerBalance.DribbleDistance);
             Ball.Velocity = direction * speed;
-            Ball.VerticalSpeed = lofted ? SoccerBalance.LoftUpSpeed : 0f;
+            Ball.VerticalSpeed = verticalSpeed;
             Ball.LastToucher = player.Index;
             Ball.LockedPlayer = player.Index;
             Ball.LockSeconds = SoccerBalance.RepickLockSeconds;
             Ball.IdleSeconds = 0f;
             _trajectoryChanged = true;
-            events.Add(new SoccerEvent(SoccerEventKind.Kick, player.Index, player.Team, Ball.Position, charge, lofted));
         }
 
         /// <summary>
-        /// 離れたボールに一番近い子が、届く所にいれば持つ。頭より高い球・蹴った直後の本人・点が入った後は持てない
+        /// 離れたボールに一番近い子が、届く所にいれば持つ。この歩でボールが通った線（from → 今）で測る
+        /// （速いパスが歩と歩の間で子をすり抜けないように）。頭より高い球・蹴った直後の本人・転んでいる子・点が入った後は持てない。
+        /// すべっている子が離れたボールを拾ったら、すべりは成功で終わる
         /// </summary>
-        private void TryPickup(List<SoccerEvent> events)
+        private void TryPickup(Vec2 from, List<SoccerEvent> events)
         {
             if (Ball.LockSeconds > 0f)
             {
@@ -89,18 +100,51 @@ namespace PenmonScramble.Soccer.Core
                 return;
             }
 
-            var nearest = Nearest(Ball.Position, Ball.LockedPlayer);
-            if (nearest == null || Vec2.Distance(nearest.Position, Ball.Position) > SoccerBalance.PickupReach)
+            var picker = NearestPicker(from, Ball.Position);
+            if (picker == null)
             {
                 return;
             }
 
-            Ball.Holder = nearest.Index;
-            Ball.LastToucher = nearest.Index;
+            if (picker.State == SoccerPlayerState.Slide)
+            {
+                picker.Enter(SoccerPlayerState.Normal);
+            }
+
+            Ball.Holder = picker.Index;
+            Ball.LastToucher = picker.Index;
             Ball.Height = 0f;
             Ball.VerticalSpeed = 0f;
             Ball.IdleSeconds = 0f;
-            events.Add(new SoccerEvent(SoccerEventKind.Possess, nearest.Index, nearest.Team, Ball.Position));
+            events.Add(new SoccerEvent(SoccerEventKind.Possess, picker.Index, picker.Team, Ball.Position));
+        }
+
+        /// <summary>ボールが通った線（from → to）に届く子のうち、ボールが先に通りかかった子（同じなら近い子）。いなければ null</summary>
+        private SoccerPlayer NearestPicker(Vec2 from, Vec2 to)
+        {
+            SoccerPlayer best = null;
+            var bestAlong = float.MaxValue;
+            var bestDistance = float.MaxValue;
+            foreach (var player in _players)
+            {
+                if (player.Index == Ball.LockedPlayer || player.IsDown)
+                {
+                    continue;
+                }
+
+                var closest = MiniGameGeometry.ClosestOnSegment(from, to, player.Position);
+                var distance = Vec2.Distance(closest, player.Position);
+                var along = Vec2.Distance(from, closest);
+                var earlier = along < bestAlong - Epsilon || (along <= bestAlong + Epsilon && distance < bestDistance);
+                if (distance <= SoccerBalance.PickupReach && earlier)
+                {
+                    best = player;
+                    bestAlong = along;
+                    bestDistance = distance;
+                }
+            }
+
+            return best;
         }
     }
 }

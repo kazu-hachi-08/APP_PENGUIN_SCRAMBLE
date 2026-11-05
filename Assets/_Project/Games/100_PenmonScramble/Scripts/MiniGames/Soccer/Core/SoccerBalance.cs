@@ -4,7 +4,7 @@ namespace PenmonScramble.Soccer.Core
     /// ボールとペンモンの動きの調整値（長さはマス＝m・時間は秒）。ホストが計算して全員に配るので、Unity の物理は使わず、ここの数で決める。
     /// 「（案）」の値はフェーズ 2〜4 の試遊で決め直す
     /// </summary>
-    public static class SoccerBalance
+    public static partial class SoccerBalance
     {
         // ---- ペンモン ----
 
@@ -31,6 +31,66 @@ namespace PenmonScramble.Soccer.Core
 
         /// <summary>蹴った子は、離れたボールをこの間だけ持てない（蹴った瞬間にまた拾わないように）</summary>
         public const float RepickLockSeconds = 0.4f;
+
+        // ---- パス ----
+
+        /// <summary>向いている向き（スティック）からこの角度（度）までにいる味方へパスする（案）</summary>
+        public const float PassConeDegrees = 60f;
+
+        /// <summary>受ける子の足元に着いたときに残る速さ（止まりかけの球を取りに戻らなくてよいように）</summary>
+        public const float PassArriveSpeed = 3f;
+
+        /// <summary>パスの速さの範囲（近くへも弱すぎず、遠くへも速すぎて取りこぼさない）</summary>
+        public const float PassMinSpeed = 6f;
+        public const float PassMaxSpeed = 15f;
+
+        /// <summary>この距離より近い味方へはパスしない（足元どうしで渡しても意味がない）</summary>
+        public const float PassMinDistance = 1.2f;
+
+        /// <summary>前に味方がいないときに、向いている向きへ弱く蹴り出す速さ</summary>
+        public const float PassFallbackSpeed = 7f;
+
+        // ---- スライディング ----
+
+        /// <summary>すべる速さと長さ（約 3.5 マス。案）。すべる間は向きを変えられない</summary>
+        public const float SlideSpeed = 10f;
+        public const float SlideSeconds = 0.35f;
+
+        /// <summary>持っている相手のボールにこの距離（子の中心からボールの中心）まで届けば奪う</summary>
+        public const float SlideStealReach = PlayerRadius + BallRadius + 0.3f;
+
+        /// <summary>奪われた子が転んで動けない秒（案）</summary>
+        public const float TackledDownSeconds = 1f;
+
+        /// <summary>外したときに自分が起き上がれない秒（むやみに出させない。案）</summary>
+        public const float SlideMissSeconds = 0.5f;
+
+        /// <summary>すべり始めてから次にすべれるまでの秒（案）</summary>
+        public const float SlideCooldownSeconds = 1.2f;
+
+        /// <summary>転んでいる・起き上がる間に、歩く勢いが消える速さ（毎秒）</summary>
+        public const float DownBrake = 30f;
+
+        // ---- ダッシュ（持っていないときの技2）----
+
+        /// <summary>ダッシュの長さ・速さの倍率・次に出せるまでの秒（転がるボールを追いかけるため。案）</summary>
+        public const float DashSeconds = 0.5f;
+        public const float DashSpeedScale = 1.45f;
+        public const float DashCooldownSeconds = 3f;
+
+        // ---- 動かす子の切り替え ----
+
+        /// <summary>自動で替わってから、次に自動で替わるまでの秒（替わり続けてガタつかないように。案）</summary>
+        public const float SwitchHoldSeconds = 0.8f;
+
+        /// <summary>今の子よりこの秒以上早くボールに着ける子にだけ自動で替わる（同じくらいの所で行ったり来たりしないように）</summary>
+        public const float SwitchMarginSeconds = 0.5f;
+
+        /// <summary>転んでいる子は、ボールに着く秒にこれを足して比べる（替わってもすぐ動けないので後回し）</summary>
+        public const float SwitchDownPenaltySeconds = 0.8f;
+
+        /// <summary>自分が出したパスが転がっている扱いにする、いちばん長い秒（誰も持たないまま止まったら、また替われるように）</summary>
+        public const float SwitchPassFlightSeconds = 2f;
 
         // ---- シュート ----
 

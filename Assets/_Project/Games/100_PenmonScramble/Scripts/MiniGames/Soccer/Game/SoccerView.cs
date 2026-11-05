@@ -27,9 +27,9 @@ namespace PenmonScramble.Soccer.Game
 
         /// <summary>
         /// ピッチを組み直す（前の物は消す）。world は景色（柵の色・外の地面の絵）を決めるワールドの番号、
-        /// species は子ごとのペンモンの種類（world.Players と同じ並び）
+        /// species は子ごとのペンモンの種類（world.Players と同じ並び）、wildTeam は CPU のチーム（暗い色にする。いなければ −1）
         /// </summary>
-        public void Build(SoccerWorld world, int stadiumWorld, IReadOnlyList<int> species)
+        public void Build(SoccerWorld world, int stadiumWorld, IReadOnlyList<int> species, int wildTeam = -1)
         {
             Clear();
             _pitch = new GameObject("Pitch").transform;
@@ -48,7 +48,7 @@ namespace PenmonScramble.Soccer.Game
             foreach (var player in world.Players)
             {
                 var speciesNo = player.Index < species.Count ? species[player.Index] : 1;
-                _players.Add(new SoccerPlayerView(player, speciesNo, Materials, _pitch));
+                _players.Add(new SoccerPlayerView(player, speciesNo, player.Team == wildTeam, Materials, _pitch));
             }
 
             foreach (var keeper in world.Keepers)

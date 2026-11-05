@@ -61,6 +61,23 @@ namespace PenmonScramble.Soccer.Core
         }
 
         /// <summary>
+        /// 子の足元（from）から置きたい所（to）へ、ボールを細かく分けて動かして置く（速さは 0 になる）。
+        /// 一気に置くと、壁ぎわ・角で壁の線の向こうへ置いてしまい、押し出しで外へ出てしまうため
+        /// </summary>
+        private void SweepBall(Vec2 from, Vec2 to)
+        {
+            var travel = to - from;
+            var steps = Math.Max(1, (int)MathF.Ceiling(travel.Length / SoccerBalance.BallSubstepLength));
+            Ball.Position = from;
+            Ball.Velocity = Vec2.Zero;
+            for (var i = 0; i < steps; i++)
+            {
+                Ball.Position += travel / steps;
+                BounceBallOffWalls(null);
+            }
+        }
+
+        /// <summary>
         /// 壁に食い込んでいれば押し出し、壁に向かう速さを跳ね返す。ゴールの口はバーより低い球なら通す。
         /// 持っているボールにも使う（壁ぎわでボールが壁に埋まらないように。持っている間は速さを持たないので跳ねない）
         /// </summary>

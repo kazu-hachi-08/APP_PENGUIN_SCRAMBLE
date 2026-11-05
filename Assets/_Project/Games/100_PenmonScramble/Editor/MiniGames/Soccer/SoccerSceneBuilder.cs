@@ -13,8 +13,8 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// サッカーのシーン（SoccerScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編とゴルフのシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
-    /// 今はスタジアムが無いので、「準備中」の板と、開発用メニューから遊ぶ試しのピッチ（本番の見た目・カメラ・操作・仮の HUD）を置く
-    /// （Docs/MINIGAME_SOCCER_PLAN.md フェーズ 2）。HUD は SoccerSceneBuilder.Hud.cs
+    /// 今はスタジアムが無いので、「準備中」の板と、開発用メニューから遊ぶ試しのピッチ（3対3。本番の見た目・カメラ・操作・仮の HUD）を置く
+    /// （Docs/MINIGAME_SOCCER_PLAN.md フェーズ 3）。HUD は SoccerSceneBuilder.Hud.cs
     /// </summary>
     public static partial class SoccerSceneBuilder
     {
@@ -118,7 +118,7 @@ namespace PenmonScramble.Editor
 
         /// <summary>
         /// 操作を読む。シーンごとに作り直す（仮想ボタンがこのシーンの物なので、シーンをまたいで残すと参照が切れる）。
-        /// シュートのボタンは J / ×（Action1）と同じ扱い
+        /// シュート / スライディングは J / ×（Action1）、パス / ダッシュは K / ○（Action2）、交代は Space / L1（Action4）と同じ扱い
         /// </summary>
         private static void CreateInputManager(PenmonScrambleSceneBuilder.SoccerTouchParts touch)
         {
@@ -126,6 +126,8 @@ namespace PenmonScramble.Editor
             var so = new SerializedObject(manager);
             so.FindProperty("_virtualJoystick").objectReferenceValue = touch.Joystick;
             so.FindProperty("_virtualAction1Button").objectReferenceValue = touch.Shoot;
+            so.FindProperty("_virtualAction2Button").objectReferenceValue = touch.Pass;
+            so.FindProperty("_virtualAction4Button").objectReferenceValue = touch.Switch;
             so.FindProperty("_dontDestroyOnLoad").boolValue = false;
             so.ApplyModifiedProperties();
         }

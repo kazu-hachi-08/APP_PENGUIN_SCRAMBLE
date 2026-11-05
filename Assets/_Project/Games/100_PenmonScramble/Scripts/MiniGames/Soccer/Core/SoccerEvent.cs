@@ -28,6 +28,16 @@ namespace PenmonScramble.Soccer.Core
         KeeperParry,
         /// <summary>キーパーがボールを投げた（Player は受け取る味方。いなければ NoPlayer）</summary>
         KeeperThrow,
+        /// <summary>パスした（Player は蹴った子、Other は受ける味方。前に味方がいなければ NoPlayer。Strength は蹴り出した速さ）</summary>
+        Pass,
+        /// <summary>スライディングを始めた（Player はすべる子）</summary>
+        Slide,
+        /// <summary>スライディングでボールを奪った（Player は奪った子、Other は転んだ子）</summary>
+        Tackle,
+        /// <summary>スライディングを外して転んだ（Player はすべった子）</summary>
+        SlideMiss,
+        /// <summary>ダッシュした（Player は走る子）</summary>
+        Dash,
     }
 
     /// <summary>試合で起きたこと。表示・音・通信へはこれで渡す（Core は見せ方を知らない）</summary>
@@ -40,8 +50,12 @@ namespace PenmonScramble.Soccer.Core
         public readonly float Strength;
         public readonly bool Lofted;
 
-        public SoccerEvent(SoccerEventKind kind, int player, int team, Vec2 position, float strength = 0f, bool lofted = false)
+        /// <summary>もう1人の子（パスを受ける味方・奪われた子）。いなければ SoccerBall.NoPlayer</summary>
+        public readonly int Other;
+
+        public SoccerEvent(SoccerEventKind kind, int player, int team, Vec2 position, float strength = 0f, bool lofted = false, int other = SoccerBall.NoPlayer)
         {
+            Other = other;
             Kind = kind;
             Player = player;
             Team = team;
