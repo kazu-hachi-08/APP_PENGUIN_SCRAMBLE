@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
@@ -103,7 +104,7 @@ namespace PenmonScramble.Golf.Core
         public static GolfMover Block(Vec2 center, float width, float depth, Vec2 travel, float period, float phase = 0f,
             float bounce = GolfBalance.WallBounce, float height = GolfBalance.TallWallHeight)
         {
-            var walls = GolfHoleDef.WallsAround(GolfGeometry.Rect(-width * 0.5f, -depth * 0.5f, width * 0.5f, depth * 0.5f), bounce, height);
+            var walls = GolfHoleDef.WallsAround(MiniGameGeometry.Rect(-width * 0.5f, -depth * 0.5f, width * 0.5f, depth * 0.5f), bounce, height);
             return new GolfMover(GolfMoverLook.Block, center, walls, travel, 0, period, phase);
         }
 
@@ -196,7 +197,7 @@ namespace PenmonScramble.Golf.Core
             {
                 var a = _sweep[i];
                 var b = _sweep[(i + 1) % _sweep.Length];
-                var closest = GolfGeometry.ClosestOnSegment(a, b, point);
+                var closest = MiniGameGeometry.ClosestOnSegment(a, b, point);
                 var edge = b - a;
                 var outward = new Vec2(edge.Y, -edge.X).Normalized;
                 var side = Vec2.Dot(point - a, outward);
@@ -232,7 +233,7 @@ namespace PenmonScramble.Golf.Core
             var best = point;
             for (var i = 0; i < _sweep.Length; i++)
             {
-                var closest = GolfGeometry.ClosestOnSegment(_sweep[i], _sweep[(i + 1) % _sweep.Length], point);
+                var closest = MiniGameGeometry.ClosestOnSegment(_sweep[i], _sweep[(i + 1) % _sweep.Length], point);
                 var distance = Vec2.Distance(point, closest);
                 if (distance < nearest)
                 {
@@ -267,7 +268,7 @@ namespace PenmonScramble.Golf.Core
                 points.Add(pivot + travel + wall.B);
             }
 
-            return GolfGeometry.ConvexHull(points);
+            return MiniGameGeometry.ConvexHull(points);
         }
     }
 

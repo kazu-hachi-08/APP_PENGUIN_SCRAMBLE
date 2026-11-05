@@ -11,6 +11,9 @@ namespace PenmonScramble.MiniGames.Core
         /// <summary>記録に残るので一度配ったら変えない</summary>
         public const string GolfId = "golf";
 
+        /// <summary>記録に残るので一度配ったら変えない</summary>
+        public const string SoccerId = "soccer";
+
         public static readonly IReadOnlyList<MiniGameDef> All = new[]
         {
             new MiniGameDef(
@@ -30,6 +33,25 @@ namespace PenmonScramble.MiniGames.Core
                     new MiniGameCourseDef(4, "嵐の崖", 4),
                     new MiniGameCourseDef(5, "火山の入り江", 5),
                 }),
+            new MiniGameDef(
+                SoccerId,
+                "ペンモンサッカー",
+                "編成の3体でチームを組んで、3分間の試合",
+                "SoccerScene",
+                maxPlayers: 4,
+                // ベストは1試合の得失点差の最高（大きいほど良い。見せ方は SoccerCourseGuide で「+3」「±0」「−1」）
+                lowerIsBetter: false,
+                scoreUnit: "点差",
+                courses: new[]
+                {
+                    // スタジアムの景色もストーリーの5ワールド。番号は一度配ったら変えない
+                    new MiniGameCourseDef(1, "海岸", 1),
+                    new MiniGameCourseDef(2, "氷山", 2),
+                    new MiniGameCourseDef(3, "深海", 3),
+                    new MiniGameCourseDef(4, "嵐の崖", 4),
+                    new MiniGameCourseDef(5, "火山の入り江", 5),
+                },
+                courseWord: "スタジアム"),
         };
 
         /// <summary>Id のミニゲーム。無ければ null（新しい版で増えたミニゲームの記録など）</summary>

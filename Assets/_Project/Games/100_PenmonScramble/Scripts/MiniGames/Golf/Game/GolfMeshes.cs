@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using PenmonScramble.Core;
 using PenmonScramble.Golf.Core;
+using PenmonScramble.MiniGames.Core;
 using UnityEngine;
 
 namespace PenmonScramble.Golf.Game
@@ -60,7 +61,7 @@ namespace PenmonScramble.Golf.Game
             }
 
             // Core の三角形は上から見て左回り。Unity は表から見て右回りが表なので、並びを逆にする
-            var indices = GolfGeometry.Triangulate(shape);
+            var indices = MiniGameGeometry.Triangulate(shape);
             indices.Reverse();
             for (var i = 0; i < indices.Count; i++)
             {
@@ -74,7 +75,7 @@ namespace PenmonScramble.Golf.Game
         private static List<int> BuildSides(IReadOnlyList<Vec2> shape, Func<Vec2, float> top, float bottom, List<Vector3> vertices, List<Vector2> uvs)
         {
             var triangles = new List<int>();
-            var counterClockwise = GolfGeometry.SignedArea(shape) > 0f;
+            var counterClockwise = MiniGameGeometry.SignedArea(shape) > 0f;
             for (var i = 0; i < shape.Count; i++)
             {
                 var a = shape[i];

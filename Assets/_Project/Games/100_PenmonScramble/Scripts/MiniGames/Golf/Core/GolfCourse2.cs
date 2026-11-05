@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
@@ -22,7 +23,7 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef IceSlide()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 6f, 17f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 6f, 17f);
             var walls = GolfHoleDef.WallsAround(ground);
             // 互い違いのつらら（高い壁）
             walls.Add(new GolfWall(new Vec2(0f, 6.4f), new Vec2(2.6f, 6.4f)));
@@ -30,11 +31,11 @@ namespace PenmonScramble.Golf.Core
 
             var areas = new List<GolfArea>
             {
-                GolfArea.Ice(GolfGeometry.Rect(0f, 3.4f, 6f, 12.2f)),
+                GolfArea.Ice(MiniGameGeometry.Rect(0f, 3.4f, 6f, 12.2f)),
                 // カップの奥と左右の雪だまり
-                GolfArea.Sand(GolfGeometry.Rect(0f, 15.2f, 6f, 17f)),
-                GolfArea.Sand(GolfGeometry.Rect(0f, 12.6f, 1.6f, 15.2f)),
-                GolfArea.Sand(GolfGeometry.Rect(4.4f, 12.6f, 6f, 15.2f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(0f, 15.2f, 6f, 17f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(0f, 12.6f, 1.6f, 15.2f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(4.4f, 12.6f, 6f, 15.2f)),
             };
 
             return new GolfHoleDef("氷のすべり台", 2, new Vec2(3f, 1.6f), new Vec2(3f, 14f), ground, walls, areas);
@@ -46,7 +47,7 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef IceSlope()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 12f, 17f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 12f, 17f);
             var walls = GolfHoleDef.WallsAround(ground);
             // 坂のまん中のつらら（短い高い壁が2本）
             walls.Add(new GolfWall(new Vec2(3.2f, 7.6f), new Vec2(5.2f, 7.6f)));
@@ -57,11 +58,11 @@ namespace PenmonScramble.Golf.Core
             var areas = new List<GolfArea>
             {
                 // 凍った坂（手前へ下る。氷なので止まれず、押し戻される）
-                GolfArea.Slope(GolfGeometry.Rect(0f, 5f, 12f, 10.4f), new Vec2(0f, -1.3f)),
-                GolfArea.Ice(GolfGeometry.Rect(0f, 5f, 12f, 10.4f)),
+                GolfArea.Slope(MiniGameGeometry.Rect(0f, 5f, 12f, 10.4f), new Vec2(0f, -1.3f)),
+                GolfArea.Ice(MiniGameGeometry.Rect(0f, 5f, 12f, 10.4f)),
                 // 上の段の雪だまり（坂を上りきった球を止める）
-                GolfArea.Sand(GolfGeometry.Rect(0.4f, 10.8f, 5.6f, 12.2f)),
-                GolfArea.Sand(GolfGeometry.Rect(6.4f, 10.8f, 8.6f, 12.4f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(0.4f, 10.8f, 5.6f, 12.2f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(6.4f, 10.8f, 8.6f, 12.4f)),
             };
 
             return new GolfHoleDef("氷の坂", 3, new Vec2(4f, 1.8f), new Vec2(9.4f, 14.6f), ground, walls, areas);
@@ -94,11 +95,11 @@ namespace PenmonScramble.Golf.Core
                 // 右の通りの氷の床
                 GolfArea.Ice(new[] { new Vec2(11f, 3f), new Vec2(16f, 3f), new Vec2(16f, 13f), new Vec2(11f, 13f) }),
                 // 奥の通りの氷の割れ目
-                GolfArea.Water(GolfGeometry.Rect(7.6f, 11f, 9.4f, 13.2f)),
+                GolfArea.Water(MiniGameGeometry.Rect(7.6f, 11f, 9.4f, 13.2f)),
                 // 奥の右の角の雪だまり
-                GolfArea.Sand(GolfGeometry.Rect(13f, 13.4f, 16f, 16f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(13f, 13.4f, 16f, 16f)),
                 // カップの奥の雪だまり
-                GolfArea.Sand(GolfGeometry.Rect(0f, 11f, 1.6f, 16f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(0f, 11f, 1.6f, 16f)),
             };
 
             return new GolfHoleDef("つららの洞くつ", 4, new Vec2(1.8f, 2.5f), new Vec2(3.2f, 13.5f), ground, walls, areas);

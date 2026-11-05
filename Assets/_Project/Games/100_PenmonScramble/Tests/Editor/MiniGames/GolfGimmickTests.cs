@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using PenmonScramble.Core;
 using PenmonScramble.Golf.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
@@ -24,7 +25,7 @@ namespace PenmonScramble.Tests
             var ball = new GolfBall(0, Vec2.Zero);
             ball.Launch(new Vec2(speed, 0f));
 
-            Run(Flat(areas: new[] { GolfArea.Ice(GolfGeometry.Rect(-50f, -50f, 50f, 50f)) }), ball);
+            Run(Flat(areas: new[] { GolfArea.Ice(MiniGameGeometry.Rect(-50f, -50f, 50f, 50f)) }), ball);
 
             var expected = speed * speed / (2f * GolfBalance.RollDecel * GolfBalance.IceFloorDecelScale);
             Assert.That(ball.Position.X, Is.EqualTo(expected).Within(0.2f));
@@ -34,7 +35,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Flow_StrongerThanFrictionCarriesBallOut()
         {
-            var band = GolfArea.Flow(GolfGeometry.Rect(-2f, -2f, 2f, 2f), new Vec2(GolfBalance.RollDecel * 1.5f, 0f));
+            var band = GolfArea.Flow(MiniGameGeometry.Rect(-2f, -2f, 2f, 2f), new Vec2(GolfBalance.RollDecel * 1.5f, 0f));
             var hole = Flat(areas: new[] { band });
             var ball = new GolfBall(0, Vec2.Zero);
             var sim = new GolfBallSim(hole);
@@ -50,7 +51,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Flow_WeakFlowBendsCrossingBall()
         {
-            var band = GolfArea.Flow(GolfGeometry.Rect(-50f, 2f, 50f, 4f), new Vec2(GolfBalance.RollDecel * 0.8f, 0f));
+            var band = GolfArea.Flow(MiniGameGeometry.Rect(-50f, 2f, 50f, 4f), new Vec2(GolfBalance.RollDecel * 0.8f, 0f));
             var hole = Flat(areas: new[] { band });
             var resting = new GolfBall(1, new Vec2(10f, 3f));
             var ball = new GolfBall(0, Vec2.Zero);
@@ -66,7 +67,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Flow_BallPinnedAgainstWallSettles()
         {
-            var band = GolfArea.Flow(GolfGeometry.Rect(-50f, -50f, 50f, 50f), new Vec2(GolfBalance.RollDecel * 2f, 0f));
+            var band = GolfArea.Flow(MiniGameGeometry.Rect(-50f, -50f, 50f, 50f), new Vec2(GolfBalance.RollDecel * 2f, 0f));
             var hole = Flat(walls: new[] { new GolfWall(new Vec2(3f, -10f), new Vec2(3f, 10f)) }, areas: new[] { band });
             var ball = new GolfBall(0, Vec2.Zero);
 
@@ -95,7 +96,7 @@ namespace PenmonScramble.Tests
         [TestCase(1.5f, false)]
         public void Geyser_LaunchesOnlyWhileErupting(float time, bool launches)
         {
-            var geyser = GolfArea.Geyser(GolfGeometry.Rect(0.5f, -1f, 1.5f, 1f), 3f, new GolfCycle(3f, 1f));
+            var geyser = GolfArea.Geyser(MiniGameGeometry.Rect(0.5f, -1f, 1.5f, 1f), 3f, new GolfCycle(3f, 1f));
             var hole = Flat(areas: new[] { geyser });
             var ball = new GolfBall(0, Vec2.Zero);
             ball.Launch(new Vec2(5f, 0f));
@@ -250,7 +251,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void CourseCheck_FindsStuckIsland()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 10f, 10f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 10f, 10f);
             // 外の四角から、まん中の小さな四角（0.8m 四方）をくり抜いた池（いちばん弱く打っても島から出る）
             var water = GolfArea.Water(new[]
             {
@@ -269,7 +270,7 @@ namespace PenmonScramble.Tests
 
         private static GolfHoleDef Flat(GolfWall[] walls = null, GolfArea[] areas = null, GolfMover[] movers = null, GolfWarp[] warps = null)
         {
-            return new GolfHoleDef("test", 3, Vec2.Zero, FarCup, GolfGeometry.Rect(-50f, -50f, 50f, 50f), walls ?? new GolfWall[0], areas ?? new GolfArea[0], movers, warps);
+            return new GolfHoleDef("test", 3, Vec2.Zero, FarCup, MiniGameGeometry.Rect(-50f, -50f, 50f, 50f), walls ?? new GolfWall[0], areas ?? new GolfArea[0], movers, warps);
         }
 
         private static void Run(GolfHoleDef hole, params GolfBall[] balls) => RunCounting(hole, balls);

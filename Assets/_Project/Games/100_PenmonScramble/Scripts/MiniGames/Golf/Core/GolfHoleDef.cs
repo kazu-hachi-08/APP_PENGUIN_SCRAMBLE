@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
@@ -89,7 +90,7 @@ namespace PenmonScramble.Golf.Core
         /// <summary>球を押す範囲か（坂・押し流す帯）</summary>
         public bool Pushes => Kind == GolfAreaKind.Slope || Kind == GolfAreaKind.Flow;
 
-        public bool Contains(Vec2 point) => GolfGeometry.Contains(Shape, point);
+        public bool Contains(Vec2 point) => MiniGameGeometry.Contains(Shape, point);
 
         /// <summary>落ちると打つ前の位置へ戻る範囲か</summary>
         public bool IsHazard => Kind == GolfAreaKind.Water || Kind == GolfAreaKind.OutOfBounds;
@@ -158,7 +159,7 @@ namespace PenmonScramble.Golf.Core
         /// <summary>打数の上限（これまで打っても入らなければ「上限 ＋ 1」で終わり）</summary>
         public int StrokeLimit => Par + GolfRules.StrokeLimitOverPar;
 
-        public bool OnGround(Vec2 point) => GolfGeometry.Contains(Ground, point);
+        public bool OnGround(Vec2 point) => MiniGameGeometry.Contains(Ground, point);
 
         /// <summary>多角形の縁にぐるりと壁を立てる（コースの外周の柵）</summary>
         public static List<GolfWall> WallsAround(IReadOnlyList<Vec2> polygon, float bounce = GolfBalance.WallBounce, float height = GolfBalance.TallWallHeight)

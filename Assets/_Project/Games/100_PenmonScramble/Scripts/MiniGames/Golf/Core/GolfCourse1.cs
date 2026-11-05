@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
@@ -21,7 +22,7 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef FirstBeach()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 6f, 16f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 6f, 16f);
             var walls = GolfHoleDef.WallsAround(ground);
             // まん中の流氷（三角の低い壁。とがった方をティーへ向ける）
             walls.AddRange(GolfHoleDef.WallsAround(new[] { new Vec2(3f, 6.6f), new Vec2(4.1f, 8.5f), new Vec2(1.9f, 8.5f) }, GolfBalance.WallBounce, GolfBalance.LowWallHeight));
@@ -29,9 +30,9 @@ namespace PenmonScramble.Golf.Core
             var areas = new List<GolfArea>
             {
                 // カップの右手前の砂地。強すぎた球を止める
-                GolfArea.Sand(GolfGeometry.Rect(3.9f, 10.8f, 5.7f, 13.2f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(3.9f, 10.8f, 5.7f, 13.2f)),
                 // カップの左奥の砂地
-                GolfArea.Sand(GolfGeometry.Rect(0.3f, 13.4f, 2.1f, 15.6f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(0.3f, 13.4f, 2.1f, 15.6f)),
             };
 
             return new GolfHoleDef("はじまりの浜", 2, new Vec2(3f, 1.6f), new Vec2(3f, 13.6f), ground, walls, areas);
@@ -42,7 +43,7 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef Shoreline()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 12f, 16f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 12f, 16f);
             var walls = GolfHoleDef.WallsAround(ground);
             // 左の奥の流氷（低い壁）。左から回る道を少し狭くする
             walls.Add(GolfWall.Low(new Vec2(0f, 11f), new Vec2(3.2f, 11f)));
@@ -56,7 +57,7 @@ namespace PenmonScramble.Golf.Core
                     new Vec2(10.4f, 10.5f), new Vec2(8.2f, 5.5f),
                 }),
                 // まん中の砂州
-                GolfArea.Sand(GolfGeometry.Rect(2.4f, 7f, 6.8f, 8.8f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(2.4f, 7f, 6.8f, 8.8f)),
             };
 
             return new GolfHoleDef("波打ち際", 3, new Vec2(3f, 1.6f), new Vec2(7f, 13.6f), ground, walls, areas);
@@ -68,7 +69,7 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef FloeInlet()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 16f, 14f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 16f, 14f);
             var walls = GolfHoleDef.WallsAround(ground);
             // 流氷の壁: 手前の道とまん中の道（右が開いている）、まん中の道と奥の道（左が開いている）
             walls.Add(GolfWall.Low(new Vec2(0f, 4.7f), new Vec2(11f, 4.7f)));
@@ -82,9 +83,9 @@ namespace PenmonScramble.Golf.Core
             var areas = new List<GolfArea>
             {
                 // まん中の道の小さな池
-                GolfArea.Water(GolfGeometry.Rect(7f, 6.2f, 9f, 7.8f)),
+                GolfArea.Water(MiniGameGeometry.Rect(7f, 6.2f, 9f, 7.8f)),
                 // カップの手前の砂地
-                GolfArea.Sand(GolfGeometry.Rect(9.4f, 10.2f, 11.2f, 13.2f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(9.4f, 10.2f, 11.2f, 13.2f)),
             };
 
             return new GolfHoleDef("流氷の入り江", 4, new Vec2(1.8f, 2.3f), new Vec2(13.6f, 11.8f), ground, walls, areas);

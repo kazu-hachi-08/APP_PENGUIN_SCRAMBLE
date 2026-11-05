@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using PenmonScramble.Core;
 using PenmonScramble.Game;
 using PenmonScramble.Golf.Core;
+using PenmonScramble.MiniGames.Core;
 using UnityEngine;
 
 namespace PenmonScramble.Golf.Game
@@ -82,7 +83,7 @@ namespace PenmonScramble.Golf.Game
                     continue;
                 }
 
-                var closest = GolfGeometry.ClosestOnSegment(part.Wall.A, part.Wall.B, point);
+                var closest = MiniGameGeometry.ClosestOnSegment(part.Wall.A, part.Wall.B, point);
                 if (Vec2.Distance(closest, point) <= PopReach)
                 {
                     part.PopLeft = PopSeconds;

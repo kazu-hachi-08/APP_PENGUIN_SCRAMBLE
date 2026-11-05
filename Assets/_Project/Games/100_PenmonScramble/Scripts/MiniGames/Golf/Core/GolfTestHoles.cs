@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
@@ -31,13 +32,13 @@ namespace PenmonScramble.Golf.Core
             var areas = new List<GolfArea>
             {
                 // 右の壁ぎわの池
-                GolfArea.Water(GolfGeometry.Rect(5.4f, 3.6f, 8f, 6.6f)),
+                GolfArea.Water(MiniGameGeometry.Rect(5.4f, 3.6f, 8f, 6.6f)),
                 // 低い壁の手前のジャンプ台
-                GolfArea.Jump(GolfGeometry.Rect(2.6f, 7.8f, 5.4f, 8.7f), 3.2f),
+                GolfArea.Jump(MiniGameGeometry.Rect(2.6f, 7.8f, 5.4f, 8.7f), 3.2f),
                 // 曲がり角の手前の砂地
-                GolfArea.Sand(GolfGeometry.Rect(0.4f, 12f, 4f, 15.5f)),
+                GolfArea.Sand(MiniGameGeometry.Rect(0.4f, 12f, 4f, 15.5f)),
                 // カップの奥の坂（左＝カップの方へ下る）。行き過ぎた球が戻ってくる
-                GolfArea.Slope(GolfGeometry.Rect(13.4f, 14f, 16f, 22f), new Vec2(-2.4f, 0f)),
+                GolfArea.Slope(MiniGameGeometry.Rect(13.4f, 14f, 16f, 22f), new Vec2(-2.4f, 0f)),
             };
 
             return new GolfHoleDef("試しのホール", 3, new Vec2(4f, 1.6f), new Vec2(12.6f, 18f), ground, walls, areas);

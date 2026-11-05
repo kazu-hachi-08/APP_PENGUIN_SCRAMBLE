@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
@@ -98,7 +99,7 @@ namespace PenmonScramble.Golf.Core
 
             foreach (var wall in _hole.Walls)
             {
-                var offset = ball.Position - GolfGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
+                var offset = ball.Position - MiniGameGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
                 if (offset.Length > GolfBalance.BallRadius + PinnedReach || offset.Length <= Epsilon)
                 {
                     continue;
@@ -184,7 +185,7 @@ namespace PenmonScramble.Golf.Core
         {
             foreach (var wall in _hole.Walls)
             {
-                var closest = GolfGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
+                var closest = MiniGameGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
                 var offset = ball.Position - closest;
                 if (offset.Length < GolfBalance.BallRadius && offset.Length > Epsilon)
                 {
@@ -484,7 +485,7 @@ namespace PenmonScramble.Golf.Core
                 return;
             }
 
-            var closest = GolfGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
+            var closest = MiniGameGeometry.ClosestOnSegment(wall.A, wall.B, ball.Position);
             var offset = ball.Position - closest;
             var distance = offset.Length;
             if (distance >= GolfBalance.BallRadius)

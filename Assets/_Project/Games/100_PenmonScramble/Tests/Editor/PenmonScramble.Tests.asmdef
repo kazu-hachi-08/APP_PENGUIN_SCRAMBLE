@@ -7,7 +7,8 @@
         "PenmonScramble.Core",
         "PenmonScramble.Game",
         "PenmonScramble.MiniGames.Core",
-        "PenmonScramble.Golf.Core"
+        "PenmonScramble.Golf.Core",
+        "PenmonScramble.Soccer.Core"
     ],
     "includePlatforms": [
         "Editor"

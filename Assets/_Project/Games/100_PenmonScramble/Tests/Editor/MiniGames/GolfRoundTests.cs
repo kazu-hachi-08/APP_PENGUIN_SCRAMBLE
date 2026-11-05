@@ -51,7 +51,7 @@ namespace PenmonScramble.Tests
         [TestCase(true)]
         public void Ice_CrossesWater(bool iced)
         {
-            var hole = Flat(areas: new[] { GolfArea.Water(GolfGeometry.Rect(2f, -2f, 4f, 2f)) });
+            var hole = Flat(areas: new[] { GolfArea.Water(MiniGameGeometry.Rect(2f, -2f, 4f, 2f)) });
             var world = Solo(hole);
 
             world.Shoot(0, 0f, PowerForDistance(8f), iced ? new GolfSpecial(GolfSpecialKind.IceRoad, 3) : GolfSpecial.None);
@@ -78,7 +78,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Ice_StoppingOnWaterFallsAfterShot()
         {
-            var hole = Flat(areas: new[] { GolfArea.Water(GolfGeometry.Rect(1f, -2f, 30f, 2f)) });
+            var hole = Flat(areas: new[] { GolfArea.Water(MiniGameGeometry.Rect(1f, -2f, 30f, 2f)) });
             var world = Solo(hole);
 
             world.Shoot(0, 0f, PowerForDistance(3f), new GolfSpecial(GolfSpecialKind.IceRoad, 3));
@@ -105,7 +105,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Skip_BouncesStarsTimesAndSkimsWater()
         {
-            var hole = Flat(areas: new[] { GolfArea.Water(GolfGeometry.Rect(1.5f, -3f, 8f, 3f)) });
+            var hole = Flat(areas: new[] { GolfArea.Water(MiniGameGeometry.Rect(1.5f, -3f, 8f, 3f)) });
             var world = Solo(hole);
 
             world.Shoot(0, 0f, 1f, new GolfSpecial(GolfSpecialKind.SkipBounce, 3));
@@ -243,7 +243,7 @@ namespace PenmonScramble.Tests
         {
             // カップがティーのすぐ先にあるコース。席 1 だけがカップへ打ち、席 0 は反対へ弱く打ち続けて上限で終わる
             var cup = new Vec2(1.5f, 0f);
-            var hole = new GolfHoleDef("near", 2, Vec2.Zero, cup, GolfGeometry.Rect(-50f, -50f, 50f, 50f), new GolfWall[0], new GolfArea[0]);
+            var hole = new GolfHoleDef("near", 2, Vec2.Zero, cup, MiniGameGeometry.Rect(-50f, -50f, 50f, 50f), new GolfWall[0], new GolfArea[0]);
             var teams = Enumerable.Range(0, 2).Select(_ => new GolfTeam(new[] { 1, 3, 5 })).ToList();
             var round = new GolfRound(new GolfCourseDef(1, "test", 1, new[] { hole, hole }), teams);
 
@@ -350,7 +350,7 @@ namespace PenmonScramble.Tests
             {
                 var tee = GolfHoleWorld.TeePosition(hole, player, GolfRules.MaxPlayers);
                 Assert.That(sim.IsHazard(tee), Is.False, $"{hole.Name} {player}");
-                Assert.That(hole.Walls.All(w => Vec2.Distance(GolfGeometry.ClosestOnSegment(w.A, w.B, tee), tee) > GolfBalance.BallRadius), Is.True, $"{hole.Name} {player}");
+                Assert.That(hole.Walls.All(w => Vec2.Distance(MiniGameGeometry.ClosestOnSegment(w.A, w.B, tee), tee) > GolfBalance.BallRadius), Is.True, $"{hole.Name} {player}");
                 Assert.That(hole.Movers.All(m => !m.TryPushOutOfSweep(tee, out _)), Is.True, $"{hole.Name} {player}");
                 Assert.That(hole.Warps.All(w => !w.Catches(tee)), Is.True, $"{hole.Name} {player}");
             }
@@ -391,7 +391,7 @@ namespace PenmonScramble.Tests
 
         private static GolfHoleDef Flat(GolfWall[] walls = null, GolfArea[] areas = null)
         {
-            return new GolfHoleDef("test", 3, Vec2.Zero, FarCup, GolfGeometry.Rect(-50f, -50f, 50f, 50f), walls ?? new GolfWall[0], areas ?? new GolfArea[0]);
+            return new GolfHoleDef("test", 3, Vec2.Zero, FarCup, MiniGameGeometry.Rect(-50f, -50f, 50f, 50f), walls ?? new GolfWall[0], areas ?? new GolfArea[0]);
         }
 
         private static GolfHoleWorld Solo(GolfHoleDef hole) => new GolfHoleWorld(hole, GolfTurnOrder.SeatOrder(1));
@@ -399,7 +399,7 @@ namespace PenmonScramble.Tests
         /// <summary>2ホールの平らなコース（カップは遠くて入らない。上限まで打って終わる）</summary>
         private static GolfRound TwoHoleRound(int players)
         {
-            var hole = new GolfHoleDef("flat", 2, Vec2.Zero, FarCup, GolfGeometry.Rect(-50f, -50f, 50f, 50f), new GolfWall[0], new GolfArea[0]);
+            var hole = new GolfHoleDef("flat", 2, Vec2.Zero, FarCup, MiniGameGeometry.Rect(-50f, -50f, 50f, 50f), new GolfWall[0], new GolfArea[0]);
             var course = new GolfCourseDef(1, "test", 1, new[] { hole, hole });
             var teams = Enumerable.Range(0, players).Select(_ => new GolfTeam(new[] { 1, 3, 5 })).ToList();
             return new GolfRound(course, teams);

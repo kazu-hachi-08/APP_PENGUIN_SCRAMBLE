@@ -7,7 +7,7 @@ namespace PenmonScramble.MiniGames.Core
     /// </summary>
     public sealed class MiniGameDef
     {
-        public MiniGameDef(string id, string name, string description, string sceneName, int maxPlayers, bool lowerIsBetter, string scoreUnit, IReadOnlyList<MiniGameCourseDef> courses)
+        public MiniGameDef(string id, string name, string description, string sceneName, int maxPlayers, bool lowerIsBetter, string scoreUnit, IReadOnlyList<MiniGameCourseDef> courses, string courseWord = "コース")
         {
             Id = id;
             Name = name;
@@ -17,6 +17,7 @@ namespace PenmonScramble.MiniGames.Core
             LowerIsBetter = lowerIsBetter;
             ScoreUnit = scoreUnit;
             Courses = courses;
+            CourseWord = courseWord;
         }
 
         /// <summary>記録（MiniGameRecord.gameId）に残るので、一度配ったら変えない</summary>
@@ -41,6 +42,9 @@ namespace PenmonScramble.MiniGames.Core
 
         /// <summary>遊ぶ単位（コース）の一覧。並びが番号の順</summary>
         public IReadOnlyList<MiniGameCourseDef> Courses { get; }
+
+        /// <summary>コース選びで遊ぶ単位を呼ぶ名前（「コース」「スタジアム」など）</summary>
+        public string CourseWord { get; }
 
         /// <summary>番号のコース。無ければ null</summary>
         public MiniGameCourseDef Course(int courseNo)

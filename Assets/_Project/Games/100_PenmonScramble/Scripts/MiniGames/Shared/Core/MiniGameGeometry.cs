@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using PenmonScramble.Core;
 
-namespace PenmonScramble.Golf.Core
+namespace PenmonScramble.MiniGames.Core
 {
-    /// <summary>コースの形の計算（多角形の中か・線分の一番近い点・多角形の三角形への分け方）</summary>
-    public static class GolfGeometry
+    /// <summary>
+    /// ミニゲームの地面の形の計算（多角形の中か・線分の一番近い点・多角形の三角形への分け方）。
+    /// どのミニゲームでも使う汎用の物だけを置く（ゴルフで作り、サッカーでも使うので共通側へ移した）
+    /// </summary>
+    public static class MiniGameGeometry
     {
         public static float Cross(Vec2 a, Vec2 b) => a.X * b.Y - a.Y * b.X;
 
