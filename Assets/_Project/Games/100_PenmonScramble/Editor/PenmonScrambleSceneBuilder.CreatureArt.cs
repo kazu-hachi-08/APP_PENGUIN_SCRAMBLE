@@ -16,7 +16,7 @@ namespace PenmonScramble.Editor
         private const int CreatureArtMaxSize = 512;
         private const int GroundArtMaxSize = 2048;
 
-        private static void CreateCreatureArt()
+        internal static void CreateCreatureArt()
         {
             var art = new GameObject("CreatureArt").AddComponent<CreatureArt>();
             var so = new SerializedObject(art);

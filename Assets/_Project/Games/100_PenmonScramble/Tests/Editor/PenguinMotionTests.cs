@@ -96,6 +96,35 @@ namespace PenmonScramble.Tests
             AssertAboveFloorWhile(motion, PenguinMotion.SpecialSeconds, "必殺技");
         }
 
+        /// <summary>ゴルフで使う: 両ヒレで持って大きく振る・頭を抱える。どちらも床にめり込まず、やめると元の姿勢へ戻る</summary>
+        [Test]
+        public void HoldSwing_And_Despair_StayAboveTheFloorAndReturnToRest()
+        {
+            var motion = Build();
+            motion.Apply(PenguinPose.Idle);
+            var rest = Snapshot(motion);
+
+            motion.Holding = true;
+            foreach (var swing in new[] { 110f, 0f, -120f })
+            {
+                motion.HoldSwing = swing;
+                AssertAboveFloorWhile(motion, 0.3f, $"振る {swing}");
+            }
+
+            motion.Holding = false;
+            motion.Despairing = true;
+            AssertAboveFloorWhile(motion, 1f, "頭を抱える");
+
+            motion.Despairing = false;
+            Run(motion, 1f);
+            motion.Apply(PenguinPose.Idle);
+            var after = Snapshot(motion);
+            for (var i = 0; i < rest.Length; i++)
+            {
+                Assert.That(Vector3.Distance(rest[i], after[i]), Is.LessThan(1e-4f), $"部品 {i} に前の動きが残っている");
+            }
+        }
+
         [Test]
         public void Knockback_RollsAndLandsUpright()
         {

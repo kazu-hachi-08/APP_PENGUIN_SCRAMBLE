@@ -13,7 +13,6 @@ namespace PenmonScramble.Game
     {
         private const string SoloHeading = "いちじていし";
         private const string CoopHeading = "メニュー";
-        private const string CoopNote = "協力中は ゲームが止まりません";
 
         [SerializeField] private Text _headingText;
         [SerializeField] private Text _noteText;
@@ -22,6 +21,7 @@ namespace PenmonScramble.Game
         [SerializeField] private StageMenuParty _party;
 
         private StageSnapshot _snapshot;
+        private string _caption = string.Empty;
         private PlayerState _partyState;
         private bool _fallen;
 
@@ -38,10 +38,22 @@ namespace PenmonScramble.Game
             }
         }
 
+        /// <summary>
+        /// ステージの様子（StageSnapshot）が無い所（ミニゲーム）で、上の帯の札に出す字。この字を出す間はエリアのつぶを隠す
+        /// </summary>
+        public void SetCaption(string caption)
+        {
+            _caption = caption ?? string.Empty;
+            if (_shown)
+            {
+                ShowStatus(snap: false);
+            }
+        }
+
         private void BindStatus()
         {
             _headingText.text = _solo ? SoloHeading : CoopHeading;
-            _noteText.text = _solo ? string.Empty : CoopNote;
+            _noteText.text = _solo ? string.Empty : _coopNote;
         }
 
         private void ShowStatusNow() => ShowStatus(snap: true);
@@ -53,8 +65,17 @@ namespace PenmonScramble.Game
                 _stageText.text = Stages.Get(_snapshot.StageNo)?.Name ?? string.Empty;
                 _areaPips.Set(_snapshot.AreaIndex, _snapshot.AreaCount, StageHud.IsRoundStage(_snapshot));
             }
+            else if (_caption.Length > 0)
+            {
+                _stageText.text = _caption;
+                _areaPips.gameObject.SetActive(false);
+            }
 
-            _party.Show(_partyState, _fallen, snap);
+            // 右の編成の欄はステージだけ（ミニゲームでは作らない）
+            if (_party != null)
+            {
+                _party.Show(_partyState, _fallen, snap);
+            }
         }
     }
 }

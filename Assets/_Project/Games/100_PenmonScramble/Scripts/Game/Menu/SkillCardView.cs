@@ -6,15 +6,12 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// ペンモン画面の技1つ分のカード: 形のアイコン・名前・［形］と一言の説明・威力／出しやすさ／範囲の3段階。
-    /// 必殺技のカードは、ステージの必殺技ボタンと同じ金の面にし、出しやすさの代わりに［ゲージ満タンで1回］と出す。
-    /// 押すと、その技を実演の小窓で見せる（選んでいるカードは縁を光らせる）
+    /// ガチャの結果に出す技1つ分のカード: 形のアイコン・名前・［形］と一言の説明・威力／出しやすさ／範囲の3段階。
+    /// 必殺技のカードは、ステージの必殺技ボタンと同じ金の面にする。文は SkillTexts
     /// </summary>
     public class SkillCardView : MonoBehaviour
     {
         private const string ShapeColor = "#FFD24D";
-        private const string SkillRatingLabels = "威力\n出しやすさ\n範囲";
-        private const string SpecialRatingLabels = "威力\n範囲";
 
         [SerializeField] private Button _button;
         [SerializeField] private Image _frame;
@@ -45,38 +42,23 @@ namespace PenmonScramble.Game
         /// <param name="slot">0 が技1、SkillPractice.SpecialSlot が必殺技</param>
         public void Show(SpeciesDef species, int slot, bool selected)
         {
-            if (slot == SkillPractice.SpecialSlot)
-            {
-                ShowSpecial(species.Element, selected);
-                return;
-            }
+            var lines = SkillTexts.For(species, slot);
+            _nameText.text = NameLine(lines);
+            _descriptionText.text = DescriptionLine(lines);
+            _ratingLabelsText.text = lines.RatingLabels;
+            _ratingsText.text = lines.Ratings;
 
-            var skill = species.GetSkill(slot);
-            _icon.sprite = SkillShapeIcons.Get(skill.Shape);
-            _icon.color = PenguinPalette.ElementColor(species.Element);
-            _nameText.text = $"技{slot + 1}　<b>{skill.Name}</b>";
-            _descriptionText.text = $"<color={ShapeColor}>［{SkillProfile.ShapeLabel(skill)}］</color>{SpeciesTexts.Skill(species.No, slot)}";
-            _ratingLabelsText.text = SkillRatingLabels;
-            _ratingsText.text =
-                $"{PenguinLabels.Pips(SkillProfile.PowerRating(skill), SkillProfile.MaxRating)}\n" +
-                $"{PenguinLabels.Pips(SkillProfile.QuicknessRating(skill), SkillProfile.MaxRating)}\n" +
-                $"{PenguinLabels.Pips(SkillProfile.AreaRating(skill), SkillProfile.MaxRating)}";
-            _frame.color = selected ? _selectedColor : _normalColor;
+            var special = SkillTexts.IsSpecial(slot);
+            _icon.sprite = SkillShapeIcons.Get(SkillTexts.SkillOf(species, slot).Shape);
+            _icon.color = special ? _specialIconColor : PenguinPalette.ElementColor(species.Element);
+            _frame.color = special
+                ? selected ? _specialSelectedColor : _specialNormalColor
+                : selected ? _selectedColor : _normalColor;
         }
 
-        private void ShowSpecial(Element element, bool selected)
-        {
-            var special = SpecialMoves.For(element);
-            _icon.sprite = SkillShapeIcons.Get(special.Shape);
-            _icon.color = _specialIconColor;
-            _nameText.text = $"必殺　<b>{special.Name}</b>";
-            _descriptionText.text = $"<color={ShapeColor}>［ゲージ満タンで1回］</color>{SpeciesTexts.Special(element)}";
-            // 必殺技はゲージで出すので「出しやすさ」は比べられない。範囲は画面全体に効くものがあるので言葉で出す
-            _ratingLabelsText.text = SpecialRatingLabels;
-            _ratingsText.text =
-                $"{PenguinLabels.Pips(SkillProfile.PowerRating(special), SkillProfile.MaxRating)}\n" +
-                SkillProfile.SpecialReach(element);
-            _frame.color = selected ? _specialSelectedColor : _specialNormalColor;
-        }
+        // カードの1行目と2行目の作り方。エディタの UiLayoutCheck も同じ文で測る
+        public static string NameLine(SkillTexts.Lines lines) => $"{lines.Header}　<b>{lines.Name}</b>";
+
+        public static string DescriptionLine(SkillTexts.Lines lines) => $"<color={ShapeColor}>{lines.Shape}</color>{lines.Description}";
     }
 }

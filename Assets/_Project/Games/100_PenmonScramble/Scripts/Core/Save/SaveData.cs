@@ -11,7 +11,7 @@ namespace PenmonScramble.Core
     [Serializable]
     public sealed class SaveData
     {
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
 
         // JsonUtility で読み書きするため、プロパティではなく public のフィールドにする。
         // version は初期値を入れない（version の無い JSON を、この記録だと思い込まないように）
@@ -28,6 +28,12 @@ namespace PenmonScramble.Core
 
         /// <summary>ボスラッシュのクリア済み（v2〜）。ステージ番号 × 10 ＋ 難易度</summary>
         public List<int> clearedRush = new List<int>();
+
+        /// <summary>
+        /// ミニゲームの記録（v3〜）。ミニゲームとコースごとに1行。次のミニゲームは項目を足さずに、この表に行を足す
+        /// （MiniGames.Core の MiniGameRecords が読み書きする）
+        /// </summary>
+        public List<MiniGameRecord> miniGames = new List<MiniGameRecord>();
 
         public static SaveData CreateNew()
         {

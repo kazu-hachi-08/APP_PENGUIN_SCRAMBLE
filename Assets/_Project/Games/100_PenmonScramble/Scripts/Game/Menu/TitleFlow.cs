@@ -8,7 +8,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// タイトルの2段: 起動したら大きなロゴと「タップしてスタート」だけを見せ、押すとロビー（TitleMenu）へ移る。
-    /// ステージから戻ったときは、もう一度押させずにロビーから始める。
+    /// ステージ・ミニゲーム（LobbyReturn）から戻ったときは、もう一度押させずにロビーから始める。
     /// ロビーに入ったら、古い版の記録を消したならそれを知らせ、名前がまだ無ければ名前を決めてもらい、そのあと無料ガチャがあれば開く
     /// </summary>
     public class TitleFlow : MonoBehaviour
@@ -51,8 +51,12 @@ namespace PenmonScramble.Game
 
         private void Start()
         {
-            if (_started)
+            // ミニゲームのシーンから戻ったときも（エディタでミニゲームのシーンから再生したときも）ロビーから
+            if (_started || LobbyReturn.HasPending)
             {
+                _started = true;
+                // ロビーへ戻るだけの頼みは、ここで受け取って消す（ほかの画面の頼みはその画面が自分で受け取る）
+                LobbyReturn.Take(LobbyScreen.Lobby);
                 EnterLobby(instant: true);
                 return;
             }

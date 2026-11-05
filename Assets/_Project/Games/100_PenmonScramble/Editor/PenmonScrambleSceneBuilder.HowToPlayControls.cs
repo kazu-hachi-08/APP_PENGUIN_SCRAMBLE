@@ -13,28 +13,28 @@ namespace PenmonScramble.Editor
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private const string RoundedSpritePath = "UI/Skin/UISprite.psd";
+        internal const string RoundedSpritePath = "UI/Skin/UISprite.psd";
         private static readonly Color KeyCapColor = new Color(0.95f, 0.96f, 1f);
         private static readonly Color KeyCapTextColor = new Color(0.15f, 0.20f, 0.30f);
         private static readonly Vector2 KeyCapShadowOffset = new Vector2(0f, -8f);
-        private const float KeySize = 110f;
-        private const float KeyPitch = 120f;
-        private const int KeyFontSize = 48;
-        private const int KeyWordFontSize = 34;
-        private const int ControlTipFontSize = 32;
+        internal const float KeySize = 110f;
+        internal const float KeyPitch = 120f;
+        internal const int KeyFontSize = 48;
+        internal const int KeyWordFontSize = 34;
+        internal const int ControlTipFontSize = 32;
         private static readonly Vector2 ControlTipPosition = new Vector2(0f, -400f);
         private static readonly Vector2 ControlTipSize = new Vector2(1700f, 70f);
-        private static readonly Vector2 KeyLabelSize = new Vector2(260f, 60f);
+        internal static readonly Vector2 KeyLabelSize = new Vector2(260f, 60f);
 
         // キーボード: 左に移動（WASD と矢印）、右に技（J K L と Space）、左上に Esc
         private static readonly Vector2 WasdCenter = new Vector2(-560f, -130f);
         private static readonly Vector2 ArrowsCenter = new Vector2(-80f, -130f);
-        private static readonly Vector2 EscPosition = new Vector2(-680f, 110f);
-        private const float SkillKeysY = -10f;
-        private const float SkillKeysX = 280f;
+        internal static readonly Vector2 EscPosition = new Vector2(-680f, 110f);
+        internal const float SkillKeysY = -10f;
+        internal const float SkillKeysX = 280f;
         private static readonly Vector2 SpacePosition = new Vector2(420f, -180f);
         private static readonly Vector2 SpaceSize = new Vector2(400f, 100f);
-        private const float KeyLabelGap = 85f;
+        internal const float KeyLabelGap = 85f;
 
         // PS5 コントローラー: 左右2列に「ボタンの絵 + 何をするか」を並べる。記号の色は PS の記号の色に寄せる
         private static readonly float[] PadColumnX = { -640f, 120f };
@@ -45,17 +45,17 @@ namespace PenmonScramble.Editor
         // 絵の右端から文字の左端まで
         private const float PadLabelGap = 30f;
         private static readonly Vector2 PadLabelSize = new Vector2(520f, 80f);
-        private static readonly Color PadCrossColor = new Color(0.40f, 0.60f, 0.95f);
-        private static readonly Color PadCircleColor = new Color(0.90f, 0.35f, 0.35f);
-        private static readonly Color PadTriangleColor = new Color(0.30f, 0.75f, 0.60f);
-        private static readonly Color PadNeutralColor = new Color(0.55f, 0.60f, 0.70f);
+        internal static readonly Color PadCrossColor = new Color(0.40f, 0.60f, 0.95f);
+        internal static readonly Color PadCircleColor = new Color(0.90f, 0.35f, 0.35f);
+        internal static readonly Color PadTriangleColor = new Color(0.30f, 0.75f, 0.60f);
+        internal static readonly Color PadNeutralColor = new Color(0.55f, 0.60f, 0.70f);
 
         // スマホ: 横長の画面の絵に、ステージ中の配置を縮めて置く
-        private static readonly Vector2 PhoneScreenPosition = new Vector2(0f, -70f);
-        private static readonly Vector2 PhoneScreenSize = new Vector2(830f, 467f);
-        private const float PhoneBezel = 24f;
-        private static readonly Color PhoneBodyColor = new Color(0.05f, 0.07f, 0.12f);
-        private static readonly Color PhoneScreenColor = new Color(0.45f, 0.62f, 0.75f);
+        internal static readonly Vector2 PhoneScreenPosition = new Vector2(0f, -70f);
+        internal static readonly Vector2 PhoneScreenSize = new Vector2(830f, 467f);
+        internal const float PhoneBezel = 24f;
+        internal static readonly Color PhoneBodyColor = new Color(0.05f, 0.07f, 0.12f);
+        internal static readonly Color PhoneScreenColor = new Color(0.45f, 0.62f, 0.75f);
         private const int PhoneButtonFontSize = 28;
         private const float PhoneMenuIconSize = 50f;
         private const float PhoneMenuIconMargin = 18f;
@@ -91,7 +91,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>上・左・下・右のキーを、キーボードと同じ逆T字に並べる</summary>
-        private static void CreateKeyCross(Transform parent, Vector2 center, string[] labels, Key[] keys)
+        internal static void CreateKeyCross(Transform parent, Vector2 center, string[] labels, Key[] keys)
         {
             var offsets = new[] { Vector2.up, Vector2.left, Vector2.zero, Vector2.right };
             for (var i = 0; i < offsets.Length; i++)
@@ -117,7 +117,7 @@ namespace PenmonScramble.Editor
             return panel;
         }
 
-        private static void CreatePadRow(Transform parent, int column, int row, string name, string glyph, string[] controls, Color color, bool round, string action)
+        internal static void CreatePadRow(Transform parent, int column, int row, string name, string glyph, string[] controls, Color color, bool round, string action)
         {
             var position = new Vector2(PadColumnX[column], PadRowY[row]);
             var size = round ? Vector2.one * PadGlyphSize : PadWideGlyphSize;
@@ -153,7 +153,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>ステージ中のボタン1つを、画面の絵の中の同じ角から同じ割合の位置に置く</summary>
-        private static void CreatePhoneControl(Transform screen, string label, Vector2 corner, Vector2 position, float size, Color color, float scale)
+        internal static void CreatePhoneControl(Transform screen, string label, Vector2 corner, Vector2 position, float size, Color color, float scale)
         {
             var obj = CreateTouchImage(screen, label, TouchFacePath, color, size * scale).gameObject;
             var rect = obj.GetComponent<RectTransform>();
@@ -171,7 +171,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>ステージ中の右上のメニューボタンと同じ「‖」</summary>
-        private static void CreatePhoneMenuIcon(Transform screen)
+        internal static void CreatePhoneMenuIcon(Transform screen)
         {
             var icon = CreateMenuIcon(screen, "Menu", PhoneMenuIconSize);
             var rect = icon.GetComponent<RectTransform>();
@@ -183,7 +183,7 @@ namespace PenmonScramble.Editor
         /// キー1つ: 影・丸い角の面・文字。round はコントローラーの丸いボタン。押すと光る（HowToPlayKey）。
         /// name は記号（× など）をオブジェクト名に入れないためのもので、省くと label を使う
         /// </summary>
-        private static HowToPlayKey CreateKeyCap(Transform parent, string label, Vector2 position, Vector2 size, int fontSize, Key[] keys, string[] padControls = null, bool round = false, string name = null)
+        internal static HowToPlayKey CreateKeyCap(Transform parent, string label, Vector2 position, Vector2 size, int fontSize, Key[] keys, string[] padControls = null, bool round = false, string name = null)
         {
             var obj = UIDialogBuilder.CreateUIObject($"Key_{name ?? label}", parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
@@ -222,7 +222,7 @@ namespace PenmonScramble.Editor
             return key;
         }
 
-        private static Image CreateRoundedBox(Transform parent, string name, Vector2 position, Vector2 size, Color color, Sprite sprite)
+        internal static Image CreateRoundedBox(Transform parent, string name, Vector2 position, Vector2 size, Color color, Sprite sprite)
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
@@ -231,7 +231,7 @@ namespace PenmonScramble.Editor
             return image;
         }
 
-        private static void CreateControlTip(Transform parent, string value)
+        internal static void CreateControlTip(Transform parent, string value)
         {
             CreateLabel(parent, "Tip", value, ControlTipFontSize, ControlTipPosition, ControlTipSize);
         }

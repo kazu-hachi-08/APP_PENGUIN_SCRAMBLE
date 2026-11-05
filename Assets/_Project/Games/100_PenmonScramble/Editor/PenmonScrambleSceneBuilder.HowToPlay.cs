@@ -1,3 +1,4 @@
+using System;
 using PenmonScramble.Common.Editor;
 using PenmonScramble.Game;
 using UnityEditor;
@@ -8,7 +9,8 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// 遊び方の画面:上に「操作」「ルール」のタブ。操作の絵（キーボード・コントローラー・スマホ）は
-    /// PenmonScrambleSceneBuilder.HowToPlayControls.cs。タイトルとステージ中のメニューの両方から開くので、どちらよりも手前に作る
+    /// PenmonScrambleSceneBuilder.HowToPlayControls.cs。タイトルとステージ中のメニューの両方から開くので、どちらよりも手前に作る。
+    /// ミニゲームは操作の絵を自分で描いて渡す（createPanels。キーボード・PS5・スマホの順の3枚）。ルールのページは実行時に UsePages で差し替える
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
@@ -38,7 +40,8 @@ namespace PenmonScramble.Editor
         private const float PageArrowOffset = 200f;
         private static readonly Vector2 PageTextSize = new Vector2(240f, 90f);
 
-        private static HowToPlayScreen CreateHowToPlayScreen(Transform canvas)
+        /// <param name="createPanels">操作の絵（キーボード・PS5・スマホの順）を作る。省くと本編のステージの操作</param>
+        internal static HowToPlayScreen CreateHowToPlayScreen(Transform canvas, Func<Transform, GameObject[]> createPanels = null)
         {
             var root = CreateScreen(canvas, "HowToPlay", "遊び方");
             var back = CreateTitleButton(root.transform, "Back", "もどる", BackPosition, BackSize, CancelColor, MenuFontSize);
@@ -49,13 +52,13 @@ namespace PenmonScramble.Editor
             };
             var controls = CreateStretchGroup(root.transform, "Controls");
             var rules = CreateStretchGroup(root.transform, "Rules");
-            var (devices, panels) = CreateDeviceTabs(controls.transform);
+            var (devices, panels) = CreateDeviceTabs(controls.transform, createPanels ?? CreateStageControlPanels);
 
             var screen = root.AddComponent<HowToPlayScreen>();
             var so = new SerializedObject(screen);
             so.FindProperty("_backButton").objectReferenceValue = back;
             SetObjectArray(so.FindProperty("_tabButtons"), tabs);
-            SetObjectArray(so.FindProperty("_tabPages"), new Object[] { controls, rules });
+            SetObjectArray(so.FindProperty("_tabPages"), new UnityEngine.Object[] { controls, rules });
             SetObjectArray(so.FindProperty("_deviceButtons"), devices);
             SetObjectArray(so.FindProperty("_devicePanels"), panels);
             so.FindProperty("_selectedColor").colorValue = TabSelectedColor;
@@ -67,7 +70,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>キーボード・PS5 コントローラー・スマホの切り替えと、それぞれの絵（並びは HowToPlayScreen の定数と同じ）</summary>
-        private static (Button[] buttons, GameObject[] panels) CreateDeviceTabs(Transform parent)
+        private static (Button[] buttons, GameObject[] panels) CreateDeviceTabs(Transform parent, Func<Transform, GameObject[]> createPanels)
         {
             var labels = new[] { "キーボード", "PS5", "スマホ" };
             var buttons = new Button[labels.Length];
@@ -77,13 +80,17 @@ namespace PenmonScramble.Editor
                 buttons[i] = CreateTitleButton(parent, $"Device{i}", labels[i], position, DeviceSize, TabIdleColor, SmallFontSize);
             }
 
-            var panels = new[]
+            return (buttons, createPanels(parent));
+        }
+
+        private static GameObject[] CreateStageControlPanels(Transform parent)
+        {
+            return new[]
             {
                 CreateKeyboardPanel(parent),
                 CreateGamepadPanel(parent),
                 CreateTouchPanel(parent),
             };
-            return (buttons, panels);
         }
 
         private static void CreateRulesPage(Transform parent, SerializedObject screen)
@@ -109,14 +116,14 @@ namespace PenmonScramble.Editor
             screen.FindProperty("_nextPageButton").objectReferenceValue = next;
         }
 
-        private static GameObject CreateStretchGroup(Transform parent, string name)
+        internal static GameObject CreateStretchGroup(Transform parent, string name)
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
             return obj;
         }
 
-        private static void SetObjectArray(SerializedProperty property, Object[] values)
+        internal static void SetObjectArray(SerializedProperty property, UnityEngine.Object[] values)
         {
             property.arraySize = values.Length;
             for (var i = 0; i < values.Length; i++)

@@ -22,6 +22,7 @@ namespace PenmonScramble.Game
             {
                 case MusicTrack.Stage: return StageSong;
                 case MusicTrack.Boss: return BossSong;
+                case MusicTrack.Golf: return GolfSong;
                 default: return TitleSong;
             }
         }
@@ -102,6 +103,32 @@ namespace PenmonScramble.Game
                 D2 D3 D2 D3 D2 D3 D2 D3
                 A1 A2 A1 A2 A1 A2 A1 A2",
             Drums = "k.skk.s.",
+        };
+
+        // ゴルフ: 芝の上でのんびり狙う、口笛っぽい軽い曲（F - Dm - Bb - C）。本編より遅くして気分を切り替える
+        private static readonly Song GolfSong = new Song
+        {
+            Name = "Bgm_Golf",
+            Bpm = 104f,
+            Melody = @"
+                A4 - C5 - F5 - - -
+                D5 - C5 - A4 - - -
+                A#4 - D5 - F5 - D5 -
+                C5 - - - . . . .
+                A4 - C5 - F5 - A5 -
+                G5 - F5 - D5 - - -
+                A#4 - A4 - G4 - E4 -
+                F4 - - - . . . .",
+            Bass = @"
+                F2 - C3 - F2 - C3 -
+                D2 - A2 - D2 - A2 -
+                A#1 - F2 - A#1 - F2 -
+                C2 - G2 - C2 - G2 -
+                F2 - C3 - F2 - C3 -
+                D2 - A2 - D2 - A2 -
+                A#1 - F2 - C2 - G2 -
+                F2 - C3 - F2 - - -",
+            Drums = "k.h.s.h.",
         };
     }
 }

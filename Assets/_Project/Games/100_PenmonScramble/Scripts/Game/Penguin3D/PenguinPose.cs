@@ -42,6 +42,16 @@ namespace PenmonScramble.Game
         public float Cheer;
         public float CheerTime;
 
+        /// <summary>
+        /// 両ヒレで物（ゴルフのクラブなど）を体の前で持っている（0〜1。切り替えはなめらかに）。
+        /// HoldSwing はその物を左右へ振る角度（度。正で右へ振り上げる、負で左へ振り抜く）
+        /// </summary>
+        public float Hold;
+        public float HoldSwing;
+
+        /// <summary>しくじって頭を抱えている（0〜1。切り替えはなめらかに）</summary>
+        public float Despair;
+
         public float Blink;
         public float Time;
 

@@ -11,10 +11,12 @@ namespace PenmonScramble.Game
         [SerializeField] private AudioClip _title;
         [SerializeField] private AudioClip _stage;
         [SerializeField] private AudioClip _boss;
+        [SerializeField] private AudioClip _golf;
         // 素材ごとに音の大きさが違うので、曲ごとに合わせる。値は SceneBuilder の MusicSlots で決める
         [SerializeField, Range(0f, 1f)] private float _titleVolume;
         [SerializeField, Range(0f, 1f)] private float _stageVolume;
         [SerializeField, Range(0f, 1f)] private float _bossVolume;
+        [SerializeField, Range(0f, 1f)] private float _golfVolume;
 
         /// <summary>素材が無ければ false（仮の曲にする）</summary>
         public bool TryGet(MusicTrack track, out AudioClip clip, out float volume)
@@ -28,6 +30,10 @@ namespace PenmonScramble.Game
                 case MusicTrack.Boss:
                     clip = _boss;
                     volume = _bossVolume;
+                    break;
+                case MusicTrack.Golf:
+                    clip = _golf;
+                    volume = _golfVolume;
                     break;
                 default:
                     clip = _title;

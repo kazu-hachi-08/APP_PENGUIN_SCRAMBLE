@@ -89,6 +89,15 @@ namespace PenmonScramble.Common.Online
         /// <summary>3人以上の部屋のホストのみ：参加人数（ホスト自身を含む）</summary>
         public int MemberCount => _memberIds.Count + 1;
 
+        /// <summary>3人以上の部屋で試合中か（開始してから、部屋の待機に戻るまで。別のシーンへ引き継いだ後も続く）</summary>
+        public bool IsMatchStarted => _matchStarted;
+
+        /// <summary>3人以上の部屋の試合中のみ：自分の席番号（ホスト=0）</summary>
+        public int Seat { get; private set; }
+
+        /// <summary>3人以上の部屋の試合中のみ：開始したときの総人数（途中で抜けた人も数える。席番号はこの数より小さい）</summary>
+        public int MatchPlayerCount { get; private set; }
+
         /// <summary>
         /// 3人以上の部屋で、試合中に1人抜けても残りで続けるか。false なら全員の試合を終える（手番制のゲーム向け）
         /// </summary>
@@ -117,6 +126,9 @@ namespace PenmonScramble.Common.Online
         /// <summary>このあとシーンを読み直しても部屋を抜けず、次のシーンの OnlineSession に引き継ぐ（ReturnToRoom の後）</summary>
         private bool _carryRoomOverReload;
 
+        /// <summary>引き継ぐときに試合も続ける（CarryMatchToNextScene の後。席番号を配り直さない）</summary>
+        private bool _carryMatch;
+
         /// <summary>
         /// シーンを読み直す間だけ部屋を預かる。試合の後に部屋の待機へ戻るとき、画面はシーンの読み直しで作り直したいが、
         /// 部屋（参加コード・集まった人）はそのまま残したいため
@@ -130,6 +142,12 @@ namespace PenmonScramble.Common.Online
             public int MaxPlayers;
             public List<ulong> MemberIds;
             public Dictionary<ulong, string> MemberNames;
+
+            /// <summary>試合ごと引き継ぐ（別のシーンで試合をする）。false なら部屋の待機へ戻る</summary>
+            public bool Match;
+            public Dictionary<ulong, int> Seats;
+            public int Seat;
+            public int PlayerCount;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -218,9 +236,27 @@ namespace PenmonScramble.Common.Online
                 SendStart(_memberIds[i], i + 1, names);
             }
 
+            Seat = 0;
+            MatchPlayerCount = count;
             SeatNames.UseOnline(names);
             OnMatchStarted?.Invoke(0, count);
         }
+
+        /// <summary>
+        /// 3人以上の部屋の試合中のみ（ホストもゲストも）：試合を別のシーンで続ける（ミニゲームのシーンへ移るとき）。
+        /// 呼んだ後にシーンを移ると、部屋も席番号もそのまま次のシーンの OnlineSession に引き継ぐ。
+        /// 移った先の受け口がそろうまでの間に届いたメッセージは捨てられるので、ゲーム側は移った先で「準備できた」をやり取りしてから始めること
+        /// </summary>
+        public void CarryMatchToNextScene()
+        {
+            if (!IsMultiRoom || !_matchStarted || _session == null) return;
+
+            _carryRoomOverReload = true;
+            _carryMatch = true;
+        }
+
+        /// <summary>3人以上の部屋のホストの試合中のみ：いまつながっている人の席番号（ホスト自身の 0 は含まない）</summary>
+        public IReadOnlyCollection<int> ConnectedSeats => _seats.Values;
 
         /// <summary>
         /// 3人以上の部屋のホストのみ：試合を終えて、同じ顔ぶれのまま部屋の待機に戻る。ゲストには OnReturnToRoom が届く。
@@ -239,11 +275,13 @@ namespace PenmonScramble.Common.Online
             }
 
             _carryRoomOverReload = true;
+            _carryMatch = false;
         }
 
         private void ReceiveRoom(ulong senderId, FastBufferReader reader)
         {
             _carryRoomOverReload = true;
+            _carryMatch = false;
             OnReturnToRoom?.Invoke();
         }
 
@@ -259,6 +297,9 @@ namespace PenmonScramble.Common.Online
             _seats.Clear();
             _matchStarted = false;
             _carryRoomOverReload = false;
+            _carryMatch = false;
+            Seat = 0;
+            MatchPlayerCount = 0;
             _maxPlayers = DefaultMaxPlayers;
 
             if (_session == null) return;
@@ -296,7 +337,11 @@ namespace PenmonScramble.Common.Online
                 IsHost = IsHost,
                 MaxPlayers = _maxPlayers,
                 MemberIds = new List<ulong>(_memberIds),
-                MemberNames = new Dictionary<ulong, string>(_memberNames)
+                MemberNames = new Dictionary<ulong, string>(_memberNames),
+                Match = _carryMatch,
+                Seats = new Dictionary<ulong, int>(_seats),
+                Seat = Seat,
+                PlayerCount = MatchPlayerCount
             };
             _session = null;
         }
@@ -327,10 +372,23 @@ namespace PenmonScramble.Common.Online
             _peerConnected = true;
             _memberIds.AddRange(room.MemberIds);
             foreach (var pair in room.MemberNames) _memberNames[pair.Key] = pair.Value;
+            if (room.Match)
+            {
+                _matchStarted = true;
+                Seat = room.Seat;
+                MatchPlayerCount = room.PlayerCount;
+                foreach (var pair in room.Seats) _seats[pair.Key] = pair.Value;
+            }
+
             if (IsHost)
             {
                 var connected = new HashSet<ulong>(network.ConnectedClientsIds);
                 _memberIds.RemoveAll(id => !connected.Contains(id));
+                // 移っている間に抜けた人は、席も外す（ゲームは ConnectedSeats で知る）
+                foreach (ulong id in new List<ulong>(_seats.Keys))
+                {
+                    if (!connected.Contains(id)) _seats.Remove(id);
+                }
             }
 
             SubscribeNetworkEvents();
@@ -569,6 +627,8 @@ namespace PenmonScramble.Common.Online
             }
 
             _matchStarted = true;
+            Seat = seat;
+            MatchPlayerCount = count;
             SeatNames.UseOnline(names);
             OnMatchStarted?.Invoke(seat, count);
         }

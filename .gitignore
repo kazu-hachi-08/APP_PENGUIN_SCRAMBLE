@@ -100,3 +100,5 @@ desktop.ini
 # 曲の素材（OpenTracks・旧DOVA-SYNDROME）。規約で音源そのものの再配布が禁止されており、このリポジトリは公開なので入れない。
 /Assets/_Project/Games/100_PenmonScramble/Music/
 /Assets/_Project/Games/100_PenmonScramble/Music.meta
+# 曲を選ぶ間の仮置き場（同じ理由で入れない）
+/tmp_bgm/

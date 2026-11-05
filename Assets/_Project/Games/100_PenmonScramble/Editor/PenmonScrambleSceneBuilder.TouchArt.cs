@@ -8,11 +8,11 @@ namespace PenmonScramble.Editor
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private const string TouchCirclePath = UiArtFolder + "TouchCircle.png";
-        private const string TouchFacePath = UiArtFolder + "TouchFace.png";
-        private const string TouchGlossPath = UiArtFolder + "TouchGloss.png";
-        private const string TouchGlowPath = UiArtFolder + "TouchGlow.png";
-        private const string TouchRingPath = UiArtFolder + "TouchRing.png";
+        internal const string TouchCirclePath = UiArtFolder + "TouchCircle.png";
+        internal const string TouchFacePath = UiArtFolder + "TouchFace.png";
+        internal const string TouchGlossPath = UiArtFolder + "TouchGloss.png";
+        internal const string TouchGlowPath = UiArtFolder + "TouchGlow.png";
+        internal const string TouchRingPath = UiArtFolder + "TouchRing.png";
         private const string TouchSparkRingPath = UiArtFolder + "TouchSparkRing.png";
         private const string TouchStickBasePath = UiArtFolder + "TouchStickBase.png";
 

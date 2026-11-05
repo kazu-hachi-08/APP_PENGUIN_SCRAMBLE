@@ -20,7 +20,7 @@ namespace PenmonScramble.Editor
         private const string LobbyName = "Lobby";
         private const string SplashName = "Splash";
 
-        private const string HostLabel = "部屋を作る\n<size=34>コードを友だちに送って\n最大4人でボスラッシュ</size>";
+        private const string HostLabel = "部屋を作る\n<size=34>コードを友だちに送って\n最大4人で遊ぶ</size>";
         private const string JoinCaption = "コードで参加";
         private const string JoinLabel = "参加する";
         private const string CodePlaceholder = "参加コード";
@@ -32,11 +32,11 @@ namespace PenmonScramble.Editor
         // Relay の参加コードは英数字で、これより長くはならない
         private const int RoomCodeLimit = 12;
 
-        private static readonly Color SoloColor = new Color(1f, 0.55f, 0.30f);
-        private static readonly Color OnlineColor = new Color(0.20f, 0.55f, 0.90f);
+        internal static readonly Color SoloColor = new Color(1f, 0.55f, 0.30f);
+        internal static readonly Color OnlineColor = new Color(0.20f, 0.55f, 0.90f);
         private static readonly Color JoinColor = new Color(1f, 0.75f, 0.30f);
-        private static readonly Color StartColor = new Color(0.30f, 0.75f, 0.40f);
-        private static readonly Color CancelColor = new Color(0.45f, 0.50f, 0.60f);
+        internal static readonly Color StartColor = new Color(0.30f, 0.75f, 0.40f);
+        internal static readonly Color CancelColor = new Color(0.45f, 0.50f, 0.60f);
         private static readonly Color PlaceholderColor = new Color(0.55f, 0.55f, 0.60f);
         private static readonly Color InputFrameColor = new Color(0.96f, 0.97f, 1f);
 
@@ -64,7 +64,8 @@ namespace PenmonScramble.Editor
         private const float CloseButtonInset = 20f;
 
         // 接続待ちの窓: 上に状態と参加コード（文面は ModeSelectPanel が入れる）、下に「コピー」「開始」「キャンセル」。
-        // 部屋に入ったら、右にボスラッシュの選択（RushLobby）が出て、状態の文字は左へ寄る。窓の上の端はロゴの下にそろえる
+        // 部屋に入ったら、右に遊ぶものの札（ボスラッシュ / ゴルフ）と選んだ遊びの板が出て、状態の文字は左へ寄る（RoomModes.cs）。
+        // 窓の上の端はロゴの下にそろえる
         private static readonly Vector2 WaitingPanelSize = new Vector2(1600f, 760f);
         private static readonly Vector2 WaitingPanelPosition = new Vector2(0f, -90f);
         private static readonly Vector2 StatusPosition = new Vector2(0f, 80f);
@@ -107,7 +108,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_copyButtonLabel").objectReferenceValue = copy.GetComponentInChildren<Text>();
             so.FindProperty("_startButton").objectReferenceValue = start;
             so.ApplyModifiedProperties();
-            CreateRushLobby(panel, status.transform.parent, status);
+            CreateRoomModes(panel, session, status.transform.parent, status);
             return panel;
         }
 
@@ -213,7 +214,7 @@ namespace PenmonScramble.Editor
             return text;
         }
 
-        private static Text CreateLabel(Transform parent, string name, string value, int fontSize, Vector2 position, Vector2 size)
+        internal static Text CreateLabel(Transform parent, string name, string value, int fontSize, Vector2 position, Vector2 size)
         {
             var obj = UIDialogBuilder.CreateUIObject(name, parent);
             PlaceCenter(obj.GetComponent<RectTransform>(), position, size);

@@ -208,7 +208,7 @@ namespace PenmonScramble.Editor
             return pixels;
         }
 
-        /// <summary>PNG にして書く。中身が同じなら書き直さない（取り込み直しと差分を出さないため）</summary>
+        /// <summary>PNG にして書く。前の絵とのちがいが撮るたびのぶれほどなら書き直さない（取り込み直しと差分を出さないため）</summary>
         private static bool WriteIfChanged(string path, Color32[] pixels)
         {
             var size = (int)Mathf.Sqrt(pixels.Length);
@@ -217,7 +217,7 @@ namespace PenmonScramble.Editor
             texture.Apply();
             var png = texture.EncodeToPNG();
             Object.DestroyImmediate(texture);
-            return WriteBytesIfChanged(path, png);
+            return WriteShotIfChanged(path, pixels, size, size, png);
         }
 
         /// <summary>Player Settings のアイコンへ入れる。デスクトップ（Windows / Linux 共通）と Android</summary>

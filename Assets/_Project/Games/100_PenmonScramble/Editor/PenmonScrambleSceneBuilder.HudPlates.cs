@@ -333,7 +333,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>丸い面（属性の色）を丸く切り抜いて顔の絵を入れ、上につやを重ねる。返すのは色を塗る面と顔</summary>
-        private static (Image disc, Image face) AddPortraitFace(RectTransform root, float diameter)
+        internal static (Image disc, Image face) AddPortraitFace(RectTransform root, float diameter)
         {
             var faceSize = Vector2.one * diameter * PortraitFaceRatio;
             var disc = CreateHudImage(root, "Disc", TouchFacePath, Color.white, Middle, Vector2.zero, faceSize);
@@ -345,7 +345,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>斜めの板に白い縁を重ねる。中の文字はこの板の子に置く</summary>
-        private static Image CreateFramedSlant(RectTransform parent, string name, Color color, Vector2 anchor, Vector2 position, Vector2 size)
+        internal static Image CreateFramedSlant(RectTransform parent, string name, Color color, Vector2 anchor, Vector2 position, Vector2 size)
         {
             var plate = CreateSlant(parent, name, HudSlantPath, color, anchor, position, size);
             AddSlantLayer(plate.rectTransform, "Frame", HudSlantFramePath, PlateFrameColor, size.y);
@@ -387,7 +387,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>anchor の点から position だけずらした所を中心に置く</summary>
-        private static RectTransform CreateHudRect(Transform parent, string name, Vector2 anchor, Vector2 position, Vector2 size)
+        internal static RectTransform CreateHudRect(Transform parent, string name, Vector2 anchor, Vector2 position, Vector2 size)
         {
             var rect = UIDialogBuilder.CreateUIObject(name, parent).GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = anchor;
@@ -398,13 +398,13 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>飾りの絵（押す邪魔をしない）。spritePath が null なら絵の無い四角（顔は実行時に入れる）</summary>
-        private static Image CreateHudImage(Transform parent, string name, string spritePath, Color color, Vector2 anchor, Vector2 position, Vector2 size)
+        internal static Image CreateHudImage(Transform parent, string name, string spritePath, Color color, Vector2 anchor, Vector2 position, Vector2 size)
         {
             return AddImage(CreateHudRect(parent, name, anchor, position, size).gameObject, spritePath != null ? UiSprite(spritePath) : null, color, false);
         }
 
         /// <summary>親いっぱいに広げた太字の白い文字（濃い紺で縁取る）。左右の余白で、板の斜めの部分や顔との重なりを避ける</summary>
-        private static Text CreateHudLabel(Transform parent, string name, int fontSize, TextAnchor alignment, float paddingLeft, float paddingRight)
+        internal static Text CreateHudLabel(Transform parent, string name, int fontSize, TextAnchor alignment, float paddingLeft, float paddingRight)
         {
             var rect = CreateHudRect(parent, name, Middle, Vector2.zero, Vector2.zero);
             UIDialogBuilder.SetStretchAll(rect);

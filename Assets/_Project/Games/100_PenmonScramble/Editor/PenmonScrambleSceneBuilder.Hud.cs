@@ -14,7 +14,7 @@ namespace PenmonScramble.Editor
     public static partial class PenmonScrambleSceneBuilder
     {
         // HUD の板や文字の縁取りの濃い紺
-        private static readonly Color HudBackColor = new Color(0.08f, 0.11f, 0.22f, 0.85f);
+        internal static readonly Color HudBackColor = new Color(0.08f, 0.11f, 0.22f, 0.85f);
 
         // 画面の端の印: 大ボス1・仲間3・予告がいくつか出ても足りる数。大きさはスマホでも指の先くらい
         private const int EdgeMarkerCount = 8;
@@ -206,7 +206,7 @@ namespace PenmonScramble.Editor
         /// 右上の「‖」。角に寄せすぎると機種によって押せないので、セーフエリアの内側に置く。
         /// 遊んでいる間だけ StageMenu が出す
         /// </summary>
-        private static Button CreateMenuButton(Transform hud)
+        internal static Button CreateMenuButton(Transform hud)
         {
             var area = CreateStretchGroup(hud, "MenuButtonArea");
             area.AddComponent<SafeAreaFitter>();

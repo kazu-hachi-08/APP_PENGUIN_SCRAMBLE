@@ -10,23 +10,17 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// 「みんなで遊ぶ」の待ちの窓の右に置く、ボスラッシュの選択（RushLobby）: ステージのカード（◀ ▶・3戦の顔・鍵）、
-    /// 難易度の3つの札、報酬のコイン。左には接続の状態（参加コード・人数）が寄る
+    /// 難易度の3つの札、報酬のコイン。見出しは遊ぶものの札（RoomModes.cs）が受け持つ
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private const string RushHeading = "ボスラッシュ";
         private static readonly string[] RushRoundLabels = { "1戦目 巨大ペンモン", "2戦目 大ボス", "3戦目 本気" };
 
         // 待ちの窓の中の置き場所（窓のまん中から測る）
         private static readonly Vector2 RushCardPosition = new Vector2(270f, 60f);
         private static readonly Vector2 RushCardSize = new Vector2(1000f, 600f);
-        private static readonly Vector2 WaitingStatusBesidePosition = new Vector2(-520f, 60f);
-        private static readonly Vector2 WaitingStatusBesideSize = new Vector2(500f, 460f);
 
         // カードの中（カードのまん中から測る）
-        private static readonly Vector2 RushHeadingPosition = new Vector2(0f, 255f);
-        private static readonly Vector2 RushHeadingSize = new Vector2(600f, 60f);
-        private const int RushHeadingFontSize = 44;
         private const float RushStageY = 170f;
         private static readonly Vector2 RushStagePlateSize = new Vector2(680f, 110f);
         private const float RushArrowX = 420f;
@@ -75,36 +69,21 @@ namespace PenmonScramble.Editor
         private const int RushNoteFontSize = 28;
 
         /// <summary>待ちの窓の板（panel）の中にカードを作り、タイトルの土台に RushLobby を付けてつなぐ</summary>
-        private static RushLobby CreateRushLobby(ModeSelectPanel title, Transform waitingPanel, Text status)
+        private static RushLobby CreateRushLobby(ModeSelectPanel title, Transform waitingPanel)
         {
             var card = UIDialogBuilder.CreateUIObject("Rush", waitingPanel);
             PlaceCenter(card.GetComponent<RectTransform>(), RushCardPosition, RushCardSize);
-            var heading = CreateLabel(card.transform, "Heading", RushHeading, RushHeadingFontSize, RushHeadingPosition, RushHeadingSize);
-            heading.fontStyle = FontStyle.Bold;
-            heading.color = HudGoldColor;
 
             var lobby = title.gameObject.AddComponent<RushLobby>();
             var so = new SerializedObject(lobby);
             so.FindProperty("_modeSelect").objectReferenceValue = title;
             so.FindProperty("_card").objectReferenceValue = card;
-            var statusRect = status.rectTransform;
-            so.FindProperty("_status").objectReferenceValue = statusRect;
-            so.FindProperty("_statusAlonePosition").vector2Value = statusRect.anchoredPosition;
-            so.FindProperty("_statusAloneSize").vector2Value = statusRect.sizeDelta;
-            so.FindProperty("_statusBesideCardPosition").vector2Value = WaitingStatusBesidePosition;
-            so.FindProperty("_statusBesideCardSize").vector2Value = WaitingStatusBesideSize;
-
             CreateRushStageRow(card.transform, so);
             CreateRushRounds(card.transform, so);
             CreateRushDifficulties(card.transform, so);
             CreateRushReward(card.transform, so);
             so.ApplyModifiedProperties();
             card.SetActive(false);
-
-            // ホストひとりでも始められる（友達を待たずに練習できる）
-            var titleSo = new SerializedObject(title);
-            titleSo.FindProperty("_minPlayersToStart").intValue = 1;
-            titleSo.ApplyModifiedProperties();
             return lobby;
         }
 

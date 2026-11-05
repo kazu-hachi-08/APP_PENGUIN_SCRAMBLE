@@ -1,0 +1,25 @@
+{
+    "name": "PenmonScramble.Golf.Game",
+    "rootNamespace": "PenmonScramble.Golf.Game",
+    "references": [
+        "PenmonScramble.Core",
+        "PenmonScramble.Common",
+        "PenmonScramble.Game",
+        "PenmonScramble.MiniGames.Core",
+        "PenmonScramble.MiniGames.Game",
+        "PenmonScramble.Golf.Core",
+        "Unity.InputSystem",
+        "UnityEngine.UI",
+        "Unity.Collections",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

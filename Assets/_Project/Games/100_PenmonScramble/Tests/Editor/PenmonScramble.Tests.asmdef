@@ -5,7 +5,9 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "PenmonScramble.Core",
-        "PenmonScramble.Game"
+        "PenmonScramble.Game",
+        "PenmonScramble.MiniGames.Core",
+        "PenmonScramble.Golf.Core"
     ],
     "includePlatforms": [
         "Editor"

@@ -14,11 +14,14 @@ namespace PenmonScramble.Game
     {
         // 入れる枠を選ぶ間の光り方（1秒に何回脈打つか）
         private const float PulseSpeed = 2.5f;
+        private const string EmptyLabel = "（空き）";
 
         [SerializeField] private Button _button;
         [SerializeField] private Image _frame;
         [SerializeField] private Image _body;
-        [SerializeField] private Text _label;
+        [SerializeField] private Text _starsText;
+        [SerializeField] private Text _nameText;
+        [SerializeField] private Text _powerText;
         [SerializeField] private Image _elementStrip;
         [SerializeField] private GameObject _badge;
         [SerializeField] private Text _badgeText;
@@ -61,7 +64,10 @@ namespace PenmonScramble.Game
             }
 
             var species = penguin != null ? SpeciesTable.Get(penguin.speciesNo) : null;
-            _label.text = penguin != null ? PenguinLabels.Card(penguin) : "（空き）";
+            var (stars, name, power) = penguin != null ? PenguinLabels.CardLines(penguin) : (string.Empty, EmptyLabel, string.Empty);
+            _starsText.text = stars;
+            _nameText.text = name;
+            _powerText.text = power;
             _elementStrip.color = species != null ? PenguinPalette.ElementColor(species.Element) : _emptyStripColor;
             _badge.SetActive(partyIndex >= 0);
             _badgeText.text = (partyIndex + 1).ToString();

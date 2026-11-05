@@ -141,6 +141,69 @@ namespace PenmonScramble.Tests
             Assert.That(loaded.clearedRush, Is.EqualTo(new[] { 1012 }));
         }
 
+        /// <summary>
+        /// v2（ミニゲームの前）の記録はそのまま読めて、ミニゲームの記録だけ空で始まる。
+        /// JSON は v2 で JsonUtility が実際に書いていた形のまま（項目の名前と並び）
+        /// </summary>
+        [Test]
+        public void Load_Version2_KeepsEverythingAndAddsEmptyMiniGames()
+        {
+            const string v2 = "{\"version\":2,\"coins\":1234,\"nextPenguinId\":4,\"freePullsUsed\":3," +
+                "\"penguins\":[{\"id\":1,\"speciesNo\":5,\"basePower\":150,\"boost\":20,\"limitBreak\":1},{\"id\":2,\"speciesNo\":6,\"basePower\":90,\"boost\":0,\"limitBreak\":0},{\"id\":3,\"speciesNo\":7,\"basePower\":100,\"boost\":0,\"limitBreak\":0}]," +
+                "\"party\":[3,1,2],\"clearedStages\":[1,2,3,4],\"clearedRush\":[1012]}";
+            _storage.Write(SaveStore.Key, v2);
+
+            var data = _store.Load();
+
+            Assert.That(_store.LastBrokenKey, Is.Null);
+            Assert.That(_store.DiscardedOldRecord, Is.False);
+            Assert.That(data.version, Is.EqualTo(3));
+            Assert.That(data.coins, Is.EqualTo(1234));
+            Assert.That(data.freePullsUsed, Is.EqualTo(3));
+            Assert.That(data.penguins.Count, Is.EqualTo(3));
+            Assert.That(data.penguins[0].Power, Is.EqualTo(170));
+            Assert.That(data.penguins[0].limitBreak, Is.EqualTo(1));
+            Assert.That(data.party, Is.EqualTo(new[] { 3, 1, 2 }));
+            Assert.That(data.clearedStages, Is.EqualTo(new[] { 1, 2, 3, 4 }));
+            Assert.That(data.clearedRush, Is.EqualTo(new[] { 1012 }));
+            Assert.That(data.nextPenguinId, Is.EqualTo(4));
+            Assert.That(data.miniGames, Is.Not.Null.And.Empty);
+        }
+
+        /// <summary>ミニゲームの記録は書いて読み直しても残る。知らないミニゲームの行も消さない</summary>
+        [Test]
+        public void SaveThenLoad_KeepsMiniGames()
+        {
+            var data = SaveData.CreateNew();
+            data.miniGames.Add(new MiniGameRecord { gameId = "golf", courseNo = 2, plays = 3, best = 11, special = 1 });
+            data.miniGames.Add(new MiniGameRecord { gameId = "future", courseNo = 1, plays = 1, best = 500 });
+            _store.Save(data);
+
+            var loaded = _store.Load();
+
+            Assert.That(loaded.miniGames.Count, Is.EqualTo(2));
+            var golf = loaded.miniGames[0];
+            Assert.That(golf.gameId, Is.EqualTo("golf"));
+            Assert.That(golf.courseNo, Is.EqualTo(2));
+            Assert.That(golf.plays, Is.EqualTo(3));
+            Assert.That(golf.best, Is.EqualTo(11));
+            Assert.That(golf.special, Is.EqualTo(1));
+            Assert.That(loaded.miniGames[1].gameId, Is.EqualTo("future"));
+            Assert.That(loaded.miniGames[1].best, Is.EqualTo(500));
+        }
+
+        /// <summary>記録の項目名は一度配ったら変えない（JSON の名前がそのまま保存先の中身になる）</summary>
+        [Test]
+        public void MiniGameRecord_FieldNamesAreFixed()
+        {
+            var data = SaveData.CreateNew();
+            data.miniGames.Add(new MiniGameRecord { gameId = "golf", courseNo = 1, plays = 1, best = 9, special = 0 });
+
+            var json = JsonUtility.ToJson(data);
+
+            StringAssert.Contains("\"miniGames\":[{\"gameId\":\"golf\",\"courseNo\":1,\"plays\":1,\"best\":9,\"special\":0}]", json);
+        }
+
         [Test]
         public void Load_RepairsParty_DropsMissingAndFillsStrongest()
         {
