@@ -12,7 +12,8 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// サッカーの HUD（SoccerHud）: 上のまん中に赤・青の丸の点と、その間の残り時間、点の下にチームの必殺ゲージ。
     /// まん中に知らせ、PC では下に操作の説明と必殺の一言、スマホでは仮想スティックと技1・技2・必殺・交代のボタン
-    /// （PenmonScrambleSceneBuilder.SoccerTouch.cs）。右上にメニューの「‖」。PK戦の表とためゲージは SoccerSceneBuilder.HudShootout.cs
+    /// （PenmonScrambleSceneBuilder.SoccerTouch.cs）。右上にメニューの「‖」。PK戦の表とためゲージは SoccerSceneBuilder.HudShootout.cs、
+    /// みんなでの頭の上の名前と MVP の板は SoccerSceneBuilder.HudOnline.cs
     /// </summary>
     public static partial class SoccerSceneBuilder
     {
@@ -48,12 +49,14 @@ namespace PenmonScramble.Editor
             public readonly SoccerHud Hud;
             public readonly PenmonScrambleSceneBuilder.SoccerTouchParts Touch;
             public readonly Button Menu;
+            public readonly SoccerNameTags NameTags;
 
-            public SoccerHudParts(SoccerHud hud, PenmonScrambleSceneBuilder.SoccerTouchParts touch, Button menu)
+            public SoccerHudParts(SoccerHud hud, PenmonScrambleSceneBuilder.SoccerTouchParts touch, Button menu, SoccerNameTags nameTags)
             {
                 Hud = hud;
                 Touch = touch;
                 Menu = menu;
+                NameTags = nameTags;
             }
         }
 
@@ -62,6 +65,8 @@ namespace PenmonScramble.Editor
         {
             var root = UIDialogBuilder.CreateUIObject("SoccerHud", canvas);
             UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
+            // 頭の上の名前は、点・知らせ・ボタンより奥に出す
+            var nameTags = CreateNameTags(root.transform);
             var safe = B.CreateStretchGroup(root.transform, "Safe");
             safe.AddComponent<SafeAreaFitter>();
             var hud = root.AddComponent<SoccerHud>();
@@ -73,6 +78,7 @@ namespace PenmonScramble.Editor
             CreateGauges(safe.transform, so);
             CreateShootoutBoard(safe.transform, so);
             CreatePenaltyPanel(safe.transform, so);
+            CreateMvp(safe.transform, so);
             so.FindProperty("_banner").objectReferenceValue = CreateBanner(safe.transform);
             var help = B.CreateLabel(safe.transform, "Help", HelpText, HelpFontSize, Vector2.zero, HelpSize);
             Place(help.rectTransform, BottomCenter, HelpPosition, HelpSize);
@@ -90,7 +96,7 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
 
             root.SetActive(false);
-            return new SoccerHudParts(hud, touch, menu);
+            return new SoccerHudParts(hud, touch, menu, nameTags);
         }
 
         /// <summary>チームの色の丸（白い縁）に、点の数字。side は真ん中から左（−1）か右（+1）か</summary>

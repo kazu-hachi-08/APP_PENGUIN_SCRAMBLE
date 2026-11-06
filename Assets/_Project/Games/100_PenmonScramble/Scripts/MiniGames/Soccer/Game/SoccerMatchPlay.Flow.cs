@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using PenmonScramble.Common.Profile;
 using PenmonScramble.Game;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
@@ -8,7 +10,9 @@ namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
     /// 結果とメニュー: 試合が終わったら少し見せてから、コインと記録を書いて保存し、結果（勝ち負け・点・得失点差・コインの内訳・
-    /// 「もう一度」「スタジアムを選ぶ」「ロビーへ」）。試合中のメニュー（本編の StageMenu の見た目）の「試合をやり直す」「ミニゲームへ」もここで受ける
+    /// 「もう一度」「スタジアムを選ぶ」「ロビーへ」）。試合中のメニュー（本編の StageMenu の見た目）の「試合をやり直す」「ミニゲームへ」もここで受ける。
+    /// みんなででは、勝ち負けと報酬は自分のチームから見て、各自の端末で記録に書く。点を一番入れた人を MVP として出す。
+    /// 「もう一度」は出さず、「スタジアムを選ぶ」（ホストだけ）で全員が待ちの窓へ戻る
     /// </summary>
     public partial class SoccerMatchPlay
     {
@@ -29,7 +33,8 @@ namespace PenmonScramble.Soccer.Game
         private void BindFlow()
         {
             _result.Chosen += OnResultChosen;
-            _menu.RestartRequested += StartMatch;
+            // 「試合をやり直す」はひとりのときだけ出る
+            _menu.RestartRequested += StartSolo;
             _menu.TitleRequested += MiniGameLaunch.ReturnToHub;
         }
 
@@ -37,9 +42,9 @@ namespace PenmonScramble.Soccer.Game
         private void BeginFlow()
         {
             _resultLeft = -1f;
-            _result.SetOnline(false, false);
+            _result.SetOnline(_mode.IsOnline, _mode.IsHost);
             _result.Hide();
-            _menu.Bind(solo: true, canRestart: true);
+            _menu.Bind(solo: !_mode.IsOnline, canRestart: !_mode.IsOnline, isHost: _mode.IsHost);
             _menu.SetAvailable(true);
             _menu.SetCaption(Caption());
         }
@@ -58,7 +63,7 @@ namespace PenmonScramble.Soccer.Game
         {
             _menu.SetAvailable(false);
             _resultLeft = _resultDelay;
-            var won = e.Team == SoccerRules.Red;
+            var won = e.Team == OwnTeam;
             _hud.ShowBanner(won ? WinMessage : LossMessage, _resultDelay);
             _view.ShowWinner(e.Team);
         }
@@ -84,18 +89,43 @@ namespace PenmonScramble.Soccer.Game
             _hud.SetResult();
             GameSounds.Play(info.Outcome != SoccerOutcome.Loss ? GameSound.Clear : GameSound.Fail);
             _result.Show(SoccerResultText.Build(info));
+            ShowMvp();
+        }
+
+        /// <summary>みんなでのみ: 点を一番入れた人（並んだら全員）を、結果の左に出す。誰も入れていなければ出さない</summary>
+        private void ShowMvp()
+        {
+            if (!_mode.IsOnline)
+            {
+                return;
+            }
+
+            var seats = SoccerMvp.Find(_seatGoals);
+            if (seats.Count == 0)
+            {
+                return;
+            }
+
+            var names = new List<string>();
+            foreach (var seat in seats)
+            {
+                names.Add(SeatNames.Get(seat));
+            }
+
+            _hud.ShowMvp(string.Join("・", names), _seatGoals[seats[0]], MiniGameSeats.ColorOf(seats[0]));
         }
 
         /// <summary>
-        /// 自分（赤）のチームの結果からコインを決め、記録に書いて保存する（CLAUDE.md §3.5: SaveData は変えず、ミニゲームの表の行に書くだけ）。
+        /// 自分のチーム（ひとりでは赤）の結果からコインを決め、記録に書いて保存する（CLAUDE.md §3.5: SaveData は変えず、ミニゲームの表の行に書くだけ）。
         /// ベスト ＝ 得失点差（PK戦で決まった試合は 0）、special ＝ 勝った回数。初めて勝ったかは、書く前の勝った回数が 0 かで決める。
         /// 開発用の試しのピッチ・PK戦の確認では書かない
         /// </summary>
         private SoccerResultInfo RecordResult()
         {
-            var goals = _world.Score(SoccerRules.Red);
-            var conceded = _world.Score(SoccerRules.Blue);
-            var won = _match.Winner == SoccerRules.Red;
+            var team = OwnTeam;
+            var goals = _world.Score(team);
+            var conceded = _world.Score(SoccerRules.Opponent(team));
+            var won = _match.Winner == team;
             var outcome = !won ? SoccerOutcome.Loss : _match.WonByShootout ? SoccerOutcome.ShootoutWin : SoccerOutcome.Win;
             var game = MiniGameTable.Get(MiniGameTable.SoccerId);
             var records = new MiniGameRecords(GameSave.Record.Data);
@@ -103,7 +133,7 @@ namespace PenmonScramble.Soccer.Game
             var firstWin = (records.Find(game.Id, _stadium.No)?.special ?? 0) == 0;
             var reward = SoccerReward.Compute(goals, outcome, _record && firstWin);
             var shootout = _match.Shootout;
-            var info = new SoccerResultInfo(goals, conceded, outcome, shootout, reward, _record, previousBest, hadBest);
+            var info = new SoccerResultInfo(team, goals, conceded, outcome, shootout, reward, _record, previousBest, hadBest);
             if (!_record)
             {
                 return info;
@@ -119,9 +149,15 @@ namespace PenmonScramble.Soccer.Game
             switch (card)
             {
                 case MiniGameResultPanel.RetryCard:
-                    StartMatch();
+                    StartSolo();
                     break;
                 case MiniGameResultPanel.CoursesCard:
+                    if (_mode.IsOnline)
+                    {
+                        RequestRoom();
+                        break;
+                    }
+
                     MiniGameLaunch.ReturnToHub();
                     break;
                 case MiniGameResultPanel.LobbyCard:

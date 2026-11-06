@@ -23,7 +23,7 @@ namespace PenmonScramble.Soccer.Core
     /// 取られた側のキックオフで並び直す。時間はボールが動いている間も止まらず、演出（キックオフの合図・ゴール・カットイン）の間だけ止まる。
     /// 時間切れで同点なら PK戦（SoccerShootout）。ピッチの上の計算は SoccerWorld、子の入力（人・AI）は呼ぶ側が決めて渡す
     /// </summary>
-    public sealed class SoccerMatch
+    public sealed partial class SoccerMatch
     {
         private const float Dt = SoccerRules.StepSeconds;
 

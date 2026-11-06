@@ -1,6 +1,7 @@
 using System.Linq;
 using PenmonScramble.Common.Editor;
 using PenmonScramble.Common.Input;
+using PenmonScramble.Common.Online;
 using PenmonScramble.Game;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
@@ -16,7 +17,8 @@ namespace PenmonScramble.Editor
     /// サッカーのシーン（SoccerScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編とゴルフのシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
     /// まだ作っていないスタジアムのときの「準備中」の板と、ひとりで1試合（SoccerMatchPlay。3対3・キーパー・PK戦・必殺シュート・結果・メニュー）を置く
-    /// （Docs/MINIGAME_SOCCER_PLAN.md フェーズ 4）。HUD は SoccerSceneBuilder.Hud.cs、PK戦の HUD は SoccerSceneBuilder.HudShootout.cs
+    /// （Docs/MINIGAME_SOCCER_PLAN.md フェーズ 4）。みんなで遊ぶための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの SoccerOnlinePlay・
+    /// 始まるまでの「待っています」）も置く（フェーズ 5）。HUD は SoccerSceneBuilder.Hud.cs、PK戦の HUD は SoccerSceneBuilder.HudShootout.cs
     /// </summary>
     public static partial class SoccerSceneBuilder
     {
@@ -43,6 +45,9 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 BackPosition = new Vector2(0f, -260f);
         private static readonly Vector2 BackSize = new Vector2(360f, 130f);
         private const int BackFontSize = 52;
+        private static readonly Color WaitingBackColor = new Color(0.02f, 0.03f, 0.10f, 0.7f);
+        private static readonly Vector2 WaitingTextSize = new Vector2(1400f, 120f);
+        private const int WaitingFontSize = 60;
 
         /// <summary>バッチモードからも呼べるよう、保存の確認はしない（呼ぶ側の Rebuild が済ませている）</summary>
         public static void BuildScene()
@@ -61,8 +66,11 @@ namespace PenmonScramble.Editor
             var result = PenmonScrambleSceneBuilder.CreateMiniGameResultPanel(canvas, "スタジアムを選ぶ", "ホストがスタジアムを選ぶと、みんなで待ちの窓へ戻ります");
             // メニューは HUD・結果より手前に出す（CreateStageMenu が並べ替える）
             var menu = CreateMenu(canvas, hud.Menu);
-            var play = CreateMatchPlay(camera, hud.Hud, cutIn, menu, result);
+            var play = CreateMatchPlay(camera, hud, cutIn, menu, result);
             CreateInputManager(hud.Touch);
+            // 本編のシーンが預けた部屋を、起きたときに引き継ぐ（ひとりで遊ぶときは何もしない）
+            var session = new GameObject("OnlineSession").AddComponent<OnlineSession>();
+            var online = CreateOnline(canvas, session, play);
 
             var runner = new GameObject("Soccer").AddComponent<SoccerSceneRunner>();
             var so = new SerializedObject(runner);
@@ -70,6 +78,8 @@ namespace PenmonScramble.Editor
             so.FindProperty("_courseText").objectReferenceValue = course;
             so.FindProperty("_backButton").objectReferenceValue = back;
             so.FindProperty("_play").objectReferenceValue = play;
+            so.FindProperty("_online").objectReferenceValue = online;
+            so.FindProperty("_session").objectReferenceValue = session;
             so.ApplyModifiedProperties();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -104,7 +114,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>1試合: ピッチ・球・子・キーパーの見た目（SoccerView）と、試合を進める SoccerMatchPlay</summary>
-        private static SoccerMatchPlay CreateMatchPlay(SoccerCamera camera, SoccerHud hud, SpecialCutIn cutIn, StageMenu menu, MiniGameResultPanel result)
+        private static SoccerMatchPlay CreateMatchPlay(SoccerCamera camera, SoccerHudParts hud, SpecialCutIn cutIn, StageMenu menu, MiniGameResultPanel result)
         {
             var root = new GameObject("Match");
             var view = root.AddComponent<SoccerView>();
@@ -117,12 +127,31 @@ namespace PenmonScramble.Editor
             var so = new SerializedObject(play);
             so.FindProperty("_view").objectReferenceValue = view;
             so.FindProperty("_camera").objectReferenceValue = camera;
-            so.FindProperty("_hud").objectReferenceValue = hud;
+            so.FindProperty("_hud").objectReferenceValue = hud.Hud;
+            so.FindProperty("_nameTags").objectReferenceValue = hud.NameTags;
             so.FindProperty("_cutIn").objectReferenceValue = cutIn;
             so.FindProperty("_menu").objectReferenceValue = menu;
             so.FindProperty("_result").objectReferenceValue = result;
             so.ApplyModifiedProperties();
             return play;
+        }
+
+        /// <summary>みんなで遊ぶときの通信の段取りと、始まるまで（全員の準備・ホストを待つ間）画面を覆う「待っています」</summary>
+        private static SoccerOnlinePlay CreateOnline(Transform canvas, OnlineSession session, SoccerMatchPlay play)
+        {
+            var waiting = PenmonScrambleSceneBuilder.CreateFullScreenBacking(canvas, "Waiting", WaitingBackColor);
+            var text = PenmonScrambleSceneBuilder.CreateLabel(waiting.transform, "Text", string.Empty, WaitingFontSize, Vector2.zero, WaitingTextSize);
+            text.fontStyle = FontStyle.Bold;
+            waiting.SetActive(false);
+
+            var online = play.gameObject.AddComponent<SoccerOnlinePlay>();
+            var so = new SerializedObject(online);
+            so.FindProperty("_session").objectReferenceValue = session;
+            so.FindProperty("_play").objectReferenceValue = play;
+            so.FindProperty("_waiting").objectReferenceValue = waiting;
+            so.FindProperty("_waitingText").objectReferenceValue = text;
+            so.ApplyModifiedProperties();
+            return online;
         }
 
         /// <summary>

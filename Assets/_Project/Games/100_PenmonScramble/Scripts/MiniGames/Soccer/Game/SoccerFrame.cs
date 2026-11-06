@@ -42,6 +42,32 @@ namespace PenmonScramble.Soccer.Game
             return new SoccerFrame(center, players, keepers);
         }
 
+        /// <summary>
+        /// 2つの写しの間の t（0〜1）を新しい写しにする（オンラインのゲストが、いま描いている所から次の届いた所へ寄せ始めるため）。
+        /// 子の数が違えば b
+        /// </summary>
+        public static SoccerFrame Blend(SoccerFrame a, SoccerFrame b, float t)
+        {
+            if (a.Players == null || b.Players == null || a.Players.Length != b.Players.Length || a.Keepers.Length != b.Keepers.Length)
+            {
+                return b;
+            }
+
+            var players = new Vector3[b.Players.Length];
+            for (var i = 0; i < players.Length; i++)
+            {
+                players[i] = Vector3.Lerp(a.Players[i], b.Players[i], t);
+            }
+
+            var keepers = new Vector3[b.Keepers.Length];
+            for (var i = 0; i < keepers.Length; i++)
+            {
+                keepers[i] = Vector3.Lerp(a.Keepers[i], b.Keepers[i], t);
+            }
+
+            return new SoccerFrame(Vector3.Lerp(a.Ball, b.Ball, t), players, keepers);
+        }
+
         /// <summary>prev と next の間の t（0〜1）の写し</summary>
         public static Vector3 Lerp(Vector3[] previous, Vector3[] next, int index, float t)
         {

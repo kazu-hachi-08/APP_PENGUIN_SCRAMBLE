@@ -93,6 +93,9 @@ namespace PenmonScramble.Soccer.Game
 
         public int Team => _team;
 
+        /// <summary>足元の位置（世界の座標）</summary>
+        public Vector3 Position => _root.position;
+
         private void SetFrozen(bool frozen)
         {
             if (frozen == _frozen)

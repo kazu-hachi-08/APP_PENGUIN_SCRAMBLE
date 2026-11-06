@@ -3,11 +3,12 @@ using PenmonScramble.Soccer.Core;
 
 namespace PenmonScramble.Soccer.Game
 {
-    /// <summary>サッカーの結果に出すもの（自分のチーム＝赤から見た）</summary>
+    /// <summary>サッカーの結果に出すもの（自分のチームから見た。ひとりでは赤）</summary>
     public readonly struct SoccerResultInfo
     {
-        public SoccerResultInfo(int goals, int conceded, SoccerOutcome outcome, SoccerShootout shootout, SoccerRewardBreakdown reward, bool recorded, int previousBest, bool hadBest, bool firstPlay = false, bool newBest = false)
+        public SoccerResultInfo(int team, int goals, int conceded, SoccerOutcome outcome, SoccerShootout shootout, SoccerRewardBreakdown reward, bool recorded, int previousBest, bool hadBest, bool firstPlay = false, bool newBest = false)
         {
+            Team = team;
             Goals = goals;
             Conceded = conceded;
             Outcome = outcome;
@@ -19,6 +20,9 @@ namespace PenmonScramble.Soccer.Game
             FirstPlay = firstPlay;
             NewBest = newBest;
         }
+
+        /// <summary>自分のチーム</summary>
+        public int Team { get; }
 
         public int Goals { get; }
         public int Conceded { get; }
@@ -41,7 +45,7 @@ namespace PenmonScramble.Soccer.Game
         public int GoalDifference => Goals - Conceded;
 
         public SoccerResultInfo WithRecord(bool firstPlay, bool newBest) =>
-            new SoccerResultInfo(Goals, Conceded, Outcome, Shootout, Reward, Recorded, PreviousBest, HadBest, firstPlay, newBest);
+            new SoccerResultInfo(Team, Goals, Conceded, Outcome, Shootout, Reward, Recorded, PreviousBest, HadBest, firstPlay, newBest);
     }
 
     /// <summary>
@@ -99,7 +103,7 @@ namespace PenmonScramble.Soccer.Game
             var line = $"得失点差 {SoccerCourseGuide.FormatGoalDifference(info.GoalDifference)}";
             if (info.Shootout != null)
             {
-                line += $"（PK {info.Shootout.Score(SoccerRules.Red)} − {info.Shootout.Score(SoccerRules.Blue)}）";
+                line += $"（PK {info.Shootout.Score(info.Team)} − {info.Shootout.Score(SoccerRules.Opponent(info.Team))}）";
             }
 
             if (!info.Recorded)

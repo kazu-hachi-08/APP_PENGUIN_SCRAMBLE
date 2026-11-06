@@ -54,7 +54,18 @@ namespace PenmonScramble.Soccer.Core
 
             _maskShoot &= raw.Shoot;
             _maskPass &= raw.Pass;
-            return new SoccerInput(raw.Move, raw.Shoot && !_maskShoot, raw.Pass && !_maskPass);
+            return new SoccerInput(raw.Move, raw.Shoot && !_maskShoot, raw.Pass && !_maskPass, raw.Special);
+        }
+
+        /// <summary>
+        /// オンラインのゲストの写し: ホストが決めた動かす子に合わせる（ボタンの中身・交代の顔を出すため。切り替えはホストが決める）
+        /// </summary>
+        public void Follow(int controlled)
+        {
+            if (controlled != SoccerBall.NoPlayer)
+            {
+                Controlled = controlled;
+            }
         }
 
         private int ChooseControlled(SoccerWorld world, bool switchPressed, IReadOnlyList<SoccerEvent> lastEvents)

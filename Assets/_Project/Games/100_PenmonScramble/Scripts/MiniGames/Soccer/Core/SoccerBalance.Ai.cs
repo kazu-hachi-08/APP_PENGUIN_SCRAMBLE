@@ -58,6 +58,15 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>人のチームの、人が動かしていない味方の強さ（「ふつう」で固定。案）</summary>
         public const int TeammateAiStars = 3;
 
+        /// <summary>協力で人が1人増えるごとに、CPU の強さを上げる段の数（案。人が多いほど1人ずつの子が少なく、人の判断が多く入って強いため）</summary>
+        public const int CoopStarsPerExtraHuman = 1;
+
+        /// <summary>協力の CPU の強さ: スタジアムの強さに、2人目からの人数ぶんを足す（★5 まで）</summary>
+        public static int CoopCpuStars(int stadiumStars, int humans)
+        {
+            return Math.Clamp(stadiumStars + Math.Max(0, humans - 1) * CoopStarsPerExtraHuman, AiMinStars, AiMaxStars);
+        }
+
         /// <summary>気づくまでの遅れの上限（秒）。これより前のボールは覚えておかない</summary>
         public const float AiMaxReactionSeconds = 0.5f;
 

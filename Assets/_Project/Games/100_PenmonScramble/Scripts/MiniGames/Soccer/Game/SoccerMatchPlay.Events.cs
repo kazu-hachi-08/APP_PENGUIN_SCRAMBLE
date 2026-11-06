@@ -3,7 +3,8 @@ using PenmonScramble.Soccer.Core;
 namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
-    /// 起きたことの見せ方: 音（SoccerSoundCues）と子・網の反応（SoccerView）に渡し、知らせ・点・カメラ・カットインを出す
+    /// 起きたことの見せ方: 音（SoccerSoundCues）と子・網の反応（SoccerView）に渡し、知らせ・点・カメラ・カットインを出す。
+    /// オンラインのゲストは、スナップショットに載って届いたものを同じように見せる
     /// </summary>
     public partial class SoccerMatchPlay
     {
@@ -29,6 +30,7 @@ namespace PenmonScramble.Soccer.Game
 
         private void OnEvent(SoccerEvent e)
         {
+            CountScorer(e);
             SoccerSoundCues.Play(e);
             _view.OnEvent(e, _world);
             switch (e.Kind)
@@ -94,7 +96,7 @@ namespace PenmonScramble.Soccer.Game
         private void PlayCutIn(SoccerEvent e)
         {
             var player = _world.Players[e.Player];
-            var species = e.Player < _species.Length ? _species[e.Player] : SoccerMatchSetup.FallbackSpecies;
+            var species = e.Player >= 0 && e.Player < _species.Count ? _species[e.Player] : SoccerMatchSetup.FallbackSpecies;
             _cutIn.Play(species, player.Element, SpecialHeading, SoccerSpecialNames.Of(player.Element), SoccerBalance.SpecialCutInSeconds);
         }
     }

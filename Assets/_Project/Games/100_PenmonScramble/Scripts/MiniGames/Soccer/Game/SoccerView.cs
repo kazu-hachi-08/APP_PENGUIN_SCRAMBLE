@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using PenmonScramble.Game;
+using PenmonScramble.MiniGames.Game;
 using PenmonScramble.Soccer.Core;
 using UnityEngine;
 
@@ -57,13 +58,32 @@ namespace PenmonScramble.Soccer.Game
             }
         }
 
-        /// <summary>動かしている子の印（足元の席の色の輪）。index が −1 なら誰も動かしていない</summary>
-        public void SetControlled(int index, Color seatColor)
+        /// <summary>
+        /// 人が動かしている子の印（足元の席の色の輪）。seatShown は席ごとの、印を付ける子（−1 なら無し）
+        /// </summary>
+        public void SetControllers(IReadOnlyList<int> seatShown)
         {
             for (var i = 0; i < _players.Count; i++)
             {
-                _players[i].SetControlled(i == index, seatColor);
+                var seat = seatShown != null ? IndexOf(seatShown, i) : -1;
+                _players[i].SetControlled(seat >= 0, seat >= 0 ? MiniGameSeats.ColorOf(seat) : Color.white);
             }
+        }
+
+        /// <summary>子の足元の位置（世界の座標。名前を頭の上に出すのに使う）。いなければ null</summary>
+        public Vector3? PlayerPosition(int index) => index >= 0 && index < _players.Count ? _players[index].Position : (Vector3?)null;
+
+        private static int IndexOf(IReadOnlyList<int> list, int value)
+        {
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (list[i] == value)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         /// <summary>前の歩と今の歩の写しの間（t）を描く</summary>

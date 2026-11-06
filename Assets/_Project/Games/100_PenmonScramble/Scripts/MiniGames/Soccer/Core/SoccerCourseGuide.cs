@@ -19,6 +19,27 @@ namespace PenmonScramble.Soccer.Core
             return stadium != null ? $"CPUの強さ {Stars(stadium.CpuStars)}  {stadium.Gimmick}" : string.Empty;
         }
 
+        /// <summary>
+        /// みんなでの中身: 協力は人数で上がった CPU の強さ（「CPUの強さ ★★★☆☆（3人）」）、対戦は人どうし。後ろに仕掛けの一言
+        /// </summary>
+        public string OnlineLayout(int courseNo, SoccerOnlineMode mode, int humans)
+        {
+            var stadium = SoccerStadiumTable.Get(courseNo);
+            if (stadium == null)
+            {
+                return string.Empty;
+            }
+
+            if (mode == SoccerOnlineMode.Versus)
+            {
+                return $"人どうしの対戦  {stadium.Gimmick}";
+            }
+
+            var stars = SoccerBalance.CoopCpuStars(stadium.CpuStars, humans);
+            var people = humans > 1 ? $"（{humans}人）" : string.Empty;
+            return $"CPUの強さ {Stars(stars)}{people}  {stadium.Gimmick}";
+        }
+
         public string FormatBest(int courseNo, int best) => FormatGoalDifference(best);
 
         public string Reward(int courseNo, bool firstPlay)
