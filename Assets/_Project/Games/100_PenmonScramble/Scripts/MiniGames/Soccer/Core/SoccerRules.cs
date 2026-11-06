@@ -16,8 +16,24 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>1チームのフィールドの子の数（キーパーは別）</summary>
         public const int PlayersPerTeam = 3;
 
-        /// <summary>1試合の長さ（秒。案。試合の流れはフェーズ 4 の SoccerMatch。今は CPU の試合の確認で使う）</summary>
+        /// <summary>1試合の長さ（秒。案。ゴールの演出・カットインの間は減らない）</summary>
         public const float MatchSeconds = 180f;
+
+        /// <summary>キックオフの並びで「キックオフ！」を見せる間（この間はボールに触れない）</summary>
+        public const float KickoffWaitSeconds = 1.2f;
+
+        /// <summary>点が入ってから並び直すまで（「ゴール！」の演出。時間は止まる）</summary>
+        public const float GoalPauseSeconds = 2f;
+
+        /// <summary>時間切れの笛から、結果か PK戦へ移るまで</summary>
+        public const float TimeUpSeconds = 2f;
+
+        /// <summary>残りがこの秒になったら、1秒ごとに数える</summary>
+        public const int CountdownFrom = 10;
+
+        /// <summary>PK戦の1チームの本数（同点ならサドンデス）と、サドンデスを続けるいちばん多い組の数（終わらないことが無いように）</summary>
+        public const int PenaltyRounds = 3;
+        public const int PenaltyMaxRounds = 30;
 
         /// <summary>赤（左のゴールを守り、右へ攻める）</summary>
         public const int Red = 0;

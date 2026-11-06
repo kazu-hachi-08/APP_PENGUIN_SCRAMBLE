@@ -8,21 +8,25 @@ using UnityEngine.UI;
 namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
-    /// サッカーのシーンの入口。スタジアムはまだ作っていないので、ミニゲーム画面から来たときは「準備中」の板と「もどる」だけ。
-    /// エディタの Tools/PenmonScramble/Soccer から開いたときは試しのピッチ（SoccerTestPitch）を遊ぶ（記録には書かない）
+    /// サッカーのシーンの入口。ミニゲーム画面から来たときは、選んだスタジアムでひとりで1試合（SoccerMatchPlay）。
+    /// まだ作っていないスタジアムなら「準備中」の板と「もどる」だけ。
+    /// エディタの Tools/PenmonScramble/Soccer から開いたときは、スタジアム1の試合（試しのピッチ）か PK戦の確認を遊ぶ（記録には書かない）
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に Esc を見る
     [DefaultExecutionOrder(50)]
     public class SoccerSceneRunner : MonoBehaviour
     {
+        // 開発用の遊び方で使うスタジアム（海岸）
+        private const int DevStadium = 1;
+
         [SerializeField] private GameObject _placeholder;
         [SerializeField] private Text _courseText;
         [SerializeField] private Button _backButton;
-        [SerializeField] private SoccerTestPitch _testPitch;
+        [SerializeField] private SoccerMatchPlay _play;
 
         private bool _leaving;
 
-        /// <summary>ミニゲーム画面のスタジアム選びに、サッカーの中身（今はどれも準備中）を出せるようにする</summary>
+        /// <summary>ミニゲーム画面のスタジアム選びに、サッカーの中身（CPU の強さ・仕掛け・報酬）を出せるようにする</summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RegisterGuide()
         {
@@ -37,10 +41,17 @@ namespace PenmonScramble.Soccer.Game
         private void Start()
         {
             MiniGameLaunch.EnsureSelected(MiniGameTable.SoccerId);
-            if (SoccerDevRequest.TryTakeTestPitch())
+            var dev = SoccerDevRequest.Take();
+            if (dev != SoccerDevMode.None)
             {
-                _placeholder.SetActive(false);
-                _testPitch.Begin();
+                StartMatch(SoccerStadiumTable.Get(DevStadium), record: false, shootoutOnly: dev == SoccerDevMode.Shootout);
+                return;
+            }
+
+            var stadium = SoccerStadiumTable.Get(MiniGameLaunch.CourseNo);
+            if (stadium != null)
+            {
+                StartMatch(stadium, record: true, shootoutOnly: false);
                 return;
             }
 
@@ -49,10 +60,16 @@ namespace PenmonScramble.Soccer.Game
             _courseText.text = row != null ? $"{game.CourseWord} {row.No}  {row.Name}" : string.Empty;
         }
 
-        /// <summary>試しのピッチにはまだメニューが無いので、Esc でそのまま戻る（試合中のメニューはフェーズ 4）</summary>
+        private void StartMatch(SoccerStadiumDef stadium, bool record, bool shootoutOnly)
+        {
+            _placeholder.SetActive(false);
+            _play.Begin(stadium, record, shootoutOnly);
+        }
+
         private void Update()
         {
-            if (InputManager.HasInstance && InputManager.Instance.IsPauseDown)
+            // 試合中の Esc はメニュー（StageMenu）が受ける
+            if (_placeholder.activeSelf && InputManager.HasInstance && InputManager.Instance.IsPauseDown)
             {
                 Leave();
             }

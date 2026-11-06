@@ -9,6 +9,12 @@ namespace PenmonScramble.Soccer.Core
     {
         private void StepFreeBall(List<SoccerEvent> events)
         {
+            if (Special != null)
+            {
+                StepSpecialBall(events);
+                return;
+            }
+
             if (Ball.IsAirborne)
             {
                 Fly(events);
@@ -107,6 +113,7 @@ namespace PenmonScramble.Soccer.Core
                 var bounce = isNet ? SoccerBalance.NetBounce : SoccerBalance.WallBounce;
                 velocity += normal * (into * (1f + bounce));
                 _trajectoryChanged = true;
+                EndSpecial();
                 if (into >= SoccerBalance.HitEventMinSpeed)
                 {
                     var kind = isNet ? SoccerEventKind.NetHit : SoccerEventKind.WallHit;
@@ -147,6 +154,7 @@ namespace PenmonScramble.Soccer.Core
             var scorer = SoccerRules.Opponent(goal.Team);
             _score[scorer]++;
             IsGoalScored = true;
+            EndSpecial();
             if (Ball.IsHeldByPlayer)
             {
                 var holder = _players[Ball.Holder];

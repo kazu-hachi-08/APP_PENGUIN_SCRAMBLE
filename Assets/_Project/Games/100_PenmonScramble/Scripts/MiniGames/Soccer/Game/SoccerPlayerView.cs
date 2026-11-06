@@ -7,7 +7,7 @@ namespace PenmonScramble.Soccer.Game
     /// <summary>
     /// フィールドの子1体: 本編の3Dのペンモン（PenguinMotion で歩く・ためる・蹴る・すべる・転ぶ・喜ぶ・悔しがる）と、
     /// 足元の輪（動かしている子は席の色の太い輪、AI の子はチームの色の細い輪）とためゲージの弧。
-    /// CPU のチームの子は本編の雑魚と同じく暗い色にする
+    /// CPU のチームの子は本編の雑魚と同じく暗い色にする。氷の必殺シュートで凍っている間は、水色に染めて止める
     /// </summary>
     public sealed class SoccerPlayerView
     {
@@ -18,6 +18,8 @@ namespace PenmonScramble.Soccer.Game
         private const float ControlledRingSize = 1.15f;
         private const float ControlledRingThickness = 1.1f;
         private const float RingLift = 0.02f;
+        private const float FrozenTintAmount = 0.6f;
+        private static readonly Color FrozenColor = new Color(0.65f, 0.9f, 1f);
 
         private readonly Transform _root;
         private readonly PenguinMotion _motion;
@@ -26,7 +28,10 @@ namespace PenmonScramble.Soccer.Game
         private readonly SoccerChargeArc _charge;
         private readonly ToonMaterials _materials;
         private readonly int _team;
+        private readonly PenguinModel _model;
+        private readonly PenguinTint _baseTint;
         private bool _controlled;
+        private bool _frozen;
 
         public SoccerPlayerView(SoccerPlayer player, int speciesNo, bool wild, ToonMaterials materials, Transform parent)
         {
@@ -41,12 +46,11 @@ namespace PenmonScramble.Soccer.Game
             body.localScale = Vector3.one * PenguinModelBuilder.ScaleForRadius(SoccerBalance.PlayerRadius);
             var look = PenguinLooks.Has(speciesNo) ? PenguinLooks.Get(speciesNo) : PenguinLooks.Get(1);
             var model = PenguinModelBuilder.Build(look, materials, body);
+            _model = model;
             // 太陽の影は切っているので、足元の丸い影にする（本編のステージと同じ）
             model.SetRealShadows(false);
-            if (wild)
-            {
-                model.SetTint(PenguinTint.Dark(UnitView.EnemyDarkness));
-            }
+            _baseTint = wild ? PenguinTint.Dark(UnitView.EnemyDarkness) : PenguinTint.None;
+            model.SetTint(_baseTint);
 
             _motion = model.gameObject.AddComponent<PenguinMotion>();
             _motion.SnapFacing(SoccerSpace.Direction(player.Facing));
@@ -76,17 +80,29 @@ namespace PenmonScramble.Soccer.Game
         public void Sync(SoccerPlayer player, Vector3 position, float deltaTime)
         {
             _root.localPosition = position;
+            SetFrozen(player.IsFrozen);
             _motion.Velocity = SoccerSpace.Direction(player.Velocity);
             _motion.Facing = SoccerSpace.Direction(player.Facing);
             var charge = player.IsCharging ? player.Charge01 : 0f;
             _motion.KickCharge = charge;
             _motion.Sliding = player.State == SoccerPlayerState.Slide;
-            // 奪われて転ぶ・外して起き上がるところは、本編のダウンの姿（腹ばい）
-            _motion.Down = player.IsDown;
+            // 奪われて転ぶ・外して起き上がるところは、本編のダウンの姿（腹ばい）。凍っている間は立ったまま止まる
+            _motion.Down = player.IsDown && !player.IsFrozen;
             _charge.Show(_controlled ? charge : 0f, SoccerSpace.Direction(player.Facing), deltaTime);
         }
 
         public int Team => _team;
+
+        private void SetFrozen(bool frozen)
+        {
+            if (frozen == _frozen)
+            {
+                return;
+            }
+
+            _frozen = frozen;
+            _model.SetTint(frozen ? _baseTint.Toward(FrozenColor, FrozenTintAmount) : _baseTint);
+        }
 
         public void Kick(float strength) => _motion.PlayKick(strength);
 

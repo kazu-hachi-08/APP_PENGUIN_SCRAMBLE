@@ -5,7 +5,8 @@ namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
     /// サッカーのカメラ: 横長のピッチを斜め上からほぼ全部見せ、ボールの方へ少しだけ寄る（どこにいても全体が分かり、ボールの側が少し大きく見える）。
-    /// ゴールの瞬間はそのゴールへぐっと寄り、キックオフで全体へ戻る
+    /// ゴールの瞬間はそのゴールへぐっと寄り、キックオフで全体へ戻る。
+    /// PK戦では、蹴る子の後ろの少し上からゴールを見る（スティックの左右・上が、そのまま狙う左右・高さに見えるように）
     /// </summary>
     public class SoccerCamera : MonoBehaviour
     {
@@ -32,6 +33,13 @@ namespace PenmonScramble.Soccer.Game
         [SerializeField] private float _goalZoom = 0.32f;
         [SerializeField] private float _goalSmooth = 0.3f;
 
+        [Header("PK戦")]
+        [Tooltip("ボールを置く所から、どれだけ後ろ・上に置くか")]
+        [SerializeField] private float _penaltyBack = 6.5f;
+        [SerializeField] private float _penaltyHeight = 3.2f;
+        [Tooltip("見る所の高さ（ゴールの口の真ん中より少し下）")]
+        [SerializeField] private float _penaltyLookHeight = 0.6f;
+
         private Vector3 _center;
         private float _distance;
         private Vector2 _halfSize = Vector2.one;
@@ -40,6 +48,7 @@ namespace PenmonScramble.Soccer.Game
         private float _zoom;
         private float _zoomVelocity;
         private Vector3? _goal;
+        private bool _penalty;
 
         // 収まる距離を探す範囲と、探す回数（半分ずつ狭める）
         private const float FitNear = 1f;
@@ -50,6 +59,7 @@ namespace PenmonScramble.Soccer.Game
         /// <summary>ピッチ全体（柵とゴールの網まで）が収まる位置へすぐ置く</summary>
         public void ShowPitch(SoccerPitchDef pitch)
         {
+            _penalty = false;
             _halfSize = new Vector2(pitch.HalfLength, pitch.HalfWidth);
             _center = Vector3.zero;
             _distance = FitDistance(Corners(pitch));
@@ -61,12 +71,29 @@ namespace PenmonScramble.Soccer.Game
             Apply();
         }
 
+        /// <summary>PK戦の1本: ボールの後ろの少し上から、狙うゴールを見る（ShowPitch で全体へ戻る）</summary>
+        public void ShowPenalty(Vector3 spot, Vector3 goal)
+        {
+            _penalty = true;
+            var toGoal = goal - spot;
+            toGoal.y = 0f;
+            var forward = toGoal.normalized;
+            var position = spot - forward * _penaltyBack + Vector3.up * _penaltyHeight;
+            var look = goal + Vector3.up * _penaltyLookHeight;
+            _camera.transform.SetPositionAndRotation(position, Quaternion.LookRotation(look - position));
+        }
+
         /// <summary>ゴールに寄る（null で戻る）</summary>
         public void FocusGoal(Vector3? goal) => _goal = goal;
 
         /// <summary>毎フレーム、ボールの位置を渡す</summary>
         public void Follow(Vector3 ball, float deltaTime)
         {
+            if (_penalty)
+            {
+                return;
+            }
+
             ball.y = 0f;
             Vector3 look;
             float zoom;

@@ -7,13 +7,15 @@ namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
     /// スマホのボタンの中身: 動かしている子がボールを持っているかで、技1は シュート ⇔ スライディング、技2は パス ⇔ ダッシュ の絵に替わる。
-    /// 持っていないときは、スライディング・ダッシュの待ちを扇で出す。交代のボタンには、押したら替わる子の顔を出す（替われる子がいなければ灰色）
+    /// 持っていないときは、スライディング・ダッシュの待ちを扇で出す。交代のボタンには、押したら替わる子の顔を出す（替われる子がいなければ灰色）。
+    /// 必殺のボタンは、縁のリングにチームのゲージを出し、満タンで光る
     /// </summary>
     public class SoccerTouchView : MonoBehaviour
     {
         [SerializeField] private TouchSkillButton _shoot;
         [SerializeField] private TouchSkillButton _pass;
         [SerializeField] private TouchSkillButton _switch;
+        [SerializeField] private TouchSpecialButton _special;
         [SerializeField] private Sprite _shootIcon;
         [SerializeField] private Sprite _slideIcon;
         [SerializeField] private Sprite _passIcon;
@@ -37,6 +39,7 @@ namespace PenmonScramble.Soccer.Game
             _shoot.SetCooldown(holding ? 0f : player.SlideCooldown / SoccerBalance.SlideCooldownSeconds);
             _pass.SetCooldown(holding ? 0f : player.DashCooldown / SoccerBalance.DashCooldownSeconds);
             ShowSwitchFace(control.NextSwitchTarget(world), species);
+            _special.SetGauge(world.Gauge(control.Team));
         }
 
         private void ShowSwitchFace(int target, IReadOnlyList<int> species)

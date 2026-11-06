@@ -13,6 +13,8 @@ namespace PenmonScramble.Soccer.Core
         Down,
         /// <summary>スライディングを外して起き上がるところ（動けない・持てない）</summary>
         Recover,
+        /// <summary>氷の必殺シュートに当たって凍っている（動けない・持てない）</summary>
+        Frozen,
     }
 
     /// <summary>フィールドの子1体（ペンモン）。書き換えるのは SoccerWorld だけ</summary>
@@ -29,6 +31,14 @@ namespace PenmonScramble.Soccer.Core
         public int Index { get; }
 
         public int Team { get; }
+
+        /// <summary>属性と★（必殺シュートの種類と強さだけに効く。歩く速さは種類で変えない）</summary>
+        public Element Element { get; internal set; } = Element.Ice;
+
+        public int Stars { get; internal set; } = 1;
+
+        /// <summary>凍っている残りの秒（Frozen の間だけ意味がある）</summary>
+        public float FrozenSeconds { get; internal set; }
 
         public Vec2 Position { get; internal set; }
 
@@ -61,8 +71,10 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>歩ける・ボールを持てる・技を出せる</summary>
         public bool CanAct => State == SoccerPlayerState.Normal;
 
-        /// <summary>転んでいる・起き上がるところ（ボールを持てない）</summary>
-        public bool IsDown => State == SoccerPlayerState.Down || State == SoccerPlayerState.Recover;
+        /// <summary>転んでいる・起き上がるところ・凍っている（ボールを持てない・パスを受けない）</summary>
+        public bool IsDown => State == SoccerPlayerState.Down || State == SoccerPlayerState.Recover || State == SoccerPlayerState.Frozen;
+
+        public bool IsFrozen => State == SoccerPlayerState.Frozen;
 
         public bool IsDashing => DashSeconds > 0f;
 
@@ -70,6 +82,8 @@ namespace PenmonScramble.Soccer.Core
         internal bool WasShooting { get; set; }
 
         internal bool WasPassing { get; set; }
+
+        internal bool WasSpecial { get; set; }
 
         internal void ResetCharge()
         {
@@ -91,6 +105,7 @@ namespace PenmonScramble.Soccer.Core
             SlideCooldown = 0f;
             DashSeconds = 0f;
             DashCooldown = 0f;
+            FrozenSeconds = 0f;
         }
     }
 }

@@ -51,6 +51,9 @@ namespace PenmonScramble.Soccer.Game
             }
         }
 
+        /// <summary>試合が終わったとき: 勝った側の子は喜び、負けた側の子とキーパーは悔しがる</summary>
+        public void ShowWinner(int team) => React(team);
+
         /// <summary>scorer の子は喜び、相手の子とキーパーは悔しがる。−1 なら全員元に戻す</summary>
         private void React(int scorer)
         {

@@ -21,7 +21,8 @@ namespace PenmonScramble.MiniGames.Game
     public class MiniGameHubScreen : MonoBehaviour
     {
         private const string HubHeading = "ミニゲーム";
-        private const string NoRecordLabel = "まだ回っていません";
+        // ゴルフ（回る）にもサッカー（試合）にも合う言い方にする
+        private const string NoRecordLabel = "まだ記録がありません";
         private static readonly Color LockedColor = new Color(1f, 0.70f, 0.45f);
         private static readonly Color InfoColor = new Color(1f, 0.92f, 0.6f);
 

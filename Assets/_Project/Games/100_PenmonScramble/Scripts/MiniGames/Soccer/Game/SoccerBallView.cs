@@ -6,7 +6,8 @@ namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
     /// おもちゃのサッカーボール: 白い球に、正二十面体の頂点の向きの12枚の黒い五角形（本物のボールの五角形と同じ並び）。
-    /// 進んだ分だけ転がって回り、足元に丸い影（浮くと小さく薄く）
+    /// 進んだ分だけ転がって回り、足元に丸い影（浮くと小さく薄く）。
+    /// 必殺シュートの間は、属性の色の玉を通った所に残して尾を引き（彗星のように）、雷の消えている間は球も影も隠す
     /// </summary>
     public sealed class SoccerBallView
     {
@@ -23,17 +24,29 @@ namespace PenmonScramble.Soccer.Game
         // これより大きく動いたら置き直し（キックオフ）とみなして回さない
         private const float TeleportDistance = 1.5f;
 
+        // 必殺シュートの尾: 玉の数・いちばん手前の玉の大きさ（直径に対して）・後ろほど小さくする割合
+        private const int TrailCount = 8;
+        private const float TrailHeadScale = 1.1f;
+        private const float TrailShrink = 0.82f;
+        private const float TrailGloss = 0.6f;
+
         private static readonly Color PatchColor = new Color(0.14f, 0.15f, 0.2f);
         private static Mesh _pentagon;
 
+        private readonly ToonMaterials _materials;
         private readonly Transform _root;
         private readonly Transform _spin;
         private readonly Transform _shadow;
+        private readonly MeshRenderer[] _trail = new MeshRenderer[TrailCount];
+        private readonly Vector3[] _trailPoints = new Vector3[TrailCount];
+        private Color? _trailColor;
+        private int _trailFilled;
         private Vector3 _last;
         private bool _placed;
 
         public SoccerBallView(ToonMaterials materials, Transform parent)
         {
+            _materials = materials;
             _root = new GameObject("Ball").transform;
             _root.SetParent(parent, false);
             _spin = new GameObject("Spin").transform;
@@ -52,17 +65,81 @@ namespace PenmonScramble.Soccer.Game
             var shadow = Add("Blob", ToyMeshes.FloorQuad, _shadow, Vector3.zero, Quaternion.identity, new Vector3(diameter * ShadowSize, 1f, diameter * ShadowSize), materials.BlobShadow);
             shadow.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             shadow.receiveShadows = false;
+
+            var size = diameter * TrailHeadScale;
+            for (var i = 0; i < TrailCount; i++)
+            {
+                _trail[i] = Add($"Trail{i}", ToyMeshes.Sphere, parent, Vector3.zero, Quaternion.identity, Vector3.one * size, materials.Get(Color.white, TrailGloss));
+                _trail[i].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                _trail[i].gameObject.SetActive(false);
+                size *= TrailShrink;
+            }
+        }
+
+        /// <summary>必殺シュートの尾の色（null で尾を消す）と、球を隠すか（雷の消えている間）。毎フレーム Sync の前に呼ぶ</summary>
+        public void SetSpecial(Color? trail, bool hidden)
+        {
+            _root.gameObject.SetActive(!hidden);
+            _shadow.gameObject.SetActive(!hidden);
+            if (trail == _trailColor)
+            {
+                return;
+            }
+
+            _trailColor = trail;
+            _trailFilled = 0;
+            foreach (var renderer in _trail)
+            {
+                renderer.gameObject.SetActive(false);
+                if (trail.HasValue)
+                {
+                    renderer.sharedMaterial = _materials.Get(trail.Value, TrailGloss);
+                }
+            }
         }
 
         /// <summary>center は補間したボールの中心（高さを含む）</summary>
         public void Sync(Vector3 center)
         {
             Roll(center);
+            UpdateTrail(center);
             _root.localPosition = center;
             var height = center.y - SoccerBalance.BallRadius;
             var scale = Mathf.Lerp(1f, ShadowMinScale, Mathf.Clamp01(height / ShadowFadeHeight));
             _shadow.localPosition = new Vector3(center.x, ShadowLift, center.z);
             _shadow.localScale = Vector3.one * scale;
+        }
+
+        /// <summary>尾の玉を1つずつ後ろへ送り、先頭に今の位置を入れる（隠れている間は残さず、現れた所から尾を引く）</summary>
+        private void UpdateTrail(Vector3 center)
+        {
+            if (!_trailColor.HasValue || !_root.gameObject.activeSelf)
+            {
+                _trailFilled = 0;
+                foreach (var renderer in _trail)
+                {
+                    renderer.gameObject.SetActive(false);
+                }
+
+                return;
+            }
+
+            for (var i = TrailCount - 1; i > 0; i--)
+            {
+                _trailPoints[i] = _trailPoints[i - 1];
+            }
+
+            _trailPoints[0] = center;
+            _trailFilled = Mathf.Min(_trailFilled + 1, TrailCount);
+            for (var i = 0; i < TrailCount; i++)
+            {
+                var shown = i > 0 && i < _trailFilled;
+                _trail[i].gameObject.SetActive(shown);
+                if (shown)
+                {
+                    _trail[i].transform.localPosition = _trailPoints[i];
+                }
+            }
         }
 
         /// <summary>地面を進んだ分だけ、進む向きと直角の軸で回す（滑らず転がって見えるように）</summary>

@@ -101,7 +101,10 @@ namespace PenmonScramble.Soccer.Core
 
             var capability = SoccerKeeperSave.DiveCapability(prediction.Seconds);
             var need = SoccerKeeperSave.Need(keeper.Position.Y, prediction.Y);
-            var chance = SoccerKeeperSave.Chance(capability, need, prediction.Height, Pitch.GoalOf(keeper.Team).BarHeight);
+            var chance = Special != null
+                ? SoccerBalance.KeeperSpecialSave(Special.Stars)
+                : SoccerKeeperSave.Chance(capability, need, prediction.Height, Pitch.GoalOf(keeper.Team).BarHeight);
+
             keeper.Decided = true;
             keeper.WillSave = _random.NextDouble() < chance;
             keeper.DiveTargetY = ClampToLine(keeper, keeper.WillSave ? prediction.Y : MissTarget(keeper, prediction.Y));
@@ -171,13 +174,18 @@ namespace PenmonScramble.Soccer.Core
             return Math.Clamp(y, -limit, limit);
         }
 
-        /// <summary>離れたボールがこのキーパーの守る口へ向かっていれば、その見込み</summary>
+        /// <summary>離れたボールがこのキーパーの守る口へ向かっていれば、その見込み（必殺シュートは飛び方を先へ進めて読む）</summary>
         private bool Predict(SoccerKeeper keeper, out SoccerShotPrediction prediction)
         {
             prediction = default;
             if (Ball.IsHeld || IsGoalScored)
             {
                 return false;
+            }
+
+            if (Special != null)
+            {
+                return PredictSpecial(keeper, out prediction);
             }
 
             var decel = SoccerBalance.RollDecel * SoccerBalance.RollDecelScale(Pitch.GroundAt(Ball.Position));
@@ -239,6 +247,7 @@ namespace PenmonScramble.Soccer.Core
             Ball.Velocity = Vec2.Zero;
             Ball.VerticalSpeed = 0f;
             Ball.IdleSeconds = 0f;
+            EndSpecial();
             keeper.Speed = 0f;
             keeper.Enter(SoccerKeeperState.Hold);
             HoldBall(keeper);
@@ -259,6 +268,7 @@ namespace PenmonScramble.Soccer.Core
 
             Ball.Velocity += normal * (into * (1f + SoccerBalance.KeeperParryBounce));
             _trajectoryChanged = true;
+            EndSpecial();
             events.Add(new SoccerEvent(SoccerEventKind.KeeperParry, SoccerBall.NoPlayer, keeper.Team, Ball.Position, into));
         }
 

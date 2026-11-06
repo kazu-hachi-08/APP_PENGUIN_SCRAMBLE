@@ -71,6 +71,27 @@ namespace PenmonScramble.Soccer.Game
                 case SoccerEventKind.Dash:
                     SoccerSounds.Play(SoccerSound.Dash);
                     break;
+                case SoccerEventKind.SpecialKick:
+                    SoccerSounds.Play(SoccerSound.SpecialShot);
+                    break;
+                case SoccerEventKind.Freeze:
+                    SoccerSounds.Play(SoccerSound.Freeze);
+                    break;
+                case SoccerEventKind.Countdown:
+                    SoccerSounds.Play(SoccerSound.Countdown);
+                    break;
+                case SoccerEventKind.TimeUp:
+                    SoccerSounds.Play(SoccerSound.TimeUp);
+                    break;
+                case SoccerEventKind.ShootoutStart:
+                    SoccerSounds.Play(SoccerSound.Whistle);
+                    break;
+                case SoccerEventKind.PenaltyGoal:
+                    SoccerSounds.Play(SoccerSound.Goal);
+                    break;
+                case SoccerEventKind.PenaltyMiss:
+                    SoccerSounds.Play(SoccerSound.Miss);
+                    break;
             }
         }
     }

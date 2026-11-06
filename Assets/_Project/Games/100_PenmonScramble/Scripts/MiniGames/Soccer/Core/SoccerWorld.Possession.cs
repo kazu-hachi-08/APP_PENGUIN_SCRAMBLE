@@ -76,13 +76,14 @@ namespace PenmonScramble.Soccer.Core
             Ball.LockedPlayer = player.Index;
             Ball.LockSeconds = SoccerBalance.RepickLockSeconds;
             Ball.IdleSeconds = 0f;
+            _lastPasser = SoccerBall.NoPlayer;
             _trajectoryChanged = true;
         }
 
         /// <summary>
         /// 離れたボールに一番近い子が、届く所にいれば持つ。この歩でボールが通った線（from → 今）で測る
         /// （速いパスが歩と歩の間で子をすり抜けないように）。頭より高い球・蹴った直後の本人・転んでいる子・点が入った後は持てない。
-        /// すべっている子が離れたボールを拾ったら、すべりは成功で終わる
+        /// すべっている子が離れたボールを拾ったら、すべりは成功で終わる。飛んでいる必殺シュートは誰も持てない
         /// </summary>
         private void TryPickup(Vec2 from, List<SoccerEvent> events)
         {
@@ -95,7 +96,7 @@ namespace PenmonScramble.Soccer.Core
                 }
             }
 
-            if (Ball.IsHeld || IsGoalScored || Ball.Height > SoccerBalance.PickupMaxHeight)
+            if (Ball.IsHeld || IsGoalScored || Special != null || Ball.Height > SoccerBalance.PickupMaxHeight)
             {
                 return;
             }
@@ -116,6 +117,7 @@ namespace PenmonScramble.Soccer.Core
             Ball.Height = 0f;
             Ball.VerticalSpeed = 0f;
             Ball.IdleSeconds = 0f;
+            GaugeOnPossess(picker);
             events.Add(new SoccerEvent(SoccerEventKind.Possess, picker.Index, picker.Team, Ball.Position));
         }
 

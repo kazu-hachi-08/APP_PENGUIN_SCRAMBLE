@@ -10,9 +10,9 @@ using B = PenmonScramble.Editor.PenmonScrambleSceneBuilder;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// サッカーの HUD（仮。SoccerHud）: 上のまん中に赤・青の丸の点と、その間の時間。まん中に知らせ、PC では下に操作の説明、
-    /// スマホでは仮想スティックと技1・技2・交代のボタン（PenmonScrambleSceneBuilder.SoccerTouch.cs）。
-    /// 試合の流れ・必殺のゲージ・PK戦の表はフェーズ 4 で足す
+    /// サッカーの HUD（SoccerHud）: 上のまん中に赤・青の丸の点と、その間の残り時間、点の下にチームの必殺ゲージ。
+    /// まん中に知らせ、PC では下に操作の説明と必殺の一言、スマホでは仮想スティックと技1・技2・必殺・交代のボタン
+    /// （PenmonScrambleSceneBuilder.SoccerTouch.cs）。右上にメニューの「‖」。PK戦の表とためゲージは SoccerSceneBuilder.HudShootout.cs
     /// </summary>
     public static partial class SoccerSceneBuilder
     {
@@ -27,27 +27,37 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 TimePosition = new Vector2(0f, -82f);
         private static readonly Vector2 TimePlateSize = new Vector2(170f, 70f);
         private const int TimeFontSize = 44;
+        private static readonly Vector2 GaugeOffset = new Vector2(150f, -168f);
+        private static readonly Vector2 GaugeSize = new Vector2(190f, 20f);
+        private const float GaugeBackPadding = 6f;
         private static readonly Vector2 BannerPosition = new Vector2(0f, 160f);
         private static readonly Vector2 BannerSize = new Vector2(1500f, 220f);
         private const int BannerFontSize = 150;
         private static readonly Vector2 HelpPosition = new Vector2(0f, 34f);
-        private static readonly Vector2 HelpSize = new Vector2(1700f, 48f);
-        private const int HelpFontSize = 26;
-        private const string HelpText = "移動: WASD / 左スティック　シュート（ためて離す）/ スライディング: J / ×　パス / ダッシュ: K / ○　交代: Space / L1　もどる: Esc";
+        private static readonly Vector2 HelpSize = new Vector2(1800f, 48f);
+        private const int HelpFontSize = 24;
+        private static readonly Vector2 SpecialHintPosition = new Vector2(0f, 96f);
+        private static readonly Vector2 SpecialHintSize = new Vector2(900f, 60f);
+        private const int SpecialHintFontSize = 40;
+        private static readonly Color SpecialHintColor = new Color(1f, 0.85f, 0.25f);
+        private const string HelpText = "移動 WASD / 左スティック　シュート（ためて離す）/ スライディング J / ×　パス / ダッシュ K / ○　必殺 L / △　交代 Space / L1　メニュー Esc";
+        private const string SpecialHintText = "L / △ で必殺シュート！";
 
         private readonly struct SoccerHudParts
         {
             public readonly SoccerHud Hud;
             public readonly PenmonScrambleSceneBuilder.SoccerTouchParts Touch;
+            public readonly Button Menu;
 
-            public SoccerHudParts(SoccerHud hud, PenmonScrambleSceneBuilder.SoccerTouchParts touch)
+            public SoccerHudParts(SoccerHud hud, PenmonScrambleSceneBuilder.SoccerTouchParts touch, Button menu)
             {
                 Hud = hud;
                 Touch = touch;
+                Menu = menu;
             }
         }
 
-        /// <summary>試しのピッチを始めるまで隠しておく（ミニゲーム画面から来たときは準備中の板だけ）</summary>
+        /// <summary>試合を始めるまで隠しておく（ミニゲーム画面から来て、まだ作っていないスタジアムのときは準備中の板だけ）</summary>
         private static SoccerHudParts CreateHud(Transform canvas)
         {
             var root = UIDialogBuilder.CreateUIObject("SoccerHud", canvas);
@@ -60,17 +70,27 @@ namespace PenmonScramble.Editor
             so.FindProperty("_redScore").objectReferenceValue = CreateScore(safe.transform, SoccerRules.Red, -1f);
             so.FindProperty("_blueScore").objectReferenceValue = CreateScore(safe.transform, SoccerRules.Blue, 1f);
             so.FindProperty("_time").objectReferenceValue = CreateTime(safe.transform);
+            CreateGauges(safe.transform, so);
+            CreateShootoutBoard(safe.transform, so);
+            CreatePenaltyPanel(safe.transform, so);
             so.FindProperty("_banner").objectReferenceValue = CreateBanner(safe.transform);
             var help = B.CreateLabel(safe.transform, "Help", HelpText, HelpFontSize, Vector2.zero, HelpSize);
             Place(help.rectTransform, BottomCenter, HelpPosition, HelpSize);
             so.FindProperty("_help").objectReferenceValue = help.gameObject;
+            var hint = B.CreateLabel(safe.transform, "SpecialHint", SpecialHintText, SpecialHintFontSize, Vector2.zero, SpecialHintSize);
+            Place(hint.rectTransform, BottomCenter, SpecialHintPosition, SpecialHintSize);
+            hint.fontStyle = FontStyle.Bold;
+            hint.color = SpecialHintColor;
+            so.FindProperty("_specialHint").objectReferenceValue = hint;
             var touch = B.CreateSoccerTouchControls(root.transform);
             so.FindProperty("_touch").objectReferenceValue = touch.Visibility;
             so.FindProperty("_touchView").objectReferenceValue = touch.View;
+            // 右上の「‖」は本編の HUD と同じ部品（メニューは StageMenu が出し入れする）
+            var menu = B.CreateMenuButton(root.transform);
             so.ApplyModifiedProperties();
 
             root.SetActive(false);
-            return new SoccerHudParts(hud, touch);
+            return new SoccerHudParts(hud, touch, menu);
         }
 
         /// <summary>チームの色の丸（白い縁）に、点の数字。side は真ん中から左（−1）か右（+1）か</summary>
@@ -88,9 +108,31 @@ namespace PenmonScramble.Editor
         private static Text CreateTime(Transform safe)
         {
             var plate = B.CreateHudImage(safe, "TimePlate", null, B.HudBackColor, TopCenter, TimePosition, TimePlateSize);
-            var text = B.CreateLabel(plate.transform, "Time", "0:00", TimeFontSize, Vector2.zero, TimePlateSize);
+            var text = B.CreateLabel(plate.transform, "Time", "3:00", TimeFontSize, Vector2.zero, TimePlateSize);
             text.fontStyle = FontStyle.Bold;
             return text;
+        }
+
+        /// <summary>点の丸の下に、暗い板の上のチームの色の棒（たまった分だけ左から伸びる）。PK戦の間は表と入れ替えて隠す</summary>
+        private static void CreateGauges(Transform safe, SerializedObject so)
+        {
+            var group = B.CreateStretchGroup(safe, "Gauges");
+            var gauges = new Object[SoccerRules.TeamCount];
+            for (var team = 0; team < SoccerRules.TeamCount; team++)
+            {
+                var side = team == SoccerRules.Red ? -1f : 1f;
+                var position = new Vector2(GaugeOffset.x * side, GaugeOffset.y);
+                B.CreateHudImage(group.transform, "GaugeBack", null, B.HudBackColor, TopCenter, position, GaugeSize + Vector2.one * GaugeBackPadding);
+                var fill = B.CreateHudImage(group.transform, "Gauge", null, SoccerColors.Team(team), TopCenter, position, GaugeSize);
+                fill.type = Image.Type.Filled;
+                fill.fillMethod = Image.FillMethod.Horizontal;
+                fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+                fill.fillAmount = 0f;
+                gauges[team] = fill;
+            }
+
+            B.SetObjectArray(so.FindProperty("_gauges"), gauges);
+            so.FindProperty("_gaugeGroup").objectReferenceValue = group;
         }
 
         private static Text CreateBanner(Transform safe)

@@ -69,6 +69,9 @@ namespace PenmonScramble.Soccer.Game
         /// <summary>前の歩と今の歩の写しの間（t）を描く</summary>
         public void Draw(SoccerWorld world, SoccerFrame previous, SoccerFrame current, float t, float deltaTime)
         {
+            var special = world.Special;
+            Color? trail = special != null ? PenguinPalette.ElementColor(special.Element) : (Color?)null;
+            _ball.SetSpecial(trail, special != null && special.IsHidden);
             _ball.Sync(Vector3.Lerp(previous.Ball, current.Ball, t));
             for (var i = 0; i < _players.Count; i++)
             {

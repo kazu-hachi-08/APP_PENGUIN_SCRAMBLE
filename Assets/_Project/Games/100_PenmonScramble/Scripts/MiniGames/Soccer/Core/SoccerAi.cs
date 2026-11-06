@@ -22,6 +22,9 @@ namespace PenmonScramble.Soccer.Core
         private readonly SoccerAiSight _sight = new SoccerAiSight();
         private readonly SoccerBallSight[] _seen = new SoccerBallSight[SoccerRules.TeamCount];
 
+        // 必殺シュートを使うチーム（人のいるチームでは、AI の味方が人のゲージを使わないように使わない）
+        private readonly bool[] _usesSpecial = new bool[SoccerRules.TeamCount];
+
         public SoccerAi(SoccerWorld world, int seed)
         {
             _random = new Random(seed);
@@ -39,6 +42,35 @@ namespace PenmonScramble.Soccer.Core
         }
 
         public void SetLevel(int team, SoccerAiLevel level) => _levels[team] = level;
+
+        /// <summary>そのチームの AI が、ゲージが満タンのときに必殺シュートを使うか（CPU のチームだけ使う）</summary>
+        public void SetUsesSpecial(int team, bool uses) => _usesSpecial[team] = uses;
+
+        /// <summary>
+        /// 試合の段に合わせて考える: 試合中は Think、PK戦は ThinkShootout。それ以外（キックオフの合図・ゴールの間など）は何も押さない
+        /// </summary>
+        public void ThinkMatch(SoccerMatch match, SoccerInput[] inputs, Func<int, bool> isHuman)
+        {
+            switch (match.Phase)
+            {
+                case SoccerMatchPhase.Playing:
+                    Think(match.World, inputs, isHuman);
+                    break;
+                case SoccerMatchPhase.Shootout:
+                    ThinkShootout(match.Shootout, inputs, isHuman);
+                    break;
+                default:
+                    for (var i = 0; i < inputs.Length; i++)
+                    {
+                        if (!isHuman(i))
+                        {
+                            inputs[i] = SoccerInput.None;
+                        }
+                    }
+
+                    break;
+            }
+        }
 
         public SoccerAiLevel LevelOf(int team) => _levels[team];
 

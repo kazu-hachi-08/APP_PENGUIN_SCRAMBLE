@@ -1,44 +1,47 @@
 using System;
+using System.Collections.Generic;
 using PenmonScramble.Common.Input;
 using PenmonScramble.Game;
-using PenmonScramble.Golf.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PenmonScramble.Golf.Game
+namespace PenmonScramble.MiniGames.Game
 {
-    /// <summary>ゴルフの結果に出すもの</summary>
-    public readonly struct GolfResultInfo
+    /// <summary>
+    /// 結果の欄に出す中身（ミニゲームごとに作る）。見出しの点・ベストの一言・コインの内訳（名前とコインの行）・合計の一言
+    /// </summary>
+    public sealed class MiniGameResultView
     {
-        public GolfResultInfo(int strokes, int par, GolfRewardBreakdown reward, bool newBest, bool firstPlay, int previousBest, bool recorded)
+        private readonly List<(string Label, int Coins)> _rewards = new List<(string, int)>();
+
+        /// <summary>大きく出す結果（「27 打（−3）」「勝ち！ 3 − 1」など）</summary>
+        public string Score { get; set; } = string.Empty;
+
+        /// <summary>ベストの一言（「ベスト更新！」など）。記録しないときは空</summary>
+        public string Best { get; set; } = string.Empty;
+
+        /// <summary>ベストの一言を目立つ色にする（ベスト更新・初めての記録）</summary>
+        public bool BestHighlighted { get; set; }
+
+        /// <summary>合計の一言（「+120 コイン」・記録しないときの断り）</summary>
+        public string CoinTotal { get; set; } = string.Empty;
+
+        public IReadOnlyList<(string Label, int Coins)> Rewards => _rewards;
+
+        /// <summary>内訳の1行を足す（0 コインの行も出したいときだけ足す）</summary>
+        public MiniGameResultView AddReward(string label, int coins)
         {
-            Strokes = strokes;
-            Par = par;
-            Reward = reward;
-            NewBest = newBest;
-            FirstPlay = firstPlay;
-            PreviousBest = previousBest;
-            Recorded = recorded;
+            _rewards.Add((label, coins));
+            return this;
         }
-
-        public int Strokes { get; }
-        public int Par { get; }
-        public GolfRewardBreakdown Reward { get; }
-        public bool NewBest { get; }
-        public bool FirstPlay { get; }
-
-        /// <summary>今回の前のベスト（初めてなら 0）</summary>
-        public int PreviousBest { get; }
-
-        /// <summary>記録に書いた（開発用の試しのホールでは書かない）</summary>
-        public bool Recorded { get; }
     }
 
     /// <summary>
-    /// 結果の画面の右の欄（左はスコアカード）: 合計の打数とパーとの差・ベスト更新・コインの内訳・下に「もう一度」「コースを選ぶ」「ロビーへ」の札。
-    /// 札は左右で選び、決定（J / × / Enter）で押す。最初は「もう一度」を選んでおく（続けて遊びやすいように）
+    /// ミニゲームの結果の欄: 結果の点・ベストの一言・コインの内訳・下に「もう一度」「コース（スタジアム）を選ぶ」「ロビーへ」の札。
+    /// 札は左右で選び、決定（J / × / Enter）で押す。最初は「もう一度」を選んでおく（続けて遊びやすいように）。
+    /// 中身（MiniGameResultView）はミニゲームごとに作って渡す
     /// </summary>
-    public class GolfResultPanel : MonoBehaviour
+    public class MiniGameResultPanel : MonoBehaviour
     {
         public const int RetryCard = 0;
         public const int CoursesCard = 1;
@@ -51,7 +54,7 @@ namespace PenmonScramble.Golf.Game
         [SerializeField] private Text _rewardLabels;
         [SerializeField] private Text _rewardValues;
         [SerializeField] private Text _coinTotal;
-        [Tooltip("左から もう一度・コースを選ぶ・ロビーへ")]
+        [Tooltip("左から もう一度・コース（スタジアム）を選ぶ・ロビーへ")]
         [SerializeField] private StageMenuCard[] _cards;
         [Tooltip("オンラインのゲストに出す一言（コースを選ぶのはホスト）")]
         [SerializeField] private Text _note;
@@ -75,7 +78,7 @@ namespace PenmonScramble.Golf.Game
         }
 
         /// <summary>
-        /// オンラインでは「もう一度」を出さない（同じコースをもう一度回るときも、待ちの窓でそのまま「開始」）。
+        /// オンラインでは「もう一度」を出さない（同じコースをもう一度遊ぶときも、待ちの窓でそのまま「開始」）。
         /// 「コースを選ぶ」（全員で待ちの窓へ戻る）はホストだけ。ゲストは「ロビーへ」（部屋から抜ける）だけで、ホストを待つ
         /// </summary>
         public void SetOnline(bool online, bool host)
@@ -91,17 +94,16 @@ namespace PenmonScramble.Golf.Game
             _note.gameObject.SetActive(online && !host);
         }
 
-        public void Show(GolfResultInfo info)
+        public void Show(MiniGameResultView view)
         {
             gameObject.SetActive(true);
             _shownFrame = Time.frameCount;
             _navigator.Reset();
-            var rank = info.Reward.Rank > 0 ? $"{info.Reward.Rank}位  " : string.Empty;
-            _score.text = $"{rank}{info.Strokes} 打（{GolfScoreNames.Difference(info.Strokes, info.Par)}）";
-            _best.text = BestLine(info);
-            _best.color = info.NewBest ? GoodColor : Color.white;
-            ShowReward(info.Reward);
-            _coinTotal.text = info.Recorded ? $"+{info.Reward.Total:N0} コイン" : "試しのホールは記録しません";
+            _score.text = view.Score;
+            _best.text = view.Best;
+            _best.color = view.BestHighlighted ? GoodColor : Color.white;
+            ShowRewards(view.Rewards);
+            _coinTotal.text = view.CoinTotal;
             Select(FirstAvailable());
             for (var i = 0; i < _cards.Length; i++)
             {
@@ -136,52 +138,19 @@ namespace PenmonScramble.Golf.Game
             }
         }
 
-        private static string BestLine(GolfResultInfo info)
-        {
-            if (!info.Recorded)
-            {
-                return string.Empty;
-            }
-
-            if (info.FirstPlay)
-            {
-                return "はじめての記録！";
-            }
-
-            return info.NewBest ? $"ベスト更新！（前は {info.PreviousBest} 打）" : $"ベスト {info.PreviousBest} 打";
-        }
-
         /// <summary>内訳は左に名前、右にコインの2列（字の幅がそろわないので、空白で並べずに列を分ける）</summary>
-        private void ShowReward(GolfRewardBreakdown reward)
+        private void ShowRewards(IReadOnlyList<(string Label, int Coins)> rewards)
         {
-            var labels = "回った";
-            var values = $"+{reward.BaseCoins}";
-            if (reward.UnderParStrokes > 0)
+            var labels = new List<string>();
+            var values = new List<string>();
+            foreach (var (label, coins) in rewards)
             {
-                labels += $"\nパーより {reward.UnderParStrokes} 打少ない";
-                values += $"\n+{reward.UnderParCoins}";
+                labels.Add(label);
+                values.Add($"+{coins}");
             }
 
-            if (reward.HoleInOnes > 0)
-            {
-                labels += $"\nホールインワン ×{reward.HoleInOnes}";
-                values += $"\n+{reward.HoleInOneCoins}";
-            }
-
-            if (reward.FirstPlayBonus > 0)
-            {
-                labels += "\n初めて回った";
-                values += $"\n+{reward.FirstPlayBonus}";
-            }
-
-            if (reward.RankBonus > 0)
-            {
-                labels += $"\n{reward.Rank}位";
-                values += $"\n+{reward.RankBonus}";
-            }
-
-            _rewardLabels.text = labels;
-            _rewardValues.text = values;
+            _rewardLabels.text = string.Join("\n", labels);
+            _rewardValues.text = string.Join("\n", values);
         }
 
         private int FirstAvailable() => NextAvailable(-1, 1);

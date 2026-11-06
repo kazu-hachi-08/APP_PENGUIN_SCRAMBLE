@@ -80,7 +80,7 @@ namespace PenmonScramble.Editor
                 text.AppendLine(
                     $"★{red} 対 ★{blue}: 点 {stats.Average(s => s.Goals[0]):0.0} - {stats.Average(s => s.Goals[1]):0.0}" +
                     $"  勝ち 赤{redWins} 青{blueWins} 引き分け{stats.Count - redWins - blueWins}" +
-                    $"  シュート {stats.Average(s => s.Shots):0}  パス {stats.Average(s => s.Passes):0}" +
+                    $"  シュート {stats.Average(s => s.Shots):0}（必殺 {stats.Average(s => s.Specials):0.0}）  パス {stats.Average(s => s.Passes):0}" +
                     $"  奪った {stats.Average(s => s.Tackles):0}  外した {stats.Average(s => s.SlideMisses):0}" +
                     $"  誰も触らない最長 {stats.Max(s => s.LongestIdleSeconds):0.0}秒  壁ぎわの詰まり {stats.Average(s => s.WallStuckSeconds):0.0}秒" +
                     $"  ボールのまわり {stats.Average(s => s.CrowdAverage):0.00}体  団子 {stats.Average(s => s.CrowdRate) * 100f:0.0}%" +

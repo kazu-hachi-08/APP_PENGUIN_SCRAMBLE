@@ -21,6 +21,12 @@ namespace PenmonScramble.Soccer.Core
 
             if (decide)
             {
+                if (_usesSpecial[player.Team] && world.IsSpecialReady(player.Team) && CanShoot(world, player, level, out var specialAim, out _))
+                {
+                    // 必殺シュートは狙いを付けなくても口の内側へ飛ぶので、ゴールの方へ倒すだけ
+                    return new SoccerInput((specialAim - player.Position).Normalized, false, false, true);
+                }
+
                 if (TryShoot(world, player, brain, level))
                 {
                     return new SoccerInput(brain.Aim, true);
@@ -38,19 +44,7 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>シュートが通る所なら、キーパーのいない側の柱の内側を狙ってため始める</summary>
         private bool TryShoot(SoccerWorld world, SoccerPlayer player, SoccerAiBrain brain, SoccerAiLevel level)
         {
-            var goal = world.Pitch.GoalOf(SoccerRules.Opponent(player.Team));
-            var ball = world.Ball.Position;
-            var distance = Vec2.Distance(ball, goal.Center);
-            var depth = -goal.DepthPastLine(ball);
-            if (depth < SoccerBalance.AiNoAngleDepth && Math.Abs(ball.Y) >= goal.HalfWidth)
-            {
-                return false;
-            }
-
-            var aimPoint = ShotTarget(world, goal);
-            var close = distance <= SoccerBalance.AiForceShootDistance || KeeperDistance(world, goal.Team, ball) <= SoccerBalance.AiKeeperPanicDistance;
-            var open = distance <= level.ShootRange && LaneClear(world, player.Team, ball, aimPoint, SoccerBalance.AiShotLaneClearance);
-            if (!close && !open)
+            if (!CanShoot(world, player, level, out var aimPoint, out var distance))
             {
                 return false;
             }
@@ -61,6 +55,28 @@ namespace PenmonScramble.Soccer.Core
             brain.ChargeLeft = charge * SoccerBalance.ShotChargeSeconds;
             brain.Charging = true;
             return true;
+        }
+
+        /// <summary>
+        /// シュートを蹴る所か: 届く距離でコースが空いている、またはゴールのすぐ前・キーパーが迫っている。
+        /// ゴールの線の近くで角度が無い所では蹴らない。aimPoint はキーパーのいない側の柱の内側
+        /// </summary>
+        private bool CanShoot(SoccerWorld world, SoccerPlayer player, SoccerAiLevel level, out Vec2 aimPoint, out float distance)
+        {
+            var goal = world.Pitch.GoalOf(SoccerRules.Opponent(player.Team));
+            var ball = world.Ball.Position;
+            distance = Vec2.Distance(ball, goal.Center);
+            aimPoint = goal.Center;
+            var depth = -goal.DepthPastLine(ball);
+            if (depth < SoccerBalance.AiNoAngleDepth && Math.Abs(ball.Y) >= goal.HalfWidth)
+            {
+                return false;
+            }
+
+            aimPoint = ShotTarget(world, goal);
+            var close = distance <= SoccerBalance.AiForceShootDistance || KeeperDistance(world, goal.Team, ball) <= SoccerBalance.AiKeeperPanicDistance;
+            var open = distance <= level.ShootRange && LaneClear(world, player.Team, ball, aimPoint, SoccerBalance.AiShotLaneClearance);
+            return close || open;
         }
 
         /// <summary>キーパーが立っていない側の柱の少し内側（真ん中にいれば、どちらかを乱数で）</summary>

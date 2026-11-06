@@ -38,6 +38,33 @@ namespace PenmonScramble.Soccer.Core
         SlideMiss,
         /// <summary>ダッシュした（Player は走る子）</summary>
         Dash,
+        /// <summary>必殺シュートのカットインが始まった（Player は蹴る子、Strength は★。蹴るのはカットインの後）</summary>
+        SpecialCutIn,
+        /// <summary>必殺シュートを蹴った（Player は蹴った子、Strength は★。同じ歩に Kick も出る）</summary>
+        SpecialKick,
+        /// <summary>氷の必殺シュートで凍った（Player は凍った子、Strength は凍る秒）</summary>
+        Freeze,
+
+        // ---- 試合の流れ（SoccerMatch・SoccerShootout）----
+
+        /// <summary>キックオフの合図が終わってボールに触れるようになった（Team は蹴る側）</summary>
+        PlayStart,
+        /// <summary>残りの秒が1つ減った（Strength は残りの秒。残り 10 秒から）</summary>
+        Countdown,
+        /// <summary>時間切れ</summary>
+        TimeUp,
+        /// <summary>同点で PK戦が始まった</summary>
+        ShootoutStart,
+        /// <summary>PK戦の1本の構え（Player は蹴る子、Team は蹴る側、Strength は何本目（1 から））</summary>
+        PenaltyReady,
+        /// <summary>PK戦で蹴った（Player は蹴る子、Strength は強さ 0〜1、Lofted は高い所を狙った）</summary>
+        PenaltyKick,
+        /// <summary>PK戦の1本が決まった・止められた・外れた（Player は蹴った子、Team は蹴った側）</summary>
+        PenaltyGoal,
+        PenaltySave,
+        PenaltyMiss,
+        /// <summary>試合が終わった（Team は勝った側。PK戦で決まったら Lofted）</summary>
+        MatchEnd,
     }
 
     /// <summary>試合で起きたこと。表示・音・通信へはこれで渡す（Core は見せ方を知らない）</summary>

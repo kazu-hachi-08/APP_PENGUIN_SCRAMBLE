@@ -1,5 +1,6 @@
 using PenmonScramble.Game;
 using PenmonScramble.Golf.Game;
+using PenmonScramble.MiniGames.Game;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,7 +17,7 @@ namespace PenmonScramble.Editor
         // 寄って見たときに、ペンモンと球が大きく見えるよう画角は狭めにする
         private const float CameraFieldOfView = 40f;
 
-        private static GolfRoundPlay CreatePlay(Camera camera, GolfHudParts hud, GolfScorecard scorecard, GolfResultPanel result, StageMenu menu)
+        private static GolfRoundPlay CreatePlay(Camera camera, GolfHudParts hud, GolfScorecard scorecard, MiniGameResultPanel result, StageMenu menu)
         {
             camera.fieldOfView = CameraFieldOfView;
             var root = new GameObject("Golf3D");

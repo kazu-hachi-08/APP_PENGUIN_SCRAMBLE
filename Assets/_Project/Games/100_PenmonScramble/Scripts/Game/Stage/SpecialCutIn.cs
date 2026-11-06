@@ -26,10 +26,19 @@ namespace PenmonScramble.Game
 
         public void Play(SpecialUsedEvent special)
         {
-            CreatureArt.ShowFace(_face, special.SpeciesNo);
-            _bandImage.color = Color.Lerp(PenguinPalette.ElementColor(special.Element), Color.black, 0.6f);
-            _text.text = $"{PenguinPalette.SpeciesName(special.SpeciesNo)}の必殺技！\n<size={_nameFontSize}>{SpecialMoves.For(special.Element).Name}</size>";
-            _seconds = Balance.SpecialCutInTicks * Balance.TickSeconds;
+            Play(special.SpeciesNo, special.Element, "の必殺技！", SpecialMoves.For(special.Element).Name, Balance.SpecialCutInTicks * Balance.TickSeconds);
+        }
+
+        /// <summary>
+        /// 種類の顔と属性の色の帯に「（名前）（見出し）」と技の名前を出す（ミニゲームの必殺シュートなど、本編の必殺技でない技にも使う）
+        /// </summary>
+        /// <param name="heading">名前の後ろに付ける一言（「の必殺技！」など）</param>
+        public void Play(int speciesNo, Element element, string heading, string moveName, float seconds)
+        {
+            CreatureArt.ShowFace(_face, speciesNo);
+            _bandImage.color = Color.Lerp(PenguinPalette.ElementColor(element), Color.black, 0.6f);
+            _text.text = $"{PenguinPalette.SpeciesName(speciesNo)}{heading}\n<size={_nameFontSize}>{moveName}</size>";
+            _seconds = seconds;
             _width = ((RectTransform)transform).rect.width;
             _age = 0f;
             gameObject.SetActive(true);

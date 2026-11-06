@@ -9,6 +9,9 @@ namespace PenmonScramble.Soccer.Core
     {
         public readonly int[] Goals = new int[SoccerRules.TeamCount];
         public int Shots;
+
+        /// <summary>必殺シュート（Shots にも数える）</summary>
+        public int Specials;
         public int Passes;
         public int Tackles;
         public int SlideMisses;
@@ -47,6 +50,9 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>替わってからこれより短い間に1つ前の子へ戻ったら、ガタつきとみなす</summary>
         public const float FlipSeconds = 1f;
 
+        // 両チームの子の種類（4属性がそろうように。★はどれも 1）
+        private static readonly int[] CheckSpecies = { 1, 6, 11, 16, 7, 12 };
+
         // 点が入ってから並び直すまでの秒（ボールが網へ入るのを待つ）
         private const float GoalPauseSeconds = 1f;
 
@@ -56,10 +62,12 @@ namespace PenmonScramble.Soccer.Core
 
         public static SoccerMatchStats Play(SoccerAiLevel red, SoccerAiLevel blue, int seed, float seconds = SoccerRules.MatchSeconds)
         {
-            var world = new SoccerWorld(SoccerPitchTable.Standard(), SoccerRules.PlayersPerTeam, SoccerRules.PlayersPerTeam, keepers: true, seed: seed);
+            var world = SoccerMatchSetup.CreateWorld(SoccerPitchTable.Standard(), CheckSpecies, seed);
             var ai = new SoccerAi(world, seed + 1);
             ai.SetLevel(SoccerRules.Red, red);
             ai.SetLevel(SoccerRules.Blue, blue);
+            ai.SetUsesSpecial(SoccerRules.Red, true);
+            ai.SetUsesSpecial(SoccerRules.Blue, true);
 
             var stats = new SoccerMatchStats();
             var inputs = new SoccerInput[world.Players.Count];
@@ -115,6 +123,9 @@ namespace PenmonScramble.Soccer.Core
                         break;
                     case SoccerEventKind.Pass:
                         stats.Passes++;
+                        break;
+                    case SoccerEventKind.SpecialKick:
+                        stats.Specials++;
                         break;
                     case SoccerEventKind.Tackle:
                         stats.Tackles++;

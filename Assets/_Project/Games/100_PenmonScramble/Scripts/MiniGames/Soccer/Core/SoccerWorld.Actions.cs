@@ -22,11 +22,19 @@ namespace PenmonScramble.Soccer.Core
         {
             var shootPressed = input.Shoot && !player.WasShooting;
             var passPressed = input.Pass && !player.WasPassing;
+            var specialPressed = input.Special && !player.WasSpecial;
             player.WasShooting = input.Shoot;
             player.WasPassing = input.Pass;
+            player.WasSpecial = input.Special;
 
             if (Ball.Holder == player.Index)
             {
+                if (specialPressed && IsSpecialReady(player.Team) && !IsGoalScored)
+                {
+                    StartSpecial(player, input.Move, events);
+                    return;
+                }
+
                 UpdateShot(player, input, shootPressed, events);
                 if (passPressed && Ball.Holder == player.Index && !player.IsCharging)
                 {
@@ -69,6 +77,7 @@ namespace PenmonScramble.Soccer.Core
                     break;
                 case SoccerPlayerState.Down when player.StateSeconds >= SoccerBalance.TackledDownSeconds:
                 case SoccerPlayerState.Recover when player.StateSeconds >= SoccerBalance.SlideMissSeconds:
+                case SoccerPlayerState.Frozen when player.StateSeconds >= player.FrozenSeconds:
                     player.Enter(SoccerPlayerState.Normal);
                     break;
             }
@@ -96,6 +105,7 @@ namespace PenmonScramble.Soccer.Core
             }
 
             Release(player, direction, speed, 0f);
+            _lastPasser = player.Index;
             var other = receiver?.Index ?? SoccerBall.NoPlayer;
             events.Add(new SoccerEvent(SoccerEventKind.Pass, player.Index, player.Team, Ball.Position, speed, false, other));
         }
@@ -192,6 +202,8 @@ namespace PenmonScramble.Soccer.Core
                 Ball.Holder = slider.Index;
                 Ball.LastToucher = slider.Index;
                 Ball.IdleSeconds = 0f;
+                _lastPasser = SoccerBall.NoPlayer;
+                AddGauge(slider.Team, SoccerBalance.GaugeTackle);
                 events.Add(new SoccerEvent(SoccerEventKind.Tackle, slider.Index, slider.Team, Ball.Position, 0f, false, holder.Index));
                 return;
             }

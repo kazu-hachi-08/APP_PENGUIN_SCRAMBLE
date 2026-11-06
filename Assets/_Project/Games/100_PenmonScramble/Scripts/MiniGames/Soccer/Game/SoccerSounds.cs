@@ -37,6 +37,16 @@ namespace PenmonScramble.Soccer.Game
         Tackle,
         /// <summary>ダッシュで駆け出す（タタッ）</summary>
         Dash,
+        /// <summary>残り10秒からの1秒ごと（ピッ）</summary>
+        Countdown,
+        /// <summary>時間切れの笛（ピッ、ピッ、ピーー）</summary>
+        TimeUp,
+        /// <summary>必殺シュートを蹴った（ギュイーン）</summary>
+        SpecialShot,
+        /// <summary>氷の必殺シュートで凍った（キラキラ）</summary>
+        Freeze,
+        /// <summary>PK戦で外れた（ヒューン）</summary>
+        Miss,
     }
 
     /// <summary>
@@ -72,6 +82,11 @@ namespace PenmonScramble.Soccer.Game
             { SoccerSound.Slide, 0.3f },
             { SoccerSound.Tackle, 0.55f },
             { SoccerSound.Dash, 0.2f },
+            { SoccerSound.Countdown, 0.35f },
+            { SoccerSound.TimeUp, 0.5f },
+            { SoccerSound.SpecialShot, 0.55f },
+            { SoccerSound.Freeze, 0.4f },
+            { SoccerSound.Miss, 0.35f },
         };
 
         /// <summary>蹴る音。strength はため（0〜1）</summary>
@@ -128,6 +143,12 @@ namespace PenmonScramble.Soccer.Game
                 case SoccerSound.Tackle: return ToySynth.Impact("Soccer_Tackle", 0.12f, 110f);
                 // 駆け出す「タタッ」: 短い打撃を2つ
                 case SoccerSound.Dash: return Dash();
+                case SoccerSound.Countdown: return ToySynth.CreateClip("Soccer_Countdown", 0.09f, t => ToySynth.Square(1320f, t) * 0.4f * Mathf.Exp(-t * 25f));
+                case SoccerSound.TimeUp: return TimeUp();
+                // 必殺シュートの「ギュイーン」: 低いところから一気に上がる
+                case SoccerSound.SpecialShot: return ToySynth.Sweep("Soccer_Special", 0.35f, 220f, 1400f);
+                case SoccerSound.Freeze: return Freeze();
+                case SoccerSound.Miss: return ToySynth.Sweep("Soccer_Miss", 0.4f, 900f, 300f);
                 default: return ToySynth.Jingle("Soccer_Goal", new[] { 523f, 659f, 784f, 1047f, 1319f });
             }
         }
@@ -208,6 +229,49 @@ namespace PenmonScramble.Soccer.Game
             {
                 var local = t % step;
                 return Mathf.Sin(2f * Mathf.PI * 260f * local) * Mathf.Exp(-local * 60f);
+            });
+        }
+
+        /// <summary>時間切れの笛「ピッ、ピッ、ピーー」: 短く2回と長く1回</summary>
+        private static AudioClip TimeUp()
+        {
+            var blows = new[] { (0f, 0.14f), (0.22f, 0.14f), (0.44f, 0.6f) };
+            const float duration = 1.04f;
+            return ToySynth.CreateClip("Soccer_TimeUp", duration, t =>
+            {
+                foreach (var (start, length) in blows)
+                {
+                    var local = t - start;
+                    if (local >= 0f && local < length)
+                    {
+                        var trill = 2350f + Mathf.Sin(t * 2f * Mathf.PI * 32f) * 140f;
+                        var envelope = Mathf.Min(1f, local / 0.01f) * Mathf.Min(1f, (length - local) / 0.03f);
+                        return ToySynth.Square(trill, t) * 0.5f * envelope;
+                    }
+                }
+
+                return 0f;
+            });
+        }
+
+        /// <summary>凍る「キラキラ」: 高い音を細かく上へ重ねて消える</summary>
+        private static AudioClip Freeze()
+        {
+            const float duration = 0.45f;
+            var notes = new[] { 1760f, 2217f, 2637f, 3520f };
+            return ToySynth.CreateClip("Soccer_Freeze", duration, t =>
+            {
+                var sum = 0f;
+                for (var i = 0; i < notes.Length; i++)
+                {
+                    var local = t - i * 0.05f;
+                    if (local >= 0f)
+                    {
+                        sum += Mathf.Sin(2f * Mathf.PI * notes[i] * local) * Mathf.Exp(-local * 12f);
+                    }
+                }
+
+                return sum * 0.25f;
             });
         }
 

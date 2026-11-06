@@ -8,9 +8,10 @@ namespace PenmonScramble.Soccer.Core
     /// <summary>
     /// ピッチの上の計算（子の移動・ボールの転がり・壁の跳ね返り・浮いた球・持つ / 離す・シュート・パス・スライディング・ゴールの判定）。
     /// SoccerRules.StepSeconds ずつ進める（同じ入力なら同じ結果）。表示と音へは起きたこと（SoccerEvent）で渡す。
-    /// 試合の流れ（時間・ゴールの演出・PK戦）はここに持たない（フェーズ 4 の SoccerMatch）。
+    /// 試合の流れ（時間・ゴールの演出・PK戦）はここに持たない（SoccerMatch）。
     /// 点が入ったら Kickoff を呼ぶまでボールは誰も持てない（網の中で転がるだけ）。
-    /// ボタンで出す技（パス・スライディング・ダッシュ）は SoccerWorld.Actions.cs、キーパーの動きと止める判定は SoccerWorld.Keeper.cs
+    /// ボタンで出す技（パス・スライディング・ダッシュ）は SoccerWorld.Actions.cs、キーパーの動きと止める判定は SoccerWorld.Keeper.cs、
+    /// 必殺シュートとチームのゲージは SoccerWorld.Special.cs
     /// </summary>
     public sealed partial class SoccerWorld
     {
@@ -75,6 +76,7 @@ namespace PenmonScramble.Soccer.Core
 
             Ball.Place(Vec2.Zero);
             Ball.LastToucher = SoccerBall.NoPlayer;
+            ResetSpecial();
             IsGoalScored = false;
             _trajectoryChanged = true;
             events?.Add(new SoccerEvent(SoccerEventKind.Kickoff, SoccerBall.NoPlayer, kickingTeam, Vec2.Zero));
@@ -83,6 +85,12 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>1歩進める。inputs は Players と同じ並び（足りない子は何もしない）。起きたことは events に足す</summary>
         public void Step(IReadOnlyList<SoccerInput> inputs, List<SoccerEvent> events)
         {
+            // 必殺シュートのカットインの間は全体を止める（全員の画面で同じだけ止まるよう、計算の側で止める）
+            if (StepCutIn(events))
+            {
+                return;
+            }
+
             Time += Dt;
             foreach (var player in _players)
             {
@@ -105,6 +113,7 @@ namespace PenmonScramble.Soccer.Core
                 StepFreeBall(events);
             }
 
+            FreezeAlong(ballFrom, events);
             KeepersTouchBall(events);
             CheckGoal(events);
             TryPickup(ballFrom, events);
@@ -131,6 +140,10 @@ namespace PenmonScramble.Soccer.Core
                 case SoccerPlayerState.Down:
                 case SoccerPlayerState.Recover:
                     player.Velocity -= player.Velocity.ClampLength(SoccerBalance.DownBrake * Dt);
+                    break;
+                case SoccerPlayerState.Frozen:
+                    // 凍っている間はその場で動かない
+                    player.Velocity = Vec2.Zero;
                     break;
                 default:
                     Walk(player, input.Move.ClampLength(1f));

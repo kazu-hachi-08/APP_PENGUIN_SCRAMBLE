@@ -29,8 +29,16 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>遠くのボールへダッシュする割合（考え直すたびに決める）</summary>
         public readonly float DashChance;
 
-        public SoccerAiLevel(float reactionSeconds, float decisionSeconds, float aimErrorDegrees, float slideChance, float passSense, float shootRange, float dashChance)
+        /// <summary>PK戦で蹴るとき、狙う強さのぶれ（小さいほど赤い所に入れず、強く蹴れる）</summary>
+        public readonly float PenaltyPowerSpread;
+
+        /// <summary>PK戦で守るとき、蹴る子がため始めたのを見て狙いを読む割合</summary>
+        public readonly float PenaltyReadChance;
+
+        public SoccerAiLevel(float reactionSeconds, float decisionSeconds, float aimErrorDegrees, float slideChance, float passSense, float shootRange, float dashChance, float penaltyPowerSpread, float penaltyReadChance)
         {
+            PenaltyPowerSpread = penaltyPowerSpread;
+            PenaltyReadChance = penaltyReadChance;
             ReactionSeconds = reactionSeconds;
             DecisionSeconds = decisionSeconds;
             AimErrorDegrees = aimErrorDegrees;
@@ -56,11 +64,11 @@ namespace PenmonScramble.Soccer.Core
         // ★1〜★5（スタジアム 1〜5 の CPU。案。試合の確認と試遊で決め直す）
         private static readonly SoccerAiLevel[] AiLevels =
         {
-            new SoccerAiLevel(0.22f, 0.4f, 10f, 0.1f, 0.4f, 9f, 0.25f),
-            new SoccerAiLevel(0.18f, 0.35f, 8.5f, 0.13f, 0.48f, 9.5f, 0.3f),
-            new SoccerAiLevel(0.15f, 0.3f, 7f, 0.16f, 0.55f, 10f, 0.35f),
-            new SoccerAiLevel(0.12f, 0.25f, 5.5f, 0.19f, 0.65f, 10.5f, 0.4f),
-            new SoccerAiLevel(0.09f, 0.2f, 4f, 0.22f, 0.75f, 11f, 0.45f),
+            new SoccerAiLevel(0.22f, 0.4f, 10f, 0.1f, 0.4f, 9f, 0.25f, 0.22f, 0.05f),
+            new SoccerAiLevel(0.18f, 0.35f, 8.5f, 0.13f, 0.48f, 9.5f, 0.3f, 0.18f, 0.1f),
+            new SoccerAiLevel(0.15f, 0.3f, 7f, 0.16f, 0.55f, 10f, 0.35f, 0.15f, 0.15f),
+            new SoccerAiLevel(0.12f, 0.25f, 5.5f, 0.19f, 0.65f, 10.5f, 0.4f, 0.12f, 0.2f),
+            new SoccerAiLevel(0.09f, 0.2f, 4f, 0.22f, 0.75f, 11f, 0.45f, 0.09f, 0.25f),
         };
 
         public static SoccerAiLevel AiLevel(int stars) => AiLevels[Math.Clamp(stars, AiMinStars, AiMaxStars) - AiMinStars];
