@@ -9,11 +9,12 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// サッカーのスマホの操作: 本編と同じ仮想スティック（左）と、本編の技1の位置のシュート / スライディング（右の大）、
-    /// 技2の位置のパス / ダッシュ（右の中）、必殺の位置の必殺シュート（技1の上。チームのゲージのリング）、
+    /// サッカーのスマホの操作: 本編と同じ仮想スティック（左）と、本編の技1の位置のパス / ダッシュ（右の大）、
+    /// 技2の位置のシュート / スライディング（右の中）、必殺の位置の必殺シュート（技1の上。チームのゲージのリング）、
     /// 交代の位置の切り替え（技2の上の小。替わる子の顔を出す）。
     /// 置き場所と見た目は本編のタッチ操作と同じ部品（本編で覚えた手のまま遊べるように）で、中のアイコンだけサッカー用
-    /// （持っているかで替わる。SoccerTouchView）。必殺シュートのカットインも本編と同じ帯
+    /// （持っているかで替わる。SoccerTouchView）。必殺シュートのカットインも本編と同じ帯。
+    /// パッドと同じく本編の技1（×）と技2（○）を入れ替えてある（○＝シュート）ので、遊び方の絵もこの並びで描く
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
@@ -50,8 +51,8 @@ namespace PenmonScramble.Editor
             root.AddComponent<CanvasGroup>();
             var visibility = root.AddComponent<TouchControlsVisibility>();
             var joystick = CreateJoystick(root.transform);
-            var shoot = CreateSkillButton(root.transform, "Shoot", Skill1Position, Skill1Size, SoccerShootColor);
-            var pass = CreateSkillButton(root.transform, "Pass", Skill2Position, Skill2Size, SoccerPassColor);
+            var pass = CreateSkillButton(root.transform, "Pass", Skill1Position, Skill1Size, SoccerPassColor);
+            var shoot = CreateSkillButton(root.transform, "Shoot", Skill2Position, Skill2Size, SoccerShootColor);
             var special = CreateSpecialButton(root.transform);
             var swap = CreateSwitchButton(root.transform);
             ShowIcon(shoot, SoccerShootIconPath);

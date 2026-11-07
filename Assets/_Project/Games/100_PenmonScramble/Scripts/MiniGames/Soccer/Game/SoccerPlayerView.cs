@@ -6,17 +6,19 @@ namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
     /// フィールドの子1体: 本編の3Dのペンモン（PenguinMotion で歩く・ためる・蹴る・すべる・転ぶ・喜ぶ・悔しがる）と、
-    /// 足元の輪（動かしている子は席の色の太い輪、AI の子はチームの色の細い輪）とためゲージの弧。
-    /// CPU のチームの子は本編の雑魚と同じく暗い色にする。氷の必殺シュートで凍っている間は、水色に染めて止める
+    /// 頭のチームの色のはちまき、足元の輪（動かしている子はチームの色を明るくした太い輪、AI の子はチームの色の輪）とためゲージの弧。
+    /// CPU のチームの子は本編の雑魚と同じく暗い色にする（はちまきは暗くしない）。氷の必殺シュートで凍っている間は、水色に染めて止める
     /// </summary>
     public sealed class SoccerPlayerView
     {
         private const float RingGloss = 0.3f;
-        // 輪の大きさ（直径）・厚み。動かしている子の輪は太く大きくして目立たせる
+        // 輪の大きさ（直径）・厚み。AI の子の輪も芝の上で見える太さにし、動かしている子の輪はさらに太く大きくして目立たせる
         private const float RingSize = 1.0f;
-        private const float RingThickness = 0.5f;
-        private const float ControlledRingSize = 1.15f;
-        private const float ControlledRingThickness = 1.1f;
+        private const float RingThickness = 0.8f;
+        private const float ControlledRingSize = 1.2f;
+        private const float ControlledRingThickness = 1.4f;
+        // 動かしている子の輪はチームの色を白へ寄せる（席の色だと、赤のチームに青い輪が付いて相手に見えたため）
+        private const float ControlledRingLighten = 0.4f;
         private const float RingLift = 0.02f;
         private const float FrozenTintAmount = 0.6f;
         private static readonly Color FrozenColor = new Color(0.65f, 0.9f, 1f);
@@ -51,6 +53,7 @@ namespace PenmonScramble.Soccer.Game
             model.SetRealShadows(false);
             _baseTint = wild ? PenguinTint.Dark(UnitView.EnemyDarkness) : PenguinTint.None;
             model.SetTint(_baseTint);
+            PenguinModelBuilder.AddTeamHeadband(model, look, materials, SoccerColors.Team(_team));
 
             _motion = model.gameObject.AddComponent<PenguinMotion>();
             _motion.SnapFacing(SoccerSpace.Direction(player.Facing));
@@ -63,17 +66,18 @@ namespace PenmonScramble.Soccer.Game
             _ringRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _ring = ring.transform;
             _charge = new SoccerChargeArc(materials, _root);
-            SetControlled(false, Color.white);
+            SetControlled(false);
         }
 
-        /// <summary>動かしている子は席の色の太い輪、そうでなければチームの色を暗くした細い輪</summary>
-        public void SetControlled(bool controlled, Color seatColor)
+        /// <summary>動かしている子はチームの色を明るくした太い輪、そうでなければチームの色の輪</summary>
+        public void SetControlled(bool controlled)
         {
             _controlled = controlled;
             var size = controlled ? ControlledRingSize : RingSize;
             var thickness = controlled ? ControlledRingThickness : RingThickness;
             _ring.localScale = new Vector3(size, thickness * 0.1f, size);
-            _ringRenderer.sharedMaterial = _materials.Get(controlled ? seatColor : SoccerColors.TeamDark(_team), RingGloss);
+            var team = SoccerColors.Team(_team);
+            _ringRenderer.sharedMaterial = _materials.Get(controlled ? Color.Lerp(team, Color.white, ControlledRingLighten) : team, RingGloss);
         }
 
         /// <summary>position は補間した足元の位置</summary>

@@ -22,25 +22,25 @@ namespace PenmonScramble.Editor
             });
         }
 
-        /// <summary>技1＝シュート / スライディング、技2＝パス / ダッシュ（持っているかで替わる）、必殺＝必殺シュート、交代＝動かす子の切り替え</summary>
+        /// <summary>技1（J / ×）＝パス / ダッシュ、技2（K / ○）＝シュート / スライディング（持っているかで替わる）、必殺＝必殺シュート、交代＝動かす子の切り替え</summary>
         private static B.ControlWords SoccerControlWords()
         {
             return new B.ControlWords
             {
-                Skill1 = "シュート",
-                Skill2 = "パス",
+                Skill1 = "パス",
+                Skill2 = "シュート",
                 Special = "必殺シュート",
                 Switch = "交代",
-                PadSkill1 = "シュート / スライディング",
-                PadSkill2 = "パス / ダッシュ",
-                TouchSkill1 = "シュート",
-                TouchSkill2 = "パス",
+                PadSkill1 = "パス / ダッシュ",
+                PadSkill2 = "シュート / スライディング",
+                TouchSkill1 = "パス",
+                TouchSkill2 = "シュート",
                 TouchSpecial = "必殺",
-                KeyboardTip = "J はためて離すとシュート。持っていないときは J でスライディング、K でダッシュ",
-                PadTip = "× はためて離すとシュート。持っていないときは × でスライディング、○ でダッシュ",
+                KeyboardTip = "K はためて離すとシュート。持っていないときは K でスライディング、J でダッシュ",
+                PadTip = "○ はためて離すとシュート。持っていないときは ○ でスライディング、× でダッシュ",
                 TouchTip = "持っていないときは、シュートがスライディングに、パスがダッシュに替わる。右上の ‖ でメニュー",
-                TouchSkill1Color = B.SoccerShootColor,
-                TouchSkill2Color = B.SoccerPassColor,
+                TouchSkill1Color = B.SoccerPassColor,
+                TouchSkill2Color = B.SoccerShootColor,
             };
         }
     }

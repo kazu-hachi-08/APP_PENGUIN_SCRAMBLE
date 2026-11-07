@@ -180,7 +180,7 @@ namespace PenmonScramble.Editor
 
         /// <summary>
         /// 操作を読む。シーンごとに作り直す（仮想ボタンがこのシーンの物なので、シーンをまたいで残すと参照が切れる）。
-        /// シュート / スライディングは J / ×（Action1）、パス / ダッシュは K / ○（Action2）、必殺シュートは L / △（Action3）、
+        /// パス / ダッシュは J / ×（Action1）、シュート / スライディングは K / ○（Action2）、必殺シュートは L / △（Action3）、
         /// 交代は Space / L1（Action4）と同じ扱い
         /// </summary>
         private static void CreateInputManager(PenmonScrambleSceneBuilder.SoccerTouchParts touch)
@@ -188,8 +188,8 @@ namespace PenmonScramble.Editor
             var manager = new GameObject("InputManager").AddComponent<InputManager>();
             var so = new SerializedObject(manager);
             so.FindProperty("_virtualJoystick").objectReferenceValue = touch.Joystick;
-            so.FindProperty("_virtualAction1Button").objectReferenceValue = touch.Shoot;
-            so.FindProperty("_virtualAction2Button").objectReferenceValue = touch.Pass;
+            so.FindProperty("_virtualAction1Button").objectReferenceValue = touch.Pass;
+            so.FindProperty("_virtualAction2Button").objectReferenceValue = touch.Shoot;
             so.FindProperty("_virtualAction3Button").objectReferenceValue = touch.Special;
             so.FindProperty("_virtualAction4Button").objectReferenceValue = touch.Switch;
             so.FindProperty("_dontDestroyOnLoad").boolValue = false;

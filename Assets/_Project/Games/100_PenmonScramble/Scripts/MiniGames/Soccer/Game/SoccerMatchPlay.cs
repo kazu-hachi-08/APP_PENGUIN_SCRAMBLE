@@ -20,9 +20,10 @@ namespace PenmonScramble.Soccer.Game
     [DefaultExecutionOrder(60)]
     public partial class SoccerMatchPlay : MonoBehaviour
     {
-        // InputManager の Action の番号（J / × ・K / ○ ・L / △ ・Space / L1）
-        private const int ShootAction = 0;
-        private const int PassAction = 1;
+        // InputManager の Action の番号（0: J / × ・1: K / ○ ・2: L / △ ・3: Space / L1）。
+        // サッカーは本編と逆に ○（K）をシュート、×（J）をパスにする（よくあるサッカーゲームの手に合わせる）
+        private const int ShootAction = 1;
+        private const int PassAction = 0;
         private const int SpecialAction = 2;
         private const int SwitchAction = 3;
 

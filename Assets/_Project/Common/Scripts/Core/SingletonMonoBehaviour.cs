@@ -3,6 +3,27 @@ using UnityEngine;
 namespace PenmonScramble.Common.Core
 {
     /// <summary>
+    /// アプリ終了中かどうか（全シングルトン共通）。
+    /// Domain Reload を切っていると static が前回の再生から残る。SingletonMonoBehaviour&lt;T&gt; は総称型なので
+    /// RuntimeInitializeOnLoadMethod を置けず、型ごとのフラグだと「前回の再生終了で true のまま、今回 Awake が来ない型」の
+    /// Instance が null を返していた。非総称のここで再生開始ごとに必ず戻す
+    /// </summary>
+    internal static class SingletonLifecycle
+    {
+        public static bool IsQuitting { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Reset()
+        {
+            IsQuitting = false;
+            Application.quitting -= OnQuitting;
+            Application.quitting += OnQuitting;
+        }
+
+        private static void OnQuitting() => IsQuitting = true;
+    }
+
+    /// <summary>
     /// 型安全なSingleton MonoBehaviour基底クラス
     /// </summary>
     /// <typeparam name="T">継承先クラスの型</typeparam>
@@ -10,7 +31,6 @@ namespace PenmonScramble.Common.Core
     {
         private static T _instance;
         private static readonly object _lock = new object();
-        private static bool _isApplicationQuitting = false;
 
         [Header("Singleton Settings")]
         [SerializeField] private bool _dontDestroyOnLoad = true;
@@ -19,7 +39,8 @@ namespace PenmonScramble.Common.Core
         {
             get
             {
-                if (_isApplicationQuitting)
+                // 終了中に作ると、シーンの後片付けのあとに GameObject が残ってしまう
+                if (SingletonLifecycle.IsQuitting)
                 {
                     return null;
                 }
@@ -46,10 +67,6 @@ namespace PenmonScramble.Common.Core
 
         protected virtual void Awake()
         {
-            // Domain Reloadが無効な設定だと、前回Play終了時のフラグが残ったままになるため
-            // 新しいセッション開始（Awake）のたびに必ずリセットする
-            _isApplicationQuitting = false;
-
             if (_instance == null)
             {
                 _instance = this as T;
@@ -63,11 +80,6 @@ namespace PenmonScramble.Common.Core
                 Debug.LogWarning($"[{typeof(T).Name}] インスタンスが重複して生成されたため破棄します: {gameObject.name}");
                 Destroy(gameObject);
             }
-        }
-
-        protected virtual void OnApplicationQuit()
-        {
-            _isApplicationQuitting = true;
         }
 
         protected virtual void OnDestroy()

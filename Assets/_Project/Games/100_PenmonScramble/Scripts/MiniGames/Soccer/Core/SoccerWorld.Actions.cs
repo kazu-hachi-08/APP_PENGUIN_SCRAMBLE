@@ -5,7 +5,7 @@ using PenmonScramble.Core;
 namespace PenmonScramble.Soccer.Core
 {
     /// <summary>
-    /// ボタンで出す技。持っているときはシュート（技1）・パス（技2）、持っていないときはスライディング（技1）・ダッシュ（技2）。
+    /// ボタンで出す技。持っているときはシュート・パス、持っていないときはスライディング（シュートのボタン）・ダッシュ（パスのボタン）。
     /// ボタンは「押しているか」で届くので、押した瞬間は前の歩と比べて決める。転ぶ・すべるの時間もここで進める
     /// </summary>
     public sealed partial class SoccerWorld

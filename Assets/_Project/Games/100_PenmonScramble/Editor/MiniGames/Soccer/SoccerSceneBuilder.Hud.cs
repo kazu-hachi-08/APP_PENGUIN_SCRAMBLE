@@ -41,7 +41,7 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 SpecialHintSize = new Vector2(900f, 60f);
         private const int SpecialHintFontSize = 40;
         private static readonly Color SpecialHintColor = new Color(1f, 0.85f, 0.25f);
-        private const string HelpText = "移動 WASD / 左スティック　シュート（ためて離す）/ スライディング J / ×　パス / ダッシュ K / ○　必殺 L / △　交代 Space / L1　メニュー Esc";
+        private const string HelpText = "移動 WASD / 左スティック　パス / ダッシュ J / ×　シュート（ためて離す）/ スライディング K / ○　必殺 L / △　交代 Space / L1　メニュー Esc";
         private const string SpecialHintText = "L / △ で必殺シュート！";
 
         private readonly struct SoccerHudParts

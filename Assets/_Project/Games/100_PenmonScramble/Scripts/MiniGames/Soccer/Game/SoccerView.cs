@@ -60,14 +60,14 @@ namespace PenmonScramble.Soccer.Game
         }
 
         /// <summary>
-        /// 人が動かしている子の印（足元の席の色の輪）。seatShown は席ごとの、印を付ける子（−1 なら無し）
+        /// 人が動かしている子の印（足元の太い輪）。seatShown は席ごとの、印を付ける子（−1 なら無し）
         /// </summary>
         public void SetControllers(IReadOnlyList<int> seatShown)
         {
             for (var i = 0; i < _players.Count; i++)
             {
                 var seat = seatShown != null ? IndexOf(seatShown, i) : -1;
-                _players[i].SetControlled(seat >= 0, seat >= 0 ? MiniGameSeats.ColorOf(seat) : Color.white);
+                _players[i].SetControlled(seat >= 0);
             }
         }
 
