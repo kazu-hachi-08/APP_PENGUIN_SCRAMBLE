@@ -1,7 +1,6 @@
 using PenmonScramble.Soccer.Game;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 using B = PenmonScramble.Editor.PenmonScrambleSceneBuilder;
 
 namespace PenmonScramble.Editor

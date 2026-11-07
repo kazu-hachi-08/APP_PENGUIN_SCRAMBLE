@@ -6,7 +6,7 @@ namespace PenmonScramble.Baseball.Game
     /// <summary>野球の結果に出すもの（自分のチームから見た）</summary>
     public readonly struct BaseballResultInfo
     {
-        public BaseballResultInfo(int runs, int conceded, BaseballOutcome outcome, BaseballRewardBreakdown reward, bool recorded, int previousBest, bool hadBest, bool firstPlay = false, bool newBest = false)
+        public BaseballResultInfo(int runs, int conceded, BaseballOutcome outcome, BaseballRewardBreakdown reward, bool recorded, int previousBest, bool firstPlay = false, bool newBest = false)
         {
             Runs = runs;
             Conceded = conceded;
@@ -14,7 +14,6 @@ namespace PenmonScramble.Baseball.Game
             Reward = reward;
             Recorded = recorded;
             PreviousBest = previousBest;
-            HadBest = hadBest;
             FirstPlay = firstPlay;
             NewBest = newBest;
         }
@@ -28,14 +27,13 @@ namespace PenmonScramble.Baseball.Game
         public bool Recorded { get; }
 
         public int PreviousBest { get; }
-        public bool HadBest { get; }
         public bool FirstPlay { get; }
         public bool NewBest { get; }
 
         public int RunDifference => Runs - Conceded;
 
         public BaseballResultInfo WithRecord(bool firstPlay, bool newBest) =>
-            new BaseballResultInfo(Runs, Conceded, Outcome, Reward, Recorded, PreviousBest, HadBest, firstPlay, newBest);
+            new BaseballResultInfo(Runs, Conceded, Outcome, Reward, Recorded, PreviousBest, firstPlay, newBest);
     }
 
     /// <summary>

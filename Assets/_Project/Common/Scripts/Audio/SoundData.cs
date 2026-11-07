@@ -24,9 +24,7 @@ namespace PenmonScramble.Common.Audio
     public enum SeId
     {
         None = 0,
-        ButtonClick = 1,
-        GameOver = 6,
-        GameClear = 7
+        ButtonClick = 1
     }
 
     [Serializable]

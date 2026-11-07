@@ -6,10 +6,9 @@ namespace PenmonScramble.Core
     /// <summary>試験場の1回分の結果（数字はプレイヤー1人あたりの平均）</summary>
     public readonly struct BalanceRunResult
     {
-        public BalanceRunResult(bool cleared, bool timedOut, float seconds, float damageRatio, float fainted, float downs, float bossSeconds, float bossHits, int roundsWon, int defeated)
+        public BalanceRunResult(bool cleared, float seconds, float damageRatio, float fainted, float downs, float bossSeconds, float bossHits, int roundsWon, int defeated)
         {
             Cleared = cleared;
-            TimedOut = timedOut;
             Seconds = seconds;
             DamageRatio = damageRatio;
             Fainted = fainted;
@@ -21,9 +20,6 @@ namespace PenmonScramble.Core
         }
 
         public bool Cleared { get; }
-
-        /// <summary>時間切れで止めた（決着がつかないほど長い＝失敗に数える）</summary>
-        public bool TimedOut { get; }
 
         /// <summary>始まってから決着までの秒数（ゲームの中の時間）</summary>
         public float Seconds { get; }
@@ -110,7 +106,6 @@ namespace PenmonScramble.Core
             var count = _players.Length;
             return new BalanceRunResult(
                 _world.Result == StageResult.Cleared,
-                _world.Result == StageResult.Playing,
                 _world.TickCount * Balance.TickSeconds,
                 (float)_damage / Math.Max(1, _totalMaxHp),
                 (float)_fainted / count,

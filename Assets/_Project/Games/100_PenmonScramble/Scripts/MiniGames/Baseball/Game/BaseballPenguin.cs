@@ -19,17 +19,15 @@ namespace PenmonScramble.Baseball.Game
         private readonly float _scale;
         private float _pop = 1f;
 
-        private BaseballPenguin(Transform root, PenguinMotion motion, int species)
+        private BaseballPenguin(Transform root, PenguinMotion motion)
         {
             Root = root;
             Motion = motion;
-            Species = species;
             _scale = root.localScale.x;
         }
 
         public Transform Root { get; }
         public PenguinMotion Motion { get; }
-        public int Species { get; }
 
         public static BaseballPenguin Build(string name, int species, bool wild, ToonMaterials materials, Transform parent)
         {
@@ -42,7 +40,7 @@ namespace PenmonScramble.Baseball.Game
             model.SetRealShadows(false);
             model.SetTint(wild ? PenguinTint.Dark(UnitView.EnemyDarkness) : PenguinTint.None);
             var motion = model.gameObject.AddComponent<PenguinMotion>();
-            return new BaseballPenguin(root, motion, species);
+            return new BaseballPenguin(root, motion);
         }
 
         /// <summary>立つ所へ置く。前の所から離れていたら、ぽんと出す</summary>

@@ -80,9 +80,6 @@ namespace PenmonScramble.Baseball.Core
             }
         }
 
-        /// <summary>二塁か三塁に走者がいる（ヒット1本で還れる所。CPU のチャンス・ピンチの見方）</summary>
-        public bool InScoringPosition => IsOccupied(2) || IsOccupied(3);
-
         public void Clear()
         {
             Array.Fill(_runners, Empty);

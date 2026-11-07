@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using PenmonScramble.Baseball.Core;
 using PenmonScramble.Core;
 using PenmonScramble.Game;
-using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
 using UnityEngine;
 

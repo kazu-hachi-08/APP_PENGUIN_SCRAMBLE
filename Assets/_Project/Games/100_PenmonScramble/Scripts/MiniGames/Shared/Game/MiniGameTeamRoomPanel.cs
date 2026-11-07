@@ -152,7 +152,7 @@ namespace PenmonScramble.MiniGames.Game
                 Setup.Course = HostCourse;
             }
 
-            MiniGameLaunch.StartOnline(Game, Shown?.Course ?? 0, _session, seat, playerCount);
+            MiniGameLaunch.StartOnline(Game, Shown?.Course ?? 0, _session);
             return true;
         }
 

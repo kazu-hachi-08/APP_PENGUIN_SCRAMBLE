@@ -87,9 +87,6 @@ namespace PenmonScramble.Golf.Core
             return Kind == GolfAreaKind.Jump || (Kind == GolfAreaKind.Geyser && Cycle.IsActive(time));
         }
 
-        /// <summary>球を押す範囲か（坂・押し流す帯）</summary>
-        public bool Pushes => Kind == GolfAreaKind.Slope || Kind == GolfAreaKind.Flow;
-
         public bool Contains(Vec2 point) => MiniGameGeometry.Contains(Shape, point);
 
         /// <summary>落ちると打つ前の位置へ戻る範囲か</summary>

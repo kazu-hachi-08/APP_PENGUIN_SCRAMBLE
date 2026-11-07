@@ -23,16 +23,13 @@ namespace PenmonScramble.Baseball.Core
         public readonly Dictionary<BaseballHitResult, int> Stops = new Dictionary<BaseballHitResult, int>();
 
         public int Pitches;
-        public int Swings;
-        public int Contacts;
         public int Fouls;
 
         /// <summary>浮いた打球（ジャスト＆芯）の数</summary>
         public int Lofted;
 
-        /// <summary>バントの構えのまま球が来た数・当てた数・それで走者が進んだ（犠打）数</summary>
+        /// <summary>バントの構えのまま球が来た数・それで走者が進んだ（犠打）数</summary>
         public int BuntAttempts;
-        public int BuntContacts;
         public int Sacrifices;
 
         /// <summary>本当に2つアウトを取ったゲッツーの数</summary>
@@ -42,12 +39,11 @@ namespace PenmonScramble.Baseball.Core
 
         public const int ElementCount = 4;
 
-        /// <summary>魔球を投げた数・振られた数・当てられた数（ファウルも）・ストライク（見送り・空振り）・ボール・打たれたヒット</summary>
+        /// <summary>魔球を投げた数・振られた数・当てられた数（ファウルも）・ストライク（見送り・空振り）・打たれたヒット</summary>
         public readonly int[] MagicThrown = new int[ElementCount];
         public readonly int[] MagicSwung = new int[ElementCount];
         public readonly int[] MagicContact = new int[ElementCount];
         public readonly int[] MagicStrike = new int[ElementCount];
-        public readonly int[] MagicBall = new int[ElementCount];
         public readonly int[] MagicHitSafe = new int[ElementCount];
 
         /// <summary>必殺打を出した球の数・当てた数（使った）・ファウル・ヒット・ホームラン・アウト</summary>
@@ -57,10 +53,6 @@ namespace PenmonScramble.Baseball.Core
         public readonly int[] SpecialSafe = new int[ElementCount];
         public readonly int[] SpecialHomeRun = new int[ElementCount];
         public readonly int[] SpecialOut = new int[ElementCount];
-
-        /// <summary>魔球と必殺打がぶつかった球の数と、そのうち当てた数</summary>
-        public int Clashes;
-        public int ClashContacts;
 
         public int Innings;
         public bool Mercy;
@@ -217,14 +209,7 @@ namespace PenmonScramble.Baseball.Core
                 stats.MagicSwung[e] += board.Bat.HasAttempted ? 1 : 0;
                 stats.MagicContact[e] += contact ? 1 : 0;
                 stats.MagicStrike[e] += outcome.Kind == BaseballPitchOutcomeKind.CalledStrike || outcome.Kind == BaseballPitchOutcomeKind.SwingingStrike ? 1 : 0;
-                stats.MagicBall[e] += outcome.Kind == BaseballPitchOutcomeKind.Ball ? 1 : 0;
                 stats.MagicHitSafe[e] += outcome.Kind == BaseballPitchOutcomeKind.InPlay && !BaseballResults.IsOut(outcome.Hit) ? 1 : 0;
-            }
-
-            if (magic.IsActive && hit.IsActive)
-            {
-                stats.Clashes++;
-                stats.ClashContacts += board.SpecialHitUsed ? 1 : 0;
             }
 
             if (!hit.IsActive)
@@ -259,11 +244,7 @@ namespace PenmonScramble.Baseball.Core
         {
             switch (e.Kind)
             {
-                case BaseballEventKind.Swing:
-                    stats.Swings++;
-                    break;
                 case BaseballEventKind.Contact:
-                    stats.Contacts++;
                     stats.Lofted += e.Flag ? 1 : 0;
                     break;
                 case BaseballEventKind.HoleIn:
@@ -279,7 +260,6 @@ namespace PenmonScramble.Baseball.Core
         {
             var outcome = play.Outcome;
             stats.Fouls += outcome.Kind == BaseballPitchOutcomeKind.Foul ? 1 : 0;
-            stats.BuntContacts += outcome.Bunt ? 1 : 0;
             stats.Seconds += play.PlateEnded ? PlateEndSeconds : ResultSeconds;
             if (!play.PlateEnded)
             {

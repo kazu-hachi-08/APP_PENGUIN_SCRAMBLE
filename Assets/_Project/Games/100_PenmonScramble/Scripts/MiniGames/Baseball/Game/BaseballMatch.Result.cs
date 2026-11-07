@@ -173,7 +173,7 @@ namespace PenmonScramble.Baseball.Game
             var hadBest = records.TryGetBest(game.Id, courseNo, out var previousBest);
             var firstWin = (records.Find(game.Id, courseNo)?.special ?? 0) == 0;
             var reward = BaseballReward.Compute(runs, outcome, _record && firstWin);
-            var info = new BaseballResultInfo(runs, conceded, outcome, reward, _record, previousBest, hadBest);
+            var info = new BaseballResultInfo(runs, conceded, outcome, reward, _record, previousBest);
             if (!_record)
             {
                 return info;

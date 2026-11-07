@@ -68,24 +68,6 @@ namespace PenmonScramble.Golf.Core
                 default: return string.Empty;
             }
         }
-
-        /// <summary>HUD に出す一言の説明（★で何が変わるかも）</summary>
-        public static string DescribeOf(GolfSpecialKind kind, int stars)
-        {
-            switch (kind)
-            {
-                case GolfSpecialKind.IceRoad:
-                    return $"通り道が凍って止まりにくい。池・砂地も渡れる（{GolfSpecialBalance.IceLength(stars):0}m）";
-                case GolfSpecialKind.SkipBounce:
-                    return $"水切りのように跳ねて、低い壁や池を越える（{GolfSpecialBalance.SkipBounces(stars)}回跳ねる）";
-                case GolfSpecialKind.WindCurve:
-                    return "選んだ向きへ大きく曲がって進む";
-                case GolfSpecialKind.ThunderBoost:
-                    return "転がっている間にもう一度押すと、加速して向きを少し変える";
-                default:
-                    return string.Empty;
-            }
-        }
     }
 
     /// <summary>

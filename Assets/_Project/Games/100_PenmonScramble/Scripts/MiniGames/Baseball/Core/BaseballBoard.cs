@@ -86,9 +86,6 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>今の球の高さ（転がっていれば 0）</summary>
         public float BallHeight => Phase == BaseballBoardPhase.BallInPlay || (Phase == BaseballBoardPhase.Done && LastHit.HasValue) ? _ball.Height : 0f;
 
-        /// <summary>投げた球がゾーンの中を通ったか（ホームの線を越えた後に決まる）</summary>
-        public bool InZone => _inZone;
-
         /// <summary>この球で打つ人が出した必殺打（出していなければ None）</summary>
         public BaseballSpecial HitSpecial => _hitSpecial;
 

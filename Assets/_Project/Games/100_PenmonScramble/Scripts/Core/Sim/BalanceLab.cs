@@ -23,10 +23,8 @@ namespace PenmonScramble.Core
         public int Players { get; }
         public BotSkill Skill { get; }
         public BalanceParty Party { get; }
-        public IReadOnlyList<BalanceRunResult> Results => _results;
 
         public float ClearRate => Average(r => r.Cleared ? 1f : 0f);
-        public float TimeoutRate => Average(r => r.TimedOut ? 1f : 0f);
 
         /// <summary>クリアできた回の平均の秒数（クリアが無ければ全部の平均）</summary>
         public float ClearSeconds => HasClear ? Average(r => r.Seconds, r => r.Cleared) : Average(r => r.Seconds);

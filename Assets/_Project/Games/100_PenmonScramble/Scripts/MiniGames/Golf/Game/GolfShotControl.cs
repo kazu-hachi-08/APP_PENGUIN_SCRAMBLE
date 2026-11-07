@@ -92,9 +92,6 @@ namespace PenmonScramble.Golf.Game
         /// <summary>いまの番の人の3体</summary>
         public GolfTeam CurrentTeam => _round.Teams[World.CurrentPlayer];
 
-        /// <summary>ON にしているときの特殊ショット（ガイド線を曲げる・HUD に出す）。OFF なら None</summary>
-        public GolfSpecial ArmedSpecial => SpecialArmed ? GolfSpecial.For(CurrentTeam.Current, Curve) : GolfSpecial.None;
-
         /// <summary>雷の加速を使える（打った球が転がっている間）</summary>
         public bool BoostAvailable => IsLocalTurn && !Blocked && World.CanBoost(World.CurrentPlayer);
 

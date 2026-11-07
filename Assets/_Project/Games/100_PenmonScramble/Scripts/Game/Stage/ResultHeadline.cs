@@ -34,11 +34,6 @@ namespace PenmonScramble.Game
         private float _glideAt;
         private bool _showRays;
 
-        /// <summary>まん中に見せてから、列の上へすべり始めるまでの秒</summary>
-        public float GlideAt => _glideAt;
-
-        public float GlideEnd => _glideAt + GlideSeconds;
-
         private void Bind()
         {
             if (_group != null)

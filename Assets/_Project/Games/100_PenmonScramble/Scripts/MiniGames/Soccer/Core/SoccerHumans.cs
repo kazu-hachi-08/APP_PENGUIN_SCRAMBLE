@@ -31,8 +31,6 @@ namespace PenmonScramble.Soccer.Core
             }
         }
 
-        public int SeatCount => _controls.Length;
-
         /// <summary>その席の人がいる（抜けていない）</summary>
         public bool Has(int seat) => Control(seat) != null;
 

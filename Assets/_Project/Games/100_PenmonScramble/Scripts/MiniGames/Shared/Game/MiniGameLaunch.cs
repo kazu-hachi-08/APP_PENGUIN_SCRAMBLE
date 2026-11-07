@@ -9,7 +9,7 @@ namespace PenmonScramble.MiniGames.Game
     /// <summary>
     /// ミニゲームのシーンへの行き来。遊ぶミニゲームとコースはシーンをまたいで残す
     /// （ミニゲームのシーンが読み、本編へ戻ったミニゲーム画面が同じコースを選んだ状態で開く）。
-    /// みんなで遊ぶときは、部屋（OnlineSession）を試合ごと次のシーンへ引き継ぎ、席番号と人数もここで渡す
+    /// みんなで遊ぶときは、部屋（OnlineSession）を試合ごと次のシーンへ引き継ぐ
     /// </summary>
     public static class MiniGameLaunch
     {
@@ -21,20 +21,12 @@ namespace PenmonScramble.MiniGames.Game
         /// <summary>みんなで遊んでいる（部屋の待ちの窓から始めた）。ひとりで遊ぶ・戻ると false</summary>
         public static bool IsOnline { get; private set; }
 
-        /// <summary>みんなでのみ: 自分の席番号（ホスト=0）</summary>
-        public static int Seat { get; private set; }
-
-        /// <summary>みんなでのみ: 始めたときの人数</summary>
-        public static int PlayerCount { get; private set; }
-
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             Game = null;
             CourseNo = 0;
             IsOnline = false;
-            Seat = 0;
-            PlayerCount = 0;
         }
 
         /// <summary>ひとりで遊ぶ: ミニゲームのシーンへ移る</summary>
@@ -50,14 +42,12 @@ namespace PenmonScramble.MiniGames.Game
         /// みんなで遊ぶ（部屋の待ちの窓で試合が始まった。全員の端末で呼ぶ）: 部屋を試合ごと引き継いで、ミニゲームのシーンへ移る。
         /// ゲストの courseNo は待ちの窓で届いたもの（届いていなければ 0。正しいコースはシーンに入ってからホストが送る）
         /// </summary>
-        public static void StartOnline(MiniGameDef game, int courseNo, OnlineSession session, int seat, int playerCount)
+        public static void StartOnline(MiniGameDef game, int courseNo, OnlineSession session)
         {
             session.CarryMatchToNextScene();
             Game = game;
             CourseNo = courseNo;
             IsOnline = true;
-            Seat = seat;
-            PlayerCount = playerCount;
             Load(game.SceneName);
         }
 

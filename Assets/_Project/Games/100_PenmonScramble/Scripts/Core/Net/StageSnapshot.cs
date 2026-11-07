@@ -142,7 +142,6 @@ namespace PenmonScramble.Core
         }
 
         public bool IsFan => HalfAngleDegrees > 0f;
-        public bool IsCircle => !IsFan && (To - From).LengthSquared <= 1e-6f;
     }
 
     /// <summary>
