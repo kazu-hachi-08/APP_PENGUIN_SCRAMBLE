@@ -57,6 +57,19 @@ namespace PenmonScramble.Editor
             return parts.Button;
         }
 
+        /// <summary>遊び方のスマホの絵（BaseballSceneBuilder.HowToPlay）: 打つ番の「振る」「バント」を、試合と同じ配置で縮めて描く</summary>
+        internal static void CreateBaseballPhoneBatButtons(Transform screen, float scale)
+        {
+            CreatePhoneControl(screen, "振る", Vector2.right, Skill1Position, Skill1Size, BaseballSwingColor, scale);
+            CreatePhoneControl(screen, "バント", Vector2.right, Skill2Position, Skill2Size, BaseballBuntColor, scale);
+        }
+
+        /// <summary>遊び方のスマホの絵: 投げる番に出る、曲げるスティック（本編の移動のスティックと同じ所）</summary>
+        internal static void CreateBaseballPhoneStick(Transform screen, float scale)
+        {
+            CreatePhoneControl(screen, "曲げる", Vector2.zero, JoystickPosition, JoystickSize, JoystickBackColor, scale);
+        }
+
         /// <summary>試しの打席のシーン用: 仮想スティックを InputManager に、振るを Action1・バントを Action2 につなぐ</summary>
         internal static void BindBaseballInput(InputManager manager, BaseballTouchParts touch)
         {

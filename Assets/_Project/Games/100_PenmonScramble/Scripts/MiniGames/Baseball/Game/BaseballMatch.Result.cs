@@ -26,6 +26,7 @@ namespace PenmonScramble.Baseball.Game
         [SerializeField] private MiniGameResultPanel _result;
         [Tooltip("ゲームセットから結果を出すまで（喜ぶ・悔しがるのを見せる）")]
         [SerializeField] private float _resultDelay = 2.2f;
+        [SerializeField] private MusicClips _musicClips;
 
         private bool _record;
         private float _resultLeft = -1f;
@@ -35,6 +36,15 @@ namespace PenmonScramble.Baseball.Game
         public event System.Action RoomRequested;
 
         private bool IsMenuOpen => _menu != null && _menu.IsOpen;
+
+        /// <summary>
+        /// 野球の曲。本編から来たときの曲を引き継がず、ここで差し替える（AudioManager はシーンをまたいで残る）。
+        /// 同じ曲が流れている間に呼んでも頭からにはならない（AudioManager が見分ける）
+        /// </summary>
+        public void PlayMusic()
+        {
+            GameMusic.Play(MusicTrack.Baseball, _musicClips);
+        }
 
         private void BindResult()
         {
@@ -47,6 +57,8 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>試合を始めるたび: メニューを開けるようにして、結果を隠す</summary>
         private void BeginResultFlow()
         {
+            // 結果で止めた曲を「もう一度」・「試合をやり直す」で流し直す
+            PlayMusic();
             _resultLeft = -1f;
             _seatRbi = new int[_plan.SeatCount];
             _result.SetOnline(IsOnline, !IsGuest);
@@ -106,6 +118,8 @@ namespace PenmonScramble.Baseball.Game
         {
             var info = RecordResult();
             _hud.SetResult(true);
+            // 本編・ゴルフ・サッカーと同じく、結果の音が曲に埋もれないよう止める
+            GameMusic.Stop();
             GameSounds.Play(info.Outcome == BaseballOutcome.Loss ? GameSound.Fail : GameSound.Clear);
             _result.Show(BaseballResultText.Build(info));
             ShowMvp();

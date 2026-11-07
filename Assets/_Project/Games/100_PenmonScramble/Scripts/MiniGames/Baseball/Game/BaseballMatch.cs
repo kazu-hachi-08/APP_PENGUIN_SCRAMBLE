@@ -165,6 +165,11 @@ namespace PenmonScramble.Baseball.Game
             BeginResultFlow();
             SetUpHalf();
             _camera.Snap();
+            if (!_game.IsPractice)
+            {
+                BaseballSoundCues.PlayBall();
+            }
+
             if (!IsGuest)
             {
                 EnterPlate();

@@ -34,7 +34,7 @@ namespace PenmonScramble.Baseball.Game
         Hit,
         /// <summary>アウト（下がる2つの音）</summary>
         Out,
-        /// <summary>三振（下がっていく音）</summary>
+        /// <summary>三振（審判の「ストラーイク！」の代わりの、短い音と伸びて上がる音）</summary>
         Strikeout,
         /// <summary>四球（軽い3つの音）</summary>
         Walk,
@@ -46,7 +46,7 @@ namespace PenmonScramble.Baseball.Game
         Ooh,
         /// <summary>魔球・必殺打のカットイン（上がっていく音）</summary>
         Special,
-        /// <summary>チェンジ（攻守交代の短い合図）</summary>
+        /// <summary>チェンジ（攻守交代の、オルガンのような2声のジングル）</summary>
         Change,
         /// <summary>フリーズボールが凍った（キーン）</summary>
         Freeze,
@@ -56,6 +56,8 @@ namespace PenmonScramble.Baseball.Game
         Skip,
         /// <summary>間欠泉が打球を跳ね上げた（シュワッ）</summary>
         Geyser,
+        /// <summary>試合の始め（審判の「プレイボール！」の代わりの、呼びかけとファンファーレ）</summary>
+        PlayBall,
     }
 
     /// <summary>
@@ -101,6 +103,7 @@ namespace PenmonScramble.Baseball.Game
             { BaseballSound.Vanish, 0.4f },
             { BaseballSound.Skip, 0.35f },
             { BaseballSound.Geyser, 0.4f },
+            { BaseballSound.PlayBall, 0.5f },
         };
 
         /// <summary>バットに当たった音。power は当たりの強さ（0〜1）</summary>
@@ -152,18 +155,19 @@ namespace PenmonScramble.Baseball.Game
                 case BaseballSound.Ball: return Beep("Baseball_Ball", 520f, 0.1f);
                 case BaseballSound.Hit: return ToySynth.Jingle("Baseball_Hit", new[] { 659f, 784f, 1047f });
                 case BaseballSound.Out: return ToySynth.Jingle("Baseball_Out", new[] { 523f, 392f });
-                case BaseballSound.Strikeout: return ToySynth.Sweep("Baseball_Strikeout", 0.45f, 700f, 200f);
+                case BaseballSound.Strikeout: return UmpireCall("Baseball_Strikeout", 0.55f);
                 case BaseballSound.Walk: return ToySynth.Jingle("Baseball_Walk", new[] { 784f, 784f, 988f });
                 case BaseballSound.Cheer: return MiniGameCrowdSounds.Cheer();
                 case BaseballSound.Ooh: return MiniGameCrowdSounds.Ooh();
                 case BaseballSound.Special: return ToySynth.Sweep("Baseball_Special", 0.35f, 220f, 1400f);
-                case BaseballSound.Change: return ToySynth.Jingle("Baseball_Change", new[] { 784f, 659f, 784f, 1047f });
+                case BaseballSound.Change: return Change();
                 case BaseballSound.Freeze: return Freeze();
                 // 消える・現れる「ヒュン」: 高い所から一気に下がる
                 case BaseballSound.Vanish: return ToySynth.Sweep("Baseball_Vanish", 0.15f, 1800f, 500f);
                 // 水切りの「ピチャッ」: 短く高めの打撃
                 case BaseballSound.Skip: return ToySynth.Impact("Baseball_Skip", 0.05f, 900f);
                 case BaseballSound.Geyser: return ToySynth.Whoosh("Baseball_Geyser");
+                case BaseballSound.PlayBall: return PlayBall();
                 default: return ToySynth.Jingle("Baseball_HomeRun", new[] { 523f, 659f, 784f, 1047f, 784f, 1047f, 1319f });
             }
         }
@@ -248,6 +252,95 @@ namespace PenmonScramble.Baseball.Game
             {
                 var ring = Mathf.Sin(2f * Mathf.PI * 2093f * t) * 0.4f + Mathf.Sin(2f * Mathf.PI * 3136f * t) * 0.25f;
                 return ring * Mathf.Min(1f, t / 0.01f) * Mathf.Exp(-t * 6f);
+            });
+        }
+
+        /// <summary>
+        /// 審判の呼び声の代わり: 短く切った「スト」と、下から持ち上げて伸ばす「ラーイク」。声に聞こえるよう、
+        /// 角の丸い三角波に少しの揺れを付け、高さは人の声の上のあたり（言葉を録らずに、審判が叫んだ感じだけ出す）
+        /// </summary>
+        private static AudioClip UmpireCall(string name, float longLength)
+        {
+            var sampler = UmpireSampler(longLength, out var duration);
+            return ToySynth.CreateClip(name, duration, sampler);
+        }
+
+        /// <summary>呼び声の波形（t は鳴らし始めからの秒。前から順に呼ぶ）。PlayBall がファンファーレの前につなぐので、クリップにせず波形のまま返す</summary>
+        private static System.Func<float, float> UmpireSampler(float longLength, out float duration)
+        {
+            const float shortLength = 0.08f;
+            const float gap = 0.05f;
+            duration = shortLength + gap + longLength;
+            var phase = 0f;
+            return t =>
+            {
+                float frequency;
+                float envelope;
+                if (t < shortLength)
+                {
+                    frequency = 520f;
+                    envelope = Mathf.Min(1f, t / 0.01f) * (1f - t / shortLength * 0.4f);
+                }
+                else if (t < shortLength + gap)
+                {
+                    return 0f;
+                }
+                else
+                {
+                    var local = t - shortLength - gap;
+                    frequency = Mathf.Lerp(440f, 700f, Mathf.Clamp01(local / 0.12f)) * (1f + 0.02f * Mathf.Sin(2f * Mathf.PI * 6f * local));
+                    envelope = Mathf.Min(1f, local / 0.02f) * Mathf.Clamp01((longLength - local) / 0.15f);
+                }
+
+                phase += frequency / ToySynth.SampleRate;
+                var triangle = Mathf.Abs(phase % 1f * 4f - 2f) - 1f;
+                var edge = ToySynth.Square(frequency, t) * 0.25f;
+                return (triangle * 0.5f + edge) * envelope;
+            };
+        }
+
+        /// <summary>チェンジ: 上の旋律と下の支えの2声で、球場のオルガンのように明るく区切る（1 秒ほど。帯を見せている間に鳴り終わる）</summary>
+        private static AudioClip Change()
+        {
+            const float note = 0.11f;
+            var melody = new[] { 784f, 988f, 1175f, 988f, 1175f, 1568f };
+            var bass = new[] { 196f, 196f, 247f, 247f, 294f, 392f };
+            var duration = note * (melody.Length + 2);
+            return ToySynth.CreateClip("Baseball_Change", duration, t =>
+            {
+                var index = Mathf.Min(melody.Length - 1, Mathf.FloorToInt(t / note));
+                var local = t - index * note;
+                // 最後の音だけ伸ばして、区切りの感じを出す
+                var length = index == melody.Length - 1 ? note * 3f : note;
+                var envelope = Mathf.Max(0f, 1f - local / length);
+                var top = ToySynth.Square(melody[index], t) * 0.8f;
+                var low = Mathf.Sin(2f * Mathf.PI * bass[index] * t) * 0.35f;
+                return (top + low) * envelope;
+            });
+        }
+
+        /// <summary>
+        /// プレイボール: 審判の呼び声の代わり（短い「プレイ」と伸ばす「ボール」）のあとに、上がっていく短いファンファーレ。
+        /// 2つのクリップを読み出してつなぐのではなく波形でつなぐ（ブラウザ版ではクリップの中身を読み出せないため）
+        /// </summary>
+        private static AudioClip PlayBall()
+        {
+            const float note = 0.11f;
+            var fanfare = new[] { 523f, 659f, 784f, 1047f };
+            var call = UmpireSampler(0.4f, out var callLength);
+            var duration = callLength + note * (fanfare.Length + 1);
+            return ToySynth.CreateClip("Baseball_PlayBall", duration, t =>
+            {
+                if (t < callLength)
+                {
+                    return call(t);
+                }
+
+                var local = t - callLength;
+                var index = Mathf.Min(fanfare.Length - 1, Mathf.FloorToInt(local / note));
+                var inNote = local - index * note;
+                var length = index == fanfare.Length - 1 ? note * 2f : note;
+                return ToySynth.Square(fanfare[index], t) * Mathf.Max(0f, 1f - inNote / length);
             });
         }
 

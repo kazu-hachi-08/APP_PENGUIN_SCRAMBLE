@@ -1,6 +1,7 @@
 using PenmonScramble.Baseball.Core;
 using PenmonScramble.Common.Input;
 using PenmonScramble.Common.Online;
+using PenmonScramble.Game;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace PenmonScramble.Baseball.Game
         [SerializeField] private BaseballMatch _match;
         [SerializeField] private BaseballOnlinePlay _online;
         [SerializeField] private OnlineSession _session;
+        [SerializeField] private HowToPlayScreen _howToPlay;
 
         private bool _leaving;
 
@@ -42,6 +44,14 @@ namespace PenmonScramble.Baseball.Game
         private void Start()
         {
             MiniGameLaunch.EnsureSelected(MiniGameTable.BaseballId);
+            // 遊び方の画面は本編と同じ物なので、ルールのページだけ野球のものに差し替える
+            if (_howToPlay != null)
+            {
+                _howToPlay.UsePages(BaseballHowToPlayPages.All);
+            }
+
+            // 「準備中」の板・みんなでの「待っています」の間も、本編の曲のままにしない
+            _match.PlayMusic();
             if (BaseballDevRequest.TryTake(out var mode))
             {
                 StartMatch(mode, null, record: false);
