@@ -353,6 +353,23 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
+        public void AiLevels_EveryStarIsStrongerThanTheOneBelow()
+        {
+            // ★4・★5 は ★3 との間を詰めてあるので、詰めすぎて段が逆にならないことを確かめる
+            for (var stars = SoccerBalance.AiMinStars + 1; stars <= SoccerBalance.AiMaxStars; stars++)
+            {
+                var weaker = SoccerBalance.AiLevel(stars - 1);
+                var stronger = SoccerBalance.AiLevel(stars);
+                Assert.That(stronger.ReactionSeconds, Is.LessThan(weaker.ReactionSeconds), $"★{stars} の気づくまでの遅れ");
+                Assert.That(stronger.DecisionSeconds, Is.LessThan(weaker.DecisionSeconds), $"★{stars} の考え直す間隔");
+                Assert.That(stronger.AimErrorDegrees, Is.LessThan(weaker.AimErrorDegrees), $"★{stars} の狙いのぶれ");
+                Assert.That(stronger.SlideChance, Is.GreaterThan(weaker.SlideChance), $"★{stars} のスライディング");
+                Assert.That(stronger.PassSense, Is.GreaterThan(weaker.PassSense), $"★{stars} のパスの賢さ");
+                Assert.That(stronger.PenaltyReadChance, Is.GreaterThan(weaker.PenaltyReadChance), $"★{stars} の PK の読み");
+            }
+        }
+
+        [Test]
         public void Ai_SameSeedPlaysTheSameMatch()
         {
             Assert.That(PlayAiMatch(3, 3, 7, 30f), Is.EqualTo(PlayAiMatch(3, 3, 7, 30f)));

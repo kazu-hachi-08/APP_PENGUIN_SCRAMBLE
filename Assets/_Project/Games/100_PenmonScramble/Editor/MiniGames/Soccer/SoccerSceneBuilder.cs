@@ -18,7 +18,8 @@ namespace PenmonScramble.Editor
     /// （Rebuild は本編とゴルフのシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
     /// まだ作っていないスタジアムのときの「準備中」の板と、ひとりで1試合（SoccerMatchPlay。3対3・キーパー・PK戦・必殺シュート・結果・メニュー）を置く
     /// （Docs/MINIGAME_SOCCER_PLAN.md フェーズ 4）。みんなで遊ぶための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの SoccerOnlinePlay・
-    /// 始まるまでの「待っています」）も置く（フェーズ 5）。HUD は SoccerSceneBuilder.Hud.cs、PK戦の HUD は SoccerSceneBuilder.HudShootout.cs
+    /// 始まるまでの「待っています」）も置く（フェーズ 5）。HUD は SoccerSceneBuilder.Hud.cs、PK戦の HUD は SoccerSceneBuilder.HudShootout.cs、
+    /// 遊び方は SoccerSceneBuilder.HowToPlay.cs
     /// </summary>
     public static partial class SoccerSceneBuilder
     {
@@ -64,8 +65,9 @@ namespace PenmonScramble.Editor
             var hud = CreateHud(canvas);
             var cutIn = PenmonScrambleSceneBuilder.CreateSoccerCutIn(canvas);
             var result = PenmonScrambleSceneBuilder.CreateMiniGameResultPanel(canvas, "スタジアムを選ぶ", "ホストがスタジアムを選ぶと、みんなで待ちの窓へ戻ります");
-            // メニューは HUD・結果より手前に出す（CreateStageMenu が並べ替える）
-            var menu = CreateMenu(canvas, hud.Menu);
+            // メニューは HUD・結果より手前に、遊び方はメニューよりさらに手前に出す（CreateStageMenu が並べ替える）
+            var howToPlay = CreateHowToPlay(canvas);
+            var menu = CreateMenu(canvas, hud.Menu, howToPlay);
             var play = CreateMatchPlay(camera, hud, cutIn, menu, result);
             CreateInputManager(hud.Touch);
             // 本編のシーンが預けた部屋を、起きたときに引き継ぐ（ひとりで遊ぶときは何もしない）
@@ -80,6 +82,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_play").objectReferenceValue = play;
             so.FindProperty("_online").objectReferenceValue = online;
             so.FindProperty("_session").objectReferenceValue = session;
+            so.FindProperty("_howToPlay").objectReferenceValue = howToPlay;
             so.ApplyModifiedProperties();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -132,6 +135,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_cutIn").objectReferenceValue = cutIn;
             so.FindProperty("_menu").objectReferenceValue = menu;
             so.FindProperty("_result").objectReferenceValue = result;
+            so.FindProperty("_musicClips").objectReferenceValue = PenmonScrambleSceneBuilder.CreateMusicClips(root);
             so.ApplyModifiedProperties();
             return play;
         }
@@ -155,13 +159,13 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>
-        /// 試合中のメニュー（本編の StageMenu の見た目）。札は つづける・試合をやり直す・設定・ミニゲームへ
-        /// （遊び方のページはフェーズ 7 で足す。それまで「遊び方」の札は出さない）。右の編成の欄は作らない
+        /// 試合中のメニュー（本編の StageMenu の見た目）。札は つづける・試合をやり直す・遊び方（サッカーのページ）・設定・ミニゲームへ。
+        /// 右の編成の欄は作らない
         /// </summary>
-        private static StageMenu CreateMenu(Transform canvas, Button openButton)
+        private static StageMenu CreateMenu(Transform canvas, Button openButton, HowToPlayScreen howToPlay)
         {
             var labels = new[] { "つづける", "試合をやり直す", "遊び方", "設定", "ミニゲームへ" };
-            var menu = PenmonScrambleSceneBuilder.CreateStageMenu(canvas, openButton, null, labels, withParty: false);
+            var menu = PenmonScrambleSceneBuilder.CreateStageMenu(canvas, openButton, howToPlay, labels, withParty: false);
             var so = new SerializedObject(menu);
             so.FindProperty("_restartLabel").stringValue = "試合をやり直す";
             so.FindProperty("_restartSoloMessage").stringValue = "試合をはじめからやり直します。\nいまの点は残りません";

@@ -23,12 +23,22 @@ namespace PenmonScramble.Soccer.Game
         [SerializeField] private MiniGameResultPanel _result;
         [Tooltip("試合が終わってから結果を出すまで（喜ぶ・悔しがるのを見せる）")]
         [SerializeField] private float _resultDelay = 1.6f;
+        [SerializeField] private MusicClips _musicClips;
 
         private bool _record;
         private bool _shootoutOnly;
         private float _resultLeft = -1f;
 
         private bool IsMenuOpen => _menu != null && _menu.IsOpen;
+
+        /// <summary>
+        /// サッカーの曲。本編から来たときの曲を引き継がず、ここで差し替える（AudioManager はシーンをまたいで残る）。
+        /// 同じ曲が流れている間に呼んでも頭からにはならない（AudioManager が見分ける）
+        /// </summary>
+        public void PlayMusic()
+        {
+            GameMusic.Play(MusicTrack.Soccer, _musicClips);
+        }
 
         private void BindFlow()
         {
@@ -41,6 +51,8 @@ namespace PenmonScramble.Soccer.Game
         /// <summary>試合を始めるたび: メニューを開けるようにして、結果を隠す</summary>
         private void BeginFlow()
         {
+            // 結果で止めた曲を「もう一度」・「試合をやり直す」で流し直す
+            PlayMusic();
             _resultLeft = -1f;
             _result.SetOnline(_mode.IsOnline, _mode.IsHost);
             _result.Hide();
@@ -87,6 +99,8 @@ namespace PenmonScramble.Soccer.Game
         {
             var info = RecordResult();
             _hud.SetResult();
+            // 本編・ゴルフと同じく、結果の音が曲に埋もれないよう止める
+            GameMusic.Stop();
             GameSounds.Play(info.Outcome != SoccerOutcome.Loss ? GameSound.Clear : GameSound.Fail);
             _result.Show(SoccerResultText.Build(info));
             ShowMvp();

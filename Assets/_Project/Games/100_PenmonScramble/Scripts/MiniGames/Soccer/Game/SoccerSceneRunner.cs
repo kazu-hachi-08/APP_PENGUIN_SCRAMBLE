@@ -1,5 +1,6 @@
 using PenmonScramble.Common.Input;
 using PenmonScramble.Common.Online;
+using PenmonScramble.Game;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
 using PenmonScramble.Soccer.Core;
@@ -24,6 +25,7 @@ namespace PenmonScramble.Soccer.Game
         [SerializeField] private SoccerMatchPlay _play;
         [SerializeField] private SoccerOnlinePlay _online;
         [SerializeField] private OnlineSession _session;
+        [SerializeField] private HowToPlayScreen _howToPlay;
 
         private bool _leaving;
 
@@ -42,6 +44,14 @@ namespace PenmonScramble.Soccer.Game
         private void Start()
         {
             MiniGameLaunch.EnsureSelected(MiniGameTable.SoccerId);
+            // 遊び方の画面は本編と同じ物なので、ルールのページだけサッカーのものに差し替える
+            if (_howToPlay != null)
+            {
+                _howToPlay.UsePages(SoccerHowToPlayPages.All);
+            }
+
+            // 「準備中」の板・みんなでの「待っています」の間も、本編の曲のままにしない
+            _play.PlayMusic();
             var dev = SoccerDevRequest.Take(out var devStadium);
             if (dev != SoccerDevMode.None)
             {

@@ -43,14 +43,17 @@ namespace PenmonScramble.Soccer.Core
     }
 
     /// <summary>
-    /// サッカーの報酬（案。計画書「報酬」）。本編のストーリーより控えめにする（数値はフェーズ 7 でゴルフと比べて決め直す）。マイナスにはしない
+    /// サッカーの報酬。マイナスにはしない。
+    /// 1試合は合図・ゴールの間・結果まで入れて 3分40秒ほど（1時間に 16 試合）。ストーリーのくり返し（1時間に約 3500）より控えめな
+    /// ゴルフ（800〜1400）に合わせ、いちばん稼げる「5点以上取って勝ち続ける」でも 1試合 85・1時間に 1400 ほどにした
+    /// （計画書の案の 勝ち 50・1点 8 では 110・1時間に 1800 で、海岸の CPU ★1 にはまず勝てるのでゴルフより稼げてしまった）
     /// </summary>
     public static class SoccerReward
     {
         public const int BaseCoins = 20;
-        public const int WinCoins = 50;
-        public const int ShootoutWinCoins = 30;
-        public const int CoinsPerGoal = 8;
+        public const int WinCoins = 40;
+        public const int ShootoutWinCoins = 25;
+        public const int CoinsPerGoal = 5;
         public const int MaxPaidGoals = 5;
         public const int FirstWinBonus = 100;
 

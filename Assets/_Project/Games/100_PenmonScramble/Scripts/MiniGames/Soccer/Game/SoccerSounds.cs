@@ -51,6 +51,10 @@ namespace PenmonScramble.Soccer.Game
         Bumper,
         /// <summary>間欠泉が噴いてボールが跳ね上がった（シュワーッ）</summary>
         Geyser,
+        /// <summary>点が入ったときの観客の歓声（ワーッ）</summary>
+        Cheer,
+        /// <summary>おしい・止められたときの観客のどよめき（おお〜）</summary>
+        Ooh,
     }
 
     /// <summary>
@@ -69,6 +73,9 @@ namespace PenmonScramble.Soccer.Game
         private const float NetVolumeMax = 0.6f;
         // 当たる速さがこれで「いちばん強い」とする（m/s）
         private const float FullSpeed = 14f;
+        // 残りの秒がこれ以下のカウントダウンは高く鳴らす（最後の3秒を耳でも分かるように）
+        private const int FinalCountdownSeconds = 3;
+        private const float FinalCountdownPitch = 1.5f;
 
         private static readonly Dictionary<SoccerSound, AudioClip> Clips = new Dictionary<SoccerSound, AudioClip>();
 
@@ -93,6 +100,9 @@ namespace PenmonScramble.Soccer.Game
             { SoccerSound.Miss, 0.35f },
             { SoccerSound.Bumper, 0.5f },
             { SoccerSound.Geyser, 0.45f },
+            // 観客の声は、ゴールのファンファーレ・キーパーの音の後ろで鳴る大きさに
+            { SoccerSound.Cheer, 0.35f },
+            { SoccerSound.Ooh, 0.3f },
         };
 
         /// <summary>蹴る音。strength はため（0〜1）</summary>
@@ -111,6 +121,13 @@ namespace PenmonScramble.Soccer.Game
         }
 
         public static void Play(SoccerSound sound) => Play(sound, Volumes.TryGetValue(sound, out var volume) ? volume : 0.5f, 1f);
+
+        /// <summary>残り10秒からの「ピッ」。secondsLeft は画面に出ている残りの秒</summary>
+        public static void PlayCountdown(int secondsLeft)
+        {
+            var pitch = secondsLeft <= FinalCountdownSeconds ? FinalCountdownPitch : 1f;
+            Play(SoccerSound.Countdown, Volumes[SoccerSound.Countdown], pitch);
+        }
 
         private static void Play(SoccerSound sound, float volume, float pitch)
         {
@@ -157,6 +174,8 @@ namespace PenmonScramble.Soccer.Game
                 case SoccerSound.Miss: return ToySynth.Sweep("Soccer_Miss", 0.4f, 900f, 300f);
                 case SoccerSound.Bumper: return Bumper();
                 case SoccerSound.Geyser: return Geyser();
+                case SoccerSound.Cheer: return Cheer();
+                case SoccerSound.Ooh: return Ooh();
                 default: return ToySynth.Jingle("Soccer_Goal", new[] { 523f, 659f, 784f, 1047f, 1319f });
             }
         }
@@ -209,6 +228,64 @@ namespace PenmonScramble.Soccer.Game
                 var hiss = Mathf.Lerp(noise - previous, noise, 0.4f);
                 previous = noise;
                 return hiss * 0.45f * Mathf.Min(1f, t / 0.03f) * Mathf.Exp(-t * 4.5f);
+            });
+        }
+
+        /// <summary>
+        /// 観客の歓声「ワーッ」: 中くらいの高さだけ残したノイズ（大勢のざわめき）に、ばらばらの高さの声を薄く重ね、
+        /// 波打たせながら一気に立ち上げて、ゴールの間（2 秒）のうちに引いていく
+        /// </summary>
+        private static AudioClip Cheer()
+        {
+            const float duration = 1.8f;
+            const float hold = 0.5f;
+            var random = new System.Random(31);
+            var voices = new[] { 330f, 415f, 494f, 587f, 698f };
+            var phases = new float[voices.Length];
+            var low = 0f;
+            var lower = 0f;
+            return ToySynth.CreateClip("Soccer_Cheer", duration, t =>
+            {
+                // 高い所を削った音から、もっと低い所を引いて、中くらいの高さだけ残す
+                low = Mathf.Lerp(low, (float)random.NextDouble() * 2f - 1f, 0.3f);
+                lower = Mathf.Lerp(lower, low, 0.04f);
+                var crowd = low - lower;
+                var voice = 0f;
+                for (var i = 0; i < voices.Length; i++)
+                {
+                    var wobble = 1f + 0.03f * Mathf.Sin(2f * Mathf.PI * (4.5f + i * 1.3f) * t);
+                    phases[i] += 2f * Mathf.PI * voices[i] * wobble / ToySynth.SampleRate;
+                    voice += Mathf.Sin(phases[i]);
+                }
+
+                var flutter = 0.8f + 0.2f * Mathf.Sin(2f * Mathf.PI * 7.3f * t) * Mathf.Sin(2f * Mathf.PI * 3.1f * t);
+                var envelope = Mathf.Min(1f, t / 0.12f) * (t < hold ? 1f : Mathf.Exp(-(t - hold) * 2.2f));
+                return (crowd * 1.4f + voice * 0.035f) * flutter * envelope;
+            });
+        }
+
+        /// <summary>観客のどよめき「おお〜」: 低い声の束が少し上がってから下がり、こもったざわめきと一緒に消える（歓声と聞き分けられるように低く短く）</summary>
+        private static AudioClip Ooh()
+        {
+            const float duration = 1f;
+            var random = new System.Random(37);
+            var voices = new[] { 196f, 220f, 247f, 262f };
+            var phases = new float[voices.Length];
+            var murmur = 0f;
+            return ToySynth.CreateClip("Soccer_Ooh", duration, t =>
+            {
+                var glide = t < 0.25f ? Mathf.Lerp(1f, 1.08f, t / 0.25f) : Mathf.Lerp(1.08f, 0.9f, (t - 0.25f) / (duration - 0.25f));
+                var voice = 0f;
+                for (var i = 0; i < voices.Length; i++)
+                {
+                    phases[i] += 2f * Mathf.PI * voices[i] * glide / ToySynth.SampleRate;
+                    // 三角波で丸い「お」の声にする
+                    voice += Mathf.Abs((phases[i] / (2f * Mathf.PI)) % 1f * 4f - 2f) - 1f;
+                }
+
+                murmur = Mathf.Lerp(murmur, (float)random.NextDouble() * 2f - 1f, 0.08f);
+                var envelope = Mathf.Min(1f, t / 0.1f) * Mathf.Exp(-t * 2.5f);
+                return (voice * 0.12f + murmur * 0.8f) * envelope;
             });
         }
 

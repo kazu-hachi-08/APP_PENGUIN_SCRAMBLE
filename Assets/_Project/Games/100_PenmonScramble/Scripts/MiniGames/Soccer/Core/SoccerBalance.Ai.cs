@@ -70,14 +70,16 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>気づくまでの遅れの上限（秒）。これより前のボールは覚えておかない</summary>
         public const float AiMaxReactionSeconds = 0.5f;
 
-        // ★1〜★5（スタジアム 1〜5 の CPU。案。試合の確認と試遊で決め直す）
+        // ★1〜★5（スタジアム 1〜5 の CPU）。★4・★5 は ★3 との間を詰めてある: 等間隔の段では、全スタジアムの確認で
+        // ★3（人のチームの代わり）が嵐の崖に 18%・火山の入り江に 2% しか勝てず、最後のスタジアムがほぼ勝てない壁になったため
+        // （詰めた後は 35%・20%。人が入ると勝ちやすくなるので、試遊で外れていたらここを直す）
         private static readonly SoccerAiLevel[] AiLevels =
         {
             new SoccerAiLevel(0.22f, 0.4f, 10f, 0.1f, 0.4f, 9f, 0.25f, 0.22f, 0.05f),
             new SoccerAiLevel(0.18f, 0.35f, 8.5f, 0.13f, 0.48f, 9.5f, 0.3f, 0.18f, 0.1f),
             new SoccerAiLevel(0.15f, 0.3f, 7f, 0.16f, 0.55f, 10f, 0.35f, 0.15f, 0.15f),
+            new SoccerAiLevel(0.14f, 0.28f, 6.5f, 0.17f, 0.58f, 10.2f, 0.37f, 0.14f, 0.17f),
             new SoccerAiLevel(0.12f, 0.25f, 5.5f, 0.19f, 0.65f, 10.5f, 0.4f, 0.12f, 0.2f),
-            new SoccerAiLevel(0.09f, 0.2f, 4f, 0.22f, 0.75f, 11f, 0.45f, 0.09f, 0.25f),
         };
 
         public static SoccerAiLevel AiLevel(int stars) => AiLevels[Math.Clamp(stars, AiMinStars, AiMaxStars) - AiMinStars];

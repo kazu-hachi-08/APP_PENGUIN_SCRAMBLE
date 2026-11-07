@@ -23,6 +23,7 @@ namespace PenmonScramble.Game
                 case MusicTrack.Stage: return StageSong;
                 case MusicTrack.Boss: return BossSong;
                 case MusicTrack.Golf: return GolfSong;
+                case MusicTrack.Soccer: return SoccerSong;
                 default: return TitleSong;
             }
         }
@@ -129,6 +130,32 @@ namespace PenmonScramble.Game
                 A#1 - F2 - C2 - G2 -
                 F2 - C3 - F2 - - -",
             Drums = "k.h.s.h.",
+        };
+
+        // サッカー: 3分間走り回る、サンバっぽく跳ねる元気な曲（G - Em - C - D / G - B7 - C - D）。ゴルフより速く、本編のステージより明るく
+        private static readonly Song SoccerSong = new Song
+        {
+            Name = "Bgm_Soccer",
+            Bpm = 144f,
+            Melody = @"
+                D5 - B4 D5 G5 - D5 B4
+                E5 - G5 - E5 D5 B4 -
+                C5 E5 G5 - E5 - C5 E5
+                D5 - F#5 - A5 - - -
+                B5 - A5 G5 D5 - G5 -
+                F#5 - D#5 - B4 - D#5 F#5
+                E5 - G5 - C6 - B5 A5
+                A5 - F#5 - G5 - . .",
+            Bass = @"
+                G2 . G2 D3 . G2 D3 .
+                E2 . E2 B2 . E2 B2 .
+                C3 . C3 G3 . C3 G3 .
+                D3 . D3 A2 . D3 A2 .
+                G2 . G2 D3 . G2 D3 .
+                B1 . B1 F#2 . B1 F#2 .
+                C3 . C3 G2 . C3 G2 .
+                D3 . D3 A2 G2 - - .",
+            Drums = "k.hsk.hsk.h.khs.",
         };
     }
 }

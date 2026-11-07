@@ -17,8 +17,9 @@ namespace PenmonScramble.Editor
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        private static readonly Color SoccerShootColor = new Color(1f, 0.55f, 0.2f);
-        private static readonly Color SoccerPassColor = new Color(0.22f, 0.62f, 1f);
+        // 遊び方のスマホの絵（SoccerSceneBuilder.HowToPlay）も同じ色で描く
+        internal static readonly Color SoccerShootColor = new Color(1f, 0.55f, 0.2f);
+        internal static readonly Color SoccerPassColor = new Color(0.22f, 0.62f, 1f);
 
         internal readonly struct SoccerTouchParts
         {

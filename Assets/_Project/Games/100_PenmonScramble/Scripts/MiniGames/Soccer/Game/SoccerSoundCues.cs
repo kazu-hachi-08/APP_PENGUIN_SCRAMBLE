@@ -23,7 +23,9 @@ namespace PenmonScramble.Soccer.Game
                     }
                     else
                     {
+                        // 柱・バーに当たったら、観客もおしいとどよめく
                         SoccerSounds.Play(SoccerSound.Post);
+                        SoccerSounds.Play(SoccerSound.Ooh);
                     }
 
                     break;
@@ -42,6 +44,7 @@ namespace PenmonScramble.Soccer.Game
                     break;
                 case SoccerEventKind.Goal:
                     SoccerSounds.Play(SoccerSound.Goal);
+                    SoccerSounds.Play(SoccerSound.Cheer);
                     break;
                 case SoccerEventKind.Kickoff:
                     SoccerSounds.Play(SoccerSound.Whistle);
@@ -78,7 +81,8 @@ namespace PenmonScramble.Soccer.Game
                     SoccerSounds.Play(SoccerSound.Freeze);
                     break;
                 case SoccerEventKind.Countdown:
-                    SoccerSounds.Play(SoccerSound.Countdown);
+                    // Strength は画面に出ている残りの秒
+                    SoccerSounds.PlayCountdown((int)e.Strength);
                     break;
                 case SoccerEventKind.TimeUp:
                     SoccerSounds.Play(SoccerSound.TimeUp);
@@ -88,9 +92,14 @@ namespace PenmonScramble.Soccer.Game
                     break;
                 case SoccerEventKind.PenaltyGoal:
                     SoccerSounds.Play(SoccerSound.Goal);
+                    SoccerSounds.Play(SoccerSound.Cheer);
+                    break;
+                case SoccerEventKind.PenaltySave:
+                    SoccerSounds.Play(SoccerSound.Ooh);
                     break;
                 case SoccerEventKind.PenaltyMiss:
                     SoccerSounds.Play(SoccerSound.Miss);
+                    SoccerSounds.Play(SoccerSound.Ooh);
                     break;
                 case SoccerEventKind.BumperHit:
                     SoccerSounds.Play(SoccerSound.Bumper);
