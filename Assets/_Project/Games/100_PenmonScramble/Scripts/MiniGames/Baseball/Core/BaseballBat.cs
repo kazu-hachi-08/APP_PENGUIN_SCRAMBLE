@@ -42,8 +42,11 @@ namespace PenmonScramble.Baseball.Core
             _elapsed = 0f;
         }
 
-        /// <summary>振る（1球に1回。バントの構えからも振れる＝バスター）。振り始めたら true</summary>
-        public bool Swing()
+        /// <summary>
+        /// 振る（1球に1回。バントの構えからも振れる＝バスター）。振り始めたら true。
+        /// elapsed は、もう振っていた秒（負なら次の Step の途中から回り始める。押した時刻を歩の中まで合わせるため）
+        /// </summary>
+        public bool Swing(float elapsed = 0f)
         {
             if (State != BaseballBatState.Ready && State != BaseballBatState.Bunting)
             {
@@ -51,7 +54,7 @@ namespace PenmonScramble.Baseball.Core
             }
 
             State = BaseballBatState.Swinging;
-            _elapsed = 0f;
+            _elapsed = elapsed;
             Degrees = BaseballBalance.SwingStartDegrees;
             return true;
         }
@@ -89,13 +92,20 @@ namespace PenmonScramble.Baseball.Core
             }
 
             _elapsed += dt;
-            var t = Math.Min(_elapsed / BaseballBalance.SwingSeconds, 1f);
+            var t = Math.Clamp(_elapsed / BaseballBalance.SwingSeconds, 0f, 1f);
             Degrees = BaseballBalance.SwingStartDegrees + (BaseballBalance.SwingEndDegrees - BaseballBalance.SwingStartDegrees) * t;
             if (t >= 1f)
             {
                 State = BaseballBatState.Swung;
             }
         }
+
+        /// <summary>
+        /// 振り始めてから、バットがホームの上を横切る向き（0°＝ジャストの真ん中）になるまでの秒。
+        /// 球がバットの線に届くのがこの秒後になるよう振れば、ジャストで当たる（CPU の振る時刻の目安）
+        /// </summary>
+        public static float SecondsToSquare =>
+            BaseballBalance.SwingSeconds * (0f - BaseballBalance.SwingStartDegrees) / (BaseballBalance.SwingEndDegrees - BaseballBalance.SwingStartDegrees);
 
         /// <summary>角度のバットの向き（軸から先へ）</summary>
         public static Vec2 Direction(float degrees)

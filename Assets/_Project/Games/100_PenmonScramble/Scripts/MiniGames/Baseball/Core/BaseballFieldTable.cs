@@ -1,3 +1,4 @@
+using System;
 using PenmonScramble.Core;
 
 namespace PenmonScramble.Baseball.Core
@@ -26,7 +27,7 @@ namespace PenmonScramble.Baseball.Core
         private const float HitHoleRadius = 0.42f;
 
         /// <summary>
-        /// 試しの盤: 内野にゴロアウト4つ・二塁の前にゲッツー・内野の間に単打2つ、外野の手前に単打2つ・フライアウト3つ・
+        /// 試しの盤: 内野にゴロアウト4つ・二塁ベースの上にゲッツー・内野の間に単打2つ、外野の手前に単打2つ・フライアウト3つ・
         /// 外野の間に二塁打2つ・フェンス際の隅に三塁打2つ。止まったら内野の土＝ゴロアウト・外野の芝＝単打・フェンス際の帯＝二塁打
         /// </summary>
         public static BaseballFieldDef Test()
@@ -37,7 +38,8 @@ namespace PenmonScramble.Baseball.Core
                 Hole(BaseballHitResult.GroundOut, -13f, 6.0f, OutHoleRadius),
                 Hole(BaseballHitResult.GroundOut, 13f, 6.0f, OutHoleRadius),
                 Hole(BaseballHitResult.GroundOut, 32f, 4.6f, OutHoleRadius),
-                Hole(BaseballHitResult.DoublePlay, 0f, 6.7f, OutHoleRadius),
+                // ゲッツーの穴は二塁ベースの上（二塁で封殺して一塁へ。見た目も白いベースの真ん中が穴）
+                Hole(BaseballHitResult.DoublePlay, 0f, BaseDistance * MathF.Sqrt(2f), OutHoleRadius),
                 Hole(BaseballHitResult.Single, -23f, 5.4f, HitHoleRadius),
                 Hole(BaseballHitResult.Single, 23f, 5.4f, HitHoleRadius),
 

@@ -24,6 +24,17 @@ namespace PenmonScramble.Baseball.Core
             };
         }
 
+        /// <summary>打席の終わりの見せ方（三振・四球。打った打席は打球の結果をそのまま見せるので空）</summary>
+        public static string Label(BaseballPlateResult result)
+        {
+            return result switch
+            {
+                BaseballPlateResult.Strikeout => "三振！",
+                BaseballPlateResult.Walk => "フォアボール",
+                _ => string.Empty,
+            };
+        }
+
         /// <summary>1球の結果の見せ方（打った球は打球の結果）</summary>
         public static string Label(BaseballPitchOutcome outcome)
         {

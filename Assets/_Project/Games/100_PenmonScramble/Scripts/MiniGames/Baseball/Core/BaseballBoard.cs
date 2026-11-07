@@ -21,11 +21,12 @@ namespace PenmonScramble.Baseball.Core
     {
         public static readonly BaseballInput None = default;
 
-        public BaseballInput(float bend, bool swing, bool bunt)
+        public BaseballInput(float bend, bool swing, bool bunt, float swingTime = 0f)
         {
             Bend = bend;
             Swing = swing;
             Bunt = bunt;
+            SwingTime = swingTime;
         }
 
         /// <summary>曲げる（−1 で左・1 で右）</summary>
@@ -36,6 +37,12 @@ namespace PenmonScramble.Baseball.Core
 
         /// <summary>バントのボタンを押している</summary>
         public bool Bunt { get; }
+
+        /// <summary>
+        /// 振り始めた時刻（この歩の始めからの秒。負ならその分だけ前に振り始めていた。−1歩〜+1歩）。
+        /// 歩の刻み（1/30 秒）のままだとバットの角度が 36° ずつ飛び、ジャストに当たるかが運になるので、押した時刻を歩の中まで渡す
+        /// </summary>
+        public float SwingTime { get; }
     }
 
     /// <summary>
@@ -120,20 +127,33 @@ namespace PenmonScramble.Baseball.Core
 
         private void StepPitching(BaseballInput input, List<BaseballEvent> events)
         {
-            if (input.Swing && _bat.Swing())
-            {
-                events.Add(new BaseballEvent(BaseballEventKind.Swing, Field.BatPivot));
-            }
-
             if (_bat.SetBunt(input.Bunt))
             {
                 events.Add(new BaseballEvent(BaseballEventKind.BuntSquare, Field.BatPivot));
             }
 
             var dt = BaseballRules.StepSeconds / PitchSubsteps;
+            var swingAt = Math.Clamp(input.SwingTime, -BaseballRules.StepSeconds, BaseballRules.StepSeconds);
+            var swingPending = input.Swing;
             for (var i = 0; i < PitchSubsteps && Phase == BaseballBoardPhase.Pitching; i++)
             {
+                var start = i * dt;
+                if (swingPending && swingAt < start + dt)
+                {
+                    swingPending = false;
+                    StartSwing(start - swingAt, events);
+                }
+
                 PitchSubstep(input.Bend, dt, events);
+            }
+        }
+
+        /// <summary>振り始める。elapsed はこの細かい1歩の始めの時点で、もう振っていた秒（負ならこの1歩の途中から振り始める）</summary>
+        private void StartSwing(float elapsed, List<BaseballEvent> events)
+        {
+            if (_bat.Swing(elapsed))
+            {
+                events.Add(new BaseballEvent(BaseballEventKind.Swing, Field.BatPivot));
             }
         }
 

@@ -130,6 +130,37 @@ namespace PenmonScramble.Baseball.Core
 
         /// <summary>打ってからこの秒たっても決まらなければ、その場で止まった扱い（終わらないことが無いように）</summary>
         public const float MaxBallSeconds = 10f;
+
+        // ---- CPU（案。★ごとの強さはフェーズ 3 の試合の確認で決める） ----
+
+        /// <summary>試しの打席の CPU のうまさ（振る時刻のぶれ 0.03 秒・ゾーンの外を 7 割見送る・狙いのぶれ 0.12 マス）</summary>
+        public static readonly BaseballAiSkill AiTest = new BaseballAiSkill(0.03f, 0.7f, 0.12f);
+
+        /// <summary>曲げ方の型を選ぶ割合（まっすぐ・後半だけ曲げる。残りを外へ・内へで半分ずつ）</summary>
+        public const float AiStraightChance = 0.25f;
+        public const float AiLateChance = 0.2f;
+
+        /// <summary>曲げる球のねらい: ゾーンの幅のこの割合の所（端の少し内）。わざと外す球はこの割合で、ゾーンの外へこれだけ</summary>
+        public const float AiEdgeAim = 0.75f;
+        public const float AiWasteChance = 0.2f;
+        public const float AiWasteMargin = 0.35f;
+
+        /// <summary>後半だけ曲げる型は、曲げられる区間の残りがこの割合になってから曲げ始める</summary>
+        public const float AiLateFraction = 0.5f;
+
+        /// <summary>打つ CPU のぶれは、マウンドから横へ曲げられた 1 マスごとにこの割合だけ大きくなる</summary>
+        public const float AiBendDifficulty = 0.6f;
+
+        /// <summary>球種ごとの打ちにくさ（打つ CPU のぶれに掛ける。速い球と、緩急のチェンジアップを少し打ちにくく）</summary>
+        public static float AiTimingDifficulty(BaseballPitchType type)
+        {
+            return type switch
+            {
+                BaseballPitchType.Straight => 1.25f,
+                BaseballPitchType.Changeup => 1.15f,
+                _ => 1f,
+            };
+        }
     }
 
     public enum BaseballPitchType

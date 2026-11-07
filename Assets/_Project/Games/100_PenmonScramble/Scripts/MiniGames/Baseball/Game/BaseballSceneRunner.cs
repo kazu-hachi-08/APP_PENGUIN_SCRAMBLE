@@ -9,7 +9,7 @@ namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
     /// 野球のシーンの入口。球場はまだ作っていないので、ミニゲーム画面から来たときは「準備中」の板と「もどる」だけ。
-    /// エディタの Tools/PenmonScramble/Baseball から開いたときは試しの打席（BaseballTestAtBat）を遊ぶ（記録には書かない）
+    /// エディタの Tools/PenmonScramble/Baseball から開いたときは試しの打席（BaseballTestPlay。打つ側か投げる側）を遊ぶ（記録には書かない）
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に Esc を見る
     [DefaultExecutionOrder(50)]
@@ -18,7 +18,7 @@ namespace PenmonScramble.Baseball.Game
         [SerializeField] private GameObject _placeholder;
         [SerializeField] private Text _courseText;
         [SerializeField] private Button _backButton;
-        [SerializeField] private BaseballTestAtBat _testAtBat;
+        [SerializeField] private BaseballTestPlay _testPlay;
 
         private bool _leaving;
 
@@ -37,10 +37,10 @@ namespace PenmonScramble.Baseball.Game
         private void Start()
         {
             MiniGameLaunch.EnsureSelected(MiniGameTable.BaseballId);
-            if (BaseballDevRequest.TryTakeTestAtBat())
+            if (BaseballDevRequest.TryTakeTestAtBat(out var side))
             {
                 _placeholder.SetActive(false);
-                _testAtBat.Begin();
+                _testPlay.Begin(side);
                 return;
             }
 
