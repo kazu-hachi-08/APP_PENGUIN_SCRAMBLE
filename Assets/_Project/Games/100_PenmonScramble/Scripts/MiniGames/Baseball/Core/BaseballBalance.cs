@@ -162,6 +162,15 @@ namespace PenmonScramble.Baseball.Core
 
         public static BaseballAiSkill AiSkill(int stars) => AiSkills[Math.Clamp(stars, AiMinStars, AiMaxStars) - AiMinStars];
 
+        /// <summary>協力で、2人目から1人ごとに CPU の強さへ足す★（サッカーと同じ。案）</summary>
+        public const int CoopStarsPerExtraHuman = 1;
+
+        /// <summary>協力の CPU の強さ: 球場の強さに、2人目からの人数ぶんを足す（★5 まで）</summary>
+        public static int CoopCpuStars(int stadiumStars, int humans)
+        {
+            return Math.Clamp(stadiumStars + Math.Max(0, humans - 1) * CoopStarsPerExtraHuman, AiMinStars, AiMaxStars);
+        }
+
         /// <summary>曲げ方の型を選ぶ割合（まっすぐ・後半だけ曲げる。残りを外へ・内へで半分ずつ）</summary>
         public const float AiStraightChance = 0.1f;
         public const float AiLateChance = 0.2f;

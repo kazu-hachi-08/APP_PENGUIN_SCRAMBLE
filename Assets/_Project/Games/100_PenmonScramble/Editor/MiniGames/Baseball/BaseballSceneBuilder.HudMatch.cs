@@ -8,8 +8,9 @@ using B = PenmonScramble.Editor.PenmonScrambleSceneBuilder;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 試合の HUD（BaseballHud.Match.cs・.Lineup.cs）: 上のまん中のスコアボード（2段のイニングごとの点・合計・イニング・塁の3つのひし形）、
-    /// 左右の打順のカード（左が自分・右が CPU。BaseballTeamCard）、魔球・必殺打の札（下の球種の札の左）
+    /// 試合の HUD（BaseballHud.Match.cs・.Lineup.cs・.Mvp.cs）: 上のまん中のスコアボード（2段のイニングごとの点・合計・イニング・塁の3つのひし形）、
+    /// 左右の打順のカード（左が自分・右が相手。BaseballTeamCard。みんなでの2人のチームは4人の打順なので4枚）、魔球・必殺打の札（下の球種の札の左）、
+    /// みんなでの結果の MVP の板（結果の間に左へ寄せたスコアボードの下）
     /// </summary>
     public static partial class BaseballSceneBuilder
     {
@@ -38,13 +39,14 @@ namespace PenmonScramble.Editor
         private const float BaseDiamondSize = 28f;
         private static readonly Color BaseDiamondOff = new Color(0.22f, 0.24f, 0.30f);
 
-        private const int LineupSize = 3;
+        // みんなでの2人のチームは A1・B1・A2・B2 の4人の打順（BaseballTeamPlan）
+        private const int LineupSize = 4;
         private const float LineupX = 190f;
         private const float LineupHeadingY = -290f;
         private static readonly Vector2 LineupHeadingSize = new Vector2(360f, 44f);
         private const int LineupHeadingFontSize = 28;
         private const float LineupCardFirstY = -350f;
-        private const float LineupCardStep = 96f;
+        private const float LineupCardStep = 90f;
         private static readonly Vector2 LineupCardSize = new Vector2(330f, 86f);
         private const float CardRimWidth = 4f;
         private static readonly Vector2 CardFacePosition = new Vector2(-122f, 0f);
@@ -56,6 +58,24 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 CardHitPosition = new Vector2(112f, -20f);
         private static readonly Vector2 CardBadgeSize = new Vector2(92f, 32f);
         private const int CardBadgeFontSize = 20;
+        // 持ち主の札（P1〜P4）は、カードの左上の角から少しはみ出す（顔に重ならない高さ）
+        private static readonly Vector2 CardOwnerPosition = new Vector2(-122f, 40f);
+        private static readonly Vector2 CardOwnerSize = new Vector2(150f, 28f);
+        private const int CardOwnerFontSize = 20;
+
+        private static readonly Vector2 MvpPosition = new Vector2(-430f, -235f);
+        private static readonly Vector2 MvpSize = new Vector2(600f, 300f);
+        private static readonly Vector2 MvpHeadingPosition = new Vector2(0f, 92f);
+        private static readonly Vector2 MvpHeadingSize = new Vector2(560f, 90f);
+        private const int MvpHeadingFontSize = 76;
+        private static readonly Color MvpHeadingColor = new Color(1f, 0.82f, 0.25f);
+        private static readonly Vector2 MvpBandPosition = new Vector2(0f, -4f);
+        private static readonly Vector2 MvpBandSize = new Vector2(540f, 88f);
+        private static readonly Vector2 MvpNameSize = new Vector2(520f, 82f);
+        private const int MvpNameFontSize = 50;
+        private static readonly Vector2 MvpRbiPosition = new Vector2(0f, -100f);
+        private static readonly Vector2 MvpRbiSize = new Vector2(540f, 64f);
+        private const int MvpRbiFontSize = 40;
 
         private static readonly Vector2 SpecialTogglePosition = new Vector2(-230f, 190f);
         private static readonly Vector2 SpecialToggleSize = new Vector2(270f, 170f);
@@ -67,6 +87,7 @@ namespace PenmonScramble.Editor
             CreateScoreboard(safe, so);
             CreateLineups(safe, so);
             CreateSpecialToggle(safe, so);
+            CreateMvp(safe, so);
         }
 
         /// <summary>スコアボード: 上に回の見出し、その下に先攻・後攻の2段（名前・1〜3回の点・合計）、右にイニングと塁のひし形</summary>
@@ -120,7 +141,7 @@ namespace PenmonScramble.Editor
             return cells;
         }
 
-        /// <summary>打順のカード: 左（カウントの板の下）に自分のチーム、右に CPU のチーム。見出しは試合の中で入れる</summary>
+        /// <summary>打順のカード: 左（カウントの板の下）に自分のチーム、右に相手のチーム。見出しは試合の中で入れる</summary>
         private static void CreateLineups(Transform safe, SerializedObject so)
         {
             var group = B.CreateStretchGroup(safe, "Lineups");
@@ -162,6 +183,13 @@ namespace PenmonScramble.Editor
             label.fontStyle = FontStyle.Bold;
             var magic = CreateCardBadge(back.transform, "Magic", "魔球", CardMagicPosition, out var magicText);
             var hit = CreateCardBadge(back.transform, "Hit", "必殺打", CardHitPosition, out var hitText);
+            // 持ち主の札は暗くした板の上でも席の色のまま見えるよう、縁の子にする
+            var owner = CreateCardBadge(rim.transform, "Owner", string.Empty, CardOwnerPosition, out var ownerText);
+            owner.rectTransform.sizeDelta = CardOwnerSize;
+            ownerText.rectTransform.sizeDelta = CardOwnerSize;
+            ownerText.fontSize = CardOwnerFontSize;
+            ownerText.color = Color.black;
+            owner.gameObject.SetActive(false);
 
             var card = rim.gameObject.AddComponent<BaseballTeamCard>();
             var so = new SerializedObject(card);
@@ -173,6 +201,8 @@ namespace PenmonScramble.Editor
             so.FindProperty("_magicText").objectReferenceValue = magicText;
             so.FindProperty("_hitBadge").objectReferenceValue = hit;
             so.FindProperty("_hitText").objectReferenceValue = hitText;
+            so.FindProperty("_ownerBadge").objectReferenceValue = owner;
+            so.FindProperty("_ownerText").objectReferenceValue = ownerText;
             if (selectable)
             {
                 var button = rim.gameObject.AddComponent<Button>();
@@ -185,6 +215,28 @@ namespace PenmonScramble.Editor
 
             so.ApplyModifiedProperties();
             return card;
+        }
+
+        /// <summary>みんなでの結果の MVP: 「MVP」の金の見出し、席の色の帯の上に名前、その下に打点。結果を出すまで隠す（サッカーと同じ形）</summary>
+        private static void CreateMvp(Transform safe, SerializedObject so)
+        {
+            var panel = B.CreatePanel(safe, "Mvp", MvpPosition, MvpSize);
+            var heading = B.CreateLabel(panel.transform, "Heading", "MVP", MvpHeadingFontSize, MvpHeadingPosition, MvpHeadingSize);
+            heading.fontStyle = FontStyle.Bold;
+            heading.color = MvpHeadingColor;
+            var band = B.CreateHudImage(panel.transform, "Band", null, Color.white, Center, MvpBandPosition, MvpBandSize);
+            var name = B.CreateLabel(band.transform, "Name", string.Empty, MvpNameFontSize, Vector2.zero, MvpNameSize);
+            name.fontStyle = FontStyle.Bold;
+            name.resizeTextForBestFit = true;
+            name.resizeTextMinSize = MvpNameFontSize / 2;
+            name.resizeTextMaxSize = MvpNameFontSize;
+            var rbi = B.CreateLabel(panel.transform, "Rbi", string.Empty, MvpRbiFontSize, MvpRbiPosition, MvpRbiSize);
+            rbi.fontStyle = FontStyle.Bold;
+            panel.SetActive(false);
+            so.FindProperty("_mvp").objectReferenceValue = panel;
+            so.FindProperty("_mvpName").objectReferenceValue = name;
+            so.FindProperty("_mvpRbi").objectReferenceValue = rbi;
+            so.FindProperty("_mvpBand").objectReferenceValue = band;
         }
 
         /// <summary>角の丸い板（Unity の組み込みの UISprite を9スライスで）</summary>

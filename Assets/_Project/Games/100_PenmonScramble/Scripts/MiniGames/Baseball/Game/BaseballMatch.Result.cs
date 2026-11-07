@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using PenmonScramble.Baseball.Core;
+using PenmonScramble.Common.Profile;
 using PenmonScramble.Game;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
@@ -9,7 +11,9 @@ namespace PenmonScramble.Baseball.Game
     /// <summary>
     /// 結果とメニュー: 試合が終わったら「ゲームセット」を少し見せてから、コインと記録を書いて保存し、結果（勝ち負け・点・得失点差・コインの内訳・
     /// 「もう一度」「球場を選ぶ」「ロビーへ」）。試合中のメニュー（本編の StageMenu の見た目）の「試合をやり直す」「ミニゲームへ」もここで受ける。
-    /// 「もう一度」は先攻と後攻を入れ替えて始める（ひとりでは試合ごとに交互）。「試合をやり直す」は同じ先攻・後攻のまま
+    /// 「もう一度」は先攻と後攻を入れ替えて始める（ひとりでは試合ごとに交互）。「試合をやり直す」は同じ先攻・後攻のまま。
+    /// みんなでは各自が自分のチームの結果で記録を書き、結果の左に MVP（打点の一番多い人）を出す。「もう一度」は無く、
+    /// 「球場を選ぶ」（ホストだけ）で全員が待ちの窓へ戻る
     /// </summary>
     public partial class BaseballMatch
     {
@@ -25,12 +29,17 @@ namespace PenmonScramble.Baseball.Game
 
         private bool _record;
         private float _resultLeft = -1f;
+        private int[] _seatRbi = System.Array.Empty<int>();
+
+        /// <summary>オンラインのホストが結果で「球場を選ぶ」を押した（全員で待ちの窓へ戻る。BaseballOnlinePlay が受ける）</summary>
+        public event System.Action RoomRequested;
 
         private bool IsMenuOpen => _menu != null && _menu.IsOpen;
 
         private void BindResult()
         {
             _result.Chosen += OnResultChosen;
+            // 「試合をやり直す」はひとりのときだけ出る
             _menu.RestartRequested += StartGame;
             _menu.TitleRequested += MiniGameLaunch.ReturnToHub;
         }
@@ -39,10 +48,12 @@ namespace PenmonScramble.Baseball.Game
         private void BeginResultFlow()
         {
             _resultLeft = -1f;
-            _result.SetOnline(false, true);
+            _seatRbi = new int[_plan.SeatCount];
+            _result.SetOnline(IsOnline, !IsGuest);
             _result.Hide();
             _hud.SetResult(false);
-            _menu.Bind(solo: true, canRestart: true);
+            _hud.HideMvp();
+            _menu.Bind(solo: !IsOnline, canRestart: !IsOnline, isHost: IsHost);
             _menu.SetAvailable(true);
             _menu.SetCaption(Caption());
         }
@@ -60,11 +71,12 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>ゲームセット: 勝ち負けと点を帯つきで出し、少し見せてから結果を出す</summary>
         private void EnterOver()
         {
-            _stage = Stage.Over;
+            _stage = BaseballStage.Over;
             _menu.SetAvailable(false);
             RefreshSpecialToggle();
-            var mine = _game.Score(_humanTeam);
-            var theirs = _game.Score(1 - _humanTeam);
+            NotifyChanged();
+            var mine = _game.Score(_localTeam);
+            var theirs = _game.Score(1 - _localTeam);
             var outcome = BaseballReward.OutcomeOf(mine, theirs);
             var verdict = outcome == BaseballOutcome.Draw ? "引き分け" : outcome == BaseballOutcome.Win ? "勝ち！" : "負け…";
             var color = outcome == BaseballOutcome.Draw ? Color.white : outcome == BaseballOutcome.Win ? WinColor : LoseColor;
@@ -96,6 +108,39 @@ namespace PenmonScramble.Baseball.Game
             _hud.SetResult(true);
             GameSounds.Play(info.Outcome == BaseballOutcome.Loss ? GameSound.Fail : GameSound.Clear);
             _result.Show(BaseballResultText.Build(info));
+            ShowMvp();
+        }
+
+        /// <summary>打点を数える（ひとり・ホスト。人が打った打席だけ。押し出しの四球も）</summary>
+        private void CountRbi(int seat, int runs)
+        {
+            if (seat >= 0 && seat < _seatRbi.Length)
+            {
+                _seatRbi[seat] += runs;
+            }
+        }
+
+        /// <summary>みんなでのみ: 打点の一番多い人（並んだら全員）を、結果の左に出す。誰も打点が無ければ出さない</summary>
+        private void ShowMvp()
+        {
+            if (!IsOnline)
+            {
+                return;
+            }
+
+            var seats = MiniGameMvp.Find(_seatRbi);
+            if (seats.Count == 0)
+            {
+                return;
+            }
+
+            var names = new List<string>();
+            foreach (var seat in seats)
+            {
+                names.Add(SeatNames.Get(seat));
+            }
+
+            _hud.ShowMvp(string.Join("・", names), _seatRbi[seats[0]], MiniGameSeats.ColorOf(seats[0]));
         }
 
         /// <summary>
@@ -105,8 +150,8 @@ namespace PenmonScramble.Baseball.Game
         /// </summary>
         private BaseballResultInfo RecordResult()
         {
-            var runs = _game.Score(_humanTeam);
-            var conceded = _game.Score(1 - _humanTeam);
+            var runs = _game.Score(_localTeam);
+            var conceded = _game.Score(1 - _localTeam);
             var outcome = BaseballReward.OutcomeOf(runs, conceded);
             var game = MiniGameTable.Get(MiniGameTable.BaseballId);
             var courseNo = _stadium != null ? _stadium.No : 0;
@@ -134,6 +179,12 @@ namespace PenmonScramble.Baseball.Game
                     PlayAgain();
                     break;
                 case MiniGameResultPanel.CoursesCard:
+                    if (IsOnline)
+                    {
+                        RoomRequested?.Invoke();
+                        break;
+                    }
+
                     MiniGameLaunch.ReturnToHub();
                     break;
                 case MiniGameResultPanel.LobbyCard:
@@ -145,6 +196,11 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>もう一度: 試合なら先攻と後攻を入れ替えて始め直す</summary>
         private void PlayAgain()
         {
+            if (IsOnline)
+            {
+                return;
+            }
+
             _mode = _mode switch
             {
                 BaseballPlayMode.MatchAway => BaseballPlayMode.MatchHome,

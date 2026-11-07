@@ -63,6 +63,14 @@ namespace PenmonScramble.Baseball.Core
             Strikes = 0;
         }
 
+        /// <summary>写し（ゲスト）: ホストの数をそのまま入れる</summary>
+        internal void Restore(int balls, int strikes, int outs)
+        {
+            Balls = balls;
+            Strikes = strikes;
+            Outs = outs;
+        }
+
         /// <summary>攻守交代でアウトも戻す</summary>
         public void ClearOuts()
         {

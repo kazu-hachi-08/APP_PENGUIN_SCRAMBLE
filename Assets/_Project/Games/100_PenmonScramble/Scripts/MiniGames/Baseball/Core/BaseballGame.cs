@@ -36,7 +36,7 @@ namespace PenmonScramble.Baseball.Core
     /// 魔球・必殺打は各子1試合1回ずつ（魔球と必殺打は別に数える）。使ったかはここで持つ。
     /// 試しの打席（Practice）は同じチームが打ち続け、3アウトでアウトと走者を戻すだけで終わらない（魔球・必殺打も3アウトで戻す）
     /// </summary>
-    public sealed class BaseballGame
+    public sealed partial class BaseballGame
     {
         private readonly int[] _lineupSizes;
         private readonly int[] _batter = new int[BaseballRules.TeamCount];

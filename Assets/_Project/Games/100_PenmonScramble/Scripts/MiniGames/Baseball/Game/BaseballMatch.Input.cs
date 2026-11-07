@@ -8,7 +8,7 @@ namespace PenmonScramble.Baseball.Game
     /// 投げる人は 構えの間に球種（J ストレート / K カーブ / L チェンジアップ。× ○ △・画面の札でも）を選んで投げ、
     /// 投げた後は ←→ / 左スティック / スマホのスティックで曲げる。打席の始めは ↑↓（画面の札）で投げる子を替えられる。
     /// 魔球・必殺打の ON / OFF は Space / L1（画面の札）。追い風ヒットで打った後は ←→ / スティックで打球を曲げる。
-    /// 相手の側は CPU（BaseballAi）
+    /// 1歩ごとに、この端末の人の番の入力と、CPU が打つ番の入力（ひとり・ホストだけ）を1球の記録に書く。ほかの人の入力は届いた記録を使う
     /// </summary>
     public partial class BaseballMatch
     {
@@ -33,7 +33,7 @@ namespace PenmonScramble.Baseball.Game
         private void ReadPitchKeys()
         {
             var input = Input;
-            if (input == null || _stage == Stage.Over)
+            if (input == null || _game == null || _stage == BaseballStage.Over)
             {
                 return;
             }
@@ -43,7 +43,7 @@ namespace PenmonScramble.Baseball.Game
                 ToggleSpecial();
             }
 
-            if (HumanBats || _stage != Stage.Ready)
+            if (!LocalPitches || _stage != BaseballStage.Ready)
             {
                 return;
             }
@@ -59,7 +59,7 @@ namespace PenmonScramble.Baseball.Game
             }
         }
 
-        /// <summary>↑↓ で投げる子を1つずつ替える（打席の始めだけ。下が次の子）</summary>
+        /// <summary>↑↓ で投げる子を1つずつ替える（打席の始めだけ。下が次の子。自分の子だけを順に回る）</summary>
         private void ReadPitcherStick(InputManager input)
         {
             var y = input.MoveVector.y;
@@ -75,14 +75,23 @@ namespace PenmonScramble.Baseball.Game
             }
 
             _pitcherStickHeld = true;
-            var count = _teams[_humanTeam].Count;
+            var count = _teams[_game.FieldingTeam].Count;
             var step = y < 0f ? 1 : count - 1;
-            ChoosePitcher((_game.CurrentPitcher + step) % count);
+            var slot = _game.CurrentPitcher;
+            for (var i = 0; i < count; i++)
+            {
+                slot = (slot + step) % count;
+                if (_plan.CanPitch(_localSeat, _game.FieldingTeam, slot))
+                {
+                    ChoosePitcher(slot);
+                    return;
+                }
+            }
         }
 
         private void OnPitchCardChosen(BaseballPitchType type)
         {
-            if (!HumanBats && _stage == Stage.Ready && !IsMenuOpen)
+            if (LocalPitches && _stage == BaseballStage.Ready && !IsMenuOpen)
             {
                 _chosenPitch = type;
             }
@@ -97,12 +106,12 @@ namespace PenmonScramble.Baseball.Game
         private void ReadSwing()
         {
             var input = Input;
-            if (input == null || _stage == Stage.Over || !HumanBats)
+            if (input == null || _game == null || _stage == BaseballStage.Over || !LocalBats)
             {
                 return;
             }
 
-            if (_stage != Stage.Live || _board.Phase != BaseballBoardPhase.Pitching)
+            if (_stage != BaseballStage.Live || Board.Phase != BaseballBoardPhase.Pitching)
             {
                 // 投げる前に押した分は持ち越さない（構えのうちに押しておけば当たる、にならないように）
                 _swingQueued = false;
@@ -116,33 +125,52 @@ namespace PenmonScramble.Baseball.Game
             }
         }
 
-        private BaseballInput TakeInput()
+        /// <summary>この歩の入力を記録に書く（この端末の人の番と、ひとり・ホストでは CPU が打つ番）。計算は記録だけを見る</summary>
+        private void RecordInputs()
         {
-            return HumanBats ? HumanBatsInput() : HumanPitchesInput();
+            // 記録はこの歩の分まで（届いた記録に置き換わっていなければ、ちょうどこの歩の番になっている）
+            var step = _session.Step;
+            if (LocalPitches)
+            {
+                var input = Input;
+                var bend = input != null && !IsMenuOpen ? input.MoveVector.x : 0f;
+                while (_session.PitcherLog.Progress <= step && _session.PitcherLog.Progress < BaseballRoleLog.MaxSteps)
+                {
+                    _session.PitcherLog.Record(bend, false, false, 0f);
+                }
+            }
+
+            if (_session.BatterLog.Progress > step)
+            {
+                return;
+            }
+
+            if (LocalBats)
+            {
+                RecordLocalBat(step);
+            }
+            else if (CpuBats && !IsGuest)
+            {
+                var bat = _ai.BatInput(Board);
+                _session.BatterLog.Record(0f, bat.Bunt, bat.Swing, bat.SwingTime);
+            }
         }
 
-        /// <summary>人が打つ: 振る・バントは人、曲げるのは CPU の組み立て。追い風ヒットで打った後は、人のスティックで打球を曲げる</summary>
-        private BaseballInput HumanBatsInput()
+        /// <summary>振る・バントは人。追い風ヒットで打った後は、人のスティックで打球を曲げる</summary>
+        private void RecordLocalBat(int step)
         {
             var input = Input;
-            var bunt = input != null && input.IsActionHeld(BuntAction);
-            var bend = _board.Phase == BaseballBoardPhase.BallInPlay
-                ? input != null ? input.MoveVector.x : 0f
-                : BaseballAi.Bend(_board.Pitch, _plan, _board.Field);
-            var result = new BaseballInput(bend, _swingQueued, bunt, _swingTime);
+            var usable = input != null && !IsMenuOpen;
+            var bunt = usable && input.IsActionHeld(BuntAction);
+            var steer = usable && Board.Phase == BaseballBoardPhase.BallInPlay ? input.MoveVector.x : 0f;
+            var log = _session.BatterLog;
+            while (log.Progress < step && log.Progress < BaseballRoleLog.MaxSteps)
+            {
+                log.Record(steer, bunt, false, 0f);
+            }
+
+            log.Record(steer, bunt, _swingQueued, _swingTime);
             _swingQueued = false;
-            return result;
-        }
-
-        /// <summary>人が投げる: 曲げるのは人（左右の倒し具合）、振る・バント・追い風ヒットの打球を曲げるのは CPU</summary>
-        private BaseballInput HumanPitchesInput()
-        {
-            var input = Input;
-            var bend = _board.Phase == BaseballBoardPhase.BallInPlay
-                ? BaseballAi.Steer(_board)
-                : input != null ? input.MoveVector.x : 0f;
-            var bat = _ai.BatInput(_board);
-            return new BaseballInput(bend, bat.Swing, bat.Bunt, bat.SwingTime);
         }
     }
 }

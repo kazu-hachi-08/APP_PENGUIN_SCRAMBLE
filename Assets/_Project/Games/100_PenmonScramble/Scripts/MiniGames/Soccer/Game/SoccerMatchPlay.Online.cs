@@ -1,3 +1,4 @@
+using PenmonScramble.MiniGames.Core;
 using System;
 using System.Collections.Generic;
 using PenmonScramble.Common.Profile;
@@ -142,7 +143,7 @@ namespace PenmonScramble.Soccer.Game
             _mode = SoccerPlayMode.Guest(seat, sender);
             _seatTeams = (int[])first.SeatTeam.Clone();
             _guestShown = (int[])first.SeatControlled.Clone();
-            SetupMatch(mirror, first.Species, first.Mode == SoccerOnlineMode.Coop ? SoccerRules.Blue : -1);
+            SetupMatch(mirror, first.Species, first.Mode == MiniGameOnlineMode.Coop ? SoccerRules.Blue : -1);
             var controlled = seat < first.SeatControlled.Length ? first.SeatControlled[seat] : SoccerBall.NoPlayer;
             _guestControl = new SoccerControl(OwnTeam, Math.Max(0, controlled), IsTakenByOtherSeat);
             ApplyGuestSnapshot(first);

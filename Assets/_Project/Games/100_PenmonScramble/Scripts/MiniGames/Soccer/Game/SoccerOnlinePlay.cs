@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using PenmonScramble.Common.Online;
+using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
 using PenmonScramble.Soccer.Core;
 using UnityEngine;
@@ -171,15 +172,16 @@ namespace PenmonScramble.Soccer.Game
         {
             _started = true;
             _waiting.SetActive(false);
-            var players = Mathf.Clamp(_session.MatchPlayerCount, 1, SoccerRoomChoice.MaxSeats);
+            var players = Mathf.Clamp(_session.MatchPlayerCount, 1, MiniGameRoomChoice.MaxSeats);
             var parties = new List<IReadOnlyList<int>> { SoccerMatchPlay.PartySpecies() };
             for (var seat = 1; seat < players; seat++)
             {
                 parties.Add(_readyParty.TryGetValue(seat, out var species) ? species : null);
             }
 
-            var mode = SoccerRoomSetup.Mode;
-            var teams = SoccerRoomSetup.Teams;
+            var setup = MiniGameRoomSetup.For(MiniGameTable.SoccerId);
+            var mode = setup.Mode;
+            var teams = setup.Teams;
             var seed = Environment.TickCount;
             var wild = _stadium.PickWild(SoccerTeamPlan.PlayersPerTeam(mode, teams, players), seed);
             var plan = SoccerTeamPlan.Create(mode, teams, parties, wild);

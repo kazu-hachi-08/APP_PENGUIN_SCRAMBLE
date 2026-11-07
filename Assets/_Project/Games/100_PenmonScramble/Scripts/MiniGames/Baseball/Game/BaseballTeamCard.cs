@@ -28,7 +28,10 @@ namespace PenmonScramble.Baseball.Game
         [SerializeField] private Text _magicText;
         [SerializeField] private Image _hitBadge;
         [SerializeField] private Text _hitText;
-        [Tooltip("自分のチームのカードだけ（押すと投げる子を選ぶ）。CPU のカードは無し")]
+        [Tooltip("みんなでのとき、持ち主（P1〜P4）を席の色で出す札")]
+        [SerializeField] private Image _ownerBadge;
+        [SerializeField] private Text _ownerText;
+        [Tooltip("自分のチームのカードだけ（押すと投げる子を選ぶ）。相手のカードは無し")]
         [SerializeField] private Button _button;
         [Tooltip("板の属性の色を、どれだけ暗くするか（字を読みやすく）")]
         [SerializeField, Range(0f, 1f)] private float _backDarken = 0.55f;
@@ -62,6 +65,18 @@ namespace PenmonScramble.Baseball.Game
         }
 
         public void Hide() => gameObject.SetActive(false);
+
+        /// <summary>持ち主の札（空なら隠す。ひとり・CPU の子）</summary>
+        public void SetOwner(string owner, Color color)
+        {
+            var shown = !string.IsNullOrEmpty(owner);
+            _ownerBadge.gameObject.SetActive(shown);
+            if (shown)
+            {
+                _ownerBadge.color = color;
+                _ownerText.text = owner;
+            }
+        }
 
         /// <summary>押せるか（投げる子を選べる間だけ押せるように見せる）</summary>
         public void SetSelectable(bool selectable)

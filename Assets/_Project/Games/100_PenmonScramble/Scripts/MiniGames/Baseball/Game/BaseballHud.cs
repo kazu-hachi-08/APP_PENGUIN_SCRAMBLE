@@ -10,7 +10,8 @@ namespace PenmonScramble.Baseball.Game
     /// 野球の HUD: 左上にカウント（B・S・O の丸）、まん中に結果の大きな文字（ホームラン・チェンジ・ゲームセットは帯つき）。
     /// 上のまん中のスコアボード（BaseballHud.Match.cs）、左右の打順のカードと魔球・必殺打の札（BaseballHud.Lineup.cs）。
     /// 投げる番では下に球種の札3枚（押すと投げる。PC ではキーの印つき）と1球の持ち時間。
-    /// PC では下に操作の説明、スマホでは打つ番に「振る」「バント」のボタン、投げる番に曲げるスティックを出す
+    /// PC では下に操作の説明、スマホでは打つ番に「振る」「バント」のボタン、投げる番に曲げるスティックを出す。
+    /// みんなでほかの人の番（同じチームのなかま・相手のチーム）のときは、ボタンを出さずに「〇〇 が打つ番です」を出す
     /// </summary>
     public partial class BaseballHud : MonoBehaviour
     {
@@ -59,6 +60,7 @@ namespace PenmonScramble.Baseball.Game
 
         private bool _isTouch;
         private bool _batting;
+        private bool _mine = true;
         private bool _steering;
         private float _bannerLeft;
         private float _bannerTime;
@@ -88,17 +90,19 @@ namespace PenmonScramble.Baseball.Game
             AwakeLineup();
         }
 
-        /// <summary>打つ番か投げる番かで、説明とスマホのボタンを替える</summary>
-        public void SetSide(bool batting)
+        /// <summary>打つ番か投げる番か（この端末の人のチームの側）と、この端末の人の番か（違えば turnName の人の番）で、説明とスマホのボタンを替える</summary>
+        public void SetSide(bool batting, bool mine, string turnName)
         {
             gameObject.SetActive(true);
             _batting = batting;
+            _mine = mine;
             _steering = false;
-            _help.text = batting ? _batHelp : _pitchHelp;
-            _help.gameObject.SetActive(!_isTouch);
+            var action = batting ? "打つ" : "投げる";
+            _help.text = mine ? batting ? _batHelp : _pitchHelp : $"{turnName} が{action}番です";
+            _help.gameObject.SetActive(HelpShown);
             foreach (var button in _batButtons)
             {
-                button.SetActive(batting);
+                button.SetActive(batting && mine);
             }
 
             ApplyStick();
@@ -112,7 +116,10 @@ namespace PenmonScramble.Baseball.Game
             ApplyStick();
         }
 
-        private void ApplyStick() => _bendStick.SetActive(!_batting || _steering);
+        private void ApplyStick() => _bendStick.SetActive(_mine && (!_batting || _steering));
+
+        /// <summary>説明は PC だけ。ほかの人の番の一言はスマホでも出す</summary>
+        private bool HelpShown => !_isTouch || !_mine;
 
         public void ShowCount(BaseballCount count)
         {
@@ -207,7 +214,7 @@ namespace PenmonScramble.Baseball.Game
         public void SetResult(bool result)
         {
             _countPlate.SetActive(!result);
-            _help.gameObject.SetActive(!result && !_isTouch);
+            _help.gameObject.SetActive(!result && HelpShown);
             _touch.SetShown(!result);
             SetLineupsShown(!result);
             PlaceScoreboard(result);

@@ -4,8 +4,8 @@ using UnityEngine;
 namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
-    /// 試合の区切り: 打席の始め（投げる子を選ぶ・打者を立たせる）、1球の結果（カウント・走者・点）、
-    /// 3アウトの「チェンジ」（攻守を替えて子を並べ直す）
+    /// 試合の区切り: 打席の始め（投げる人と投げる子を決める・打者を立たせる）、1球の結果（カウント・走者・点）、
+    /// 3アウトの「チェンジ」（攻守を替えて子を並べ直す）。決めるのはひとり・ホストで、見た目はゲストも同じ物を使う
     /// </summary>
     public partial class BaseballMatch
     {
@@ -17,64 +17,102 @@ namespace PenmonScramble.Baseball.Game
         private static readonly Color HomeRunBandColor = new Color(0.55f, 0.18f, 0.05f, 0.85f);
         private static readonly Color ChangeBandColor = new Color(0.08f, 0.16f, 0.38f, 0.85f);
 
-        /// <summary>攻守が替わった（試合の始めも）: 守る側を守備に、打つ側の打者と走者の子を用意し、HUD を打つ番・投げる番に替える</summary>
+        /// <summary>攻守が替わった（試合の始めも）: 守る側を守備に、打つ側の打者と走者の子を用意する</summary>
         private void SetUpHalf()
         {
             var batting = _game.BattingTeam;
             var fielding = _game.FieldingTeam;
             var figures = _view.Figures;
-            figures.SetDefense(_teams[fielding], fielding != _humanTeam);
-            figures.Runners.Use(_teams[batting], batting != _humanTeam);
-            _hud.SetSide(HumanBats);
+            figures.SetDefense(_teams[fielding], _plan.IsCpuTeam(fielding));
+            figures.Runners.Use(_teams[batting], _plan.IsCpuTeam(batting));
             ShowScore();
             ResetBoard();
         }
 
-        /// <summary>打席の始め: 守る側が投げる子を選び（CPU はイニングごとに替える。人は札で選べる）、打者を打席に立たせる</summary>
+        /// <summary>打席の始め（ひとり・ホスト）: 守る側の投げる人と投げる子を決め（CPU はイニングごとに替える。人は札で選べる）、打者を打席に立たせる</summary>
         private void EnterPlate()
         {
-            ResetSpecialToggles();
-            if (HumanBats)
-            {
-                _game.ChoosePitcher(BaseballAi.ChoosePitcher(_game));
-            }
+            PickPitchingSeat();
+            ShowPlate();
+            EnterReady();
+        }
 
+        /// <summary>打席の始めの見た目（ゲストも）: 投げる子と打者を立たせ、HUD を自分の番に合わせる</summary>
+        private void ShowPlate()
+        {
+            ResetSpecialToggles();
             ShowPitcher();
             var batting = _game.BattingTeam;
-            _view.Figures.SetBatter(_teams[batting][_game.CurrentBatter], batting != _humanTeam);
+            _view.Figures.SetBatter(_teams[batting][_game.CurrentBatter], _plan.IsCpuTeam(batting));
             _hud.ShowLineups(_game);
             _hud.SetSteerStick(false);
-            EnterReady();
+            ShowTurn();
+        }
+
+        /// <summary>HUD を、打つ番・投げる番・ほかの人の番に合わせる（説明・スマホのボタン・スティック）</summary>
+        private void ShowTurn()
+        {
+            var batting = LocalTeamBats;
+            var mine = batting ? LocalBats : LocalPitches;
+            var turnSeat = batting ? BatterSeat : PitcherSeat;
+            _hud.SetSide(batting, mine, SeatLabel(turnSeat));
         }
 
         private void ShowPitcher()
         {
             var fielding = _game.FieldingTeam;
-            _view.Figures.SetPitcher(_teams[fielding][_game.CurrentPitcher], fielding != _humanTeam);
+            _view.Figures.SetPitcher(_teams[fielding][_game.CurrentPitcher], _plan.IsCpuTeam(fielding));
         }
 
-        /// <summary>人が守る打席の始めだけ、自分の子の札を押して投げる子を替えられる</summary>
-        private void ShowPitcherChoice(bool shown) => _hud.SetPitcherChoice(shown);
+        /// <summary>自分が投げる打席の始めだけ、自分の子の札を押して投げる子を替えられる</summary>
+        private void ShowPitcherChoice(bool shown)
+        {
+            var fielding = _game.FieldingTeam;
+            _hud.SetPitcherChoice(shown, slot => _plan.CanPitch(_localSeat, fielding, slot));
+        }
 
-        /// <summary>投げる子を替える（人が守る打席の、1球目を投げる前だけ）</summary>
+        /// <summary>投げる子を替える（自分が投げる打席の、1球目を投げる前だけ。ゲストはホストへ知らせて、届いた所で替わる）</summary>
         private void ChoosePitcher(int slot)
         {
-            if (_stage != Stage.Ready || HumanBats || !_game.IsPlateStart || slot == _game.CurrentPitcher || IsMenuOpen)
+            if (_stage != BaseballStage.Ready || !LocalPitches || !_game.IsPlateStart || slot == _game.CurrentPitcher || IsMenuOpen
+                || !_plan.CanPitch(_localSeat, _game.FieldingTeam, slot))
             {
                 return;
             }
 
+            if (IsGuest)
+            {
+                RequestPitcher(slot);
+                return;
+            }
+
+            ApplyPitcher(slot);
+        }
+
+        /// <summary>投げる子を替えて見せる（ホストは、ゲストが選んだときもここ）</summary>
+        private void ApplyPitcher(int slot)
+        {
             _game.ChoosePitcher(slot);
             ShowPitcher();
             _hud.ShowLineups(_game);
             RefreshSpecialToggle();
+            NotifyChanged();
         }
 
         /// <summary>1球の結果を試合に入れて、大きな文字・音・子の反応・走者の動き・点を出す</summary>
         private void ShowOutcome(BaseballPitchOutcome outcome)
         {
+            var batterSeat = BatterSeat;
             SpendSpecialHit();
             var play = _game.Apply(outcome);
+            _lastPlay = play;
+            CountRbi(batterSeat, play.Runs);
+            ShowPlay(outcome, play);
+        }
+
+        /// <summary>1球の結果の見た目（ゲストは、ホストが決めた結果と試合の様子を写してから呼ぶ）</summary>
+        private void ShowPlay(BaseballPitchOutcome outcome, BaseballGamePlay play)
+        {
             var plateLabel = BaseballResults.Label(play.Plate);
             var text = plateLabel.Length > 0 ? plateLabel : BaseballResults.Label(outcome);
             if (play.Runs > 0)
@@ -95,7 +133,7 @@ namespace PenmonScramble.Baseball.Game
             ShowScore();
             _hud.ShowLineups(_game);
             _hud.SetSteerStick(false);
-            _stage = Stage.Result;
+            _stage = BaseballStage.Result;
             RefreshSpecialToggle();
         }
 
@@ -150,7 +188,7 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>3アウト: 「チェンジ」を帯つきで見せてから攻守を替える</summary>
         private void EnterChange()
         {
-            _stage = Stage.Change;
+            _stage = BaseballStage.Change;
             _timer = _changeSeconds;
             _hud.ShowBanner(_game.IsPractice ? "3アウト" : "チェンジ", ChangeColor, _timer, ChangeBandColor);
             if (!_game.IsPractice)
@@ -159,10 +197,16 @@ namespace PenmonScramble.Baseball.Game
             }
 
             RefreshSpecialToggle();
+            NotifyChanged();
         }
 
         private void StepChange()
         {
+            if (IsGuest)
+            {
+                return;
+            }
+
             _timer -= BaseballRules.StepSeconds;
             if (_timer > 0f)
             {

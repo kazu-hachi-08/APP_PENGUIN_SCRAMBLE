@@ -1,3 +1,4 @@
+using PenmonScramble.MiniGames.Core;
 using System.Collections.Generic;
 using PenmonScramble.Core;
 
@@ -73,7 +74,7 @@ namespace PenmonScramble.Soccer.Core
     public sealed class SoccerSnapshot
     {
         public int Stadium;
-        public SoccerOnlineMode Mode;
+        public MiniGameOnlineMode Mode;
         public int PerTeam;
 
         /// <summary>席ごとのチーム（抜けた席は −1）・いま動かしている子（いなければ −1）・入れた点</summary>

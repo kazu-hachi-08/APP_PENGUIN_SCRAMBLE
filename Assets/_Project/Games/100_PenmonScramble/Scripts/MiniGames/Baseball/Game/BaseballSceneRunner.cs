@@ -1,5 +1,6 @@
 using PenmonScramble.Baseball.Core;
 using PenmonScramble.Common.Input;
+using PenmonScramble.Common.Online;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
 using UnityEngine;
@@ -9,6 +10,7 @@ namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
     /// 野球のシーンの入口。ミニゲーム画面から来たときは、選んだ球場でひとりで1試合（BaseballMatch。最初は自分が先攻）。
+    /// 部屋の待ちの窓から来たときは、引き継いだ部屋でみんなで1試合（BaseballOnlinePlay）。部屋が切れていたらロビーへ。
     /// まだ作っていない球場なら「準備中」の板と「もどる」だけ。
     /// エディタの Tools/PenmonScramble/Baseball から開いたときは試しの打席・試しの試合を遊ぶ（記録には書かない）
     /// </summary>
@@ -20,6 +22,8 @@ namespace PenmonScramble.Baseball.Game
         [SerializeField] private Text _courseText;
         [SerializeField] private Button _backButton;
         [SerializeField] private BaseballMatch _match;
+        [SerializeField] private BaseballOnlinePlay _online;
+        [SerializeField] private OnlineSession _session;
 
         private bool _leaving;
 
@@ -44,6 +48,12 @@ namespace PenmonScramble.Baseball.Game
                 return;
             }
 
+            if (MiniGameLaunch.IsOnline)
+            {
+                StartOnline();
+                return;
+            }
+
             var stadium = BaseballStadiumTable.Get(MiniGameLaunch.CourseNo);
             if (stadium != null)
             {
@@ -60,6 +70,21 @@ namespace PenmonScramble.Baseball.Game
         {
             _placeholder.SetActive(false);
             _match.Begin(mode, stadium, record);
+        }
+
+        /// <summary>移っている間にホストが落ちて部屋を引き継げなかったら、ロビーへ戻る</summary>
+        private void StartOnline()
+        {
+            if (!_session.IsInRoom || !_session.IsMatchStarted)
+            {
+                Debug.LogWarning("[BaseballSceneRunner] 部屋を引き継げなかったのでロビーへ戻ります");
+                _leaving = true;
+                MiniGameLaunch.ReturnToLobby();
+                return;
+            }
+
+            _placeholder.SetActive(false);
+            _online.Begin(MiniGameLaunch.CourseNo);
         }
 
         private void Update()

@@ -28,6 +28,9 @@ namespace PenmonScramble.Baseball.Game
             return new BaseballFrame(center, board.Bat.Degrees);
         }
 
+        /// <summary>球だけずらした写し（計算し直して跳んだ分を、描くときに寄せて消すため）</summary>
+        public BaseballFrame WithBallOffset(Vector3 offset) => new BaseballFrame(Ball + offset, BatDegrees);
+
         public static BaseballFrame Lerp(BaseballFrame a, BaseballFrame b, float t)
         {
             return new BaseballFrame(Vector3.Lerp(a.Ball, b.Ball, t), Mathf.Lerp(a.BatDegrees, b.BatDegrees, t));

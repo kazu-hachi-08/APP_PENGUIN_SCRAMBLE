@@ -77,7 +77,7 @@ namespace PenmonScramble.Baseball.Game
         private string TeamLabel(int team)
         {
             var name = _teamNames[team] ?? string.Empty;
-            return team == _humanTeam ? $"<color=#{ColorUtility.ToHtmlStringRGB(HumanTeamColor)}>{name}</color>" : name;
+            return team == _localTeam ? $"<color=#{ColorUtility.ToHtmlStringRGB(HumanTeamColor)}>{name}</color>" : name;
         }
 
         /// <summary>結果を出している間は、右の結果の欄と重ならない左へ寄せる</summary>
