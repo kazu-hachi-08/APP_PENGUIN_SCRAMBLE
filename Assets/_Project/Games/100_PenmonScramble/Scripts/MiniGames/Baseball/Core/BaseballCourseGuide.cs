@@ -3,18 +3,29 @@ using PenmonScramble.MiniGames.Core;
 namespace PenmonScramble.Baseball.Core
 {
     /// <summary>
-    /// ミニゲーム画面の球場選びに出す、野球の中身。
-    /// 球場はまだどれも作っていないので「準備中」（フェーズ 4 で球場1、フェーズ 6 で残りを開け、CPU の強さ・盤と仕掛け・報酬を出す）
+    /// ミニゲーム画面の球場選びに出す、野球の中身（CPU の強さ・盤と仕掛けの一言・ベストの得失点差・報酬）。
+    /// まだ作っていない球場（BaseballStadiumTable に無い）は「準備中」
     /// </summary>
     public sealed class BaseballCourseGuide : IMiniGameCourseGuide
     {
-        public bool IsReady(int courseNo) => false;
+        private const char FullStar = '★';
+        private const char EmptyStar = '☆';
 
-        public string Layout(int courseNo) => string.Empty;
+        public bool IsReady(int courseNo) => BaseballStadiumTable.Get(courseNo) != null;
+
+        public string Layout(int courseNo)
+        {
+            var stadium = BaseballStadiumTable.Get(courseNo);
+            return stadium != null ? $"CPUの強さ {Stars(stadium.CpuStars)}  {stadium.Gimmick}" : string.Empty;
+        }
 
         public string FormatBest(int courseNo, int best) => FormatRunDifference(best);
 
-        public string Reward(int courseNo, bool firstPlay) => string.Empty;
+        public string Reward(int courseNo, bool firstPlay)
+        {
+            var line = $"報酬 {BaseballReward.BaseCoins} コイン ＋ 勝つと {BaseballReward.WinCoins} ＋ 1点ごとに {BaseballReward.CoinsPerRun}";
+            return firstPlay ? $"{line}\n初めて勝つと ボーナス +{BaseballReward.FirstWinBonus}" : line;
+        }
 
         /// <summary>得失点差の見せ方（「+3」「±0」「−1」。サッカーと同じ）</summary>
         public static string FormatRunDifference(int difference)
@@ -25,6 +36,13 @@ namespace PenmonScramble.Baseball.Core
             }
 
             return difference == 0 ? "±0" : $"−{-difference}";
+        }
+
+        /// <summary>CPU の強さを5つの星で（「★☆☆☆☆」）</summary>
+        public static string Stars(int stars)
+        {
+            var filled = System.Math.Clamp(stars, BaseballBalance.AiMinStars, BaseballBalance.AiMaxStars);
+            return new string(FullStar, filled) + new string(EmptyStar, BaseballBalance.AiMaxStars - filled);
         }
     }
 }

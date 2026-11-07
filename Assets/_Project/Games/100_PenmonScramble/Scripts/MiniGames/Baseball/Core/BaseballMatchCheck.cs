@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PenmonScramble.Core;
 
 namespace PenmonScramble.Baseball.Core
 {
@@ -36,6 +37,30 @@ namespace PenmonScramble.Baseball.Core
 
         /// <summary>本当に2つアウトを取ったゲッツーの数</summary>
         public int DoublePlays;
+
+        // ---- 魔球・必殺打（属性ごと。Element の番号）----
+
+        public const int ElementCount = 4;
+
+        /// <summary>魔球を投げた数・振られた数・当てられた数（ファウルも）・ストライク（見送り・空振り）・ボール・打たれたヒット</summary>
+        public readonly int[] MagicThrown = new int[ElementCount];
+        public readonly int[] MagicSwung = new int[ElementCount];
+        public readonly int[] MagicContact = new int[ElementCount];
+        public readonly int[] MagicStrike = new int[ElementCount];
+        public readonly int[] MagicBall = new int[ElementCount];
+        public readonly int[] MagicHitSafe = new int[ElementCount];
+
+        /// <summary>必殺打を出した球の数・当てた数（使った）・ファウル・ヒット・ホームラン・アウト</summary>
+        public readonly int[] SpecialTries = new int[ElementCount];
+        public readonly int[] SpecialContact = new int[ElementCount];
+        public readonly int[] SpecialFoul = new int[ElementCount];
+        public readonly int[] SpecialSafe = new int[ElementCount];
+        public readonly int[] SpecialHomeRun = new int[ElementCount];
+        public readonly int[] SpecialOut = new int[ElementCount];
+
+        /// <summary>魔球と必殺打がぶつかった球の数と、そのうち当てた数</summary>
+        public int Clashes;
+        public int ClashContacts;
 
         public int Innings;
         public bool Mercy;
@@ -80,12 +105,14 @@ namespace PenmonScramble.Baseball.Core
         private const int MaxStepsPerPitch = 1000;
 
         /// <param name="field">試合をする盤（null なら試しの盤）</param>
-        public static BaseballMatchStats Play(BaseballAiSkill away, BaseballAiSkill home, int seed, BaseballFieldDef field = null)
+        /// <param name="specials">魔球・必殺打を使う（false なら使わない。使ったときと比べるため）</param>
+        public static BaseballMatchStats Play(BaseballAiSkill away, BaseballAiSkill home, int seed, BaseballFieldDef field = null, bool specials = true)
         {
             field ??= BaseballFieldTable.Test();
             var game = new BaseballGame(LineupSize, LineupSize);
             var board = new BaseballBoard(field);
             var ais = new[] { new BaseballAi(seed * 2 + 1, away), new BaseballAi(seed * 2 + 2, home) };
+            var teams = PickTeams(seed);
             var stats = new BaseballMatchStats { HoleIns = new int[field.Holes.Count] };
             var events = new List<BaseballEvent>();
             while (!game.IsOver && stats.Pitches < MaxPitches)
@@ -102,8 +129,13 @@ namespace PenmonScramble.Baseball.Core
                     game.ChoosePitcher(BaseballAi.ChoosePitcher(game));
                 }
 
-                var outcome = PlayPitch(game, board, ais[game.FieldingTeam], ais[game.BattingTeam], events, stats);
+                var outcome = PlayPitch(game, board, ais[game.FieldingTeam], ais[game.BattingTeam], teams, specials, events, stats);
                 var team = game.BattingTeam;
+                if (board.SpecialHitUsed)
+                {
+                    game.UseSpecialHit();
+                }
+
                 var play = game.Apply(outcome);
                 Count(stats, team, play, game);
             }
@@ -116,20 +148,46 @@ namespace PenmonScramble.Baseball.Core
             return stats;
         }
 
-        /// <summary>1球を投げて結果が出るまで回す</summary>
-        private static BaseballPitchOutcome PlayPitch(BaseballGame game, BaseballBoard board, BaseballAi pitcher, BaseballAi batter, List<BaseballEvent> events, BaseballMatchStats stats)
+        /// <summary>両チームの3体（いろいろな属性と★の魔球・必殺打が出るよう、20 種類から試合ごとに選ぶ）</summary>
+        private static int[][] PickTeams(int seed)
+        {
+            var random = new Random(seed * 7 + 3);
+            var teams = new int[BaseballRules.TeamCount][];
+            for (var t = 0; t < teams.Length; t++)
+            {
+                teams[t] = new int[LineupSize];
+                for (var i = 0; i < LineupSize; i++)
+                {
+                    teams[t][i] = 1 + random.Next(SpeciesTable.Species.Count);
+                }
+            }
+
+            return teams;
+        }
+
+        /// <summary>1球を投げて結果が出るまで回す（投げる前に、投げる側の魔球と打つ側の必殺打を相手に見せずに決める）</summary>
+        private static BaseballPitchOutcome PlayPitch(BaseballGame game, BaseballBoard board, BaseballAi pitcher, BaseballAi batter, int[][] teams, bool specials, List<BaseballEvent> events, BaseballMatchStats stats)
         {
             var field = board.Field;
-            var plan = pitcher.PlanPitch(field, game.Count);
+            var magicSpecial = specials && pitcher.WantsMagic(game) ? BaseballSpecial.Of(teams[game.FieldingTeam][game.CurrentPitcher]) : BaseballSpecial.None;
+            var hitSpecial = specials && batter.WantsSpecialHit(game) ? BaseballSpecial.Of(teams[game.BattingTeam][game.CurrentBatter]) : BaseballSpecial.None;
+            var plan = magicSpecial.IsActive ? pitcher.PlanMagicPitch(field, magicSpecial) : pitcher.PlanPitch(field, game.Count);
+            var magic = pitcher.RollMagic(magicSpecial);
+            if (magic.IsActive)
+            {
+                game.UseMagic();
+            }
+
             batter.BeginPitch(game);
             board.Reset();
             events.Clear();
-            board.Throw(plan.Type, events);
+            board.Throw(plan.Type, magic, hitSpecial, events);
             var steps = 0;
             for (; steps < MaxStepsPerPitch && board.Phase != BaseballBoardPhase.Done; steps++)
             {
                 var bat = batter.BatInput(board);
-                board.Step(new BaseballInput(BaseballAi.Bend(board.Pitch, plan, field), bat.Swing, bat.Bunt, bat.SwingTime), events);
+                var bend = board.Phase == BaseballBoardPhase.BallInPlay ? BaseballAi.Steer(board) : BaseballAi.Bend(board.Pitch, plan, field);
+                board.Step(new BaseballInput(bend, bat.Swing, bat.Bunt, bat.SwingTime), events);
             }
 
             foreach (var e in events)
@@ -137,12 +195,64 @@ namespace PenmonScramble.Baseball.Core
                 CountEvent(stats, e);
             }
 
+            CountSpecials(stats, board, magicSpecial, hitSpecial);
+
             stats.Pitches++;
             // バントの構えのまま球が来た（当てた・空振り）
             var buntAttempt = board.LastHit is { Bunt: true } || board.Bat.State == BaseballBatState.Bunting;
             stats.BuntAttempts += buntAttempt ? 1 : 0;
             stats.Seconds += ReadySeconds + WindUpSeconds + steps * BaseballRules.StepSeconds;
             return board.Outcome;
+        }
+
+        /// <summary>魔球を打てた割合と、必殺打の当たり・結果を属性ごとに数える</summary>
+        private static void CountSpecials(BaseballMatchStats stats, BaseballBoard board, BaseballSpecial magic, BaseballSpecial hit)
+        {
+            var outcome = board.Outcome;
+            var contact = board.LastHit.HasValue;
+            if (magic.IsActive)
+            {
+                var e = (int)magic.Element;
+                stats.MagicThrown[e]++;
+                stats.MagicSwung[e] += board.Bat.HasAttempted ? 1 : 0;
+                stats.MagicContact[e] += contact ? 1 : 0;
+                stats.MagicStrike[e] += outcome.Kind == BaseballPitchOutcomeKind.CalledStrike || outcome.Kind == BaseballPitchOutcomeKind.SwingingStrike ? 1 : 0;
+                stats.MagicBall[e] += outcome.Kind == BaseballPitchOutcomeKind.Ball ? 1 : 0;
+                stats.MagicHitSafe[e] += outcome.Kind == BaseballPitchOutcomeKind.InPlay && !BaseballResults.IsOut(outcome.Hit) ? 1 : 0;
+            }
+
+            if (magic.IsActive && hit.IsActive)
+            {
+                stats.Clashes++;
+                stats.ClashContacts += board.SpecialHitUsed ? 1 : 0;
+            }
+
+            if (!hit.IsActive)
+            {
+                return;
+            }
+
+            var h = (int)hit.Element;
+            stats.SpecialTries[h]++;
+            if (!board.SpecialHitUsed)
+            {
+                return;
+            }
+
+            stats.SpecialContact[h]++;
+            if (outcome.Kind == BaseballPitchOutcomeKind.Foul)
+            {
+                stats.SpecialFoul[h]++;
+            }
+            else if (BaseballResults.IsOut(outcome.Hit))
+            {
+                stats.SpecialOut[h]++;
+            }
+            else
+            {
+                stats.SpecialSafe[h]++;
+                stats.SpecialHomeRun[h] += outcome.Hit == BaseballHitResult.HomeRun ? 1 : 0;
+            }
         }
 
         private static void CountEvent(BaseballMatchStats stats, BaseballEvent e)

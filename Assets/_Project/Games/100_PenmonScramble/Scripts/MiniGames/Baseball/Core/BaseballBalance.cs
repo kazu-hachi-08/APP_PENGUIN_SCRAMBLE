@@ -6,7 +6,7 @@ namespace PenmonScramble.Baseball.Core
     /// 球とバットの調整値（長さはマス・時間は秒・角度は度）。ホストが計算して全員に配るので、Unity の物理は使わず、ここの数で決める。
     /// 「（案）」の値は試遊と試合の確認で決め直す
     /// </summary>
-    public static class BaseballBalance
+    public static partial class BaseballBalance
     {
         /// <summary>球の半径（バット・穴・フェンスとの当たりに使う）</summary>
         public const float BallRadius = 0.12f;
@@ -142,7 +142,7 @@ namespace PenmonScramble.Baseball.Core
         public static BaseballAiSkill AiTest => AiSkill(AiTestStars);
 
         /// <summary>
-        /// ★ごとのうまさ（振る時刻のぶれ秒・ゾーンの外を見送る割合・狙いのぶれマス）。
+        /// ★ごとのうまさ（振る時刻のぶれ秒・ゾーンの外を見送る割合・狙いのぶれマス・凍った魔球を待ち直せる割合）。
         /// ぶれが強さの一番の差（★1 はジャストに当たることが少なく、★5 はほとんど芯で捉える）
         /// </summary>
         private const float AiTiming1 = 0.10f;
@@ -153,11 +153,11 @@ namespace PenmonScramble.Baseball.Core
 
         private static readonly BaseballAiSkill[] AiSkills =
         {
-            new BaseballAiSkill(AiTiming1, 0.45f, 0.22f),
-            new BaseballAiSkill(AiTiming2, 0.55f, 0.17f),
-            new BaseballAiSkill(AiTiming3, 0.65f, 0.13f),
-            new BaseballAiSkill(AiTiming4, 0.75f, 0.10f),
-            new BaseballAiSkill(AiTiming5, 0.85f, 0.07f),
+            new BaseballAiSkill(AiTiming1, 0.45f, 0.22f, 0.15f),
+            new BaseballAiSkill(AiTiming2, 0.55f, 0.17f, 0.25f),
+            new BaseballAiSkill(AiTiming3, 0.65f, 0.13f, 0.35f),
+            new BaseballAiSkill(AiTiming4, 0.75f, 0.10f, 0.45f),
+            new BaseballAiSkill(AiTiming5, 0.85f, 0.07f, 0.55f),
         };
 
         public static BaseballAiSkill AiSkill(int stars) => AiSkills[Math.Clamp(stars, AiMinStars, AiMaxStars) - AiMinStars];

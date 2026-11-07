@@ -1,4 +1,5 @@
 using PenmonScramble.Baseball.Core;
+using PenmonScramble.Core;
 using PenmonScramble.Game;
 using UnityEngine;
 
@@ -8,7 +9,9 @@ namespace PenmonScramble.Baseball.Game
     /// 球: おもちゃの白い球と、盤の上の丸い影（浮いた球は影が小さく薄くなるので、どこへ落ちるかが分かる）。
     /// 転がった道のりの分だけ回す。穴に入った球は穴の中へ沈める。ホームランの球はフェンスで止めず、
     /// 打球の勢いのままフェンスの向こうへ飛んでいく所まで見せる（Core はフェンスを越えた所で結果を決めて止まるので、ここで続きを描く）。
-    /// 投げる前は投げる子が持っているので見せない
+    /// 投げる前は投げる子が持っているので見せない。
+    /// 魔球・必殺打の球は属性の色に染める。消える魔球は消えている間だけ隠し、フリーズボールは凍っている間だけ氷のかたまりで包む。
+    /// アイスロードは転がった道に氷の跡を残す（BaseballIceTrail）
     /// </summary>
     public sealed class BaseballBallView
     {
@@ -23,9 +26,19 @@ namespace PenmonScramble.Baseball.Game
         private const float FlyAwaySeconds = 2.2f;
         private const float MittSeconds = 0.14f;
         private static readonly Color BallColor = new Color(0.98f, 0.98f, 0.96f);
+        private static readonly Color IceShellColor = new Color(0.75f, 0.95f, 1f);
+        // 凍った球を包む氷のかたまりの大きさ（球の直径の何倍か）
+        private const float IceShellScale = 2.2f;
+        // 魔球・必殺打の球の色は、属性の色を白へ少し寄せる（白い球のおもちゃらしさを残す）
+        private const float TintWhiten = 0.25f;
 
         private readonly Transform _ball;
         private readonly Transform _shadow;
+        private readonly Transform _iceShell;
+        private readonly MeshRenderer _ballRenderer;
+        private readonly Material _plainMaterial;
+        private readonly Material[] _elementMaterials = new Material[4];
+        private readonly BaseballIceTrail _iceTrail;
         private Vector3 _flyVelocity;
         private float _flyTime = -1f;
         private Vector3 _mittFrom;
@@ -33,9 +46,21 @@ namespace PenmonScramble.Baseball.Game
 
         public BaseballBallView(ToonMaterials materials, Transform parent)
         {
-            _ball = Part("Ball", ToyMeshes.Sphere, materials.Get(BallColor, Gloss), parent);
+            _plainMaterial = materials.Get(BallColor, Gloss);
+            for (var i = 0; i < _elementMaterials.Length; i++)
+            {
+                var color = Color.Lerp(PenguinPalette.ElementColor((Element)i), Color.white, TintWhiten);
+                _elementMaterials[i] = materials.Get(color, Gloss);
+            }
+
+            _ball = Part("Ball", ToyMeshes.Sphere, _plainMaterial, parent);
             _ball.localScale = Vector3.one * (BaseballBalance.BallRadius * 2f);
+            _ballRenderer = _ball.GetComponent<MeshRenderer>();
             _shadow = Part("BallShadow", ToyMeshes.FloorQuad, materials.BlobShadow, parent);
+            _iceShell = Part("IceShell", ToyMeshes.IceChunk, materials.Get(IceShellColor, Gloss), parent);
+            _iceShell.localScale = Vector3.one * (BaseballBalance.BallRadius * 2f * IceShellScale);
+            _iceShell.gameObject.SetActive(false);
+            _iceTrail = new BaseballIceTrail(materials, parent);
             SetVisible(false);
         }
 
@@ -68,12 +93,14 @@ namespace PenmonScramble.Baseball.Game
                 return;
             }
 
+            ShowSpecial(board, frame.Ball);
+
             var sunk = board.Phase == BaseballBoardPhase.Done && board.Ball.HoleIndex >= 0;
             var target = sunk ? frame.Ball + Vector3.down * SinkDepth : frame.Ball;
             Roll(target - Position);
             Position = target;
             _ball.localPosition = target;
-            _shadow.gameObject.SetActive(!sunk);
+            _shadow.gameObject.SetActive(!sunk && _ball.gameObject.activeSelf);
             PlaceShadow(target);
         }
 
@@ -98,7 +125,33 @@ namespace PenmonScramble.Baseball.Game
         {
             _flyTime = -1f;
             _mittTime = -1f;
+            _iceTrail.Clear();
+            _ballRenderer.sharedMaterial = _plainMaterial;
             SetVisible(false);
+        }
+
+        /// <summary>
+        /// 魔球・必殺打の見た目: 球を属性の色に染め、消えている間は隠し、凍っている間は氷で包み、アイスロードは跡を残す
+        /// </summary>
+        private void ShowSpecial(BaseballBoard board, Vector3 center)
+        {
+            var pitching = board.Phase == BaseballBoardPhase.Pitching;
+            var special = pitching ? board.Pitch.Magic.Special : board.Ball.Special;
+            _ballRenderer.sharedMaterial = special.IsActive ? _elementMaterials[(int)special.Element] : _plainMaterial;
+            var hidden = pitching && board.Pitch.IsHidden;
+            _ball.gameObject.SetActive(!hidden);
+            _shadow.gameObject.SetActive(!hidden);
+            var frozen = pitching && board.Pitch.IsFrozen;
+            _iceShell.gameObject.SetActive(frozen);
+            if (frozen)
+            {
+                _iceShell.localPosition = center;
+            }
+
+            if (!pitching && board.Ball.IsOnIce)
+            {
+                _iceTrail.Mark(center);
+            }
         }
 
         private void TickMitt(float deltaTime)
@@ -157,6 +210,10 @@ namespace PenmonScramble.Baseball.Game
             Visible = visible;
             _ball.gameObject.SetActive(visible);
             _shadow.gameObject.SetActive(visible);
+            if (!visible)
+            {
+                _iceShell.gameObject.SetActive(false);
+            }
         }
 
         private static Transform Part(string name, Mesh mesh, Material material, Transform parent)

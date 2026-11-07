@@ -44,6 +44,16 @@ namespace PenmonScramble.Baseball.Game
         Cheer,
         /// <summary>観客のどよめき（おお〜。フェンス直撃・縁で外れた）</summary>
         Ooh,
+        /// <summary>魔球・必殺打のカットイン（上がっていく音）</summary>
+        Special,
+        /// <summary>チェンジ（攻守交代の短い合図）</summary>
+        Change,
+        /// <summary>フリーズボールが凍った（キーン）</summary>
+        Freeze,
+        /// <summary>消える魔球が消えた・現れた（ヒュン）</summary>
+        Vanish,
+        /// <summary>水切りヒットが跳ねた（ピチャッ）</summary>
+        Skip,
     }
 
     /// <summary>
@@ -83,6 +93,11 @@ namespace PenmonScramble.Baseball.Game
             // 観客の声はファンファーレ・打球の音の後ろで鳴る大きさに
             { BaseballSound.Cheer, 0.35f },
             { BaseballSound.Ooh, 0.3f },
+            { BaseballSound.Special, 0.55f },
+            { BaseballSound.Change, 0.4f },
+            { BaseballSound.Freeze, 0.45f },
+            { BaseballSound.Vanish, 0.4f },
+            { BaseballSound.Skip, 0.35f },
         };
 
         /// <summary>バットに当たった音。power は当たりの強さ（0〜1）</summary>
@@ -138,6 +153,13 @@ namespace PenmonScramble.Baseball.Game
                 case BaseballSound.Walk: return ToySynth.Jingle("Baseball_Walk", new[] { 784f, 784f, 988f });
                 case BaseballSound.Cheer: return MiniGameCrowdSounds.Cheer();
                 case BaseballSound.Ooh: return MiniGameCrowdSounds.Ooh();
+                case BaseballSound.Special: return ToySynth.Sweep("Baseball_Special", 0.35f, 220f, 1400f);
+                case BaseballSound.Change: return ToySynth.Jingle("Baseball_Change", new[] { 784f, 659f, 784f, 1047f });
+                case BaseballSound.Freeze: return Freeze();
+                // 消える・現れる「ヒュン」: 高い所から一気に下がる
+                case BaseballSound.Vanish: return ToySynth.Sweep("Baseball_Vanish", 0.15f, 1800f, 500f);
+                // 水切りの「ピチャッ」: 短く高めの打撃
+                case BaseballSound.Skip: return ToySynth.Impact("Baseball_Skip", 0.05f, 900f);
                 default: return ToySynth.Jingle("Baseball_HomeRun", new[] { 523f, 659f, 784f, 1047f, 784f, 1047f, 1319f });
             }
         }
@@ -211,6 +233,17 @@ namespace PenmonScramble.Baseball.Game
                 var plop = Mathf.Sin(phase) * Mathf.Exp(-t * 20f);
                 var rattle = t > 0.12f ? Mathf.Sin(2f * Mathf.PI * 1100f * t) * Mathf.Abs(Mathf.Sin(2f * Mathf.PI * 18f * t)) * Mathf.Exp(-(t - 0.12f) * 9f) * 0.25f : 0f;
                 return plop * 0.8f + rattle;
+            });
+        }
+
+        /// <summary>凍る「キーン」: 高い澄んだ音が2つ重なって、ゆっくり消える</summary>
+        private static AudioClip Freeze()
+        {
+            const float duration = 0.5f;
+            return ToySynth.CreateClip("Baseball_Freeze", duration, t =>
+            {
+                var ring = Mathf.Sin(2f * Mathf.PI * 2093f * t) * 0.4f + Mathf.Sin(2f * Mathf.PI * 3136f * t) * 0.25f;
+                return ring * Mathf.Min(1f, t / 0.01f) * Mathf.Exp(-t * 6f);
             });
         }
 

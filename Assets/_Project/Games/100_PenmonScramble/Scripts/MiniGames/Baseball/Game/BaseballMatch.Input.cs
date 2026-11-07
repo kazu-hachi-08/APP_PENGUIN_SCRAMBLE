@@ -7,7 +7,8 @@ namespace PenmonScramble.Baseball.Game
     /// 入力: 打つ人は 振る（J / × / 右の大ボタン。押した時刻を歩の中まで渡す）と バント（K / ○ / 右の中ボタンを押している間）。
     /// 投げる人は 構えの間に球種（J ストレート / K カーブ / L チェンジアップ。× ○ △・画面の札でも）を選んで投げ、
     /// 投げた後は ←→ / 左スティック / スマホのスティックで曲げる。打席の始めは ↑↓（画面の札）で投げる子を替えられる。
-    /// 試合が終わったら J / × でもう一度。相手の側は CPU（BaseballAi）
+    /// 魔球・必殺打の ON / OFF は Space / L1（画面の札）。追い風ヒットで打った後は ←→ / スティックで打球を曲げる。
+    /// 相手の側は CPU（BaseballAi）
     /// </summary>
     public partial class BaseballMatch
     {
@@ -15,7 +16,8 @@ namespace PenmonScramble.Baseball.Game
         private const int PitchActionCount = 3;
         private const int SwingAction = 0;
         private const int BuntAction = 1;
-        private const int RetryAction = 0;
+        // 魔球・必殺打の ON / OFF（Action4 = Space / L1）
+        private const int SpecialAction = 3;
 
         // 投げる子を替える ↑↓ を、倒したと見なす深さ（倒したままでは1つずつしか替わらない）
         private const float PitcherStickThreshold = 0.6f;
@@ -27,23 +29,18 @@ namespace PenmonScramble.Baseball.Game
 
         private static InputManager Input => InputManager.HasInstance ? InputManager.Instance : null;
 
-        /// <summary>投げる人が構えの間に押した球種・投げる子の切り替えと、試合の後の「もう一度」を読む</summary>
+        /// <summary>魔球・必殺打の切り替えと、投げる人が構えの間に押した球種・投げる子の切り替えを読む</summary>
         private void ReadPitchKeys()
         {
             var input = Input;
-            if (input == null)
+            if (input == null || _stage == Stage.Over)
             {
                 return;
             }
 
-            if (_stage == Stage.Over)
+            if (input.IsActionDown(SpecialAction))
             {
-                if (input.IsActionDown(RetryAction))
-                {
-                    Retry();
-                }
-
-                return;
+                ToggleSpecial();
             }
 
             if (HumanBats || _stage != Stage.Ready)
@@ -85,7 +82,7 @@ namespace PenmonScramble.Baseball.Game
 
         private void OnPitchCardChosen(BaseballPitchType type)
         {
-            if (!HumanBats && _stage == Stage.Ready)
+            if (!HumanBats && _stage == Stage.Ready && !IsMenuOpen)
             {
                 _chosenPitch = type;
             }
@@ -124,22 +121,26 @@ namespace PenmonScramble.Baseball.Game
             return HumanBats ? HumanBatsInput() : HumanPitchesInput();
         }
 
-        /// <summary>人が打つ: 振る・バントは人、曲げるのは CPU の組み立て</summary>
+        /// <summary>人が打つ: 振る・バントは人、曲げるのは CPU の組み立て。追い風ヒットで打った後は、人のスティックで打球を曲げる</summary>
         private BaseballInput HumanBatsInput()
         {
             var input = Input;
             var bunt = input != null && input.IsActionHeld(BuntAction);
-            var bend = BaseballAi.Bend(_board.Pitch, _plan, _board.Field);
+            var bend = _board.Phase == BaseballBoardPhase.BallInPlay
+                ? input != null ? input.MoveVector.x : 0f
+                : BaseballAi.Bend(_board.Pitch, _plan, _board.Field);
             var result = new BaseballInput(bend, _swingQueued, bunt, _swingTime);
             _swingQueued = false;
             return result;
         }
 
-        /// <summary>人が投げる: 曲げるのは人（左右の倒し具合）、振る・バントは CPU</summary>
+        /// <summary>人が投げる: 曲げるのは人（左右の倒し具合）、振る・バント・追い風ヒットの打球を曲げるのは CPU</summary>
         private BaseballInput HumanPitchesInput()
         {
             var input = Input;
-            var bend = input != null ? input.MoveVector.x : 0f;
+            var bend = _board.Phase == BaseballBoardPhase.BallInPlay
+                ? BaseballAi.Steer(_board)
+                : input != null ? input.MoveVector.x : 0f;
             var bat = _ai.BatInput(_board);
             return new BaseballInput(bend, bat.Swing, bat.Bunt, bat.SwingTime);
         }

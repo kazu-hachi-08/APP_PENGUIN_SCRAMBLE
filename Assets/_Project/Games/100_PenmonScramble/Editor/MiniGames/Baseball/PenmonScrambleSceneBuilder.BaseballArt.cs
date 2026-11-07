@@ -1,3 +1,5 @@
+using PenmonScramble.Game;
+using UnityEditor;
 using UnityEngine;
 
 namespace PenmonScramble.Editor
@@ -84,6 +86,25 @@ namespace PenmonScramble.Editor
         {
             var q = new Vector2(Mathf.Abs(p.x) / half.x, Mathf.Abs(p.y) / half.y);
             return (q.x + q.y - 1f) * Mathf.Min(half.x, half.y) * 0.7f;
+        }
+
+        // 魔球と必殺打のカットインは上下に2本並ぶことがあるので、本編の帯より細くする
+        private const float BaseballCutInHeight = 250f;
+        private const float BaseballCutInFaceSize = 190f;
+        private const float BaseballCutInFaceX = 300f;
+        private const int BaseballCutInFontSize = 50;
+        private const int BaseballCutInNameFontSize = 78;
+
+        /// <summary>魔球・必殺打のカットイン（本編と同じ部品の細い帯）。帯を画面のまん中から offsetY だけずらして置く</summary>
+        internal static SpecialCutIn CreateBaseballCutIn(Transform canvas, string name, float offsetY)
+        {
+            var layout = new CutInLayout(BaseballCutInHeight, BaseballCutInFaceSize, BaseballCutInFaceX, BaseballCutInFontSize, BaseballCutInNameFontSize);
+            var cutIn = CreateCutIn(canvas, layout);
+            cutIn.gameObject.name = name;
+            var so = new SerializedObject(cutIn);
+            var band = (RectTransform)so.FindProperty("_band").objectReferenceValue;
+            band.anchoredPosition = new Vector2(0f, offsetY);
+            return cutIn;
         }
     }
 }

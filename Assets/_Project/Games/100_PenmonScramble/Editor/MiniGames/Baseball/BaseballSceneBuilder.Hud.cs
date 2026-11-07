@@ -9,8 +9,8 @@ using B = PenmonScramble.Editor.PenmonScrambleSceneBuilder;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 野球の HUD（BaseballHud。仮）: 左上の暗い板にカウント（B 緑3つ・S 黄2つ・O 赤2つの丸）、まん中に結果の大きな文字、
-    /// 点の板・投げる子の札・ゲームセットの欄（BaseballSceneBuilder.HudMatch.cs）、
+    /// 野球の HUD（BaseballHud）: 左上の暗い板にカウント（B 緑3つ・S 黄2つ・O 赤2つの丸）、まん中に結果の大きな文字と後ろの帯、
+    /// スコアボード・打順のカード・魔球 / 必殺打の札（BaseballSceneBuilder.HudMatch.cs）、右上の「‖」（メニュー）、
     /// 投げる番の下に球種の札3枚（PC ではキーの印つき）とその上の持ち時間、PC では下に操作の説明、
     /// スマホでは仮想スティックと「振る」「バント」のボタン（PenmonScrambleSceneBuilder.BaseballTouch.cs）
     /// </summary>
@@ -32,17 +32,19 @@ namespace PenmonScramble.Editor
         private static readonly Color CountOffColor = new Color(0.22f, 0.24f, 0.30f);
 
         private static readonly Vector2 BannerPosition = new Vector2(0f, 200f);
+        private const float BannerBandHeight = 300f;
         private static readonly Vector2 BannerSize = new Vector2(1500f, 220f);
         private const int BannerFontSize = 140;
 
-        private static readonly float[] CardX = { -100f, 230f, 560f };
+        // 左に魔球の札を置くので、スマホの左のスティックにかからない所から右へ並べる
+        private static readonly float[] CardX = { 70f, 350f, 630f };
         private const float CardY = 190f;
-        private static readonly Vector2 CardSize = new Vector2(300f, 170f);
+        private static readonly Vector2 CardSize = new Vector2(270f, 170f);
         private const int CardFontSize = 44;
         private const float KeyHintY = 82f;
         private static readonly Vector2 KeyHintSize = new Vector2(300f, 40f);
         private const int KeyHintFontSize = 28;
-        private static readonly Vector2 ClockPosition = new Vector2(230f, 318f);
+        private static readonly Vector2 ClockPosition = new Vector2(350f, 318f);
         private static readonly Vector2 ClockSize = new Vector2(400f, 60f);
         private const int ClockFontSize = 44;
 
@@ -70,11 +72,13 @@ namespace PenmonScramble.Editor
         {
             public readonly BaseballHud Hud;
             public readonly PenmonScrambleSceneBuilder.BaseballTouchParts Touch;
+            public readonly Button Menu;
 
-            public BaseballHudParts(BaseballHud hud, PenmonScrambleSceneBuilder.BaseballTouchParts touch)
+            public BaseballHudParts(BaseballHud hud, PenmonScrambleSceneBuilder.BaseballTouchParts touch, Button menu)
             {
                 Hud = hud;
                 Touch = touch;
+                Menu = menu;
             }
         }
 
@@ -89,6 +93,7 @@ namespace PenmonScramble.Editor
             var so = new SerializedObject(hud);
 
             CreateCount(safe.transform, so);
+            so.FindProperty("_bannerBand").objectReferenceValue = CreateBannerBand(safe.transform);
             so.FindProperty("_banner").objectReferenceValue = CreateBanner(safe.transform);
             CreatePitchCards(safe.transform, so);
             var help = B.CreateLabel(safe.transform, "Help", string.Empty, HelpFontSize, Vector2.zero, HelpSize);
@@ -99,18 +104,20 @@ namespace PenmonScramble.Editor
             so.FindProperty("_touch").objectReferenceValue = touch.Visibility;
             B.SetObjectArray(so.FindProperty("_batButtons"), new Object[] { touch.Swing.gameObject, touch.Bunt.gameObject });
             so.FindProperty("_bendStick").objectReferenceValue = touch.Joystick.gameObject;
-            // ゲームセットの欄はスマホのボタンより上に重ねるので、後から作る
-            CreateMatchHud(safe.transform, root.transform, so);
+            CreateMatchHud(safe.transform, so);
+            // 右上の「‖」は本編の HUD と同じ部品（メニューは StageMenu が出し入れする）
+            var menu = B.CreateMenuButton(root.transform);
             so.ApplyModifiedProperties();
 
             root.SetActive(false);
-            return new BaseballHudParts(hud, touch);
+            return new BaseballHudParts(hud, touch, menu);
         }
 
         /// <summary>暗い板の上に「B」「S」「O」の字と、それぞれの丸（ボール3・ストライク2・アウト2）</summary>
         private static void CreateCount(Transform safe, SerializedObject so)
         {
             var plate = B.CreateHudImage(safe, "CountPlate", null, B.HudBackColor, TopLeft, CountPlatePosition, CountPlateSize);
+            so.FindProperty("_countPlate").objectReferenceValue = plate.gameObject;
             var rows = new[] { ("B", 3, "_ballLights"), ("S", 2, "_strikeLights"), ("O", 2, "_outLights") };
             for (var r = 0; r < rows.Length; r++)
             {
@@ -128,6 +135,19 @@ namespace PenmonScramble.Editor
 
                 B.SetObjectArray(so.FindProperty(property), lights);
             }
+        }
+
+        /// <summary>結果の大きな文字の後ろの、横いっぱいの帯（ホームラン・チェンジ・ゲームセットだけ。色は試合の中で入れる）</summary>
+        private static Image CreateBannerBand(Transform safe)
+        {
+            var band = B.CreateHudImage(safe, "BannerBand", null, Color.clear, Center, BannerPosition, new Vector2(0f, BannerBandHeight));
+            var rect = band.rectTransform;
+            rect.anchorMin = new Vector2(0f, 0.5f);
+            rect.anchorMax = new Vector2(1f, 0.5f);
+            rect.sizeDelta = new Vector2(0f, BannerBandHeight);
+            band.raycastTarget = false;
+            band.gameObject.SetActive(false);
+            return band;
         }
 
         private static Text CreateBanner(Transform safe)

@@ -5,7 +5,8 @@ namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
     /// 1球の流れ: 構え（CPU は少し待つ・人は球種の札を選ぶ。持ち時間を過ぎたら前の球種でまっすぐ）→ 振りかぶり → 投げる（ここから盤を進める）
-    /// → 結果を見せる → 次の球の構え（打席が終わっていたら次の打者・3アウトならチェンジ・試合が終わったらゲームセット。.Innings.cs）。
+    /// → 魔球・必殺打を出していたらカットイン（盤を止める）→ 結果を見せる → 次の球の構え
+    /// （打席が終わっていたら次の打者・3アウトならチェンジ・試合が終わったらゲームセット。.Innings.cs）。
     /// どれも 1/30 秒の歩で進める（描画のフレームに関係なく同じ間になるように）
     /// </summary>
     public partial class BaseballMatch
@@ -19,6 +20,7 @@ namespace PenmonScramble.Baseball.Game
         {
             Ready,
             WindUp,
+            CutIn,
             Live,
             Result,
             Change,
@@ -37,6 +39,9 @@ namespace PenmonScramble.Baseball.Game
                 case Stage.WindUp:
                     StepWindUp();
                     break;
+                case Stage.CutIn:
+                    StepCutIn();
+                    break;
                 case Stage.Live:
                     StepLive();
                     break;
@@ -53,6 +58,7 @@ namespace PenmonScramble.Baseball.Game
             {
                 BaseballSoundCues.Play(e, _board);
                 _view.OnEvent(e, _board);
+                OnSpecialEvent(e);
             }
 
             if (_stage == Stage.Live && _board.Phase == BaseballBoardPhase.Done)
@@ -71,12 +77,14 @@ namespace PenmonScramble.Baseball.Game
                 _timer = BaseballRules.PitchClockSeconds;
                 _hud.SetPitchCards(true);
                 _hud.SetClock(_timer);
-                ShowPitcherCards(_game.IsPlateStart);
+                ShowPitcherChoice(_game.IsPlateStart);
             }
             else
             {
                 _timer = _cpuReadySeconds;
             }
+
+            RefreshSpecialToggle();
         }
 
         private void StepReady()
@@ -86,7 +94,7 @@ namespace PenmonScramble.Baseball.Game
             {
                 if (_timer <= 0f)
                 {
-                    _plan = _ai.PlanPitch(_board.Field, _game.Count);
+                    PlanCpuPitch();
                     BeginWindUp(_plan.Type);
                 }
 
@@ -110,9 +118,10 @@ namespace PenmonScramble.Baseball.Game
             _pitchType = type;
             _chosenPitch = null;
             _hud.SetPitchCards(false);
-            ShowPitcherCards(false);
+            ShowPitcherChoice(false);
             _stage = Stage.WindUp;
             _timer = 0f;
+            RefreshSpecialToggle();
         }
 
         /// <summary>振りかぶりきったら投げる（球が手を離れる瞬間に Core で投げる）</summary>
@@ -126,11 +135,46 @@ namespace PenmonScramble.Baseball.Game
             }
 
             _view.Figures.Release();
-            _board.Throw(_pitchType, _events);
+            Throw();
+        }
+
+        /// <summary>
+        /// 投げる: 投げる側の魔球と打つ側の必殺打（どちらも投げる前に、相手に見えないまま選んだもの）をここで初めて合わせる。
+        /// どちらかが出ていたら、両方のカットインを出して盤を止める
+        /// </summary>
+        private void Throw()
+        {
+            var magic = TakeMagic();
+            var hitSpecial = TakeHitSpecial();
+            _board.Throw(_pitchType, magic, hitSpecial, _events);
+            if (magic.IsActive)
+            {
+                _game.UseMagic();
+            }
+
             // CPU が打つときは、ここでこの球の読み（バントするか）を決める
             _ai.BeginPitch(_game);
             _swingQueued = false;
+            _hud.ShowLineups(_game);
+            RefreshSpecialToggle();
+            if (magic.IsActive || hitSpecial.IsActive)
+            {
+                PlayCutIns(magic.Special, hitSpecial);
+                _stage = Stage.CutIn;
+                _timer = BaseballBalance.SpecialCutInSeconds;
+                return;
+            }
+
             _stage = Stage.Live;
+        }
+
+        private void StepCutIn()
+        {
+            _timer -= BaseballRules.StepSeconds;
+            if (_timer <= 0f)
+            {
+                _stage = Stage.Live;
+            }
         }
 
         private void StepLive()

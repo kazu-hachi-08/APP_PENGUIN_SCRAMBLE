@@ -32,6 +32,20 @@ namespace PenmonScramble.Baseball.Core
         HomeRun,
         /// <summary>打球がファウルになった</summary>
         Foul,
+        /// <summary>フリーズボールが凍って止まった（Value は止まる秒）</summary>
+        MagicFreeze,
+        /// <summary>フリーズボールがまた動き出した</summary>
+        MagicThaw,
+        /// <summary>消える魔球が消えた</summary>
+        MagicVanish,
+        /// <summary>消える魔球が現れた</summary>
+        MagicAppear,
+        /// <summary>旋風ボールが逆へ曲がり出した</summary>
+        MagicReverse,
+        /// <summary>必殺打で打ち返した（Index は属性の番号）</summary>
+        SpecialHit,
+        /// <summary>水切りヒットが盤の上で跳ねた</summary>
+        Skip,
     }
 
     /// <summary>盤の上で起きたこと。表示と音へはこれをイベントで渡す（Core は表示を知らない）</summary>

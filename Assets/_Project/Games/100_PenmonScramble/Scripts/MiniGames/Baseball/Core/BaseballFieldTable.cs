@@ -4,7 +4,7 @@ using PenmonScramble.Core;
 namespace PenmonScramble.Baseball.Core
 {
     /// <summary>
-    /// 盤の定義表。いまは試しの盤だけ（球場ごとの盤はフェーズ 4・6 で足す）。
+    /// 盤の定義表。試しの盤と、球場1「海岸」のふつうの盤（同じ並び。球場2〜5の盤はフェーズ 6 で足す）。
     /// 穴の並びと大きさ・止まった場所の札は、CPU の試合の確認（BaseballMatchCheck）で 1試合 3〜6 点・ホームラン 0〜1 本くらいになるよう決めた
     /// </summary>
     public static class BaseballFieldTable
@@ -36,7 +36,12 @@ namespace PenmonScramble.Baseball.Core
         /// その奥の間に二塁打4つ・左右の隅に三塁打2つ。止まったら内野の土＝ゴロアウト・外野の芝＝単打・フェンス際の帯＝二塁打。
         /// 外野の芝で止まるのは強い当たりだけ（弱い当たりは内野で止まる）で、フライの穴がその手前で多くを捕る
         /// </summary>
-        public static BaseballFieldDef Test()
+        public static BaseballFieldDef Test() => Standard("試しの盤");
+
+        /// <summary>球場1「海岸」: 仕掛けの無い、ふつうの盤（試しの盤と同じ並び）</summary>
+        public static BaseballFieldDef Beach() => Standard("海岸");
+
+        private static BaseballFieldDef Standard(string name)
         {
             var holes = new[]
             {
@@ -70,7 +75,7 @@ namespace PenmonScramble.Baseball.Core
             };
 
             return new BaseballFieldDef(
-                "試しの盤", FenceRadius, FenceHeight, FoulDegrees, holes, stopZones,
+                name, FenceRadius, FenceHeight, FoulDegrees, holes, stopZones,
                 ZoneHalfWidth, CatcherY, Mound, BatPivot, BaseDistance, BowlCenter);
         }
 

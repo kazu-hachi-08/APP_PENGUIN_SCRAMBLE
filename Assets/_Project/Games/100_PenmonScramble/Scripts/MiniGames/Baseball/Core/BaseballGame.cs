@@ -33,7 +33,8 @@ namespace PenmonScramble.Baseball.Core
     /// 試合の流れ（Docs/MINIGAME_BASEBALL_PLAN.md「試合の流れ」）。3イニングの表（先攻）と裏（後攻）、3アウトで交代。
     /// 打順は編成の 1→2→3 をくり返し、イニングをまたいで続く。投げる子は守る側が打席ごとに選ぶ。
     /// 3回裏・サヨナラで後攻が勝っていたら、その時点で終わる。2回が終わって 10 点差なら早く終わる。3回が終わって同点なら引き分け。
-    /// 試しの打席（Practice）は同じチームが打ち続け、3アウトでアウトと走者を戻すだけで終わらない
+    /// 魔球・必殺打は各子1試合1回ずつ（魔球と必殺打は別に数える）。使ったかはここで持つ。
+    /// 試しの打席（Practice）は同じチームが打ち続け、3アウトでアウトと走者を戻すだけで終わらない（魔球・必殺打も3アウトで戻す）
     /// </summary>
     public sealed class BaseballGame
     {
@@ -42,6 +43,8 @@ namespace PenmonScramble.Baseball.Core
         private readonly int[] _pitcher = new int[BaseballRules.TeamCount];
         private readonly List<int>[] _inningRuns = { new List<int>(), new List<int>() };
         private readonly List<BaseballRunnerMove> _moves = new List<BaseballRunnerMove>();
+        private readonly bool[][] _magicUsed;
+        private readonly bool[][] _hitUsed;
         private readonly int _practiceTeam;
         private int _pitchesThisPlate;
 
@@ -60,6 +63,8 @@ namespace PenmonScramble.Baseball.Core
             }
 
             _lineupSizes = new[] { awayLineup, homeLineup };
+            _magicUsed = new[] { new bool[awayLineup], new bool[homeLineup] };
+            _hitUsed = new[] { new bool[awayLineup], new bool[homeLineup] };
             _practiceTeam = practiceTeam;
             Inning = 1;
             IsTop = practiceTeam != BaseballRules.Home;
@@ -147,6 +152,30 @@ namespace PenmonScramble.Baseball.Core
             return inning >= 1 && inning <= list.Count ? list[inning - 1] : -1;
         }
 
+        /// <summary>そのチームのその子が、魔球を使った</summary>
+        public bool IsMagicUsed(int team, int slot) => _magicUsed[team][slot];
+
+        /// <summary>そのチームのその子が、必殺打を使った</summary>
+        public bool IsSpecialHitUsed(int team, int slot) => _hitUsed[team][slot];
+
+        /// <summary>今の投げる子が、魔球をまだ出せる</summary>
+        public bool CanUseMagic => !IsOver && !_magicUsed[FieldingTeam][CurrentPitcher];
+
+        /// <summary>今の打つ子が、必殺打をまだ出せる</summary>
+        public bool CanUseSpecialHit => !IsOver && !_hitUsed[BattingTeam][CurrentBatter];
+
+        /// <summary>今の投げる子が魔球を投げた（ボールになっても使った扱い）</summary>
+        public void UseMagic()
+        {
+            _magicUsed[FieldingTeam][CurrentPitcher] = true;
+        }
+
+        /// <summary>今の打つ子が必殺打で当てた（Apply で次の打者へ進む前に呼ぶ）</summary>
+        public void UseSpecialHit()
+        {
+            _hitUsed[BattingTeam][CurrentBatter] = true;
+        }
+
         /// <summary>守る側が、この打席に投げる子を選ぶ（打席の始めだけ。前と同じ子でも良い）</summary>
         public void ChoosePitcher(int slot)
         {
@@ -208,6 +237,17 @@ namespace PenmonScramble.Baseball.Core
             Bases.Clear();
             if (IsPractice)
             {
+                // 試しの打席は、魔球・必殺打を何度でも試せるよう3アウトで戻す
+                foreach (var used in _magicUsed)
+                {
+                    Array.Clear(used, 0, used.Length);
+                }
+
+                foreach (var used in _hitUsed)
+                {
+                    Array.Clear(used, 0, used.Length);
+                }
+
                 return;
             }
 

@@ -59,10 +59,21 @@ namespace PenmonScramble.Baseball.Game
                     BaseballSounds.Play(BaseballSound.HomeRun);
                     BaseballSounds.Play(BaseballSound.Cheer);
                     break;
+                case BaseballEventKind.MagicFreeze:
+                    BaseballSounds.Play(BaseballSound.Freeze);
+                    break;
+                case BaseballEventKind.MagicVanish:
+                case BaseballEventKind.MagicAppear:
+                case BaseballEventKind.MagicReverse:
+                    BaseballSounds.Play(BaseballSound.Vanish);
+                    break;
+                case BaseballEventKind.Skip:
+                    BaseballSounds.Play(BaseballSound.Skip);
+                    break;
             }
         }
 
-        /// <summary>点が入った（観客の歓声。チェンジ・試合の終わりのジングルはフェーズ 7）</summary>
+        /// <summary>点が入った（観客の歓声。試合の終わりのジングルはフェーズ 7）</summary>
         public static void PlayRuns() => BaseballSounds.Play(BaseballSound.Cheer);
 
         /// <summary>ゲームセット（勝ったら歓声とファンファーレ、それ以外はどよめき）</summary>

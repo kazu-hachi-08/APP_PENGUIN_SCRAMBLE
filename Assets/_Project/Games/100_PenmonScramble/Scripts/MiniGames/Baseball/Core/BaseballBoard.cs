@@ -29,7 +29,7 @@ namespace PenmonScramble.Baseball.Core
             SwingTime = swingTime;
         }
 
-        /// <summary>曲げる（−1 で左・1 で右）</summary>
+        /// <summary>曲げる（−1 で左・1 で右）。投げた球は投げる人が、追い風ヒットの打球は打った人が曲げる</summary>
         public float Bend { get; }
 
         /// <summary>この歩で振るボタンを押した</summary>
@@ -47,7 +47,8 @@ namespace PenmonScramble.Baseball.Core
 
     /// <summary>
     /// 盤の上の1球（投げる → 振る・バント → 打球 → 結果）。1/30 秒の固定の刻みで進め、起きたことを BaseballEvent で返す。
-    /// 投げた球・バットは1歩をさらに細かく分けて動かし、バットが球を飛び越えないようにする
+    /// 投げた球・バットは1歩をさらに細かく分けて動かし、バットが球を飛び越えないようにする。
+    /// 魔球と必殺打は投げるときに渡す（投げる人と打つ人が、相手に見えないまま投げる前に選んだもの）
     /// </summary>
     public sealed class BaseballBoard
     {
@@ -59,6 +60,7 @@ namespace PenmonScramble.Baseball.Core
         private readonly BaseballBallSim _ball;
         private bool _crossedPlate;
         private bool _inZone;
+        private BaseballSpecial _hitSpecial;
 
         public BaseballBoard(BaseballFieldDef field)
         {
@@ -87,6 +89,14 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>投げた球がゾーンの中を通ったか（ホームの線を越えた後に決まる）</summary>
         public bool InZone => _inZone;
 
+        /// <summary>この球で打つ人が出した必殺打（出していなければ None）</summary>
+        public BaseballSpecial HitSpecial => _hitSpecial;
+
+        /// <summary>
+        /// 必殺打を使った（振って当てた。ファウルも）。空振り・見送り・バントでは使わない（Docs/MINIGAME_BASEBALL_PLAN.md「魔球と必殺打」）
+        /// </summary>
+        public bool SpecialHitUsed => _hitSpecial.IsActive && LastHit is { Bunt: false };
+
         /// <summary>次の球のために構えに戻す</summary>
         public void Reset()
         {
@@ -95,19 +105,25 @@ namespace PenmonScramble.Baseball.Core
             LastHit = null;
             _crossedPlate = false;
             _inZone = false;
+            _hitSpecial = BaseballSpecial.None;
             _pitch.Stop();
             _ball.Stop();
             _bat.Reset();
         }
 
-        public void Throw(BaseballPitchType type, List<BaseballEvent> events)
+        public void Throw(BaseballPitchType type, List<BaseballEvent> events) => Throw(type, BaseballPitchMagic.None, BaseballSpecial.None, events);
+
+        /// <param name="magic">投げる人が出した魔球（出していなければ None）</param>
+        /// <param name="hitSpecial">打つ人が出した必殺打（出していなければ None。振って当てたときだけ打球が変わる）</param>
+        public void Throw(BaseballPitchType type, BaseballPitchMagic magic, BaseballSpecial hitSpecial, List<BaseballEvent> events)
         {
             if (Phase != BaseballBoardPhase.Ready)
             {
                 throw new InvalidOperationException("投げられるのは構えのときだけ");
             }
 
-            _pitch.Start(type);
+            _hitSpecial = hitSpecial;
+            _pitch.Start(type, magic);
             Phase = BaseballBoardPhase.Pitching;
             events.Add(new BaseballEvent(BaseballEventKind.Pitch, _pitch.Position, (int)type));
         }
@@ -120,6 +136,7 @@ namespace PenmonScramble.Baseball.Core
                     StepPitching(input, events);
                     break;
                 case BaseballBoardPhase.BallInPlay:
+                    _ball.SetSteer(input.Bend);
                     StepBallInPlay(events);
                     break;
             }
@@ -163,10 +180,7 @@ namespace PenmonScramble.Baseball.Core
             var prevDegrees = _bat.Degrees;
             var wasLive = _bat.IsLive;
             var bunting = _bat.State == BaseballBatState.Bunting;
-            if (_pitch.Step(bend, dt))
-            {
-                events.Add(new BaseballEvent(BaseballEventKind.BendEnd, _pitch.Position));
-            }
+            _pitch.Step(bend, dt, events);
 
             _bat.Step(dt);
             if (wasLive && BaseballBat.TryContact(Field.BatPivot, prevDegrees, _bat.Degrees, prevBall, _pitch.Position, out var along))
@@ -208,9 +222,14 @@ namespace PenmonScramble.Baseball.Core
             _pitch.Stop();
             _bat.Finish();
             LastHit = hit;
-            _ball.Launch(at, hit);
+            var special = bunt ? BaseballSpecial.None : _hitSpecial;
+            _ball.Launch(at, hit, special);
             Phase = BaseballBoardPhase.BallInPlay;
             events.Add(new BaseballEvent(BaseballEventKind.Contact, at, hit.Power, hit.Lofted));
+            if (special.IsActive)
+            {
+                events.Add(new BaseballEvent(BaseballEventKind.SpecialHit, at, hit.Power, hit.Lofted, (int)special.Element));
+            }
         }
 
         private void StepBallInPlay(List<BaseballEvent> events)

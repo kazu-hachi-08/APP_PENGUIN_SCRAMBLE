@@ -1,4 +1,5 @@
 using System;
+using PenmonScramble.Core;
 
 namespace PenmonScramble.Baseball.Core
 {
@@ -35,11 +36,12 @@ namespace PenmonScramble.Baseball.Core
     /// <summary>CPU のうまさ（★ごとの値は BaseballBalance.AiSkill。試合の確認で決めた）</summary>
     public readonly struct BaseballAiSkill
     {
-        public BaseballAiSkill(float timingErrorSeconds, float takeBallChance, float aimError)
+        public BaseballAiSkill(float timingErrorSeconds, float takeBallChance, float aimError, float magicReadChance = 0f)
         {
             TimingErrorSeconds = timingErrorSeconds;
             TakeBallChance = takeBallChance;
             AimError = aimError;
+            MagicReadChance = magicReadChance;
         }
 
         /// <summary>振る時刻のぶれ（秒。ばらつきの標準偏差）。強さの一番の差</summary>
@@ -50,6 +52,9 @@ namespace PenmonScramble.Baseball.Core
 
         /// <summary>投げるときにゾーンの端を狙うぶれ（マス。標準偏差）</summary>
         public float AimError { get; }
+
+        /// <summary>フリーズボールが凍ったのを見て、振るのを待ち直せる確率（待てなければ取ったタイミングのまま振ってしまう）</summary>
+        public float MagicReadChance { get; }
     }
 
     /// <summary>
@@ -58,7 +63,9 @@ namespace PenmonScramble.Baseball.Core
     /// カウントでねらいを変える（3ボールでは外す球を投げない・追い込んだら外す球を増やす）。投げる子はイニングごとに替える。
     /// 打つ: 曲げられる区間が終わって球の通る所が決まったら、見送るか振るかを決め、ジャストの時刻にぶれを足した時刻に振る
     /// （前へ来る速さは球種で一定なので、時刻は読める。ぶれは曲げられた球・速い球ほど大きい）。
-    /// 追い込まれたらゾーンのきわの球もカットしにいく。走者がいて点差が小さいときは、ときどきバントで送る
+    /// 追い込まれたらゾーンのきわの球もカットしにいく。走者がいて点差が小さいときは、ときどきバントで送る。
+    /// 魔球・必殺打: ピンチ・チャンスで出しやすく、最後のイニングはさらに出しやすい（残したまま終わらないように）。
+    /// 打つ側は魔球に読みを崩される（消えている間は読めない・凍った球には取ったタイミングのまま振ってしまうことがある）
     /// </summary>
     public sealed class BaseballAi
     {
@@ -67,6 +74,8 @@ namespace PenmonScramble.Baseball.Core
         private bool _decided;
         private bool _willSwing;
         private float _swingLead;
+        private float _swingAt;
+        private bool _freezeSeen;
         private bool _buntPlate;
         private bool _bunting;
         private int _strikes;
@@ -80,18 +89,93 @@ namespace PenmonScramble.Baseball.Core
         // ---- 投げる ----
 
         /// <summary>
-        /// 投げる子を選ぶ（打席の始めに呼ぶ）。魔球の無いうちはどの子でも同じなので、イニングごとに順に替えて、いろいろな子が投げるようにする
-        /// （魔球の残りで選ぶのはフェーズ 4）
+        /// 投げる子を選ぶ（打席の始めに呼ぶ）。イニングごとに順に替えて、いろいろな子が投げるようにする。
+        /// ピンチ（得点圏に走者）で、その子の魔球が残っていなければ、魔球の残っている子に替える
         /// </summary>
         public static int ChoosePitcher(BaseballGame game)
         {
-            return (game.Inning - 1) % game.LineupSize(game.FieldingTeam);
+            var team = game.FieldingTeam;
+            var size = game.LineupSize(team);
+            var turn = (game.Inning - 1) % size;
+            if (!IsScoringChance(game) || !game.IsMagicUsed(team, turn))
+            {
+                return turn;
+            }
+
+            for (var i = 1; i < size; i++)
+            {
+                var slot = (turn + i) % size;
+                if (!game.IsMagicUsed(team, slot))
+                {
+                    return slot;
+                }
+            }
+
+            return turn;
+        }
+
+        /// <summary>得点圏（二塁・三塁）に走者がいる（投げる側のピンチ・打つ側のチャンス）</summary>
+        public static bool IsScoringChance(BaseballGame game) => game.Bases.IsOccupied(2) || game.Bases.IsOccupied(3);
+
+        /// <summary>この球で魔球を出すか（投げる前に。今の投げる子の魔球が残っているときだけ）</summary>
+        public bool WantsMagic(BaseballGame game)
+        {
+            if (!game.CanUseMagic)
+            {
+                return false;
+            }
+
+            return Roll(IsScoringChance(game) ? BaseballBalance.AiMagicPinchChance : BaseballBalance.AiMagicChance, game);
+        }
+
+        /// <summary>この球で必殺打を出すか（投げる前に。今の打つ子の必殺打が残っているときだけ。当たるまでは残る）</summary>
+        public bool WantsSpecialHit(BaseballGame game)
+        {
+            if (!game.CanUseSpecialHit)
+            {
+                return false;
+            }
+
+            return Roll(IsScoringChance(game) ? BaseballBalance.AiSpecialChanceChance : BaseballBalance.AiSpecialChance, game);
+        }
+
+        /// <summary>魔球の中身（★の幅の中の乱数）を決める</summary>
+        public BaseballPitchMagic RollMagic(BaseballSpecial special) => BaseballPitchMagic.Roll(special, _random);
+
+        /// <summary>最後のイニングは出しやすくする</summary>
+        private bool Roll(float chance, BaseballGame game)
+        {
+            var scaled = game.Inning >= BaseballRules.Innings ? chance * BaseballBalance.AiLastInningScale : chance;
+            return _random.NextDouble() < Math.Min(scaled, 1f);
         }
 
         /// <summary>カウントを見ない1球（試しの打席・テスト）</summary>
         public BaseballPitchPlan PlanPitch(BaseballFieldDef field) => PlanPitch(field, 0, 0);
 
         public BaseballPitchPlan PlanPitch(BaseballFieldDef field, BaseballCount count) => PlanPitch(field, count.Balls, count.Strikes);
+
+        /// <summary>
+        /// 魔球の1球。魔球はわざと外さず、ゾーンの端をねらう。旋風ボールだけは、ゾーンの外へ逃がしてから逆へ曲げてゾーンへ戻す
+        /// （打つ側には外へ逃げる球に見え、見送るとストライクになる）
+        /// </summary>
+        public BaseballPitchPlan PlanMagicPitch(BaseballFieldDef field, BaseballSpecial magic)
+        {
+            var type = (BaseballPitchType)_random.Next(3);
+            var side = _random.Next(2) == 0 ? -1f : 1f;
+            if (magic.Is(Element.Wind))
+            {
+                var outward = side < 0f ? BaseballBendPlan.Inside : BaseballBendPlan.Away;
+                return new BaseballPitchPlan(type, outward, side * (field.ZoneHalfWidth + BaseballBalance.AiWindOvershoot));
+            }
+
+            var bend = PickBend();
+            if (bend == BaseballBendPlan.Straight)
+            {
+                return new BaseballPitchPlan(type, bend, 0f);
+            }
+
+            return new BaseballPitchPlan(type, bend, side * field.ZoneHalfWidth * BaseballBalance.AiEdgeAim + Gaussian() * _skill.AimError);
+        }
 
         private BaseballPitchPlan PlanPitch(BaseballFieldDef field, int balls, int strikes)
         {
@@ -154,7 +238,8 @@ namespace PenmonScramble.Baseball.Core
                 return 0f;
             }
 
-            var needed = plan.TargetX - pitch.Position.X - pitch.LateralSpeed * remain;
+            // 水の揺れは曲げで動かせないので、曲げで進んだ位置（揺れを除く）でねらう
+            var needed = plan.TargetX - pitch.SteerX - pitch.LateralSpeed * remain;
             var accel = 2f * needed / Math.Max(remain * remain, 0.0001f);
             return Math.Clamp(accel / pitch.Spec.BendAccel, -1f, 1f);
         }
@@ -167,6 +252,7 @@ namespace PenmonScramble.Baseball.Core
             _decided = false;
             _willSwing = false;
             _bunting = false;
+            _freezeSeen = false;
             _strikes = 0;
         }
 
@@ -220,7 +306,7 @@ namespace PenmonScramble.Baseball.Core
                 return false;
             }
 
-            if (!_decided && !pitch.CanBend)
+            if (!_decided && !pitch.CanBend && !pitch.IsHidden)
             {
                 _decided = true;
                 var inZone = Math.Abs(pitch.Position.X) <= board.Field.ZoneHalfWidth;
@@ -243,10 +329,11 @@ namespace PenmonScramble.Baseball.Core
                 return false;
             }
 
+            SeeFreeze(pitch);
             if (!_decided)
             {
-                // 曲げられる区間の間は通る所がまだ決まらないので待つ
-                if (pitch.CanBend)
+                // 曲げられる区間の間は通る所がまだ決まらないので待つ。消えている・凍っている間も読めないので待つ
+                if (pitch.CanBend || pitch.IsHidden || pitch.IsFrozen)
                 {
                     return false;
                 }
@@ -259,8 +346,8 @@ namespace PenmonScramble.Baseball.Core
                 return false;
             }
 
-            var toBat = (pitch.Position.Y - BaseballBalance.BallRadius - board.Field.BatPivot.Y) / pitch.ForwardSpeed;
-            swingTime = toBat - _swingLead;
+            // 振る時刻は決めたときに取っておく（凍って止まった球には、待ち直せなければ取ったタイミングのまま振ってしまう）
+            swingTime = _swingAt - pitch.Elapsed;
             if (swingTime >= BaseballRules.StepSeconds)
             {
                 return false;
@@ -280,9 +367,14 @@ namespace PenmonScramble.Baseball.Core
             _decided = true;
             var pitch = board.Pitch;
             var bent = Math.Abs(pitch.Position.X - board.Field.Mound.X);
-            var difficulty = BaseballBalance.AiTimingDifficulty(pitch.Type) * (1f + BaseballBalance.AiBendDifficulty * bent);
+            var difficulty = BaseballBalance.AiTimingDifficulty(pitch.Type) * (1f + BaseballBalance.AiBendDifficulty * bent)
+                * BaseballBalance.AiMagicDifficulty(pitch.Magic.Special);
+            // 旋風ボールは区間の後も横へ曲がり続ける。うまい CPU はその分を読んでホームの線の位置で決め、読めなければ今の位置で決めてしまう
+            var drift = pitch.LateralSpeed != 0f && _random.NextDouble() < _skill.MagicReadChance
+                ? pitch.LateralSpeed * pitch.Position.Y / pitch.ForwardSpeed
+                : 0f;
             // 通る所の見え方にもぶれがある（ゾーンの外の球に手を出して空振り・きわの球を見逃して三振、が出る）
-            var x = Math.Abs(pitch.Position.X + Gaussian() * _skill.TimingErrorSeconds * BaseballBalance.AiReadError * difficulty);
+            var x = Math.Abs(pitch.Position.X + drift + Gaussian() * _skill.TimingErrorSeconds * BaseballBalance.AiReadError * difficulty);
             var zone = board.Field.ZoneHalfWidth;
             var twoStrikes = _strikes >= BaseballRules.StrikesForOut - 1;
             var protect = twoStrikes && x <= zone + BaseballBalance.AiProtectMargin;
@@ -290,6 +382,56 @@ namespace PenmonScramble.Baseball.Core
             var swingStrike = x <= zone && (twoStrikes || _random.NextDouble() >= BaseballBalance.AiTakeStrikeChance);
             _willSwing = swingStrike || protect || (x > zone && _random.NextDouble() >= _skill.TakeBallChance);
             _swingLead = BaseballBat.SecondsToSquare + Gaussian() * _skill.TimingErrorSeconds * difficulty;
+            var toBat = (pitch.Position.Y - BaseballBalance.BallRadius - board.Field.BatPivot.Y) / pitch.ForwardSpeed;
+            _swingAt = pitch.Elapsed + toBat - _swingLead;
+        }
+
+        /// <summary>フリーズボールが凍ったのを見たら、うまさの割合で振るのを待ち直す（動き出してから読み直す）</summary>
+        private void SeeFreeze(BaseballPitch pitch)
+        {
+            if (!pitch.IsFrozen || _freezeSeen)
+            {
+                return;
+            }
+
+            _freezeSeen = true;
+            if (_random.NextDouble() < _skill.MagicReadChance)
+            {
+                _decided = false;
+            }
+        }
+
+        // ---- 追い風ヒット ----
+
+        /// <summary>
+        /// 追い風ヒットの曲げる入力（CPU）。打球の進む向きにいちばん近い向きのヒットの穴（今より奥）へ向けて曲げる
+        /// </summary>
+        public static float Steer(BaseballBoard board)
+        {
+            var ball = board.Ball;
+            if (board.Phase != BaseballBoardPhase.BallInPlay || !ball.CanSteer)
+            {
+                return 0f;
+            }
+
+            var heading = BaseballFieldDef.DegreesOf(ball.Velocity);
+            var best = float.MaxValue;
+            foreach (var hole in board.Field.Holes)
+            {
+                if (hole.IsOut || hole.Center.Length <= ball.Position.Length)
+                {
+                    continue;
+                }
+
+                var diff = BaseballFieldDef.DegreesOf(hole.Center - ball.Position) - heading;
+                if (Math.Abs(diff) < Math.Abs(best))
+                {
+                    best = diff;
+                }
+            }
+
+            // 方角は右（一塁側）が正で、曲げる入力も右が正
+            return best == float.MaxValue ? 0f : Math.Clamp(best / BaseballBalance.AiSteerFullDegrees, -1f, 1f);
         }
 
         /// <summary>標準正規分布の乱数（Box–Muller）</summary>
