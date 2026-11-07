@@ -9,14 +9,14 @@ namespace PenmonScramble.Baseball.Core
         Walk,
         /// <summary>打ってヒット（ホームランも）</summary>
         Hit,
-        /// <summary>打ってアウト（ゴロ・フライ・ゲッツー。走者の扱いはフェーズ 3 の BaseballBases）</summary>
+        /// <summary>打ってアウト（ゴロ・フライ・ゲッツー。走者の扱いは BaseballBases）</summary>
         Out,
     }
 
     /// <summary>
     /// ボール・ストライク・アウトのカウント（Docs/MINIGAME_BASEBALL_PLAN.md「打つ」）。
     /// 3ストライクで三振・4ボールで四球。ファウルは 2ストライク未満ならストライクを1つ足す（バントのファウルも同じ）。
-    /// 走者・点はフェーズ 3 の BaseballBases が持つ（ゲッツーもここではアウト1つ）
+    /// 走者・点は BaseballBases が持つ（ゲッツーの2つ目のアウトは BaseballGame が AddOut で足す）
     /// </summary>
     public sealed class BaseballCount
     {
@@ -48,6 +48,12 @@ namespace PenmonScramble.Baseball.Core
                 default:
                     return BaseballPlateResult.Continue;
             }
+        }
+
+        /// <summary>打球のほかにアウトが増えた（ゲッツーで一塁の走者もアウト）</summary>
+        public void AddOut()
+        {
+            Outs++;
         }
 
         /// <summary>次の打者のためにボール・ストライクを戻す（アウトは残す）</summary>

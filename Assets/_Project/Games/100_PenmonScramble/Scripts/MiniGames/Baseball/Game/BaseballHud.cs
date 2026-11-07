@@ -7,11 +7,12 @@ using UnityEngine.UI;
 namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
-    /// 野球の HUD（仮。スコアボード・打順のカードはフェーズ 4）: 左上にカウント（B・S・O の丸）、まん中に結果の大きな文字。
+    /// 野球の HUD（仮。イニングごとのスコアボード・打順のカードはフェーズ 4）: 左上にカウント（B・S・O の丸）、まん中に結果の大きな文字。
+    /// 上のまん中に点とイニングと塁の走者（試合の区切りと投げる子の札・ゲームセットの欄は BaseballHud.Match.cs）。
     /// 投げる番では下に球種の札3枚（押すと投げる。PC ではキーの印つき）と1球の持ち時間。
     /// PC では下に操作の説明、スマホでは打つ番に「振る」「バント」のボタン、投げる番に曲げるスティックを出す
     /// </summary>
-    public class BaseballHud : MonoBehaviour
+    public partial class BaseballHud : MonoBehaviour
     {
         private static readonly Color LightOff = new Color(0.22f, 0.24f, 0.30f);
         private static readonly Color BallOn = new Color(0.35f, 0.88f, 0.40f);
@@ -49,7 +50,7 @@ namespace PenmonScramble.Baseball.Game
         [Tooltip("スマホの曲げるスティック（投げる番だけ）")]
         [SerializeField] private GameObject _bendStick;
         [SerializeField, TextArea] private string _batHelp = "振る J / ×（タイミングよく）　バント K / ○（押している間）　もどる Esc";
-        [SerializeField, TextArea] private string _pitchHelp = "投げる J ストレート / K カーブ / L チェンジアップ（× ○ △）　投げた後に曲げる ←→ / 左スティック　もどる Esc";
+        [SerializeField, TextArea] private string _pitchHelp = "投げる J ストレート / K カーブ / L チェンジアップ（× ○ △）　投げた後に曲げる ←→ / 左スティック　投げる子 ↑↓（打席の始め）　もどる Esc";
 
         private bool _isTouch;
         private float _bannerLeft;
@@ -75,6 +76,7 @@ namespace PenmonScramble.Baseball.Game
             }
 
             SetPitchCards(false);
+            AwakeMatch();
         }
 
         /// <summary>打つ番か投げる番かで、説明とスマホのボタンを替える</summary>

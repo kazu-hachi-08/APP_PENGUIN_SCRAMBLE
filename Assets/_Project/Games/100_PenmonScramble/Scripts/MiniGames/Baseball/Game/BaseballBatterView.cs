@@ -25,7 +25,7 @@ namespace PenmonScramble.Baseball.Game
         // 一塁の手前で止まる（塁の上に重ならないように）
         private const float StopShort = 0.35f;
 
-        private readonly Dictionary<int, BaseballPenguin> _bodies = new Dictionary<int, BaseballPenguin>();
+        private readonly Dictionary<(int, bool), BaseballPenguin> _bodies = new Dictionary<(int, bool), BaseballPenguin>();
         private readonly BaseballFieldDef _field;
         private readonly ToonMaterials _materials;
         private readonly Transform _parent;
@@ -47,10 +47,12 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>この子を打席に立たせる（ほかの子は隠す）。替わったときはぽんと出す</summary>
         public void Use(int species, bool wild)
         {
-            if (!_bodies.TryGetValue(species, out var body))
+            // 同じ種類が両方のチームにいることがあるので、CPU の暗い色の体とは別に持つ
+            var key = (species, wild);
+            if (!_bodies.TryGetValue(key, out var body))
             {
                 body = BaseballPenguin.Build($"Batter{species}", species, wild, _materials, _parent);
-                _bodies.Add(species, body);
+                _bodies.Add(key, body);
             }
 
             var changed = _current != body;
@@ -101,6 +103,23 @@ namespace PenmonScramble.Baseball.Game
             var twist = Mathf.Clamp(batDegrees * TwistShare, -MaxTwist, MaxTwist) * Mathf.Deg2Rad;
             _current.Motion.Facing = new Vector3(Mathf.Cos(twist), 0f, Mathf.Sin(twist));
             _current.Motion.HoldSwing = -batDegrees * SwingShare;
+        }
+
+        /// <summary>今いる所（まだ誰も立っていなければ打席）</summary>
+        public Vector3 Position => _current != null ? _current.Root.localPosition : StandPoint;
+
+        /// <summary>隠す（塁に出て走者の子と入れ替わった。次の打者が Use で出てくる）</summary>
+        public void Hide()
+        {
+            if (_current == null)
+            {
+                return;
+            }
+
+            _current.SetActive(false);
+            _current.Motion.Velocity = Vector3.zero;
+            _running = false;
+            _inStance = false;
         }
 
         /// <summary>打った: バットを置いて一塁へ走り出す</summary>

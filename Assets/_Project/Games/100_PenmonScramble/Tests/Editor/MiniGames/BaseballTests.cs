@@ -73,6 +73,9 @@ namespace PenmonScramble.Tests
             return events;
         }
 
+        /// <summary>転がる球がおよそ distance で止まる速さ（摩擦だけで見積もる。すり鉢の引きは小さいので入れない）</summary>
+        private static float SpeedToStopAt(float distance) => MathF.Sqrt(2f * BaseballBalance.RollFriction * distance);
+
         private static BaseballHit Grounder(float degrees, float speed)
         {
             return new BaseballHit(BaseballFieldDef.At(degrees, 1f), speed, 0f, speed / BaseballBalance.MaxHitSpeed, false, false);
@@ -430,7 +433,7 @@ namespace PenmonScramble.Tests
         public void Ball_SlowGrounderFallsIntoHole()
         {
             var sim = new BaseballBallSim(Field);
-            var events = Roll(sim, Vec2.Zero, Grounder(0f, 7.5f));
+            var events = Roll(sim, Vec2.Zero, Grounder(0f, SpeedToStopAt(Field.Base(2).Y + 0.4f)));
             Assert.That(sim.Result, Is.EqualTo(BaseballHitResult.DoublePlay));
             Assert.That(sim.HoleIndex, Is.GreaterThanOrEqualTo(0));
             Assert.That(events.Single(e => e.Kind == BaseballEventKind.HoleIn).Index, Is.EqualTo(sim.HoleIndex));
@@ -441,7 +444,7 @@ namespace PenmonScramble.Tests
         {
             var sim = new BaseballBallSim(Field);
             var dp = Field.Holes.ToList().FindIndex(h => h.Result == BaseballHitResult.DoublePlay);
-            var events = Roll(sim, Vec2.Zero, Grounder(0f, 10.5f));
+            var events = Roll(sim, Vec2.Zero, Grounder(0f, SpeedToStopAt(Field.Base(2).Y + 4f)));
             Assert.That(events.Any(e => e.Kind == BaseballEventKind.LipOut && e.Index == dp), Is.True);
             Assert.That(sim.Result, Is.Not.EqualTo(BaseballHitResult.DoublePlay));
         }
@@ -458,9 +461,9 @@ namespace PenmonScramble.Tests
         [Test]
         public void Ball_StoppedInOutfieldIsSingle()
         {
-            // 外野の穴の無い向き（センターとフライの穴の間）へ、外野の芝で止まる強さ
+            // 外野の穴の無い向き（フライの穴の間）へ、外野の芝で止まる強さ
             var sim = new BaseballBallSim(Field);
-            Roll(sim, Vec2.Zero, Grounder(-6f, 9.5f));
+            Roll(sim, Vec2.Zero, Grounder(-8f, SpeedToStopAt(9.8f)));
             Assert.That(sim.Result, Is.EqualTo(BaseballHitResult.Single));
             Assert.That(sim.HoleIndex, Is.EqualTo(-1));
         }

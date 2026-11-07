@@ -62,6 +62,22 @@ namespace PenmonScramble.Baseball.Game
             }
         }
 
+        /// <summary>点が入った（観客の歓声。チェンジ・試合の終わりのジングルはフェーズ 7）</summary>
+        public static void PlayRuns() => BaseballSounds.Play(BaseballSound.Cheer);
+
+        /// <summary>ゲームセット（勝ったら歓声とファンファーレ、それ以外はどよめき）</summary>
+        public static void PlayGameOver(bool won)
+        {
+            if (won)
+            {
+                BaseballSounds.Play(BaseballSound.HomeRun);
+                BaseballSounds.Play(BaseballSound.Cheer);
+                return;
+            }
+
+            BaseballSounds.Play(BaseballSound.Ooh);
+        }
+
         /// <summary>1球の結果の音（打席が終わったら、その終わり方の音を優先する）</summary>
         public static void PlayOutcome(BaseballPitchOutcome outcome, BaseballPlateResult plate)
         {

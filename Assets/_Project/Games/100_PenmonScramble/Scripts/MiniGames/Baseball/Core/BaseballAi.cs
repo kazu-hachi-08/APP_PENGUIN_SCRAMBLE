@@ -32,7 +32,7 @@ namespace PenmonScramble.Baseball.Core
         public float TargetX { get; }
     }
 
-    /// <summary>CPU のうまさ（★ごとの値はフェーズ 3 の試合の確認で決める）</summary>
+    /// <summary>CPU のうまさ（★ごとの値は BaseballBalance.AiSkill。試合の確認で決めた）</summary>
     public readonly struct BaseballAiSkill
     {
         public BaseballAiSkill(float timingErrorSeconds, float takeBallChance, float aimError)
@@ -53,10 +53,12 @@ namespace PenmonScramble.Baseball.Core
     }
 
     /// <summary>
-    /// CPU（Docs/MINIGAME_BASEBALL_PLAN.md「CPU」の最初の形。フェーズ 2 の試しの打席用。強さ・バント・投げる子の選び方はフェーズ 3 で足す）。
+    /// CPU（Docs/MINIGAME_BASEBALL_PLAN.md「CPU」）。
     /// 投げる: 球種と曲げ方の型を乱数で選び、曲げられる区間が終わるまでにねらいの所へ寄るよう曲げる入力を出す。
+    /// カウントでねらいを変える（3ボールでは外す球を投げない・追い込んだら外す球を増やす）。投げる子はイニングごとに替える。
     /// 打つ: 曲げられる区間が終わって球の通る所が決まったら、見送るか振るかを決め、ジャストの時刻にぶれを足した時刻に振る
-    /// （前へ来る速さは球種で一定なので、時刻は読める。ぶれは曲げられた球・速い球ほど大きい）
+    /// （前へ来る速さは球種で一定なので、時刻は読める。ぶれは曲げられた球・速い球ほど大きい）。
+    /// 追い込まれたらゾーンのきわの球もカットしにいく。走者がいて点差が小さいときは、ときどきバントで送る
     /// </summary>
     public sealed class BaseballAi
     {
@@ -65,6 +67,9 @@ namespace PenmonScramble.Baseball.Core
         private bool _decided;
         private bool _willSwing;
         private float _swingLead;
+        private bool _buntPlate;
+        private bool _bunting;
+        private int _strikes;
 
         public BaseballAi(int seed, BaseballAiSkill skill)
         {
@@ -74,7 +79,21 @@ namespace PenmonScramble.Baseball.Core
 
         // ---- 投げる ----
 
-        public BaseballPitchPlan PlanPitch(BaseballFieldDef field)
+        /// <summary>
+        /// 投げる子を選ぶ（打席の始めに呼ぶ）。魔球の無いうちはどの子でも同じなので、イニングごとに順に替えて、いろいろな子が投げるようにする
+        /// （魔球の残りで選ぶのはフェーズ 4）
+        /// </summary>
+        public static int ChoosePitcher(BaseballGame game)
+        {
+            return (game.Inning - 1) % game.LineupSize(game.FieldingTeam);
+        }
+
+        /// <summary>カウントを見ない1球（試しの打席・テスト）</summary>
+        public BaseballPitchPlan PlanPitch(BaseballFieldDef field) => PlanPitch(field, 0, 0);
+
+        public BaseballPitchPlan PlanPitch(BaseballFieldDef field, BaseballCount count) => PlanPitch(field, count.Balls, count.Strikes);
+
+        private BaseballPitchPlan PlanPitch(BaseballFieldDef field, int balls, int strikes)
         {
             var type = (BaseballPitchType)_random.Next(3);
             var bend = PickBend();
@@ -86,10 +105,19 @@ namespace PenmonScramble.Baseball.Core
             var side = bend == BaseballBendPlan.Inside ? -1f
                 : bend == BaseballBendPlan.Away ? 1f
                 : _random.Next(2) == 0 ? -1f : 1f;
-            var target = _random.NextDouble() < BaseballBalance.AiWasteChance
-                ? side * (field.ZoneHalfWidth + BaseballBalance.AiWasteMargin)
-                : side * field.ZoneHalfWidth * BaseballBalance.AiEdgeAim + Gaussian() * _skill.AimError;
-            return new BaseballPitchPlan(type, bend, target);
+            // 3ボールはわざと外さない（狙いのぶれで外れることはある）。追い込んだら（2ストライク）外す球を増やして振らせにいく
+            var mustStrike = balls >= BaseballRules.BallsForWalk - 1;
+            var wasteChance = mustStrike ? 0f
+                : strikes >= BaseballRules.StrikesForOut - 1 ? BaseballBalance.AiWasteChanceAhead
+                : BaseballBalance.AiWasteChance;
+            if (_random.NextDouble() < wasteChance)
+            {
+                // ストレートは曲がりが小さくゾーンの外まで届かないので、外す球はカーブかチェンジアップ
+                var waste = _random.Next(2) == 0 ? BaseballPitchType.Curve : BaseballPitchType.Changeup;
+                return new BaseballPitchPlan(waste, bend, side * (field.ZoneHalfWidth + BaseballBalance.AiWasteMargin));
+            }
+
+            return new BaseballPitchPlan(type, bend, side * field.ZoneHalfWidth * BaseballBalance.AiEdgeAim + Gaussian() * _skill.AimError);
         }
 
         private BaseballBendPlan PickBend()
@@ -133,11 +161,73 @@ namespace PenmonScramble.Baseball.Core
 
         // ---- 打つ ----
 
-        /// <summary>次の球のために読みを消す</summary>
+        /// <summary>次の球のために読みを消す（試しの打席・テスト。バントはしない）</summary>
         public void ResetBatter()
         {
             _decided = false;
             _willSwing = false;
+            _bunting = false;
+            _strikes = 0;
+        }
+
+        /// <summary>
+        /// 試合の次の球のために読みを消し、この球でバントするかを決める（投げる前に呼ぶ）。
+        /// バントは打席の始めに決めて、その打席の間は続ける（2ストライクからはバントのファウルで三振になるのでやめる）
+        /// </summary>
+        public void BeginPitch(BaseballGame game)
+        {
+            ResetBatter();
+            _strikes = game.Count.Strikes;
+            if (game.IsPlateStart)
+            {
+                _buntPlate = WantsBunt(game) && _random.NextDouble() < BaseballBalance.AiBuntChance;
+            }
+
+            _bunting = _buntPlate && _strikes < BaseballRules.StrikesForOut - 1;
+        }
+
+        /// <summary>
+        /// 送りバントの場面か: 一塁か二塁に走者がいて（三塁だけならスクイズになるのでしない）、2アウト未満、
+        /// 点差が小さい（勝っていても負けていても AiBuntMaxLead 点まで）
+        /// </summary>
+        public static bool WantsBunt(BaseballGame game)
+        {
+            var bases = game.Bases;
+            var lead = game.Score(game.BattingTeam) - game.Score(game.FieldingTeam);
+            return (bases.IsOccupied(1) || bases.IsOccupied(2))
+                && game.Count.Outs < BaseballRules.OutsPerInning - 1
+                && Math.Abs(lead) <= BaseballBalance.AiBuntMaxLead;
+        }
+
+        /// <summary>この歩の打つ側の入力（振る・バントの構え。曲げるのは投げる側なので 0）</summary>
+        public BaseballInput BatInput(BaseballBoard board)
+        {
+            if (_bunting)
+            {
+                return new BaseballInput(0f, false, HoldsBunt(board));
+            }
+
+            var swing = TrySwing(board, out var swingTime);
+            return new BaseballInput(0f, swing, false, swingTime);
+        }
+
+        /// <summary>バントの構えを続けるか。通る所が決まってゾーンの外なら、見送る賢さの割合で構えを解く（ボールにする）</summary>
+        private bool HoldsBunt(BaseballBoard board)
+        {
+            var pitch = board.Pitch;
+            if (board.Phase != BaseballBoardPhase.Pitching || !pitch.IsActive)
+            {
+                return false;
+            }
+
+            if (!_decided && !pitch.CanBend)
+            {
+                _decided = true;
+                var inZone = Math.Abs(pitch.Position.X) <= board.Field.ZoneHalfWidth;
+                _willSwing = inZone || _random.NextDouble() >= _skill.TakeBallChance;
+            }
+
+            return !_decided || _willSwing;
         }
 
         /// <summary>
@@ -181,14 +271,24 @@ namespace PenmonScramble.Baseball.Core
             return true;
         }
 
+        /// <summary>
+        /// 振るか見送るかと、振る時刻のぶれを決める。ゾーンの中は振る（追い込まれるまではときどき見送る）。
+        /// 外は見送る賢さの割合で見送るが、追い込まれていたらゾーンのきわ（AiProtectMargin まで）の球はカットしにいく
+        /// </summary>
         private void Decide(BaseballBoard board)
         {
             _decided = true;
             var pitch = board.Pitch;
-            var inZone = Math.Abs(pitch.Position.X) <= board.Field.ZoneHalfWidth;
-            _willSwing = inZone || _random.NextDouble() >= _skill.TakeBallChance;
             var bent = Math.Abs(pitch.Position.X - board.Field.Mound.X);
             var difficulty = BaseballBalance.AiTimingDifficulty(pitch.Type) * (1f + BaseballBalance.AiBendDifficulty * bent);
+            // 通る所の見え方にもぶれがある（ゾーンの外の球に手を出して空振り・きわの球を見逃して三振、が出る）
+            var x = Math.Abs(pitch.Position.X + Gaussian() * _skill.TimingErrorSeconds * BaseballBalance.AiReadError * difficulty);
+            var zone = board.Field.ZoneHalfWidth;
+            var twoStrikes = _strikes >= BaseballRules.StrikesForOut - 1;
+            var protect = twoStrikes && x <= zone + BaseballBalance.AiProtectMargin;
+            // 追い込まれるまでは、ゾーンの中でもときどき見送る（毎打席の初球打ちにならないように。カウントが進んで三振・四球が出る）
+            var swingStrike = x <= zone && (twoStrikes || _random.NextDouble() >= BaseballBalance.AiTakeStrikeChance);
+            _willSwing = swingStrike || protect || (x > zone && _random.NextDouble() >= _skill.TakeBallChance);
             _swingLead = BaseballBat.SecondsToSquare + Gaussian() * _skill.TimingErrorSeconds * difficulty;
         }
 

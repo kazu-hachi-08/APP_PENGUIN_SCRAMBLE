@@ -27,7 +27,20 @@ namespace PenmonScramble.Baseball.Game
             _batter = new BaseballBatterView(field, materials, parent);
             _pitcher = new BaseballPitcherView(field, materials, parent);
             _fielders = new BaseballFielders(field, materials, parent);
+            Runners = new BaseballRunners(field, materials, parent);
         }
+
+        /// <summary>塁の上の走者</summary>
+        public BaseballRunners Runners { get; }
+
+        /// <summary>打つ子の今いる所（塁に出たら、ここから走者の子が走り出す）</summary>
+        public Vector3 BatterPosition => _batter.Position;
+
+        /// <summary>打つ子を隠す（塁に出て、走者の子と入れ替わった）</summary>
+        public void HideBatter() => _batter.Hide();
+
+        /// <summary>投げる子だけ反応する（打者が塁に出たとき。打つ子は走者になって走る）</summary>
+        public void PitcherReact(bool cheer, bool despair) => _pitcher.React(cheer, despair);
 
         /// <summary>守る側の子を並べる（投げる子は SetPitcher で別に選ぶ）</summary>
         public void SetDefense(IReadOnlyList<int> species, bool wild) => _fielders.Use(species, wild);
@@ -42,6 +55,7 @@ namespace PenmonScramble.Baseball.Game
             _batter.Tick(board, frame.BatDegrees, deltaTime);
             _pitcher.Tick(board, ball, ballVisible, deltaTime);
             _fielders.Tick(board, ball, ballVisible, deltaTime);
+            Runners.Tick(deltaTime);
         }
 
         /// <summary>振りかぶりの深さ（0〜1）。1 になったら Release で投げる</summary>

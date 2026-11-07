@@ -16,7 +16,7 @@ namespace PenmonScramble.Baseball.Game
         // マウンドの丸い山の上に立つ高さ（子たちは盤から少し持ち上げてあるので、その分を引いた残り）
         private const float MoundTop = 0.03f;
 
-        private readonly Dictionary<int, BaseballPenguin> _bodies = new Dictionary<int, BaseballPenguin>();
+        private readonly Dictionary<(int, bool), BaseballPenguin> _bodies = new Dictionary<(int, bool), BaseballPenguin>();
         private readonly BaseballFieldDef _field;
         private readonly ToonMaterials _materials;
         private readonly Transform _parent;
@@ -33,10 +33,12 @@ namespace PenmonScramble.Baseball.Game
 
         public void Use(int species, bool wild)
         {
-            if (!_bodies.TryGetValue(species, out var body))
+            // 同じ種類が両方のチームにいることがあるので、CPU の暗い色の体とは別に持つ
+            var key = (species, wild);
+            if (!_bodies.TryGetValue(key, out var body))
             {
                 body = BaseballPenguin.Build($"Pitcher{species}", species, wild, _materials, _parent);
-                _bodies.Add(species, body);
+                _bodies.Add(key, body);
             }
 
             var changed = _current != body;

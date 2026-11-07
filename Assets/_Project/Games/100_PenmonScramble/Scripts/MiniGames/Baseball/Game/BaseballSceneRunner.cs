@@ -9,7 +9,7 @@ namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
     /// 野球のシーンの入口。球場はまだ作っていないので、ミニゲーム画面から来たときは「準備中」の板と「もどる」だけ。
-    /// エディタの Tools/PenmonScramble/Baseball から開いたときは試しの打席（BaseballTestPlay。打つ側か投げる側）を遊ぶ（記録には書かない）
+    /// エディタの Tools/PenmonScramble/Baseball から開いたときは試しの打席・試しの試合（BaseballMatch）を遊ぶ（記録には書かない）
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に Esc を見る
     [DefaultExecutionOrder(50)]
@@ -18,7 +18,7 @@ namespace PenmonScramble.Baseball.Game
         [SerializeField] private GameObject _placeholder;
         [SerializeField] private Text _courseText;
         [SerializeField] private Button _backButton;
-        [SerializeField] private BaseballTestPlay _testPlay;
+        [SerializeField] private BaseballMatch _match;
 
         private bool _leaving;
 
@@ -32,15 +32,16 @@ namespace PenmonScramble.Baseball.Game
         private void Awake()
         {
             _backButton.onClick.AddListener(Leave);
+            _match.LeaveRequested += Leave;
         }
 
         private void Start()
         {
             MiniGameLaunch.EnsureSelected(MiniGameTable.BaseballId);
-            if (BaseballDevRequest.TryTakeTestAtBat(out var side))
+            if (BaseballDevRequest.TryTake(out var mode))
             {
                 _placeholder.SetActive(false);
-                _testPlay.Begin(side);
+                _match.Begin(mode);
                 return;
             }
 
@@ -49,7 +50,7 @@ namespace PenmonScramble.Baseball.Game
             _courseText.text = row != null ? $"{game.CourseWord} {row.No}  {row.Name}" : string.Empty;
         }
 
-        /// <summary>試しの打席にはまだメニューが無いので、Esc でそのまま戻る（試合中のメニューはフェーズ 4）</summary>
+        /// <summary>試しの打席・試合にはまだメニューが無いので、Esc でそのまま戻る（試合中のメニューはフェーズ 4）</summary>
         private void Update()
         {
             if (InputManager.HasInstance && InputManager.Instance.IsPauseDown)

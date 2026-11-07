@@ -5,7 +5,7 @@ namespace PenmonScramble.Baseball.Core
 {
     /// <summary>
     /// 盤の定義表。いまは試しの盤だけ（球場ごとの盤はフェーズ 4・6 で足す）。
-    /// 穴の並びと大きさ・止まった場所の札はフェーズ 3 の試合の確認で決め直す（案）
+    /// 穴の並びと大きさ・止まった場所の札は、CPU の試合の確認（BaseballMatchCheck）で 1試合 3〜6 点・ホームラン 0〜1 本くらいになるよう決めた
     /// </summary>
     public static class BaseballFieldTable
     {
@@ -21,14 +21,20 @@ namespace PenmonScramble.Baseball.Core
         private static readonly Vec2 BowlCenter = new Vec2(0f, 7f);
 
         private const float InfieldRadius = 7.5f;
-        private const float OutfieldRadius = 12.6f;
+        private const float OutfieldRadius = 12.2f;
 
         private const float OutHoleRadius = 0.5f;
         private const float HitHoleRadius = 0.42f;
+        private const float FlyHoleRadius = 0.7f;
+        private const float FlyHoleDistance = 9.2f;
+        private const float GapHoleDistance = 11.6f;
+        private const float TripleHoleDegrees = 32f;
+        private const float TripleHoleDistance = 11.2f;
 
         /// <summary>
-        /// 試しの盤: 内野にゴロアウト4つ・二塁ベースの上にゲッツー・内野の間に単打2つ、外野の手前に単打2つ・フライアウト3つ・
-        /// 外野の間に二塁打2つ・フェンス際の隅に三塁打2つ。止まったら内野の土＝ゴロアウト・外野の芝＝単打・フェンス際の帯＝二塁打
+        /// 試しの盤: 内野にゴロアウト4つ・二塁ベースの上にゲッツー・内野の間に単打2つ、外野の手前にフライアウト5つ（守備の子が横に並ぶ）・
+        /// その奥の間に二塁打4つ・左右の隅に三塁打2つ。止まったら内野の土＝ゴロアウト・外野の芝＝単打・フェンス際の帯＝二塁打。
+        /// 外野の芝で止まるのは強い当たりだけ（弱い当たりは内野で止まる）で、フライの穴がその手前で多くを捕る
         /// </summary>
         public static BaseballFieldDef Test()
         {
@@ -43,15 +49,17 @@ namespace PenmonScramble.Baseball.Core
                 Hole(BaseballHitResult.Single, -23f, 5.4f, HitHoleRadius),
                 Hole(BaseballHitResult.Single, 23f, 5.4f, HitHoleRadius),
 
-                Hole(BaseballHitResult.Single, -14f, 9f, HitHoleRadius),
-                Hole(BaseballHitResult.Single, 14f, 9f, HitHoleRadius),
-                Hole(BaseballHitResult.FlyOut, -29f, 10.5f, OutHoleRadius),
-                Hole(BaseballHitResult.FlyOut, 0f, 11f, OutHoleRadius),
-                Hole(BaseballHitResult.FlyOut, 29f, 10.5f, OutHoleRadius),
-                Hole(BaseballHitResult.Double, -14f, 12f, HitHoleRadius),
-                Hole(BaseballHitResult.Double, 14f, 12f, HitHoleRadius),
-                Hole(BaseballHitResult.Triple, -39f, 12.9f, HitHoleRadius),
-                Hole(BaseballHitResult.Triple, 39f, 12.9f, HitHoleRadius),
+                Hole(BaseballHitResult.FlyOut, -30f, FlyHoleDistance, FlyHoleRadius),
+                Hole(BaseballHitResult.FlyOut, -15f, FlyHoleDistance, FlyHoleRadius),
+                Hole(BaseballHitResult.FlyOut, 0f, FlyHoleDistance, FlyHoleRadius),
+                Hole(BaseballHitResult.FlyOut, 15f, FlyHoleDistance, FlyHoleRadius),
+                Hole(BaseballHitResult.FlyOut, 30f, FlyHoleDistance, FlyHoleRadius),
+                Hole(BaseballHitResult.Double, -22f, GapHoleDistance, HitHoleRadius),
+                Hole(BaseballHitResult.Double, -7f, GapHoleDistance, HitHoleRadius),
+                Hole(BaseballHitResult.Double, 7f, GapHoleDistance, HitHoleRadius),
+                Hole(BaseballHitResult.Double, 22f, GapHoleDistance, HitHoleRadius),
+                Hole(BaseballHitResult.Triple, -TripleHoleDegrees, TripleHoleDistance, HitHoleRadius),
+                Hole(BaseballHitResult.Triple, TripleHoleDegrees, TripleHoleDistance, HitHoleRadius),
             };
 
             var stopZones = new[]

@@ -10,6 +10,7 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// 野球の HUD（BaseballHud。仮）: 左上の暗い板にカウント（B 緑3つ・S 黄2つ・O 赤2つの丸）、まん中に結果の大きな文字、
+    /// 点の板・投げる子の札・ゲームセットの欄（BaseballSceneBuilder.HudMatch.cs）、
     /// 投げる番の下に球種の札3枚（PC ではキーの印つき）とその上の持ち時間、PC では下に操作の説明、
     /// スマホでは仮想スティックと「振る」「バント」のボタン（PenmonScrambleSceneBuilder.BaseballTouch.cs）
     /// </summary>
@@ -77,7 +78,7 @@ namespace PenmonScramble.Editor
             }
         }
 
-        /// <summary>試しの打席を始めるまで隠しておく（「準備中」の板と重ならないように）</summary>
+        /// <summary>試しの打席・試合を始めるまで隠しておく（「準備中」の板と重ならないように）</summary>
         private static BaseballHudParts CreateHud(Transform canvas)
         {
             var root = UIDialogBuilder.CreateUIObject("BaseballHud", canvas);
@@ -98,6 +99,8 @@ namespace PenmonScramble.Editor
             so.FindProperty("_touch").objectReferenceValue = touch.Visibility;
             B.SetObjectArray(so.FindProperty("_batButtons"), new Object[] { touch.Swing.gameObject, touch.Bunt.gameObject });
             so.FindProperty("_bendStick").objectReferenceValue = touch.Joystick.gameObject;
+            // ゲームセットの欄はスマホのボタンより上に重ねるので、後から作る
+            CreateMatchHud(safe.transform, root.transform, so);
             so.ApplyModifiedProperties();
 
             root.SetActive(false);

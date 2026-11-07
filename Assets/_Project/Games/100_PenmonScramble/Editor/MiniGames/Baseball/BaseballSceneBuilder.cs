@@ -13,8 +13,8 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// 野球のシーン（BaseballScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編・ゴルフ・サッカーのシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
-    /// 今は球場が無いので、「準備中」の板と、開発用メニューから遊ぶ試しの打席（本番の見た目と操作。打つ側・投げる側）を置く
-    /// （Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 2）。HUD は BaseballSceneBuilder.Hud.cs、スマホのボタンは PenmonScrambleSceneBuilder.BaseballTouch.cs
+    /// 今は球場が無いので、「準備中」の板と、開発用メニューから遊ぶ試しの打席・試しの試合（BaseballMatch）を置く
+    /// （Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 3）。HUD は BaseballSceneBuilder.Hud.cs、スマホのボタンは PenmonScrambleSceneBuilder.BaseballTouch.cs
     /// </summary>
     public static partial class BaseballSceneBuilder
     {
@@ -55,7 +55,7 @@ namespace PenmonScramble.Editor
 
             var placeholder = CreatePlaceholder(canvas, out var course, out var back);
             var hud = CreateHud(canvas);
-            var testPlay = CreateTestPlay(camera, hud.Hud);
+            var match = CreateMatch(camera, hud.Hud);
             var input = new GameObject("InputManager").AddComponent<InputManager>();
             PenmonScrambleSceneBuilder.BindBaseballInput(input, hud.Touch);
 
@@ -64,7 +64,7 @@ namespace PenmonScramble.Editor
             so.FindProperty("_placeholder").objectReferenceValue = placeholder;
             so.FindProperty("_courseText").objectReferenceValue = course;
             so.FindProperty("_backButton").objectReferenceValue = back;
-            so.FindProperty("_testPlay").objectReferenceValue = testPlay;
+            so.FindProperty("_match").objectReferenceValue = match;
             so.ApplyModifiedProperties();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -87,7 +87,7 @@ namespace PenmonScramble.Editor
             return rig;
         }
 
-        /// <summary>まだ作っていない球場のときの板（球場の名前・準備中・もどる）。試しの打席では隠す</summary>
+        /// <summary>まだ作っていない球場のときの板（球場の名前・準備中・もどる）。試しの打席・試合では隠す</summary>
         private static GameObject CreatePlaceholder(Transform canvas, out Text course, out Button back)
         {
             var group = UIDialogBuilder.CreateUIObject("Placeholder", canvas);
@@ -100,17 +100,17 @@ namespace PenmonScramble.Editor
             return group;
         }
 
-        /// <summary>試しの打席: 盤・球・バット・子の見た目（BaseballView）と、1球ずつ進める BaseballTestPlay</summary>
-        private static BaseballTestPlay CreateTestPlay(BaseballCamera camera, BaseballHud hud)
+        /// <summary>試合: 盤・球・バット・子の見た目（BaseballView）と、試合を1球ずつ進める BaseballMatch</summary>
+        private static BaseballMatch CreateMatch(BaseballCamera camera, BaseballHud hud)
         {
-            var root = new GameObject("TestPlay");
+            var root = new GameObject("Match");
             var view = root.AddComponent<BaseballView>();
             var viewSo = new SerializedObject(view);
             viewSo.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
             viewSo.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
             viewSo.ApplyModifiedProperties();
 
-            var play = root.AddComponent<BaseballTestPlay>();
+            var play = root.AddComponent<BaseballMatch>();
             var so = new SerializedObject(play);
             so.FindProperty("_view").objectReferenceValue = view;
             so.FindProperty("_camera").objectReferenceValue = camera;

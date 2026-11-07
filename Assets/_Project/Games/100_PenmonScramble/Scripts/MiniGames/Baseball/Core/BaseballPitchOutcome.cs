@@ -16,7 +16,7 @@ namespace PenmonScramble.Baseball.Core
         InPlay,
     }
 
-    /// <summary>1球の結果。カウント・走者はフェーズ 3 の BaseballAtBat がこれを見て進める</summary>
+    /// <summary>1球の結果。カウント・走者・点は BaseballGame がこれを見て進める</summary>
     public readonly struct BaseballPitchOutcome
     {
         public static readonly BaseballPitchOutcome None = new BaseballPitchOutcome(BaseballPitchOutcomeKind.None, BaseballHitResult.Single, false);
@@ -33,7 +33,7 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>InPlay のときの打球の結果</summary>
         public BaseballHitResult Hit { get; }
 
-        /// <summary>バントで当てた球か（犠打の扱いはフェーズ 3）</summary>
+        /// <summary>バントで当てた球か（転がって止まればゴロと同じく走者が進む＝犠打）</summary>
         public bool Bunt { get; }
 
         public bool IsDecided => Kind != BaseballPitchOutcomeKind.None;

@@ -12,7 +12,7 @@ namespace PenmonScramble.Baseball.Core
         Triple,
         HomeRun,
         GroundOut,
-        /// <summary>ゲッツーの穴（走者の扱いはフェーズ 3 の BaseballBases。走者がいなければゴロアウトと同じ）</summary>
+        /// <summary>ゲッツーの穴（走者の扱いは BaseballBases。一塁に走者がいない・2アウトならゴロアウトと同じ）</summary>
         DoublePlay,
         FlyOut,
         Foul,
