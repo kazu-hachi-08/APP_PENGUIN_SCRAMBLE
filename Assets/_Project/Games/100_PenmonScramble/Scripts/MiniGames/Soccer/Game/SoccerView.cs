@@ -8,7 +8,7 @@ namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
     /// サッカーの見た目（おもちゃのフットサル場）。ピッチの定義から地面・柵・ゴールを組み、毎フレーム球・子・キーパーを写す。
-    /// 地面と白い線は SoccerView.Ground.cs、柵は .Boards.cs、ゴールの枠と網は .Goals.cs、
+    /// 地面と白い線は SoccerView.Ground.cs、柵（と柵のバンパー）は .Boards.cs、ゴールの枠と網は .Goals.cs、スタジアムの仕掛けは .Gimmicks.cs、
     /// 起きたこと（蹴った・ゴール・キーパー）への見た目の反応は .Events.cs。球・子・キーパーはそれぞれ別の部品
     /// </summary>
     public partial class SoccerView : MonoBehaviour
@@ -43,6 +43,7 @@ namespace PenmonScramble.Soccer.Game
 
             var pitch = world.Pitch;
             BuildGround(pitch, stadiumWorld, theme);
+            BuildGimmicks(world);
             BuildBoards(pitch, theme);
             BuildGoals(pitch);
             _ball = new SoccerBallView(Materials, _pitch);
@@ -104,6 +105,7 @@ namespace PenmonScramble.Soccer.Game
             }
 
             TickNets(deltaTime);
+            SyncGimmicks(world.Time, deltaTime);
         }
 
         /// <summary>Unity の基本の形の代わりに、ToyMeshes の形を置く（当たりは Core が持つので Collider は付けない）</summary>
@@ -158,6 +160,8 @@ namespace PenmonScramble.Soccer.Game
             _players.Clear();
             _keepers.Clear();
             _nets.Clear();
+            _boards.Clear();
+            ClearGimmicks();
             _ball = null;
         }
 

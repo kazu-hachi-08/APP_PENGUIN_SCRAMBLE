@@ -342,6 +342,7 @@ namespace PenmonScramble.Tests
             Assert.That(read.Species, Is.EqualTo(plan.Species));
             Assert.That(read.Phase, Is.EqualTo(match.Phase));
             Assert.That(read.TimeLeft, Is.EqualTo(match.TimeLeft));
+            Assert.That(read.WorldTime, Is.EqualTo(match.World.Time), "仕掛けの様子はピッチの時刻で決まる");
             Assert.That(read.Gauge[SoccerRules.Red], Is.EqualTo(0.4f));
             Assert.That(read.Ball.Position, Is.EqualTo(snapshot.Ball.Position));
             Assert.That(read.Ball.Holder, Is.EqualTo(snapshot.Ball.Holder));
@@ -374,6 +375,7 @@ namespace PenmonScramble.Tests
             Assert.That(mirror.IsMirror, Is.True);
             Assert.That(mirror.World.Players.Count, Is.EqualTo(6));
             Assert.That(mirror.World.Players[4].Element, Is.EqualTo(match.World.Players[4].Element), "種類から必殺シュートの属性を作る");
+            Assert.That(mirror.World.Time, Is.EqualTo(match.World.Time), "ゲストも同じ時刻の仕掛けを描く");
             AssertSame(match, mirror);
         }
 

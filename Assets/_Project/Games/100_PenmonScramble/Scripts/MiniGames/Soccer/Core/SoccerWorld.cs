@@ -11,7 +11,7 @@ namespace PenmonScramble.Soccer.Core
     /// 試合の流れ（時間・ゴールの演出・PK戦）はここに持たない（SoccerMatch）。
     /// 点が入ったら Kickoff を呼ぶまでボールは誰も持てない（網の中で転がるだけ）。
     /// ボタンで出す技（パス・スライディング・ダッシュ）は SoccerWorld.Actions.cs、キーパーの動きと止める判定は SoccerWorld.Keeper.cs、
-    /// 必殺シュートとチームのゲージは SoccerWorld.Special.cs
+    /// 必殺シュートとチームのゲージは SoccerWorld.Special.cs、スタジアムの仕掛け（氷の床・押し流す帯・間欠泉・バンパー）は SoccerWorld.Gimmicks.cs
     /// </summary>
     public sealed partial class SoccerWorld
     {
@@ -107,6 +107,7 @@ namespace PenmonScramble.Soccer.Core
                 HandleButtons(player, InputOf(inputs, player.Index), events);
             }
 
+            EruptGeysers(events);
             var ballFrom = Ball.Position;
             if (!Ball.IsHeld)
             {
@@ -127,7 +128,7 @@ namespace PenmonScramble.Soccer.Core
 
         /// <summary>
         /// 入力の向きへ歩く速さを近づける（急に止まる・曲がるときも少しだけなめらかに）。
-        /// 種類の速さは効かせない。ボールを持っている子だけ少し遅く、ダッシュ中だけ速い。
+        /// 種類の速さは効かせない。ボールを持っている子だけ少し遅く、ダッシュ中だけ速い。氷の床では速さの変わり方が鈍い（すべる）。
         /// すべっている間は向いている向きへまっすぐ、転んでいる間は止まっていく
         /// </summary>
         private void MovePlayer(SoccerPlayer player, SoccerInput input)
@@ -139,7 +140,8 @@ namespace PenmonScramble.Soccer.Core
                     break;
                 case SoccerPlayerState.Down:
                 case SoccerPlayerState.Recover:
-                    player.Velocity -= player.Velocity.ClampLength(SoccerBalance.DownBrake * Dt);
+                    var brake = SoccerBalance.DownBrake * SoccerBalance.DownBrakeScale(Pitch.GroundAt(player.Position));
+                    player.Velocity -= player.Velocity.ClampLength(brake * Dt);
                     break;
                 case SoccerPlayerState.Frozen:
                     // 凍っている間はその場で動かない
@@ -150,7 +152,7 @@ namespace PenmonScramble.Soccer.Core
                     break;
             }
 
-            player.Position += player.Velocity * Dt;
+            player.Position += (player.Velocity + FlowDrift(player)) * Dt;
             PushPlayerOutOfWalls(player);
             PushPlayerOutOfKeepers(player);
         }
@@ -167,7 +169,8 @@ namespace PenmonScramble.Soccer.Core
                 speed *= SoccerBalance.DashSpeedScale;
             }
 
-            var change = (move * speed - player.Velocity).ClampLength(SoccerBalance.RunAccel * Dt);
+            var accel = SoccerBalance.RunAccel * SoccerBalance.RunAccelScale(Pitch.GroundAt(player.Position));
+            var change = (move * speed - player.Velocity).ClampLength(accel * Dt);
             player.Velocity += change;
             if (!move.IsNearlyZero)
             {

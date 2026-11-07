@@ -95,6 +95,9 @@ namespace PenmonScramble.Soccer.Core
         public float CutInSeconds;
         public bool GoalScored;
 
+        /// <summary>ピッチの時刻（SoccerWorld.Time。仕掛けの様子は時刻だけで決まるので、ゲストはこれで同じ様子を描く）</summary>
+        public float WorldTime;
+
         public SoccerBallSnap Ball;
 
         /// <summary>飛んでいる必殺シュート。飛んでいなければ null</summary>

@@ -82,7 +82,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Cycle_ActiveAtStartOfEachPeriod()
         {
-            var cycle = new GolfCycle(3f, 1f, 0.5f);
+            var cycle = new MiniGameCycle(3f, 1f, 0.5f);
 
             Assert.That(cycle.IsActive(0f), Is.True);
             Assert.That(cycle.IsActive(0.6f), Is.False);
@@ -96,7 +96,7 @@ namespace PenmonScramble.Tests
         [TestCase(1.5f, false)]
         public void Geyser_LaunchesOnlyWhileErupting(float time, bool launches)
         {
-            var geyser = GolfArea.Geyser(MiniGameGeometry.Rect(0.5f, -1f, 1.5f, 1f), 3f, new GolfCycle(3f, 1f));
+            var geyser = GolfArea.Geyser(MiniGameGeometry.Rect(0.5f, -1f, 1.5f, 1f), 3f, new MiniGameCycle(3f, 1f));
             var hole = Flat(areas: new[] { geyser });
             var ball = new GolfBall(0, Vec2.Zero);
             ball.Launch(new Vec2(5f, 0f));

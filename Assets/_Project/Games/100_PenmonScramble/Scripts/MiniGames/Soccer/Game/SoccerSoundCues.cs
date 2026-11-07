@@ -92,6 +92,12 @@ namespace PenmonScramble.Soccer.Game
                 case SoccerEventKind.PenaltyMiss:
                     SoccerSounds.Play(SoccerSound.Miss);
                     break;
+                case SoccerEventKind.BumperHit:
+                    SoccerSounds.Play(SoccerSound.Bumper);
+                    break;
+                case SoccerEventKind.GeyserLaunch:
+                    SoccerSounds.Play(SoccerSound.Geyser);
+                    break;
             }
         }
     }

@@ -96,6 +96,12 @@ namespace PenmonScramble.Soccer.Core
                 }
             }
 
+            if (Ball.NoPickupSeconds > 0f)
+            {
+                Ball.NoPickupSeconds -= Dt;
+                return;
+            }
+
             if (Ball.IsHeld || IsGoalScored || Special != null || Ball.Height > SoccerBalance.PickupMaxHeight)
             {
                 return;

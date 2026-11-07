@@ -44,6 +44,10 @@ namespace PenmonScramble.Soccer.Core
         SpecialKick,
         /// <summary>氷の必殺シュートで凍った（Player は凍った子、Strength は凍る秒）</summary>
         Freeze,
+        /// <summary>ボールが壁のバンパーで弾かれた（Strength は弾かれた後の速さ）</summary>
+        BumperHit,
+        /// <summary>間欠泉がボールを跳ね上げた（Position は間欠泉の口の真ん中、Player は足元から取られた子。いなければ NoPlayer）</summary>
+        GeyserLaunch,
 
         // ---- 試合の流れ（SoccerMatch・SoccerShootout）----
 

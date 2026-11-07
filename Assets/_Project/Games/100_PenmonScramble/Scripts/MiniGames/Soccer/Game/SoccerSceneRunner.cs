@@ -12,15 +12,12 @@ namespace PenmonScramble.Soccer.Game
     /// サッカーのシーンの入口。ミニゲーム画面から来たときは、選んだスタジアムでひとりで1試合（SoccerMatchPlay）。
     /// 部屋の待ちの窓から来たときは、引き継いだ部屋でみんなで1試合（SoccerOnlinePlay）。部屋が切れていたらロビーへ。
     /// まだ作っていないスタジアムなら「準備中」の板と「もどる」だけ。
-    /// エディタの Tools/PenmonScramble/Soccer から開いたときは、スタジアム1の試合（試しのピッチ）か PK戦の確認を遊ぶ（記録には書かない）
+    /// エディタの Tools/PenmonScramble/Soccer から開いたときは、選んだスタジアムの試合（試しのピッチ・スタジアムを試す）か PK戦の確認を遊ぶ（記録には書かない）
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後に Esc を見る
     [DefaultExecutionOrder(50)]
     public class SoccerSceneRunner : MonoBehaviour
     {
-        // 開発用の遊び方で使うスタジアム（海岸）
-        private const int DevStadium = 1;
-
         [SerializeField] private GameObject _placeholder;
         [SerializeField] private Text _courseText;
         [SerializeField] private Button _backButton;
@@ -45,10 +42,11 @@ namespace PenmonScramble.Soccer.Game
         private void Start()
         {
             MiniGameLaunch.EnsureSelected(MiniGameTable.SoccerId);
-            var dev = SoccerDevRequest.Take();
+            var dev = SoccerDevRequest.Take(out var devStadium);
             if (dev != SoccerDevMode.None)
             {
-                StartMatch(SoccerStadiumTable.Get(DevStadium), record: false, shootoutOnly: dev == SoccerDevMode.Shootout);
+                var picked = SoccerStadiumTable.Get(devStadium) ?? SoccerStadiumTable.Get(SoccerDevRequest.DefaultStadium);
+                StartMatch(picked, record: false, shootoutOnly: dev == SoccerDevMode.Shootout);
                 return;
             }
 

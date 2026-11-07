@@ -184,6 +184,7 @@ namespace PenmonScramble.Soccer.Game
             }
 
             var t = _mode.IsGuest ? GuestBlend : _accumulator / SoccerRules.StepSeconds;
+            _view.QuietGimmicks = _match.Phase == SoccerMatchPhase.Shootout || _match.Phase == SoccerMatchPhase.Finished;
             _view.Draw(_world, _previous, _current, t, dt);
             _camera.Follow(Vector3.Lerp(_previous.Ball, _current.Ball, t), dt);
             UpdateHud();

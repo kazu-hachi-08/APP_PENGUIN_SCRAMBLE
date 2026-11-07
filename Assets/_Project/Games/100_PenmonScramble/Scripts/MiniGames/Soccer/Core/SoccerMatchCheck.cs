@@ -18,6 +18,14 @@ namespace PenmonScramble.Soccer.Core
         public int KeeperCatches;
         public int Nudges;
 
+        /// <summary>ボールが板に当たった・バンパーで弾かれた・間欠泉で跳ね上がった回数（仕掛けがどれだけ試合に絡んだか）</summary>
+        public int WallHits;
+        public int Bumpers;
+        public int Geysers;
+
+        /// <summary>離れたボールが、押している帯（水流・風）の中にあった秒の合計</summary>
+        public float FlowSeconds;
+
         /// <summary>赤の人が動かす子が替わった回数と、そのうち FlipSeconds 以内に1つ前の子へ戻った回数（ガタつき）</summary>
         public int ControlSwitches;
         public int FlipSwitches;
@@ -60,9 +68,10 @@ namespace PenmonScramble.Soccer.Core
         private const float StuckWallDistance = 1f;
         private const float StuckSpeed = 1f;
 
-        public static SoccerMatchStats Play(SoccerAiLevel red, SoccerAiLevel blue, int seed, float seconds = SoccerRules.MatchSeconds)
+        /// <param name="pitch">試合をするピッチ（null なら仕掛けの無い試しのピッチ。スタジアムの仕掛けで詰まらないかを見るときに渡す）</param>
+        public static SoccerMatchStats Play(SoccerAiLevel red, SoccerAiLevel blue, int seed, float seconds = SoccerRules.MatchSeconds, SoccerPitchDef pitch = null)
         {
-            var world = SoccerMatchSetup.CreateWorld(SoccerPitchTable.Standard(), CheckSpecies, seed);
+            var world = SoccerMatchSetup.CreateWorld(pitch ?? SoccerPitchTable.Standard(), CheckSpecies, seed);
             var ai = new SoccerAi(world, seed + 1);
             ai.SetLevel(SoccerRules.Red, red);
             ai.SetLevel(SoccerRules.Blue, blue);
@@ -139,6 +148,15 @@ namespace PenmonScramble.Soccer.Core
                     case SoccerEventKind.Nudge:
                         stats.Nudges++;
                         break;
+                    case SoccerEventKind.WallHit:
+                        stats.WallHits++;
+                        break;
+                    case SoccerEventKind.BumperHit:
+                        stats.Bumpers++;
+                        break;
+                    case SoccerEventKind.GeyserLaunch:
+                        stats.Geysers++;
+                        break;
                 }
             }
         }
@@ -158,6 +176,11 @@ namespace PenmonScramble.Soccer.Core
         {
             var ball = world.Ball;
             stats.LongestIdleSeconds = Math.Max(stats.LongestIdleSeconds, ball.IdleSeconds);
+            if (!ball.IsHeld && InActiveFlow(world))
+            {
+                stats.FlowSeconds += SoccerRules.StepSeconds;
+            }
+
             if (ball.IsHeld || ball.Velocity.Length > StuckSpeed)
             {
                 return;
@@ -170,6 +193,19 @@ namespace PenmonScramble.Soccer.Core
             {
                 stats.WallStuckSeconds += SoccerRules.StepSeconds;
             }
+        }
+
+        private static bool InActiveFlow(SoccerWorld world)
+        {
+            foreach (var flow in world.Pitch.Flows)
+            {
+                if (flow.Contains(world.Ball.Position) && !flow.DirectionAt(world.Time).IsNearlyZero)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void PauseAndKickoff(SoccerWorld world, List<SoccerEvent> events)

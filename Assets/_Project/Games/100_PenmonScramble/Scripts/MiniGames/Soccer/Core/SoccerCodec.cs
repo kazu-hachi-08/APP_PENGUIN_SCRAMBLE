@@ -12,7 +12,7 @@ namespace PenmonScramble.Soccer.Core
     public static class SoccerCodec
     {
         /// <summary>中身の並びを変えたら上げる。違う版どうしで部屋に入っても、読み違えるより無視する方がよい</summary>
-        public const byte FormatVersion = 1;
+        public const byte FormatVersion = 2;
 
         // 壊れた値が届いても、配列を作りすぎないようにする
         private const int MaxSeats = 4;
@@ -154,6 +154,7 @@ namespace PenmonScramble.Soccer.Core
 
             writer.Write(s.CutInSeconds);
             writer.Write(s.GoalScored);
+            writer.Write(s.WorldTime);
         }
 
         private static void ReadMatch(BinaryReader reader, SoccerSnapshot s)
@@ -171,6 +172,7 @@ namespace PenmonScramble.Soccer.Core
 
             s.CutInSeconds = Math.Max(0f, Finite(reader.ReadSingle()));
             s.GoalScored = reader.ReadBoolean();
+            s.WorldTime = Math.Max(0f, Finite(reader.ReadSingle()));
         }
 
         private static void WriteBall(BinaryWriter writer, SoccerBallSnap ball)

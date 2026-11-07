@@ -24,6 +24,7 @@ namespace PenmonScramble.Soccer.Core
                 Roll();
             }
 
+            PushByFlows();
             MoveBall(events);
         }
 
@@ -109,11 +110,18 @@ namespace PenmonScramble.Soccer.Core
                     continue;
                 }
 
+                _trajectoryChanged = true;
+                EndSpecial();
+                if (wall.IsBumper)
+                {
+                    velocity = BumperBounce(velocity, normal, into);
+                    events?.Add(new SoccerEvent(SoccerEventKind.BumperHit, SoccerBall.NoPlayer, -1, position, velocity.Length));
+                    continue;
+                }
+
                 var isNet = wall.Kind == SoccerWallKind.Net;
                 var bounce = isNet ? SoccerBalance.NetBounce : SoccerBalance.WallBounce;
                 velocity += normal * (into * (1f + bounce));
-                _trajectoryChanged = true;
-                EndSpecial();
                 if (into >= SoccerBalance.HitEventMinSpeed)
                 {
                     var kind = isNet ? SoccerEventKind.NetHit : SoccerEventKind.WallHit;

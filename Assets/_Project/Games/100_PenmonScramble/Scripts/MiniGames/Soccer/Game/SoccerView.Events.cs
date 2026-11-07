@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
-    /// 起きたことへの見た目の反応: 蹴る動き（パスは小さく）・柵が弾む・網が揺れる・キーパーが取る / 投げる、
+    /// 起きたことへの見た目の反応: 蹴る動き（パスは小さく）・柵が弾む・バンパーが膨らむ・網が揺れる・キーパーが取る / 投げる、
     /// ゴールで点を取った側が喜び、取られた側（子とキーパー）が悔しがる。キックオフで元に戻す
     /// </summary>
     public partial class SoccerView
@@ -47,6 +47,10 @@ namespace PenmonScramble.Soccer.Game
                     break;
                 case SoccerEventKind.KeeperThrow:
                     KeeperAt(e.Team)?.PlayThrow();
+                    break;
+                case SoccerEventKind.BumperHit:
+                    PopBoardNear(e.Position);
+                    PopPostNear(e.Position);
                     break;
             }
         }

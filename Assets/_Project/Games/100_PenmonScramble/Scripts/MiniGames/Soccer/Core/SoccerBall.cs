@@ -32,6 +32,9 @@ namespace PenmonScramble.Soccer.Core
 
         public float LockSeconds { get; internal set; }
 
+        /// <summary>誰も持てない残りの秒（間欠泉で跳ね上げた直後）</summary>
+        public float NoPickupSeconds { get; internal set; }
+
         /// <summary>誰も触っていない秒（SoccerBalance.IdleNudgeSeconds で自分で転がる）</summary>
         public float IdleSeconds { get; internal set; }
 
@@ -58,6 +61,7 @@ namespace PenmonScramble.Soccer.Core
             KeeperTeam = NoTeam;
             LockedPlayer = NoPlayer;
             LockSeconds = 0f;
+            NoPickupSeconds = 0f;
             IdleSeconds = 0f;
         }
     }

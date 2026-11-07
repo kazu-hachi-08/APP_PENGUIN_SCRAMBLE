@@ -30,7 +30,7 @@ namespace PenmonScramble.Golf.Core
             {
                 GolfArea.OutOfBounds(MiniGameGeometry.Rect(0f, 7.4f, 5.8f, 9f)),
                 GolfArea.OutOfBounds(MiniGameGeometry.Rect(6.5f, 7.4f, 7f, 9f)),
-                GolfArea.Geyser(MiniGameGeometry.Rect(2.3f, 5.4f, 4.5f, 6.8f), GeyserLaunch, new GolfCycle(3f, 1.2f)),
+                GolfArea.Geyser(MiniGameGeometry.Rect(2.3f, 5.4f, 4.5f, 6.8f), GeyserLaunch, new MiniGameCycle(3f, 1.2f)),
             };
 
             return new GolfHoleDef("溶岩の川", 2, new Vec2(3.4f, 1.6f), new Vec2(3.4f, 14f), ground, walls, areas);
@@ -72,7 +72,7 @@ namespace PenmonScramble.Golf.Core
                 // まん中の溶岩の川（奥の y 12 から先は岩場で渡れる）
                 GolfArea.OutOfBounds(new[] { new Vec2(7f, 0f), new Vec2(8.8f, 0f), new Vec2(9.2f, 6f), new Vec2(8.6f, 12f), new Vec2(6.8f, 12f), new Vec2(7.4f, 6f) }),
                 // 川の手前の間欠泉
-                GolfArea.Geyser(MiniGameGeometry.Rect(4.6f, 3.6f, 6.4f, 5.6f), GeyserLaunch, new GolfCycle(3.5f, 1.4f)),
+                GolfArea.Geyser(MiniGameGeometry.Rect(4.6f, 3.6f, 6.4f, 5.6f), GeyserLaunch, new MiniGameCycle(3.5f, 1.4f)),
                 // カップの右の溶岩だまり
                 GolfArea.OutOfBounds(MiniGameGeometry.Rect(14.2f, 0.8f, 16f, 4.6f)),
             };

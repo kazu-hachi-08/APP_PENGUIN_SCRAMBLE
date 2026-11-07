@@ -59,9 +59,9 @@ namespace PenmonScramble.Golf.Core
         public float Launch { get; }
 
         /// <summary>間欠泉の噴く間合い（決まった間隔で噴く。時間だけで決まるので、オンラインで全員そろう）</summary>
-        public GolfCycle Cycle { get; }
+        public MiniGameCycle Cycle { get; }
 
-        private GolfArea(GolfAreaKind kind, IReadOnlyList<Vec2> shape, Vec2 push, float launch, GolfCycle cycle = default)
+        private GolfArea(GolfAreaKind kind, IReadOnlyList<Vec2> shape, Vec2 push, float launch, MiniGameCycle cycle = default)
         {
             Kind = kind;
             Shape = shape;
@@ -79,7 +79,7 @@ namespace PenmonScramble.Golf.Core
         public static GolfArea Flow(IReadOnlyList<Vec2> shape, Vec2 push) => new GolfArea(GolfAreaKind.Flow, shape, push, 0f);
 
         /// <param name="cycle">噴く間合い（Period 秒ごとに Active 秒だけ噴く）</param>
-        public static GolfArea Geyser(IReadOnlyList<Vec2> shape, float launch, GolfCycle cycle) => new GolfArea(GolfAreaKind.Geyser, shape, Vec2.Zero, launch, cycle);
+        public static GolfArea Geyser(IReadOnlyList<Vec2> shape, float launch, MiniGameCycle cycle) => new GolfArea(GolfAreaKind.Geyser, shape, Vec2.Zero, launch, cycle);
 
         /// <summary>この時刻に球を跳ばすか（ジャンプ台はいつも、間欠泉は噴いている間だけ）</summary>
         public bool LaunchesAt(float time)

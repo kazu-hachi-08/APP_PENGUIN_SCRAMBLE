@@ -150,9 +150,6 @@ namespace PenmonScramble.Soccer.Core
 
         public const float IdleNudgeSpeed = 4f;
 
-        /// <summary>地面の種類ごとの転がりの摩擦の倍率。今は芝だけ（氷の床などの仕掛けはフェーズ 6 でここに分けて足す）</summary>
-        public static float RollDecelScale(SoccerGround ground) => 1f;
-
         // ---- キーパー（両チーム同じ強さ。スタジアムでも変えない）----
 
         /// <summary>体の当たりの半径。ペンモンはキーパーを通り抜けない</summary>

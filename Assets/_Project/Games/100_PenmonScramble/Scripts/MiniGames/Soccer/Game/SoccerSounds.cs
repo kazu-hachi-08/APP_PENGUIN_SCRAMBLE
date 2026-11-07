@@ -47,6 +47,10 @@ namespace PenmonScramble.Soccer.Game
         Freeze,
         /// <summary>PK戦で外れた（ヒューン）</summary>
         Miss,
+        /// <summary>バンパー・柱で弾かれた（ボヨン）</summary>
+        Bumper,
+        /// <summary>間欠泉が噴いてボールが跳ね上がった（シュワーッ）</summary>
+        Geyser,
     }
 
     /// <summary>
@@ -87,6 +91,8 @@ namespace PenmonScramble.Soccer.Game
             { SoccerSound.SpecialShot, 0.55f },
             { SoccerSound.Freeze, 0.4f },
             { SoccerSound.Miss, 0.35f },
+            { SoccerSound.Bumper, 0.5f },
+            { SoccerSound.Geyser, 0.45f },
         };
 
         /// <summary>蹴る音。strength はため（0〜1）</summary>
@@ -149,6 +155,8 @@ namespace PenmonScramble.Soccer.Game
                 case SoccerSound.SpecialShot: return ToySynth.Sweep("Soccer_Special", 0.35f, 220f, 1400f);
                 case SoccerSound.Freeze: return Freeze();
                 case SoccerSound.Miss: return ToySynth.Sweep("Soccer_Miss", 0.4f, 900f, 300f);
+                case SoccerSound.Bumper: return Bumper();
+                case SoccerSound.Geyser: return Geyser();
                 default: return ToySynth.Jingle("Soccer_Goal", new[] { 523f, 659f, 784f, 1047f, 1319f });
             }
         }
@@ -173,6 +181,34 @@ namespace PenmonScramble.Soccer.Game
             {
                 var ring = Mathf.Sin(2f * Mathf.PI * 1480f * t) * 0.6f + Mathf.Sin(2f * Mathf.PI * 2210f * t) * 0.35f;
                 return ring * Mathf.Exp(-t * 9f);
+            });
+        }
+
+        /// <summary>バンパーの「ボヨン」: 低い所から跳ね上がって揺れる音（板の「トン」と聞き分けられるように）</summary>
+        private static AudioClip Bumper()
+        {
+            const float duration = 0.25f;
+            var phase = 0f;
+            return ToySynth.CreateClip("Soccer_Bumper", duration, t =>
+            {
+                var pitch = Mathf.Lerp(180f, 620f, Mathf.Min(1f, t / 0.06f)) * (1f + 0.08f * Mathf.Sin(2f * Mathf.PI * 30f * t));
+                phase += 2f * Mathf.PI * pitch / ToySynth.SampleRate;
+                return Mathf.Sign(Mathf.Sin(phase)) * 0.45f * Mathf.Exp(-t * 12f);
+            });
+        }
+
+        /// <summary>間欠泉の「シュワーッ」: 明るいノイズが一気に立って、少し長く抜けていく</summary>
+        private static AudioClip Geyser()
+        {
+            const float duration = 0.6f;
+            var random = new System.Random(21);
+            var previous = 0f;
+            return ToySynth.CreateClip("Soccer_Geyser", duration, t =>
+            {
+                var noise = (float)random.NextDouble() * 2f - 1f;
+                var hiss = Mathf.Lerp(noise - previous, noise, 0.4f);
+                previous = noise;
+                return hiss * 0.45f * Mathf.Min(1f, t / 0.03f) * Mathf.Exp(-t * 4.5f);
             });
         }
 

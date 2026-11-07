@@ -16,6 +16,7 @@ namespace PenmonScramble.Soccer.Core
 
             snapshot.CutInSeconds = _cutInSeconds;
             snapshot.GoalScored = IsGoalScored;
+            snapshot.WorldTime = Time;
             snapshot.Ball = CaptureBall();
             snapshot.Special = Special == null ? (SoccerSpecialSnap?)null : new SoccerSpecialSnap
             {
@@ -57,6 +58,7 @@ namespace PenmonScramble.Soccer.Core
 
             _cutInSeconds = snapshot.CutInSeconds;
             IsGoalScored = snapshot.GoalScored;
+            Time = snapshot.WorldTime;
             ApplyBall(snapshot.Ball);
             ApplySpecial(snapshot.Special);
             for (var i = 0; i < _players.Length && i < snapshot.Players.Length; i++)
