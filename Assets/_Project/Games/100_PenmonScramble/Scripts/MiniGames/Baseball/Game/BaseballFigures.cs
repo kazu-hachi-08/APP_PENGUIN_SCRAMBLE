@@ -20,6 +20,7 @@ namespace PenmonScramble.Baseball.Game
 
         public BaseballFigures(BaseballFieldDef field, ToonMaterials materials, Transform parent)
         {
+            var board = parent;
             var ground = new GameObject("Figures").transform;
             ground.SetParent(parent, false);
             ground.localPosition = Vector3.up * GroundLift;
@@ -27,7 +28,7 @@ namespace PenmonScramble.Baseball.Game
             _batter = new BaseballBatterView(field, materials, parent);
             _pitcher = new BaseballPitcherView(field, materials, parent);
             _fielders = new BaseballFielders(field, materials, parent);
-            Runners = new BaseballRunners(field, materials, parent);
+            Runners = new BaseballRunners(field, materials, board, parent);
         }
 
         /// <summary>塁の上の走者</summary>

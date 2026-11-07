@@ -36,10 +36,10 @@ namespace PenmonScramble.Baseball.Game
         private const float HomeDirtRadius = 2f;
 
         private const float LineWidth = 0.08f;
-        private const float BaseSize = 0.5f;
+        internal const float BaseSize = 0.5f;
         private const float BaseHeight = 0.05f;
         // 二塁はゲッツーの穴を囲む大きな白い台（穴の縁が白の中に見える大きさ）
-        private const float SecondBaseSize = 1.55f;
+        internal const float SecondBaseSize = 1.55f;
         private const float MoundDiameter = 1.1f;
         private const float MoundHeight = 0.09f;
 

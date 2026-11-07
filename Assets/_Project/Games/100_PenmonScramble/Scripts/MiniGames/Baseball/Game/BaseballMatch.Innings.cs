@@ -24,7 +24,7 @@ namespace PenmonScramble.Baseball.Game
             var fielding = _game.FieldingTeam;
             var figures = _view.Figures;
             figures.SetDefense(_teams[fielding], _plan.IsCpuTeam(fielding));
-            figures.Runners.Use(_teams[batting], _plan.IsCpuTeam(batting));
+            figures.Runners.Use(_teams[batting], _plan.IsCpuTeam(batting), batting == _localTeam);
             ShowScore();
             ResetBoard();
         }
@@ -120,16 +120,12 @@ namespace PenmonScramble.Baseball.Game
                 text += $"\n<size=72>{play.Runs}点！</size>";
             }
 
-            _timer = play.PlateEnded ? _plateEndSeconds : _resultSeconds;
             var homeRun = play.Plate == BaseballPlateResult.Hit && outcome.Hit == BaseballHitResult.HomeRun;
+            _timer = (play.PlateEnded ? _plateEndSeconds : _resultSeconds) + BeginRunnerWatch(homeRun);
             _hud.ShowBanner(text, BannerColor(outcome, play.Plate), _timer, homeRun ? HomeRunBandColor : (Color?)null);
             ReactToPlay(outcome, play);
+            // 点が入った音と観客の声は、走者がホームへ還ったときに1人ずつ出す（OnRunnerScored）
             BaseballSoundCues.PlayOutcome(outcome, play.Plate);
-            if (play.Runs > 0)
-            {
-                BaseballSoundCues.PlayRuns();
-            }
-
             ShowScore();
             _hud.ShowLineups(_game);
             _hud.SetSteerStick(false);
@@ -159,7 +155,7 @@ namespace PenmonScramble.Baseball.Game
                     figures.HideBatter();
                 }
 
-                figures.Runners.Apply(_game.LastMoves, batterFrom, play.Plate == BaseballPlateResult.Walk);
+                figures.Runners.Apply(_game.LastMoves, batterFrom, play.Plate == BaseballPlateResult.Walk, RunnerStartDelay);
             }
         }
 

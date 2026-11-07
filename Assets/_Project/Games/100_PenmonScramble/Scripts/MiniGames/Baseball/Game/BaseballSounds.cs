@@ -58,6 +58,8 @@ namespace PenmonScramble.Baseball.Game
         Geyser,
         /// <summary>試合の始め（審判の「プレイボール！」の代わりの、呼びかけとファンファーレ）</summary>
         PlayBall,
+        /// <summary>走者がホームへ還った（ピコン。1人ずつ高くなる）</summary>
+        Score,
     }
 
     /// <summary>
@@ -104,7 +106,12 @@ namespace PenmonScramble.Baseball.Game
             { BaseballSound.Skip, 0.35f },
             { BaseballSound.Geyser, 0.4f },
             { BaseballSound.PlayBall, 0.5f },
+            { BaseballSound.Score, 0.45f },
         };
+
+        // 同じ打球で還った2人目・3人目…は、これだけ高くして「点が重なった」のが分かるようにする
+        private const float ScorePitchStep = 0.12f;
+        private const int ScorePitchSteps = 3;
 
         /// <summary>バットに当たった音。power は当たりの強さ（0〜1）</summary>
         public static void PlayBat(float power)
@@ -117,6 +124,12 @@ namespace PenmonScramble.Baseball.Game
         public static void PlayFence(float speed)
         {
             Play(BaseballSound.Fence, Mathf.Lerp(FenceVolumeMin, FenceVolumeMax, Mathf.Clamp01(speed / FenceFullSpeed)), 1f);
+        }
+
+        /// <summary>走者がホームへ還った音。index はその打球で何人目か（0 から）</summary>
+        public static void PlayScore(int index)
+        {
+            Play(BaseballSound.Score, Volumes[BaseballSound.Score], 1f + Mathf.Min(index, ScorePitchSteps) * ScorePitchStep);
         }
 
         public static void Play(BaseballSound sound) => Play(sound, Volumes.TryGetValue(sound, out var volume) ? volume : 0.5f, 1f);
@@ -168,6 +181,7 @@ namespace PenmonScramble.Baseball.Game
                 case BaseballSound.Skip: return ToySynth.Impact("Baseball_Skip", 0.05f, 900f);
                 case BaseballSound.Geyser: return ToySynth.Whoosh("Baseball_Geyser");
                 case BaseballSound.PlayBall: return PlayBall();
+                case BaseballSound.Score: return ToySynth.Jingle("Baseball_Score", new[] { 1047f, 1568f });
                 default: return ToySynth.Jingle("Baseball_HomeRun", new[] { 523f, 659f, 784f, 1047f, 784f, 1047f, 1319f });
             }
         }

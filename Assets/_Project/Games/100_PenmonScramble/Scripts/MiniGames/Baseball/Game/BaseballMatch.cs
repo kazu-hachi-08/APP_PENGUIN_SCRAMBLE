@@ -36,7 +36,7 @@ namespace PenmonScramble.Baseball.Game
     /// 1球は投げ方と2人の入力の記録から BaseballPitchSession が 1/30 秒の固定の刻みで計算し、描くときは前の歩との間を補間する。
     /// 投げる・打つのは、その子の持ち主（この端末の人・ほかの端末の人・CPU）。
     /// 1球の流れは .Flow.cs、入力（人と CPU）は .Input.cs、受け持ちは .Roles.cs、魔球・必殺打は .Specials.cs、
-    /// 打席の終わり・攻守交代は .Innings.cs、結果・記録・メニューは .Result.cs、ホストは .Online.cs、ゲストは .Guest.cs
+    /// 打席の終わり・攻守交代は .Innings.cs、走者の見せ場は .Runners.cs、結果・記録・メニューは .Result.cs、ホストは .Online.cs、ゲストは .Guest.cs
     /// </summary>
     // InputManager がそのフレームの入力を読んだ後、StageMenu が開け閉めした後に動く
     [DefaultExecutionOrder(60)]
@@ -126,6 +126,7 @@ namespace PenmonScramble.Baseball.Game
             var field = stadium != null ? stadium.CreateField() : BaseballFieldTable.Test();
             _session = new BaseballPitchSession(field);
             _view.Build(field, stadium != null ? stadium.World : _testWorld);
+            _view.Figures.Runners.Scored += OnRunnerScored;
         }
 
         /// <summary>
@@ -229,7 +230,7 @@ namespace PenmonScramble.Baseball.Game
             var frame = BaseballFrame.Lerp(_previous, _current, alpha);
             _ballOffset = Vector3.Lerp(_ballOffset, Vector3.zero, 1f - Mathf.Exp(-_ballCatchUp * dt));
             _view.Draw(Board, frame.WithBallOffset(_ballOffset), dt, ShownClock(alpha));
-            _camera.Follow(CameraTarget());
+            _camera.Follow(RunnerWatchTarget(dt) ?? CameraTarget());
         }
 
         /// <summary>
@@ -249,7 +250,7 @@ namespace PenmonScramble.Baseball.Game
             }
         }
 
-        /// <summary>打球が出ている間（とその結果を見せる間）だけ球を追う。ホームランは飛んでいく球を追う</summary>
+        /// <summary>打球が出ている間（とその結果を見せる間）だけ球を追う。ホームランは飛んでいく球を追う（走者の見せ場では、途中からダイヤモンドを見る。.Runners.cs）</summary>
         private Vector3? CameraTarget()
         {
             var inPlay = Board.Phase == BaseballBoardPhase.BallInPlay
