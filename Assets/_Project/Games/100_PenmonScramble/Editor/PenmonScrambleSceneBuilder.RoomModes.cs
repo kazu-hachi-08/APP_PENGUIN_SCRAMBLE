@@ -8,8 +8,8 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 「みんなで遊ぶ」の待ちの窓の右側: 上に遊ぶものの札（ボスラッシュ / ゴルフ。RoomModeSelector）、その下に選んだ遊びの板
-    /// （ボスラッシュは RushLobby.cs、ゴルフは MiniGames/Golf の GolfRoom.cs）。部屋に入っている間は、左に接続の状態（参加コード・人数）が寄る
+    /// 「みんなで遊ぶ」の待ちの窓の右側: 上に遊ぶものの札（ボスラッシュ / ゴルフ / サッカー。RoomModeSelector）、その下に選んだ遊びの板
+    /// （ボスラッシュは RushLobby.cs、ゴルフは MiniGames/Golf の GolfRoom.cs、サッカーは MiniGames/Soccer の SoccerRoom.cs）。部屋に入っている間は、左に接続の状態（参加コード・人数）が寄る
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
@@ -24,12 +24,13 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 WaitingStatusBesidePosition = new Vector2(-520f, 60f);
         private static readonly Vector2 WaitingStatusBesideSize = new Vector2(500f, 460f);
 
-        /// <summary>遊びの板を作って、札でつなぐ。札の並びはボスラッシュ・ゴルフ（先頭が最初に選ばれている）</summary>
+        /// <summary>遊びの板を作って、札でつなぐ。札の並びはボスラッシュ・ゴルフ・サッカー（先頭が最初に選ばれている）</summary>
         private static RoomModeSelector CreateRoomModes(ModeSelectPanel title, OnlineSession session, Transform waitingPanel, Text status)
         {
             var rush = CreateRushLobby(title, waitingPanel);
             var golf = CreateGolfRoomPanel(title, session, waitingPanel);
-            var modes = new MonoBehaviour[] { rush, golf };
+            var soccer = CreateSoccerRoomPanel(title, session, waitingPanel);
+            var modes = new MonoBehaviour[] { rush, golf, soccer };
 
             var selector = title.gameObject.AddComponent<RoomModeSelector>();
             var so = new SerializedObject(selector);

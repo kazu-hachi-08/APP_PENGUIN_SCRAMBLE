@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
@@ -26,16 +27,16 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef CrossCurrent()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 7f, 17f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 7f, 17f);
             var walls = GolfHoleDef.WallsAround(ground);
             walls.Add(Kelp(new Vec2(0f, 12.2f), new Vec2(2.2f, 12.6f)));
             walls.Add(Kelp(new Vec2(7f, 12.2f), new Vec2(4.8f, 12.6f)));
 
             var areas = new List<GolfArea>
             {
-                GolfArea.Flow(GolfGeometry.Rect(0f, 6.4f, 7f, 9.6f), new Vec2(CurrentPush, 0f)),
+                GolfArea.Flow(MiniGameGeometry.Rect(0f, 6.4f, 7f, 9.6f), new Vec2(CurrentPush, 0f)),
                 // 流れの先の氷の割れ目
-                GolfArea.Water(GolfGeometry.Rect(5.6f, 5.6f, 7f, 10.4f)),
+                GolfArea.Water(MiniGameGeometry.Rect(5.6f, 5.6f, 7f, 10.4f)),
             };
 
             return new GolfHoleDef("横切る海流", 2, new Vec2(3.5f, 1.6f), new Vec2(3.5f, 14.6f), ground, walls, areas);
@@ -47,7 +48,7 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef WarpBubbles()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 12f, 17f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 12f, 17f);
             var walls = GolfHoleDef.WallsAround(ground);
             // カップのまわりの海藻
             walls.Add(Kelp(new Vec2(6.4f, 12.6f), new Vec2(6.4f, 15.4f)));
@@ -57,7 +58,7 @@ namespace PenmonScramble.Golf.Core
 
             var areas = new List<GolfArea>
             {
-                GolfArea.Water(GolfGeometry.Rect(0f, 7.4f, 12f, 9.2f)),
+                GolfArea.Water(MiniGameGeometry.Rect(0f, 7.4f, 12f, 9.2f)),
             };
 
             var warps = new[]
@@ -75,7 +76,7 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef KelpMaze()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 16f, 16f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 16f, 16f);
             var walls = GolfHoleDef.WallsAround(ground);
             walls.Add(Kelp(new Vec2(5f, 0f), new Vec2(5f, 11f)));
             walls.Add(Kelp(new Vec2(10.5f, 5f), new Vec2(10.5f, 16f)));
@@ -83,10 +84,10 @@ namespace PenmonScramble.Golf.Core
             var areas = new List<GolfArea>
             {
                 // まん中の通りは手前へ、右の通りは奥へ流れる
-                GolfArea.Flow(GolfGeometry.Rect(5f, 5.6f, 10.5f, 11f), new Vec2(0f, -CurrentPush)),
-                GolfArea.Flow(GolfGeometry.Rect(10.5f, 3.4f, 16f, 10.4f), new Vec2(0f, CurrentPush)),
+                GolfArea.Flow(MiniGameGeometry.Rect(5f, 5.6f, 10.5f, 11f), new Vec2(0f, -CurrentPush)),
+                GolfArea.Flow(MiniGameGeometry.Rect(10.5f, 3.4f, 16f, 10.4f), new Vec2(0f, CurrentPush)),
                 // 手前のまん中の氷の割れ目
-                GolfArea.Water(GolfGeometry.Rect(7f, 0.8f, 8.6f, 3.6f)),
+                GolfArea.Water(MiniGameGeometry.Rect(7f, 0.8f, 8.6f, 3.6f)),
             };
 
             var warps = new[]

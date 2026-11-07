@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
@@ -118,7 +119,7 @@ namespace PenmonScramble.Golf.Core
         {
             foreach (var wall in hole.Walls)
             {
-                var offset = point - GolfGeometry.ClosestOnSegment(wall.A, wall.B, point);
+                var offset = point - MiniGameGeometry.ClosestOnSegment(wall.A, wall.B, point);
                 if (offset.Length < GolfBalance.BallRadius && Vec2.Dot(direction, offset) < 0f)
                 {
                     normal = offset.Normalized;

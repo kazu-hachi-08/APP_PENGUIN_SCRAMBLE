@@ -9,10 +9,32 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// 遊び方の「操作」の絵。キーボードはキーの並びどおりに置き、押したキーが光る（HowToPlayKey）。
-    /// スマホはステージ中の仮想スティック・ボタンの配置（TouchControls の定数）を縮めて描く
+    /// スマホはステージ中の仮想スティック・ボタンの配置（TouchControls の定数）を縮めて描く。
+    /// ボタンの置き場所が本編と同じミニゲーム（サッカー）は、言葉（ControlWords）だけ替えて同じ絵を使う
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
+        /// <summary>操作の絵に書く「何をするか」の言葉と、スマホの技のボタンの色</summary>
+        internal sealed class ControlWords
+        {
+            public string Skill1 = "技1";
+            public string Skill2 = "技2";
+            public string Special = "必殺技";
+            public string Switch = "交代";
+            public string PadSkill1 = "技1";
+            public string PadSkill2 = "技2";
+            public string TouchSkill1 = "技1";
+            public string TouchSkill2 = "技2";
+            public string TouchSpecial = "必殺";
+            public string KeyboardTip = "技は向いている方へ出る。キーは押しっぱなしで出し続ける。押したキーが光ります";
+            public string PadTip = "PS5 コントローラーのボタン。押したボタンが光ります";
+            public string TouchTip = "左のスティックで移動。技ボタンは押しっぱなしで出し続ける。右上の ‖ でメニュー";
+            public Color TouchSkill1Color = Skill1Color;
+            public Color TouchSkill2Color = Skill2Color;
+        }
+
+        // 毎回作る: 色の既定値はほかの partial のファイルの static な値で、static なフィールドにすると初期化の順で黒になりうるため
+        private static ControlWords StageWords => new ControlWords();
         internal const string RoundedSpritePath = "UI/Skin/UISprite.psd";
         private static readonly Color KeyCapColor = new Color(0.95f, 0.96f, 1f);
         private static readonly Color KeyCapTextColor = new Color(0.15f, 0.20f, 0.30f);
@@ -60,8 +82,9 @@ namespace PenmonScramble.Editor
         private const float PhoneMenuIconSize = 50f;
         private const float PhoneMenuIconMargin = 18f;
 
-        private static GameObject CreateKeyboardPanel(Transform parent)
+        internal static GameObject CreateKeyboardPanel(Transform parent, ControlWords words = null)
         {
+            words ??= StageWords;
             var panel = CreateStretchGroup(parent, "Keyboard");
             var root = panel.transform;
             CreateKeyCross(root, WasdCenter, new[] { "W", "A", "S", "D" }, new[] { Key.W, Key.A, Key.S, Key.D });
@@ -70,7 +93,7 @@ namespace PenmonScramble.Editor
             CreateLabel(root, "Or", "または", ControlTipFontSize, new Vector2(moveCenter.x, WasdCenter.y), KeyLabelSize);
             CreateLabel(root, "MoveLabel", "移動", KeyWordFontSize, moveCenter + Vector2.down * (KeyPitch * 0.5f + KeyLabelGap), KeyLabelSize);
 
-            var skills = new[] { ("J", Key.J, "技1"), ("K", Key.K, "技2"), ("L", Key.L, "必殺技") };
+            var skills = new[] { ("J", Key.J, words.Skill1), ("K", Key.K, words.Skill2), ("L", Key.L, words.Special) };
             for (var i = 0; i < skills.Length; i++)
             {
                 var (label, key, action) = skills[i];
@@ -80,13 +103,13 @@ namespace PenmonScramble.Editor
             }
 
             CreateKeyCap(root, "Space", SpacePosition, SpaceSize, KeyWordFontSize, new[] { Key.Space });
-            CreateLabel(root, "SpaceLabel", "交代", KeyWordFontSize, SpacePosition + Vector2.down * KeyLabelGap, KeyLabelSize);
+            CreateLabel(root, "SpaceLabel", words.Switch, KeyWordFontSize, SpacePosition + Vector2.down * KeyLabelGap, KeyLabelSize);
 
             CreateKeyCap(root, "Esc", EscPosition, Vector2.one * KeySize, KeyWordFontSize, new[] { Key.Escape, Key.P });
             var escLabel = CreateLabel(root, "EscLabel", "メニュー（P でも）", KeyWordFontSize, EscPosition + new Vector2(KeySize * 0.5f + 200f, 0f), new Vector2(380f, 60f));
             escLabel.alignment = TextAnchor.MiddleLeft;
 
-            CreateControlTip(root, "技は向いている方へ出る。キーは押しっぱなしで出し続ける。押したキーが光ります");
+            CreateControlTip(root, words.KeyboardTip);
             return panel;
         }
 
@@ -101,19 +124,20 @@ namespace PenmonScramble.Editor
             }
         }
 
-        private static GameObject CreateGamepadPanel(Transform parent)
+        internal static GameObject CreateGamepadPanel(Transform parent, ControlWords words = null)
         {
+            words ??= StageWords;
             var panel = CreateStretchGroup(parent, "Gamepad");
             var root = panel.transform;
             // 左の列: 移動・交代・メニュー / 右の列: 技（よく押すボタンを右手側にまとめる）
             // 記号は全角の × ○ △（同梱の日本語フォントに字がある）。光る判定は場所（buttonSouth など）なので、ほかのコントローラーでも同じ場所が光る
             CreatePadRow(root, 0, 0, "LStick", "L", new[] { "leftStick", "dpad" }, PadNeutralColor, true, "移動（左スティック / 方向キー）");
-            CreatePadRow(root, 0, 1, "L1", "L1", new[] { "leftShoulder" }, PadNeutralColor, false, "交代");
+            CreatePadRow(root, 0, 1, "L1", "L1", new[] { "leftShoulder" }, PadNeutralColor, false, words.Switch);
             CreatePadRow(root, 0, 2, "Options", "OPTIONS", new[] { "start" }, PadNeutralColor, false, "メニュー");
-            CreatePadRow(root, 1, 0, "Cross", "×", new[] { "buttonSouth" }, PadCrossColor, true, "技1");
-            CreatePadRow(root, 1, 1, "Circle", "○", new[] { "buttonEast" }, PadCircleColor, true, "技2");
-            CreatePadRow(root, 1, 2, "Triangle", "△", new[] { "buttonNorth" }, PadTriangleColor, true, "必殺技");
-            CreateControlTip(root, "PS5 コントローラーのボタン。押したボタンが光ります");
+            CreatePadRow(root, 1, 0, "Cross", "×", new[] { "buttonSouth" }, PadCrossColor, true, words.PadSkill1);
+            CreatePadRow(root, 1, 1, "Circle", "○", new[] { "buttonEast" }, PadCircleColor, true, words.PadSkill2);
+            CreatePadRow(root, 1, 2, "Triangle", "△", new[] { "buttonNorth" }, PadTriangleColor, true, words.Special);
+            CreateControlTip(root, words.PadTip);
             return panel;
         }
 
@@ -131,8 +155,9 @@ namespace PenmonScramble.Editor
             label.alignment = TextAnchor.MiddleLeft;
         }
 
-        private static GameObject CreateTouchPanel(Transform parent)
+        internal static GameObject CreateTouchPanel(Transform parent, ControlWords words = null)
         {
+            words ??= StageWords;
             var panel = CreateStretchGroup(parent, "Touch");
             var root = panel.transform;
             var rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>(RoundedSpritePath);
@@ -142,13 +167,13 @@ namespace PenmonScramble.Editor
             // ステージ中と同じ並びを、画面の絵の大きさまで縮める（基準の高さ 1080 → 絵の高さ）
             var scale = PhoneScreenSize.y / ReferenceResolution.y;
             CreatePhoneControl(screen, "移動", Vector2.zero, JoystickPosition, JoystickSize, JoystickBackColor, scale);
-            CreatePhoneControl(screen, "技1", Vector2.right, Skill1Position, Skill1Size, Skill1Color, scale);
-            CreatePhoneControl(screen, "技2", Vector2.right, Skill2Position, Skill2Size, Skill2Color, scale);
-            CreatePhoneControl(screen, "必殺", Vector2.right, SpecialPosition, SpecialSize, SpecialColor, scale);
-            CreatePhoneControl(screen, "交代", Vector2.right, SwitchPosition, SwitchSize, SwitchColor, scale);
+            CreatePhoneControl(screen, words.TouchSkill1, Vector2.right, Skill1Position, Skill1Size, words.TouchSkill1Color, scale);
+            CreatePhoneControl(screen, words.TouchSkill2, Vector2.right, Skill2Position, Skill2Size, words.TouchSkill2Color, scale);
+            CreatePhoneControl(screen, words.TouchSpecial, Vector2.right, SpecialPosition, SpecialSize, SpecialColor, scale);
+            CreatePhoneControl(screen, words.Switch, Vector2.right, SwitchPosition, SwitchSize, SwitchColor, scale);
             CreatePhoneMenuIcon(screen);
 
-            CreateControlTip(root, "左のスティックで移動。技ボタンは押しっぱなしで出し続ける。右上の ‖ でメニュー");
+            CreateControlTip(root, words.TouchTip);
             return panel;
         }
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using PenmonScramble.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
@@ -22,15 +23,15 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef WindyRidge()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 7f, 18f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 7f, 18f);
             // 右の縁は手前と奥だけ柵。あいだは崖
             var walls = GolfHoleDef.WallsAlong(new[] { new Vec2(7f, 15f), new Vec2(7f, 18f), new Vec2(0f, 18f), new Vec2(0f, 0f), new Vec2(7f, 0f), new Vec2(7f, 4f) });
             // まん中の岩
-            walls.AddRange(GolfHoleDef.WallsAround(GolfGeometry.Rect(2.2f, 8.6f, 4.2f, 9.8f)));
+            walls.AddRange(GolfHoleDef.WallsAround(MiniGameGeometry.Rect(2.2f, 8.6f, 4.2f, 9.8f)));
 
             var areas = new List<GolfArea>
             {
-                GolfArea.Flow(GolfGeometry.Rect(0f, 5.4f, 7f, 13.4f), new Vec2(1.25f, 0f)),
+                GolfArea.Flow(MiniGameGeometry.Rect(0f, 5.4f, 7f, 13.4f), new Vec2(1.25f, 0f)),
             };
 
             return new GolfHoleDef("風の尾根", 3, new Vec2(3.2f, 1.6f), new Vec2(3f, 16f), ground, walls, areas);
@@ -42,7 +43,7 @@ namespace PenmonScramble.Golf.Core
         /// </summary>
         private static GolfHoleDef WindmillHill()
         {
-            var ground = GolfGeometry.Rect(0f, 0f, 12f, 16f);
+            var ground = MiniGameGeometry.Rect(0f, 0f, 12f, 16f);
             // 左の縁の奥（y 10〜15）は崖
             var walls = GolfHoleDef.WallsAlong(new[] { new Vec2(0f, 15f), new Vec2(0f, 16f), new Vec2(12f, 16f), new Vec2(12f, 0f), new Vec2(0f, 0f), new Vec2(0f, 10f) });
             // 風車の柵（まん中に隙間）。羽根の先と柵の端の間は球がぎりぎり通れる
@@ -51,7 +52,7 @@ namespace PenmonScramble.Golf.Core
 
             var areas = new List<GolfArea>
             {
-                GolfArea.Flow(GolfGeometry.Rect(0f, 10.4f, 12f, 12.4f), new Vec2(-1.2f, 0f)),
+                GolfArea.Flow(MiniGameGeometry.Rect(0f, 10.4f, 12f, 12.4f), new Vec2(-1.2f, 0f)),
             };
 
             var movers = new[]
@@ -86,7 +87,7 @@ namespace PenmonScramble.Golf.Core
             var areas = new List<GolfArea>
             {
                 // 手前の通りのまん中は、手前の崖の方へ吹く
-                GolfArea.Flow(GolfGeometry.Rect(4f, 0f, 12f, 6f), new Vec2(0f, -1.0f)),
+                GolfArea.Flow(MiniGameGeometry.Rect(4f, 0f, 12f, 6f), new Vec2(0f, -1.0f)),
             };
 
             var movers = new[]

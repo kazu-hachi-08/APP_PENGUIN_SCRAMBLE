@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using PenmonScramble.Core;
 using PenmonScramble.Golf.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
@@ -126,7 +127,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Mirror_EventSeesStrokesAtThatMoment()
         {
-            var hole = new GolfHoleDef("cup", 3, Vec2.Zero, new Vec2(3f, 0f), GolfGeometry.Rect(-50f, -50f, 50f, 50f), new GolfWall[0], new GolfArea[0]);
+            var hole = new GolfHoleDef("cup", 3, Vec2.Zero, new Vec2(3f, 0f), MiniGameGeometry.Rect(-50f, -50f, 50f, 50f), new GolfWall[0], new GolfArea[0]);
             var course = new GolfCourseDef(1, "test", 1, new[] { hole });
             var host = new GolfRound(course, Teams(2));
             var link = new Link(host);
@@ -332,7 +333,7 @@ namespace PenmonScramble.Tests
         /// <summary>2ホールの平らなコース（カップは遠くて入らない。上限まで打って終わる）</summary>
         private static GolfRound TwoHoleRound(int players)
         {
-            var hole = new GolfHoleDef("flat", 2, Vec2.Zero, FarCup, GolfGeometry.Rect(-50f, -50f, 50f, 50f), new GolfWall[0], new GolfArea[0]);
+            var hole = new GolfHoleDef("flat", 2, Vec2.Zero, FarCup, MiniGameGeometry.Rect(-50f, -50f, 50f, 50f), new GolfWall[0], new GolfArea[0]);
             var course = new GolfCourseDef(1, "test", 1, new[] { hole, hole });
             return new GolfRound(course, Teams(players));
         }

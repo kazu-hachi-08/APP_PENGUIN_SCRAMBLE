@@ -19,7 +19,7 @@ namespace PenmonScramble.Golf.Game
         private const float HoleOverSeconds = 1.4f;
 
         [SerializeField] private GolfScorecard _scorecard;
-        [SerializeField] private GolfResultPanel _result;
+        [SerializeField] private MiniGameResultPanel _result;
         [SerializeField] private StageMenu _menu;
         [SerializeField] private MusicClips _musicClips;
 
@@ -105,7 +105,7 @@ namespace PenmonScramble.Golf.Game
             GameMusic.Stop();
             GameSounds.Play(GameSound.Clear);
             _scorecard.Show(_round, "ラウンド終了！", null, null);
-            _result.Show(info);
+            _result.Show(GolfResultText.Build(info));
         }
 
         /// <summary>
@@ -139,12 +139,12 @@ namespace PenmonScramble.Golf.Game
         {
             switch (card)
             {
-                case GolfResultPanel.RetryCard:
+                case MiniGameResultPanel.RetryCard:
                     // 同じ顔ぶれ・同じコースで、スコアカードを空にしてはじめから
                     _round.Restart();
                     PlayMusic();
                     break;
-                case GolfResultPanel.CoursesCard:
+                case MiniGameResultPanel.CoursesCard:
                     if (_mode.IsOnline)
                     {
                         RequestRoom();
@@ -153,7 +153,7 @@ namespace PenmonScramble.Golf.Game
 
                     MiniGameLaunch.ReturnToHub();
                     break;
-                case GolfResultPanel.LobbyCard:
+                case MiniGameResultPanel.LobbyCard:
                     MiniGameLaunch.ReturnToLobby();
                     break;
             }

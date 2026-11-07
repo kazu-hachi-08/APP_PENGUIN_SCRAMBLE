@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PenmonScramble.Core;
 using PenmonScramble.Game;
 using PenmonScramble.Golf.Core;
+using PenmonScramble.MiniGames.Game;
 using UnityEngine;
 
 namespace PenmonScramble.Golf.Game
@@ -49,7 +50,7 @@ namespace PenmonScramble.Golf.Game
             var uv = CoverUv(hole.Ground);
             var top = Materials.Floor(texture, tint);
             var side = Materials.Floor(Texture2D.whiteTexture, SlabSideColor);
-            AddOwnedMesh("Ground", GolfMeshes.Prism("GolfGround", hole.Ground, _ => 0f, -SlabDepth, uv), top, side);
+            AddOwnedMesh("Ground", MiniGameMeshes.Prism("GolfGround", hole.Ground, _ => 0f, -SlabDepth, uv), top, side);
             BuildOutside(hole.Ground, texture, tint);
             for (var i = 0; i < hole.Areas.Count; i++)
             {
@@ -113,11 +114,11 @@ namespace PenmonScramble.Golf.Game
             switch (area.Kind)
             {
                 case GolfAreaKind.Water:
-                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Water));
+                    AddOwnedMesh(name, MiniGameMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Water));
                     BuildRim(area.Shape, lift, _scenery.Foam);
                     break;
                 case GolfAreaKind.OutOfBounds:
-                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Out));
+                    AddOwnedMesh(name, MiniGameMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Out));
                     if (_scenery.OutRim.HasValue)
                     {
                         BuildRim(area.Shape, lift, _scenery.OutRim.Value);
@@ -125,11 +126,11 @@ namespace PenmonScramble.Golf.Game
 
                     break;
                 case GolfAreaKind.Sand:
-                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Sand));
+                    AddOwnedMesh(name, MiniGameMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.Sand));
                     BuildRim(area.Shape, lift, _scenery.SandRim);
                     break;
                 case GolfAreaKind.Ice:
-                    AddOwnedMesh(name, GolfMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.IceFloor));
+                    AddOwnedMesh(name, MiniGameMeshes.Flat(name, area.Shape, lift, uv), Materials.Floor(Texture2D.whiteTexture, _scenery.IceFloor));
                     BuildRim(area.Shape, lift, _scenery.IceRim);
                     break;
                 case GolfAreaKind.Flow:
@@ -151,7 +152,7 @@ namespace PenmonScramble.Golf.Game
         private void BuildSlope(GolfArea area, float lift, Texture texture, Color tint, Func<Vec2, Vector2> uv, Material side)
         {
             var height = Surface.TopOf(area);
-            AddOwnedMesh("Slope", GolfMeshes.Prism("GolfSlope", area.Shape, p => lift + height(p), 0f, uv), Materials.Floor(texture, SlopeTint * tint), side);
+            AddOwnedMesh("Slope", MiniGameMeshes.Prism("GolfSlope", area.Shape, p => lift + height(p), 0f, uv), Materials.Floor(texture, SlopeTint * tint), side);
 
             var down = area.Push.Normalized;
             var center = Centroid(area.Shape);
@@ -183,7 +184,7 @@ namespace PenmonScramble.Golf.Game
         private void BuildJump(GolfArea area, float lift, Func<Vec2, Vector2> uv)
         {
             var top = lift + GolfSurface.JumpPadHeight;
-            AddOwnedMesh("Jump", GolfMeshes.Prism("GolfJump", area.Shape, _ => top, 0f, uv),
+            AddOwnedMesh("Jump", MiniGameMeshes.Prism("GolfJump", area.Shape, _ => top, 0f, uv),
                 Materials.Floor(Texture2D.whiteTexture, JumpColor), Materials.Floor(Texture2D.whiteTexture, JumpSideColor));
             var (min, max) = Bounds(area.Shape);
             var size = Mathf.Min(max.x - min.x, max.y - min.y) * JumpRingRatio;

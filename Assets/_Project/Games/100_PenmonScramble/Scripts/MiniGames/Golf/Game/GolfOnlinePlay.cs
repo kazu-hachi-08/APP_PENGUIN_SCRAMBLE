@@ -31,7 +31,7 @@ namespace PenmonScramble.Golf.Game
 
         private readonly Dictionary<int, int[]> _readyParty = new Dictionary<int, int[]>();
         private readonly List<GolfNetEvent> _pending = new List<GolfNetEvent>();
-        private GolfLink _link;
+        private MiniGameLink _link;
         private GolfCourseDef _course;
         private GolfRound _round;
         private bool _online;
@@ -53,7 +53,8 @@ namespace PenmonScramble.Golf.Game
             _session.ContinueWhenMemberLeaves = true;
             _session.OnPeerDisconnected += Leave;
             _session.OnConnectionLost += Leave;
-            _link = new GolfLink();
+            // メッセージの名前は配った版どうしで合わせるので変えない
+            _link = new MiniGameLink("scramble.golf");
             _link.Open();
             _play.RoomRequested += ReturnToRoomAsHost;
             if (IsHost)

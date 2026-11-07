@@ -12,6 +12,8 @@ namespace PenmonScramble.Game
         Boss,
         /// <summary>ミニゲームのゴルフ（のんびり狙って打つ）</summary>
         Golf,
+        /// <summary>ミニゲームのサッカー（元気に走り回る）</summary>
+        Soccer,
     }
 
     /// <summary>
@@ -33,6 +35,7 @@ namespace PenmonScramble.Game
             { MusicTrack.Stage, BgmId.GameBgm01 },
             { MusicTrack.Boss, BgmId.GameBgm02 },
             { MusicTrack.Golf, BgmId.GameBgm03 },
+            { MusicTrack.Soccer, BgmId.GameBgm04 },
         };
 
         private static readonly Dictionary<MusicTrack, AudioClip> SynthClips = new Dictionary<MusicTrack, AudioClip>();

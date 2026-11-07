@@ -1,5 +1,6 @@
 using PenmonScramble.Game;
 using PenmonScramble.Golf.Game;
+using PenmonScramble.MiniGames.Game;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,7 +9,7 @@ using B = PenmonScramble.Editor.PenmonScrambleSceneBuilder;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ホールの間のスコアカード（GolfScorecard）と、結果の右の欄（GolfResultPanel）。
+    /// ホールの間のスコアカード（GolfScorecard）と、結果の右の欄（ミニゲームで共通の MiniGameResultPanel）。
     /// 板・札はほかの画面と同じ部品（角の丸い板・メニューの斜めの札）。結果ではスコアカードを左へ寄せ、右に内訳、下に3枚の札
     /// </summary>
     public static partial class GolfSceneBuilder
@@ -38,29 +39,6 @@ namespace PenmonScramble.Editor
         private static readonly Color NoteColor = new Color(0.75f, 0.85f, 1f);
         private static readonly Vector2 PanelSlideFrom = new Vector2(0f, -120f);
         private static readonly Vector2 CardSlideFrom = new Vector2(0f, -200f);
-
-        // ---- 結果の右の欄 ----
-        private static readonly Vector2 ResultPanelPosition = new Vector2(500f, 60f);
-        private static readonly Vector2 ResultPanelSize = new Vector2(720f, 600f);
-        private static readonly Vector2 ResultScorePosition = new Vector2(0f, 210f);
-        private static readonly Vector2 ResultScoreSize = new Vector2(660f, 110f);
-        private const int ResultScoreFontSize = 76;
-        private static readonly Vector2 ResultBestPosition = new Vector2(0f, 120f);
-        private static readonly Vector2 ResultBestSize = new Vector2(660f, 60f);
-        private const int ResultBestFontSize = 40;
-        private static readonly Vector2 RewardLabelsPosition = new Vector2(-90f, -50f);
-        private static readonly Vector2 RewardLabelsSize = new Vector2(440f, 230f);
-        private static readonly Vector2 RewardValuesPosition = new Vector2(220f, -50f);
-        private static readonly Vector2 RewardValuesSize = new Vector2(180f, 230f);
-        private const int RewardFontSize = 34;
-        private static readonly Vector2 CoinTotalPosition = new Vector2(0f, -230f);
-        private static readonly Vector2 CoinTotalSize = new Vector2(660f, 80f);
-        private const int CoinTotalFontSize = 52;
-        private const float ResultCardY = -430f;
-        private const float ResultCardSpacing = 520f;
-        private static readonly Vector2 ResultCardSize = new Vector2(460f, 116f);
-        private const int ResultCardFontSize = 50;
-        private const int ResultNoteFontSize = 38;
 
         private static GolfScorecard CreateScorecard(Transform canvas)
         {
@@ -118,52 +96,10 @@ namespace PenmonScramble.Editor
             return scorecard;
         }
 
-        /// <summary>結果の右の欄と下の3枚の札。スコアカードより手前に置く（スコアカードの暗い幕の上に出す）</summary>
-        private static GolfResultPanel CreateResultPanel(Transform canvas)
+        /// <summary>結果の右の欄と下の3枚の札（ミニゲームで共通の部品）。スコアカードより手前に置く（スコアカードの暗い幕の上に出す）</summary>
+        private static MiniGameResultPanel CreateResultPanel(Transform canvas)
         {
-            var root = B.CreateStretchGroup(canvas, "Result");
-            var panel = B.CreatePanel(root.transform, "Panel", ResultPanelPosition, ResultPanelSize);
-            B.SetSlideIn(panel, PanelSlideFrom, 0.1f);
-            var score = B.CreateLabel(panel.transform, "Score", string.Empty, ResultScoreFontSize, ResultScorePosition, ResultScoreSize);
-            score.fontStyle = FontStyle.Bold;
-            var best = B.CreateLabel(panel.transform, "Best", string.Empty, ResultBestFontSize, ResultBestPosition, ResultBestSize);
-            best.fontStyle = FontStyle.Bold;
-            var labels = B.CreateLabel(panel.transform, "RewardLabels", string.Empty, RewardFontSize, RewardLabelsPosition, RewardLabelsSize);
-            labels.alignment = TextAnchor.UpperLeft;
-            var values = B.CreateLabel(panel.transform, "RewardValues", string.Empty, RewardFontSize, RewardValuesPosition, RewardValuesSize);
-            values.alignment = TextAnchor.UpperRight;
-            var coins = B.CreateLabel(panel.transform, "CoinTotal", string.Empty, CoinTotalFontSize, CoinTotalPosition, CoinTotalSize);
-            coins.fontStyle = FontStyle.Bold;
-            coins.color = HudGold;
-
-            var defs = new[] { ("もう一度", B.StartColor), ("コースを選ぶ", B.OnlineColor), ("ロビーへ", B.CancelColor) };
-            var cards = new Object[defs.Length];
-            for (var i = 0; i < defs.Length; i++)
-            {
-                var (label, color) = defs[i];
-                var position = new Vector2((i - (defs.Length - 1) * 0.5f) * ResultCardSpacing, ResultCardY);
-                cards[i] = B.CreateMenuCard(root.transform, $"Card{i + 1}", label, color, Center, position, ResultCardSize, ResultCardFontSize, CardSlideFrom, centered: true);
-            }
-
-            // オンラインのゲストは「もう一度」「コースを選ぶ」の代わりに一言（札2枚分の幅に出す）
-            var note = B.CreateLabel(root.transform, "Note", "ホストがコースを選ぶと、みんなで待ちの窓へ戻ります", ResultNoteFontSize,
-                new Vector2(-ResultCardSpacing * 0.5f, ResultCardY), new Vector2(ResultCardSpacing * 2f - 80f, ResultCardSize.y));
-            note.fontStyle = FontStyle.Bold;
-            note.color = NoteColor;
-            note.gameObject.SetActive(false);
-
-            var result = root.AddComponent<GolfResultPanel>();
-            var so = new SerializedObject(result);
-            so.FindProperty("_note").objectReferenceValue = note;
-            so.FindProperty("_score").objectReferenceValue = score;
-            so.FindProperty("_best").objectReferenceValue = best;
-            so.FindProperty("_rewardLabels").objectReferenceValue = labels;
-            so.FindProperty("_rewardValues").objectReferenceValue = values;
-            so.FindProperty("_coinTotal").objectReferenceValue = coins;
-            B.SetObjectArray(so.FindProperty("_cards"), cards);
-            so.ApplyModifiedProperties();
-            root.SetActive(false);
-            return result;
+            return B.CreateMiniGameResultPanel(canvas, "コースを選ぶ", "ホストがコースを選ぶと、みんなで待ちの窓へ戻ります");
         }
 
         /// <summary>

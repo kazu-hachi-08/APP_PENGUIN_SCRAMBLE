@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using PenmonScramble.Core;
 using PenmonScramble.Golf.Core;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
@@ -104,7 +105,7 @@ namespace PenmonScramble.Tests
         public void Ball_AirborneBallDoesNotDropIn()
         {
             var cup = new Vec2(5f, 0f);
-            var hole = Flat(cup: cup, areas: new[] { GolfArea.Jump(GolfGeometry.Rect(4f, -1f, 4.6f, 1f), 3f) });
+            var hole = Flat(cup: cup, areas: new[] { GolfArea.Jump(MiniGameGeometry.Rect(4f, -1f, 4.6f, 1f), 3f) });
             var ball = new GolfBall(0, new Vec2(3f, 0f));
             ball.Launch(new Vec2(3.5f, 0f));
 
@@ -120,7 +121,7 @@ namespace PenmonScramble.Tests
         public void Ball_JumpClearsLowWall(bool withJump)
         {
             var walls = new[] { GolfWall.Low(new Vec2(3f, -5f), new Vec2(3f, 5f)) };
-            var areas = withJump ? new[] { GolfArea.Jump(GolfGeometry.Rect(1.5f, -1f, 2.2f, 1f), 3.2f) } : Array.Empty<GolfArea>();
+            var areas = withJump ? new[] { GolfArea.Jump(MiniGameGeometry.Rect(1.5f, -1f, 2.2f, 1f), 3.2f) } : Array.Empty<GolfArea>();
             var ball = new GolfBall(0, Vec2.Zero);
             ball.Launch(new Vec2(6f, 0f));
 
@@ -135,7 +136,7 @@ namespace PenmonScramble.Tests
         [TestCase(GolfBalance.RollDecel * 1.5f, true)]
         public void Ball_SlopeMovesRestingBallOnlyWhenSteep(float push, bool moves)
         {
-            var hole = Flat(areas: new[] { GolfArea.Slope(GolfGeometry.Rect(-2f, -2f, 2f, 2f), new Vec2(push, 0f)) });
+            var hole = Flat(areas: new[] { GolfArea.Slope(MiniGameGeometry.Rect(-2f, -2f, 2f, 2f), new Vec2(push, 0f)) });
             var ball = new GolfBall(0, Vec2.Zero);
             var sim = new GolfBallSim(hole);
 
@@ -147,7 +148,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Ball_SandStopsSooner()
         {
-            var sand = Flat(areas: new[] { GolfArea.Sand(GolfGeometry.Rect(-50f, -50f, 50f, 50f)) });
+            var sand = Flat(areas: new[] { GolfArea.Sand(MiniGameGeometry.Rect(-50f, -50f, 50f, 50f)) });
             var onSand = new GolfBall(0, Vec2.Zero);
             onSand.Launch(new Vec2(6f, 0f));
             var onGrass = new GolfBall(0, Vec2.Zero);
@@ -162,7 +163,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Ball_WaterReturnsToShotPosition()
         {
-            var hole = Flat(areas: new[] { GolfArea.Water(GolfGeometry.Rect(3f, -2f, 6f, 2f)) });
+            var hole = Flat(areas: new[] { GolfArea.Water(MiniGameGeometry.Rect(3f, -2f, 6f, 2f)) });
             var ball = new GolfBall(0, new Vec2(1f, 0f));
             ball.Launch(new Vec2(5f, 0f));
 
@@ -175,7 +176,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Ball_LeavingGroundCountsAsFall()
         {
-            var hole = new GolfHoleDef("t", 3, Vec2.Zero, FarCup, GolfGeometry.Rect(-1f, -1f, 3f, 1f), new GolfWall[0], new GolfArea[0]);
+            var hole = new GolfHoleDef("t", 3, Vec2.Zero, FarCup, MiniGameGeometry.Rect(-1f, -1f, 3f, 1f), new GolfWall[0], new GolfArea[0]);
             var ball = new GolfBall(0, Vec2.Zero);
             ball.Launch(new Vec2(5f, 0f));
 
@@ -300,7 +301,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void World_WaterAddsPenaltyStroke()
         {
-            var hole = Flat(areas: new[] { GolfArea.Water(GolfGeometry.Rect(2f, -2f, 5f, 2f)) });
+            var hole = Flat(areas: new[] { GolfArea.Water(MiniGameGeometry.Rect(2f, -2f, 5f, 2f)) });
             var world = new GolfHoleWorld(hole, GolfTurnOrder.SeatOrder(1));
             var start = world.Balls[0].Position;
 
@@ -315,7 +316,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void World_KnockedIntoWaterHasNoPenalty()
         {
-            var hole = Flat(areas: new[] { GolfArea.Water(GolfGeometry.Rect(3f, -3f, 6f, 3f)) });
+            var hole = Flat(areas: new[] { GolfArea.Water(MiniGameGeometry.Rect(3f, -3f, 6f, 3f)) });
             var world = new GolfHoleWorld(hole, GolfTurnOrder.SeatOrder(2));
             world.Balls[0].Place(Vec2.Zero);
             world.Balls[1].Place(new Vec2(1f, 0f));
@@ -452,9 +453,9 @@ namespace PenmonScramble.Tests
         {
             var shape = LShape();
 
-            Assert.That(GolfGeometry.Contains(shape, new Vec2(1f, 1f)), Is.True);
-            Assert.That(GolfGeometry.Contains(shape, new Vec2(3f, 3f)), Is.False);
-            Assert.That(GolfGeometry.Contains(shape, new Vec2(-1f, 1f)), Is.False);
+            Assert.That(MiniGameGeometry.Contains(shape, new Vec2(1f, 1f)), Is.True);
+            Assert.That(MiniGameGeometry.Contains(shape, new Vec2(3f, 3f)), Is.False);
+            Assert.That(MiniGameGeometry.Contains(shape, new Vec2(-1f, 1f)), Is.False);
         }
 
         /// <summary>へこんだ形も、向きが逆でも、頂点の数 − 2 枚の三角形に分かれ、面積が合う</summary>
@@ -468,19 +469,19 @@ namespace PenmonScramble.Tests
                 Array.Reverse(shape);
             }
 
-            var indices = GolfGeometry.Triangulate(shape);
+            var indices = MiniGameGeometry.Triangulate(shape);
 
             Assert.That(indices.Count, Is.EqualTo((shape.Length - 2) * 3));
             var area = 0f;
             for (var i = 0; i < indices.Count; i += 3)
             {
                 var triangle = new[] { shape[indices[i]], shape[indices[i + 1]], shape[indices[i + 2]] };
-                var signed = GolfGeometry.SignedArea(triangle);
+                var signed = MiniGameGeometry.SignedArea(triangle);
                 Assert.That(signed, Is.GreaterThan(0f), "左回り");
                 area += signed;
             }
 
-            Assert.That(area, Is.EqualTo(Math.Abs(GolfGeometry.SignedArea(shape))).Within(1e-3f));
+            Assert.That(area, Is.EqualTo(Math.Abs(MiniGameGeometry.SignedArea(shape))).Within(1e-3f));
         }
 
         [Test]
@@ -525,7 +526,7 @@ namespace PenmonScramble.Tests
 
         private static GolfHoleDef Flat(Vec2? cup = null, GolfWall[] walls = null, GolfArea[] areas = null)
         {
-            return new GolfHoleDef("test", 3, Vec2.Zero, cup ?? FarCup, GolfGeometry.Rect(-50f, -50f, 50f, 50f), walls ?? new GolfWall[0], areas ?? new GolfArea[0]);
+            return new GolfHoleDef("test", 3, Vec2.Zero, cup ?? FarCup, MiniGameGeometry.Rect(-50f, -50f, 50f, 50f), walls ?? new GolfWall[0], areas ?? new GolfArea[0]);
         }
 
         private static Vec2[] LShape()

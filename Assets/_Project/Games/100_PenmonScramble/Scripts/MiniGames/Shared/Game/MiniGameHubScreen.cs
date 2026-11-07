@@ -21,8 +21,8 @@ namespace PenmonScramble.MiniGames.Game
     public class MiniGameHubScreen : MonoBehaviour
     {
         private const string HubHeading = "ミニゲーム";
-        private const string NoRecordLabel = "まだ回っていません";
-        private const string ComingSoonLabel = "このコースは準備中";
+        // ゴルフ（回る）にもサッカー（試合）にも合う言い方にする
+        private const string NoRecordLabel = "まだ記録がありません";
         private static readonly Color LockedColor = new Color(1f, 0.70f, 0.45f);
         private static readonly Color InfoColor = new Color(1f, 0.92f, 0.6f);
 
@@ -193,9 +193,9 @@ namespace PenmonScramble.MiniGames.Game
             var guide = MiniGameGuides.Get(_game.Id);
             var unlocked = MiniGameUnlock.IsUnlocked(course, Record);
             var ready = guide == null || guide.IsReady(course.No);
-            _courseNoText.text = $"コース {course.No}";
+            _courseNoText.text = $"{_game.CourseWord} {course.No}";
             _courseNameText.text = course.Name;
-            _courseInfoText.text = !unlocked ? $"ワールド {course.World} に入ると解放" : !ready ? ComingSoonLabel : BestLabel(course, guide);
+            _courseInfoText.text = !unlocked ? $"ワールド {course.World} に入ると解放" : !ready ? $"この{_game.CourseWord}は準備中" : BestLabel(course, guide);
             _courseInfoText.color = unlocked && ready ? InfoColor : LockedColor;
             var showDetails = guide != null && ready;
             _courseLayoutText.text = showDetails ? guide.Layout(course.No) : string.Empty;

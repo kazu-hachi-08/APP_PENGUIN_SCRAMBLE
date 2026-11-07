@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Games/100_PenmonScramble/Scenes/GolfScene.unity
     guid: a1e3b5ad381cb024fa4174e09b19cb8c
+  - enabled: 1
+    path: Assets/_Project/Games/100_PenmonScramble/Scenes/SoccerScene.unity
+    guid: c3cfef47118670d419bab1c8caac6faf
   m_configObjects: {}

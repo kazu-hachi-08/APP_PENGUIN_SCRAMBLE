@@ -4,6 +4,7 @@ using System.Text;
 using PenmonScramble.Common.UI;
 using PenmonScramble.Game;
 using PenmonScramble.Golf.Game;
+using PenmonScramble.Soccer.Game;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -49,8 +50,8 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>
-        /// 遊び方のルールのページ。シーンでは文が空で、開いたときに HowToPlayPages（ゴルフのシーンでは GolfHowToPlayPages）から入れるので、
-        /// 全ページを枠に当てて測る（枠はどのシーンでも同じなので、本編とゴルフのページを両方とも測る）
+        /// 遊び方のルールのページ。シーンでは文が空で、開いたときに HowToPlayPages（ゴルフ・サッカーのシーンではそれぞれのページ）から入れるので、
+        /// 全ページを枠に当てて測る（枠はどのシーンでも同じなので、本編・ゴルフ・サッカーのページをまとめて測る）
         /// </summary>
         private static void CheckRulePages(Font font, List<string> issues)
         {
@@ -59,7 +60,7 @@ namespace PenmonScramble.Editor
                 var so = new SerializedObject(screen);
                 var heading = so.FindProperty("_ruleHeading").objectReferenceValue as Text;
                 var body = so.FindProperty("_ruleBody").objectReferenceValue as Text;
-                foreach (var page in HowToPlayPages.All.Concat(GolfHowToPlayPages.All))
+                foreach (var page in HowToPlayPages.All.Concat(GolfHowToPlayPages.All).Concat(SoccerHowToPlayPages.All))
                 {
                     if (heading != null) CheckFit(heading, page.Heading, font, issues);
                     if (body != null) CheckFit(body, page.Body, font, issues);
