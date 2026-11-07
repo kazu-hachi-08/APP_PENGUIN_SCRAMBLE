@@ -181,7 +181,7 @@ namespace PenmonScramble.Baseball.Core
         public bool Contains(Vec2 point) => Vec2.Distance(point, Center) <= Radius;
     }
 
-    /// <summary>球場の盤の仕掛け（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 6）。動く穴は BaseballHole.Sway に持つ</summary>
+    /// <summary>球場の盤の仕掛け。動く穴は BaseballHole.Sway に持つ</summary>
     public sealed class BaseballGimmicks
     {
         public static readonly BaseballGimmicks None = new BaseballGimmicks();

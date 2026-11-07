@@ -5,7 +5,7 @@ using UnityEditor.SceneManagement;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 野球の試しの打席・試しの試合を、タイトルを飛ばして開く（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 3）。記録には何も書かない。
+    /// 野球の試しの打席・試しの試合を、タイトルを飛ばして開く。記録には何も書かない。
     /// 打つ / 投げる: 同じ側をくり返す（3アウトでアウトと走者を戻すだけ）。試合: 自分の3体 対 CPU の3体で3イニング（先攻か後攻か）
     /// </summary>
     public static class BaseballDevMenu

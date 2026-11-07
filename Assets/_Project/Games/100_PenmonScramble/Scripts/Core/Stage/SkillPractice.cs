@@ -15,7 +15,7 @@ namespace PenmonScramble.Core
         /// </summary>
         public static readonly Vec2 Center = new Vec2(0f, -1000f);
 
-        /// <summary>画面に映す範囲（場の中心からのずれと広さ）。場はエリア1枚分あり、飛ばされた的が場の端で止まる所は映りにくい</summary>
+        /// <summary>画面に映す範囲（場の中心からのずれと広さ）。場の決め方は FieldBounds を参照</summary>
         public static readonly Vec2 ViewOffset = new Vec2(-0.4f, 0f);
         public static readonly Vec2 ViewSize = new Vec2(10f, 4.2f);
 

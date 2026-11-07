@@ -9,7 +9,7 @@ namespace PenmonScramble.Game
     /// </summary>
     public static partial class PenguinModelBuilder
     {
-        // 種類のはちまき（HeadbandHeight）と同じ高さで、少し外・少し太く巻く（もともとはちまき・ゴーグルを巻いた種類は、チームの色で覆う）
+        // 種類のはちまき（HeadbandHeight）と同じ高さで、少し外・少し太く巻く（はちまき・ゴーグルを付けた種類は、その上からチームの色で覆うため）
         private const float TeamBandOutset = 0.025f;
         private const float TeamBandThickness = 0.085f;
         private const float TeamBandTilt = -14f;

@@ -68,7 +68,7 @@ namespace PenmonScramble.Soccer.Game
             return new SoccerFrame(Vector3.Lerp(a.Ball, b.Ball, t), players, keepers);
         }
 
-        /// <summary>prev と next の間の t（0〜1）の写し</summary>
+        /// <summary>previous[index] と next[index] の間を t（0〜1）で補間した位置</summary>
         public static Vector3 Lerp(Vector3[] previous, Vector3[] next, int index, float t)
         {
             return Vector3.Lerp(previous[index], next[index], t);

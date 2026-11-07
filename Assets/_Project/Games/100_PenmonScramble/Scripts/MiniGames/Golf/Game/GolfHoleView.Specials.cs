@@ -12,7 +12,7 @@ namespace PenmonScramble.Golf.Game
     /// </summary>
     public partial class GolfHoleView
     {
-        // 凍った道の板を置く間と大きさ（球の直径より少し広い）
+        // 凍った道の板を置く間と大きさ（幅は球の直径の約1.7倍）
         private const float IceSpacing = 0.22f;
         private const float IceWidth = GolfBalance.BallRadius * 3.4f;
         private const float IceLift = 0.03f;

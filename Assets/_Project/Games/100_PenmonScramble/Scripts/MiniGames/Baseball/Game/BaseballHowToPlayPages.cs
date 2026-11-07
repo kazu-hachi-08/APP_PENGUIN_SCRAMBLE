@@ -5,7 +5,7 @@ namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
     /// 野球の遊び方の「ルール」のページ（本編の遊び方の画面に、野球のシーンが起動時に差し替える）。
-    /// 中身は野球のルールの要約（仕様書 §13.5）なので、ルールや数値を変えたらここも直す
+    /// 中身は野球のルールの要約なので、ルールや数値を変えたらここも直す
     /// </summary>
     public static class BaseballHowToPlayPages
     {

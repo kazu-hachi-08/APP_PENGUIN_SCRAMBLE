@@ -196,7 +196,7 @@ namespace PenmonScramble.Common.Editor
             rect.offsetMax = Vector2.zero;
         }
 
-        // ラベル系の太字・中央寄せ文字。設定順は text → fontSize → 太字 → 中央 → color
+        // ラベル系の太字・中央寄せ文字を作る
         private static Text AddBoldCenteredText(GameObject obj, string content, int fontSize, Color color)
         {
             return AddText(obj, content, fontSize, TextAnchor.MiddleCenter, color, FontStyle.Bold);

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace PenmonScramble.Golf.Core
 {
     /// <summary>
-    /// 1打の入力（打つ子・向き・強さ・特殊）。オンラインのゲストが送るのもこの形（フェーズ 5）
+    /// 1打の入力（打つ子・向き・強さ・特殊）。オンラインのゲストが送るのもこの形
     /// </summary>
     public readonly struct GolfShot
     {

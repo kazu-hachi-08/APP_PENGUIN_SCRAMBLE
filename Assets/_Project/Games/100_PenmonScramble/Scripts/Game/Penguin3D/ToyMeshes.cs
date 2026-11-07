@@ -16,6 +16,11 @@ namespace PenmonScramble.Game
         // 床の円の分割数。闘技場（横32マス）に引き伸ばしても縁の角が目立たない細かさ
         private const int DiscSegments = 96;
 
+        // 星のとがり（内側の角の半径 / 外側の角の半径）と、真ん中のふくらみ（外側の直径1に対する厚み）
+        private const int StarPoints = 5;
+        private const float StarInnerRatio = 0.45f;
+        private const float StarPuff = 0.18f;
+
         // 卵形の下側の膨らみ。おもちゃのペンギンは下が太い
         private const float EggBulge = 0.18f;
         // しずくの先の細さ。大きいほど先がとがる
@@ -245,11 +250,6 @@ namespace PenmonScramble.Game
             mesh.RecalculateBounds();
             return mesh;
         }
-
-        // 星のとがり（内側の角の半径 / 外側の角の半径）と、真ん中のふくらみ（外側の直径1に対する厚み）
-        private const int StarPoints = 5;
-        private const float StarInnerRatio = 0.45f;
-        private const float StarPuff = 0.18f;
 
         /// <summary>
         /// 表と裏の真ん中を盛り上げた星。面ごとに頂点を分けて、トゥーンの陰影で面の切り替わりが見えるようにする（おもちゃの星らしく）

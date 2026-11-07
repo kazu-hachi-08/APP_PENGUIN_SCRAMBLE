@@ -23,7 +23,7 @@ namespace PenmonScramble.Baseball.Core
         Over,
     }
 
-    /// <summary>オンラインの間隔と待つ上限（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 5）</summary>
+    /// <summary>オンラインの間隔と待つ上限</summary>
     public static class BaseballNetRules
     {
         /// <summary>ホストがスナップショットを送る間隔（秒。毎秒15回）。区切りが変わったときと、球が動いている間はもっと早く送る</summary>

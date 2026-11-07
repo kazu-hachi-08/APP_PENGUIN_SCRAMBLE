@@ -72,7 +72,7 @@ namespace PenmonScramble.Editor
 
         /// <summary>
         /// カメラの絵を1枚の Texture2D に撮る（試作の場とステージの撮影で共通）。
-        /// 撮る間だけ一時の RenderTexture に描き、カメラの targetTexture と RenderTexture.active は撮る前の値に戻す。
+        /// 撮る間だけ一時の RenderTexture に描き、カメラの targetTexture は撮る前の値に戻し、RenderTexture.active は null に戻す。
         /// 色は sRGB で受ける（リニアの色空間でも PNG の色が画面と同じになるように）。Apply は呼び出し側が必要なら行う
         /// </summary>
         internal static Texture2D RenderToTexture(Camera camera, int width, int height, int msaa, TextureFormat format)

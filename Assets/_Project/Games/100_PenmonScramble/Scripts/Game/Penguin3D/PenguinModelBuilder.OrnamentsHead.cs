@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 顔と頭の上の飾り。位置・大きさは頭の大きさの倍率を掛ける前の値で書く（頭の球の中心が (0, 0.12, 0)、半径 0.3。前は +Z）
+    /// 顔と頭の上の飾り。位置・大きさは頭の大きさの倍率を掛ける前の値で書く（書き方は Rig.OnHead の説明のとおり）。顔の前は +Z
     /// </summary>
     public static partial class PenguinModelBuilder
     {

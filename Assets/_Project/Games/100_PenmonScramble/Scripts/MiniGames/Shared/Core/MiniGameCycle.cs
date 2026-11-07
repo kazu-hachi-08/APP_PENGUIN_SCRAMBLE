@@ -2,7 +2,7 @@ namespace PenmonScramble.MiniGames.Core
 {
     /// <summary>
     /// 決まった間隔のくり返し（Period 秒ごとに、はじめの Active 秒だけ「動いている」）。Offset 秒ずらして始める。
-    /// 時間だけで決まるので、ホストとゲストで同じ時刻なら同じ様子になる（ゴルフの間欠泉で作り、サッカーの仕掛けでも使うので共通側へ移した）
+    /// 時間だけで決まるので、ホストとゲストで同じ時刻なら同じ様子になる
     /// </summary>
     public readonly struct MiniGameCycle
     {

@@ -472,7 +472,7 @@ namespace PenmonScramble.Common.Online
 
         /// <summary>
         /// NetworkManager はシーンに置かず実行時に1つだけ作る。
-        /// Scene に置くとオフライン（NPC戦）でも常に存在してしまい、2人開発での Scene 差分も増えるため。
+        /// Scene に置くとオフライン（NPC戦）でも常に存在してしまうため。
         /// NetworkManager 自身が DontDestroyOnLoad になるので、再戦時は作り直さず使い回す。
         /// </summary>
         private static void EnsureNetworkManager()

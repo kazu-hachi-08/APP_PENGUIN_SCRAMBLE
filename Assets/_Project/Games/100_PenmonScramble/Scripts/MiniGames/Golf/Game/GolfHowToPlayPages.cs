@@ -6,7 +6,7 @@ namespace PenmonScramble.Golf.Game
 {
     /// <summary>
     /// ゴルフの遊び方の「ルール」のページ（本編の遊び方の画面に、ゴルフのシーンが起動時に差し替える）。
-    /// 中身はゴルフのルールの要約（仕様書 §13.3）なので、ルールや数値を変えたらここも直す
+    /// 中身はゴルフのルールの要約なので、ルールや数値を変えたらここも直す
     /// </summary>
     public static class GolfHowToPlayPages
     {

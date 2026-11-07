@@ -6,7 +6,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// 結果のコイン: 見出しのあたりからぱっと散って、少し遅れてコインの札のアイコンへ吸い込まれる。
-    /// 1枚届くたびに Arrived を呼ぶ（札がふくらみ、音が鳴る）。コインは最初にまとめて作って使い回す
+    /// 1枚届くたびに Arrived を呼ぶ（受け取った側が札をふくらませ、音を鳴らす）。コインは最初にまとめて作って使い回す
     /// </summary>
     public class ResultCoinBurst : MonoBehaviour
     {

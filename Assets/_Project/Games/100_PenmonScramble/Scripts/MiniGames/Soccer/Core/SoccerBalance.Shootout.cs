@@ -1,6 +1,6 @@
 namespace PenmonScramble.Soccer.Core
 {
-    /// <summary>PK戦の調整値（案。フェーズ 7 の試遊で決め直す）</summary>
+    /// <summary>PK戦の調整値（案。試遊で決め直す）</summary>
     public static partial class SoccerBalance
     {
         /// <summary>ボールを置く所の、ゴールの線からの距離</summary>

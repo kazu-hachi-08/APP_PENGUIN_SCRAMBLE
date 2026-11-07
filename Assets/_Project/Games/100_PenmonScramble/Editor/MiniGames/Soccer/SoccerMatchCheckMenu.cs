@@ -9,10 +9,10 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// CPU の試合の確認（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 3）。CPU 同士の 3対3 を描かずに計算だけで何試合も回し、
+    /// CPU の試合の確認。CPU 同士の 3対3 を描かずに計算だけで何試合も回し、
     /// 1試合の点の数・誰も触らない時間・壁ぎわの詰まり・団子・動かす子のガタつき・強さの差での勝ち負けを Console に出す
     /// （ゴルフのコースの確認と同じ考え方）。Play しなくてよい。裏の糸で回し、組み合わせごとに進み具合を出す。
-    /// 全スタジアムの確認（フェーズ 6）は、スタジアムごとの仕掛けのピッチで、仕掛けがどれだけ試合に絡んだかも出す
+    /// 全スタジアムの確認は、スタジアムごとの仕掛けのピッチで、仕掛けがどれだけ試合に絡んだかも出す
     /// </summary>
     public static class SoccerMatchCheckMenu
     {
@@ -37,7 +37,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>
-        /// スタジアムごとの確認（フェーズ 6）: そのスタジアムの仕掛けのピッチで、★3（人のチームの代わり）対 そのスタジアムの CPU。
+        /// スタジアムごとの確認: そのスタジアムの仕掛けのピッチで、★3（人のチームの代わり）対 そのスタジアムの CPU。
         /// 仕掛けで詰まる所が無いか・奥のスタジアムほど勝ちにくくなるか・仕掛けがどれだけ試合に絡んだかを見る
         /// </summary>
         [MenuItem(EditorMenu.Soccer + "全スタジアムの確認", priority = EditorMenu.SoccerPriority + 21)]

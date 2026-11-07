@@ -3,7 +3,7 @@ using PenmonScramble.Core;
 
 namespace PenmonScramble.Golf.Core
 {
-    /// <summary>特殊ショットの種類。属性ごとに1つ（Docs/MINIGAME_GOLF_PLAN.md「打つ子と特殊ショット」）</summary>
+    /// <summary>特殊ショットの種類。属性ごとに1つ</summary>
     public enum GolfSpecialKind
     {
         None,

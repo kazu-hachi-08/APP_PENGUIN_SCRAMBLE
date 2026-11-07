@@ -6,7 +6,7 @@ namespace PenmonScramble.Common.Core
     /// アプリ終了中かどうか（全シングルトン共通）。
     /// Domain Reload を切っていると static が前回の再生から残る。SingletonMonoBehaviour&lt;T&gt; は総称型なので
     /// RuntimeInitializeOnLoadMethod を置けず、型ごとのフラグだと「前回の再生終了で true のまま、今回 Awake が来ない型」の
-    /// Instance が null を返していた。非総称のここで再生開始ごとに必ず戻す
+    /// Instance が null を返してしまうため、非総称のここで再生開始ごとに必ず戻す
     /// </summary>
     internal static class SingletonLifecycle
     {

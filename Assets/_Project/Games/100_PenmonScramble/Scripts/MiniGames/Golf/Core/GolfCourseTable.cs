@@ -41,7 +41,7 @@ namespace PenmonScramble.Golf.Core
 
     /// <summary>
     /// ゴルフのコースの定義表。ホールの形はコースごとのファイル（GolfCourse1 など）。
-    /// まだ作っていないコース（2〜5 はフェーズ 6）は Get が null を返し、ミニゲーム画面で「準備中」になる
+    /// まだ作っていないコースは Get が null を返し、ミニゲーム画面で「準備中」になる
     /// </summary>
     public static class GolfCourseTable
     {

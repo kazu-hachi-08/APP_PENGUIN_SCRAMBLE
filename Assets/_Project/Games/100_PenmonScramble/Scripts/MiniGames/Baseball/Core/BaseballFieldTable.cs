@@ -6,7 +6,7 @@ using PenmonScramble.MiniGames.Core;
 namespace PenmonScramble.Baseball.Core
 {
     /// <summary>
-    /// 盤の定義表。試しの盤と、5球場の盤（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 6 の表）。
+    /// 盤の定義表。試しの盤と、5球場の盤。
     /// 穴の並びと大きさ・止まった場所の札は、CPU の試合の確認（BaseballMatchCheck）で 1試合 3〜6 点・ホームラン 0〜1 本くらいになるよう決めた。
     /// 球場2〜5は、ふつうの盤の並びをもとに仕掛け（BaseballGimmicks・動く穴）とフェンスを変える
     /// </summary>

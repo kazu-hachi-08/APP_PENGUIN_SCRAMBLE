@@ -9,7 +9,6 @@ namespace PenmonScramble.Baseball.Game
     /// <summary>
     /// みんなでのホスト: 試合を計算し、ゲストから届いた入力（投げた知らせ・投げる子・必殺打の ON・1球の記録）をその人の番に使う。
     /// 1球の結果は、そこまでの全員の入力が届いてから決める（BaseballPitchSession.InputsComplete。振った時刻はその人の画面の時刻のまま）。
-    /// 区切りが変わるたびと、決まった間隔で、試合のスナップショットを BaseballOnlinePlay が送る。
     /// 抜けた人の子は CPU が打ち、投げる番は残っている人で回す（チームに人がいなくなったら CPU）
     /// </summary>
     public partial class BaseballMatch

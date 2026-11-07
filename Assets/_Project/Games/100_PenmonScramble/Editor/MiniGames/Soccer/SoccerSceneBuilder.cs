@@ -16,9 +16,9 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// サッカーのシーン（SoccerScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編とゴルフのシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
-    /// まだ作っていないスタジアムのときの「準備中」の板と、ひとりで1試合（SoccerMatchPlay。3対3・キーパー・PK戦・必殺シュート・結果・メニュー）を置く
-    /// （Docs/MINIGAME_SOCCER_PLAN.md フェーズ 4）。みんなで遊ぶための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの SoccerOnlinePlay・
-    /// 始まるまでの「待っています」）も置く（フェーズ 5）。HUD は SoccerSceneBuilder.Hud.cs、PK戦の HUD は SoccerSceneBuilder.HudShootout.cs、
+    /// 準備中のスタジアムのときの「準備中」の板と、ひとりで1試合（SoccerMatchPlay。3対3・キーパー・PK戦・必殺シュート・結果・メニュー）を置く
+    /// 。みんなで遊ぶための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの SoccerOnlinePlay・
+    /// 始まるまでの「待っています」）も置く。HUD は SoccerSceneBuilder.Hud.cs、PK戦の HUD は SoccerSceneBuilder.HudShootout.cs、
     /// 遊び方は SoccerSceneBuilder.HowToPlay.cs
     /// </summary>
     public static partial class SoccerSceneBuilder
@@ -120,7 +120,7 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        /// <summary>まだ作っていないスタジアムのときの板（スタジアムの名前・準備中・もどる）。試合を始めたら隠す</summary>
+        /// <summary>準備中のスタジアムのときの板（スタジアムの名前・準備中・もどる）。試合を始めたら隠す</summary>
         private static GameObject CreatePlaceholder(Transform canvas, out Text course, out Button back)
         {
             var group = UIDialogBuilder.CreateUIObject("Placeholder", canvas);

@@ -45,7 +45,7 @@ namespace PenmonScramble.Core
             Difficulty? unlockedDifficulty = null;
             if (cleared && !IsRushCleared(stageNo, difficulty))
             {
-                // 次のステージは前の「ふつう」、次の難易度は1つ下のクリアで開く（IsRushUnlocked）。初クリアなら、どちらも今まで閉じていた
+                // 初クリアのときだけ、次のステージ・次の難易度を開く（判定は IsRushUnlocked）
                 Data.clearedRush.Add(RushKey(stageNo, difficulty));
                 bonus = Balance.RushFirstClearBonus(stageNo, difficulty);
                 unlockedStage = difficulty == Difficulty.Normal && RushTable.IsRush(stageNo + 1) ? stageNo + 1 : 0;

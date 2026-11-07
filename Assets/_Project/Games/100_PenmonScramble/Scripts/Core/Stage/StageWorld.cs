@@ -140,7 +140,7 @@ namespace PenmonScramble.Core
         public void Tick()
         {
             TickCount++;
-            // 必殺技のカットインの間は全体を止める（ヒットストップ）。全員の画面で同じだけ止まるよう、計算の側で止める
+            // 必殺技のカットイン・合体技・大ボスの吠えの間は全体を止める（ヒットストップ）。全員の画面で同じだけ止まるよう、計算の側で止める
             if (_hitStopTicks > 0)
             {
                 _hitStopTicks--;

@@ -7,7 +7,7 @@ namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
     /// 投げる子: マウンドの上でホームを向いて立つ。振りかぶる（WindUp）→ 投げる（Release。ここで球が手を離れる）→ 球を目で追う。
-    /// 三振・アウトで喜び、ヒットで悔しがる。種類ごとの体は一度作ったら取っておく（投げる子を替えても作り直さない）
+    /// 三振・アウトで喜び、ヒットで悔しがる。種類と CPU かどうかの組みごとの体は一度作ったら取っておく（投げる子を替えても作り直さない）
     /// </summary>
     public sealed class BaseballPitcherView
     {

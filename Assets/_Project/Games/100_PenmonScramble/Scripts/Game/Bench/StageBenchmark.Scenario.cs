@@ -5,7 +5,7 @@ namespace PenmonScramble.Game
 {
     public partial class StageBenchmark
     {
-        /// <summary>測る場面1つ分（そのエリアだけの1エリアのステージ）と、その結果</summary>
+        /// <summary>測る場面1つ分（そのエリアだけを入れたステージ）と、その結果</summary>
         public sealed class Scenario
         {
             public Scenario(string name, StageDef stage, BalanceParty party = null)

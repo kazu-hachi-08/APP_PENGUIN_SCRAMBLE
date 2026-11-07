@@ -84,7 +84,7 @@ namespace PenmonScramble.Core
 
     /// <summary>
     /// バランスの試験場: ステージ（1-1〜5-3・ボスラッシュ×3難易度）× 人数 × 編成 × 種 をボットで回して、表にまとめる。
-    /// 目標（計画書 §7.2 / 仕様書 §11）と並べて、どこを直すべきかを見る
+    /// 目標と並べて、どこを直すべきかを見る
     /// </summary>
     public static partial class BalanceLab
     {

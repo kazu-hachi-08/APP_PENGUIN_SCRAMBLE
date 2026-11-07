@@ -8,7 +8,7 @@ namespace PenmonScramble.MiniGames.Game
     /// <summary>
     /// ミニゲームのみんなで遊ぶ間の通信路: ホスト → 全員にスナップショット、ゲスト → ホストに「準備できた（編成）」と入力。
     /// 接続は共通基盤の OnlineSession に任せ、ここはバイト列の受け渡しだけを持つ（中身は各ミニゲームの Core の Codec。本編の StageLink と同じ形）。
-    /// ミニゲームごとに名前を変えて1つずつ使う（ゴルフは scramble.golf、サッカーは scramble.soccer）
+    /// ミニゲームごとに名前を変えて1つずつ使う（ゴルフは scramble.golf、サッカーは scramble.soccer、野球は scramble.baseball）
     /// </summary>
     public sealed class MiniGameLink
     {

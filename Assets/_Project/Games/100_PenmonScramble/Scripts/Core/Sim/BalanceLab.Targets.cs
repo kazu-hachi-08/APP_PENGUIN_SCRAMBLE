@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PenmonScramble.Core
 {
-    /// <summary>手ごたえの目標1つ（計画書 §7.2）と、測った値</summary>
+    /// <summary>手ごたえの目標1つと、測った値</summary>
     public readonly struct BalanceCheck
     {
         public BalanceCheck(string scene, string party, string goal, float measured, float min, float max, string unit)

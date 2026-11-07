@@ -18,7 +18,7 @@ namespace PenmonScramble.Game
         private const float WalkBlendRate = 6f;
         private const float SlideBlendRate = 10f;
         private const float DownBlendRate = 5f;
-        // 構えの 0.4 秒のうちに膨らみきって見えるよう速めにする
+        // 構え（雑魚は 0.4 秒。ボスはもっと長い）のうちに膨らみきって見えるよう速めにする
         private const float WindUpBlendRate = 10f;
         private const float MovingThreshold = 0.05f;
         // 1マス進むあいだの歩数（左右で1周）。速く歩くほど揺れも速くなる

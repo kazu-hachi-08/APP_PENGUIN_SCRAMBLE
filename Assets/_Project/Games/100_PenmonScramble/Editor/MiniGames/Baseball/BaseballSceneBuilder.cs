@@ -17,8 +17,7 @@ namespace PenmonScramble.Editor
     /// 野球のシーン（BaseballScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編・ゴルフ・サッカーのシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
     /// 試合（BaseballMatch）・魔球と必殺打のカットイン（上下に2本）・結果の欄・試合中のメニューと、まだ作っていない球場の「準備中」の板、
-    /// みんなで遊ぶための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの BaseballOnlinePlay・始まるまでの「待っています」）を置く
-    /// （Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 4・5）。HUD は BaseballSceneBuilder.Hud.cs、スマホのボタンは PenmonScrambleSceneBuilder.BaseballTouch.cs、
+    /// みんなで遊ぶための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの BaseballOnlinePlay・始まるまでの「待っています」）を置く。HUD は BaseballSceneBuilder.Hud.cs、スマホのボタンは PenmonScrambleSceneBuilder.BaseballTouch.cs、
     /// 遊び方は BaseballSceneBuilder.HowToPlay.cs
     /// </summary>
     public static partial class BaseballSceneBuilder

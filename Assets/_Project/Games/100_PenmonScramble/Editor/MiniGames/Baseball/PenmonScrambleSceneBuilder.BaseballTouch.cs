@@ -70,7 +70,7 @@ namespace PenmonScramble.Editor
             CreatePhoneControl(screen, "曲げる", Vector2.zero, JoystickPosition, JoystickSize, JoystickBackColor, scale);
         }
 
-        /// <summary>試しの打席のシーン用: 仮想スティックを InputManager に、振るを Action1・バントを Action2 につなぐ</summary>
+        /// <summary>野球のシーン用: 仮想スティックを InputManager に、振るを Action1・バントを Action2 につなぐ</summary>
         internal static void BindBaseballInput(InputManager manager, BaseballTouchParts touch)
         {
             var so = new SerializedObject(manager);

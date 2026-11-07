@@ -5,7 +5,7 @@ using UnityEditor.SceneManagement;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// ゴルフの試しの1ホールを、タイトルを飛ばして開く（Docs/MINIGAME_GOLF_PLAN.md フェーズ 2）。
+    /// ゴルフの試しの1ホールを、タイトルを飛ばして開く。
     /// 2人の方は、1つの手元で交代に打って、球の弾き合いと打順を確かめる用。記録には何も書かない
     /// </summary>
     public static class GolfDevMenu

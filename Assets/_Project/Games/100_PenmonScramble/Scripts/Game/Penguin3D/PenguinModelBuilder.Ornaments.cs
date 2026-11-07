@@ -130,7 +130,7 @@ namespace PenmonScramble.Game
                 return Parts.Add(objName, ToyMeshes.Torus, parent, center, rotation, scale, color, gloss);
             }
 
-            /// <summary>頭に輪を付ける。位置・半径・太さは頭の大きさの倍率を掛ける前の値（頭の球の中心が (0, 0.12, 0)、半径 0.3）</summary>
+            /// <summary>頭に輪を付ける。位置・半径・太さは OnHead と同じく、頭の大きさの倍率を掛ける前の値</summary>
             public Transform HeadBand(string objName, Vector3 center, Quaternion rotation, float radius, float thickness, Color color, float gloss)
             {
                 return Band(objName, Head, center * S, rotation, Vector2.one * radius * S, thickness * S, color, gloss);

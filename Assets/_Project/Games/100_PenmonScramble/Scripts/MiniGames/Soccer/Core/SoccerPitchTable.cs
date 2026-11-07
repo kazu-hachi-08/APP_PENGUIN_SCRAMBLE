@@ -5,8 +5,8 @@ using PenmonScramble.MiniGames.Core;
 namespace PenmonScramble.Soccer.Core
 {
     /// <summary>
-    /// ピッチの定義表。どのスタジアムも同じ形（フットサルくらいの広さ）で、スタジアムごとに仕掛けを重ねる
-    /// （Docs/MINIGAME_SOCCER_PLAN.md フェーズ 6）。仕掛けは赤と青で有利・不利が出ないよう、真ん中を中心に 180° 回して重なる形に置く。
+    /// ピッチの定義表。どのスタジアムも同じ形（フットサルくらいの広さ）で、スタジアムごとに仕掛けを重ねる。
+    /// 仕掛けは赤と青で有利・不利が出ないよう、真ん中を中心に 180° 回して重なる形に置く。
     /// ゴールの前（キーパーの動く所）には置かない（キーパーの読みと止める割合を、どのスタジアムでも同じにするため）
     /// </summary>
     public static class SoccerPitchTable

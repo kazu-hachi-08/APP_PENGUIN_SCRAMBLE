@@ -16,7 +16,6 @@ namespace PenmonScramble.Soccer.Game
 
         public override string Label => "サッカー";
 
-        // メッセージの名前は配った版どうしで合わせるので変えない
         protected override string LinkName => "scramble.soccer";
 
         protected override IMiniGameCourseGuide Guide => _guide;

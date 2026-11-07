@@ -23,8 +23,6 @@ namespace PenmonScramble.Soccer.Game
         private const float BoardPopReach = 1.2f;
         private const float BumperBoardWiden = 1.4f;
         private const float BumperBoardRaise = 0.15f;
-        private static readonly Color BumperBoardBody = new Color(1f, 0.82f, 0.22f);
-        private static readonly Color BumperBoardCap = new Color(0.93f, 0.26f, 0.24f);
 
         private readonly System.Collections.Generic.List<BoardPart> _boards = new System.Collections.Generic.List<BoardPart>();
 
@@ -39,7 +37,7 @@ namespace PenmonScramble.Soccer.Game
                 }
                 else if (wall.Kind == SoccerWallKind.Bumper)
                 {
-                    _boards.Add(BuildBoard(wall, BumperBoardBody, BumperBoardCap, BumperBoardWiden, BumperBoardRaise));
+                    _boards.Add(BuildBoard(wall, BumperBody, BumperCap, BumperBoardWiden, BumperBoardRaise));
                 }
             }
         }

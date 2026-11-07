@@ -99,7 +99,7 @@ namespace PenmonScramble.Baseball.Core
         public float Clock { get; private set; }
 
         /// <summary>
-        /// 必殺打を使った（振って当てた。ファウルも）。空振り・見送り・バントでは使わない（Docs/MINIGAME_BASEBALL_PLAN.md「魔球と必殺打」）
+        /// 必殺打を使った（振って当てた。ファウルも）。空振り・見送り・バントでは使わない
         /// </summary>
         public bool SpecialHitUsed => _hitSpecial.IsActive && LastHit is { Bunt: false };
 

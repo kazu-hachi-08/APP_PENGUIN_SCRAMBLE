@@ -14,8 +14,7 @@ namespace PenmonScramble.Editor
     /// ゴルフのシーン（GolfScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編のシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
     /// まだ作っていないコースのときの「準備中」の板と、コースを回る部品（3D・カメラ・操作・HUD・スコアカード・結果・メニュー・遊び方）、
-    /// みんなで回るための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの GolfOnlinePlay・始まるまでの「待っています」）を置く
-    /// （Docs/MINIGAME_GOLF_PLAN.md）
+    /// みんなで回るための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの GolfOnlinePlay・始まるまでの「待っています」）を置く。
     /// </summary>
     public static partial class GolfSceneBuilder
     {

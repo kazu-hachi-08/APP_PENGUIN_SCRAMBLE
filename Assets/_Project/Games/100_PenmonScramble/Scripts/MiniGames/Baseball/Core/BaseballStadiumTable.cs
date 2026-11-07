@@ -62,7 +62,7 @@ namespace PenmonScramble.Baseball.Core
     }
 
     /// <summary>
-    /// 球場の定義表（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 6 の表）。奥のワールドほど CPU が強く（★1〜★5）、盤に仕掛けがある（BaseballFieldTable）。
+    /// 球場の定義表。奥のワールドほど CPU が強く（★1〜★5）、盤に仕掛けがある（BaseballFieldTable）。
     /// CPU のチームの種類は、本編のそのワールドの雑魚と同じ混ぜ方（★が高い子ほど魔球・必殺打が強い。サッカーと同じ）
     /// </summary>
     public static class BaseballStadiumTable

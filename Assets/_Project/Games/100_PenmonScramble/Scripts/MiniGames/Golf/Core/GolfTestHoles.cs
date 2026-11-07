@@ -6,7 +6,7 @@ namespace PenmonScramble.Golf.Core
 {
     /// <summary>
     /// 開発用の試しのホール（Tools/PenmonScramble/Golf から開く）。球の計算の仕組みを一通り確かめられるよう、
-    /// 地面の種類・壁の種類を全部1つずつ置く。本番のコースは GolfCourseTable（フェーズ 4 から）
+    /// 地面の種類・壁の種類を全部1つずつ置く。本番のコースは GolfCourseTable
     /// </summary>
     public static class GolfTestHoles
     {

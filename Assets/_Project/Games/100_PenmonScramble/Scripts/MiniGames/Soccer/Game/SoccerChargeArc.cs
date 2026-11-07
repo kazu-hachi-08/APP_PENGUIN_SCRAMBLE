@@ -13,7 +13,7 @@ namespace PenmonScramble.Soccer.Game
         private const float OuterRadius = 0.82f;
         private const float Lift = 0.035f;
         private const int Segments = 48;
-        // 形を作り直す、ための変わり目（少しの変化で毎フレーム作り直さないように）
+        // 形を作り直すのは、ためが RebuildStep 以上変わったときだけ（少しの変化で毎フレーム作り直さないように）
         private const float RebuildStep = 0.01f;
         private const float FullBlinkRate = 10f;
         private const float FullFrom = 0.98f;

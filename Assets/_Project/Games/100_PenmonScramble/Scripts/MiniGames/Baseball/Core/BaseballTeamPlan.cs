@@ -5,7 +5,7 @@ using PenmonScramble.MiniGames.Core;
 namespace PenmonScramble.Baseball.Core
 {
     /// <summary>
-    /// チームの組み方（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 5）。席ごとのチームと編成から、打順（子の種類）とその子の持ち主の席を決める。
+    /// チームの組み方。席ごとのチームと編成から、打順（子の種類）とその子の持ち主の席を決める。
     /// 赤（MiniGameTeams.Red）が先攻、青が後攻（BaseballRules.Away / Home と同じ番号）。
     /// - 人が1人のチーム: その人の編成（1〜3体）
     /// - 2人のチーム: A1・B1・A2・B2（席の若い人を A。編成にいない子は飛ばす）

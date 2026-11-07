@@ -6,7 +6,7 @@ namespace PenmonScramble.Core
     /// <summary>ボットのうまさ。よけ始めるまでの遅れで分ける</summary>
     public enum BotSkill : byte
     {
-        /// <summary>よけない・交代しない・起こしに行かない。近い敵へ歩いて技を出し続けるだけ（重さの計測・スクショ用）</summary>
+        /// <summary>よけない・交代しない・起こしに行かない。近い敵へ歩いて技を出し続けるだけ</summary>
         Brawler,
 
         /// <summary>ふつうの人。予告に気づいてから動き出すまでに少しかかる</summary>
@@ -31,7 +31,7 @@ namespace PenmonScramble.Core
         private const float Skill2Hold = 0.2f;
         // 場に出ている子の HP がこの割合を切ったら、もっと元気な控えと交代する
         private const float SwitchHpRatio = 0.3f;
-        // 気づいてから動き出すまで（秒）。人の反応の速さの目安（見てから押すまで 0.2〜0.4 秒ほど）
+        // 気づいてから動き出すまで（秒）。人の反応の速さの目安（ふつうの人は見てから押すまで 0.2〜0.4 秒ほど。うまい人はそれより速い）
         private const float ExpertReactionSeconds = 0.15f;
         private const float CasualReactionSeconds = 0.35f;
         // ふつうの人は、たくさんの敵に気を取られて、危ないものをこの割合で見落とす（気づかずに当たる）

@@ -60,7 +60,7 @@ namespace PenmonScramble.Editor
             }
         }
 
-        /// <summary>試合を始めるまで隠しておく（ミニゲーム画面から来て、まだ作っていないスタジアムのときは準備中の板だけ）</summary>
+        /// <summary>試合を始めるまで隠しておく（ミニゲーム画面から来て、準備中のスタジアムのときは準備中の板だけ）</summary>
         private static SoccerHudParts CreateHud(Transform canvas)
         {
             var root = UIDialogBuilder.CreateUIObject("SoccerHud", canvas);

@@ -114,7 +114,7 @@ namespace PenmonScramble.Core
             return basePower + (int)MathF.Round((cap - basePower) * Growth);
         }
 
-        /// <summary>真ん中のパワー（コインの流れの表で、強化のコインの目安に使う）</summary>
+        /// <summary>3体の平均パワー（コインの流れの表で、強化のコインの目安に使う）</summary>
         public int TypicalPower()
         {
             var total = 0f;

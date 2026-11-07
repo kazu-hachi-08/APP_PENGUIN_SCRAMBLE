@@ -5,7 +5,7 @@ namespace PenmonScramble.Game
     /// <summary>
     /// 闘技場の柵の形と色。ストーリーの闘技場は、おもちゃの丸い柵（細い柱・玉・丸い横木）。
     /// ボスラッシュの闘技場（コロシアム）は、太い石の柱と低い石の壁、奥の柱に旗の飾り。
-    /// 手前の柵はペンギンの足元を隠さないよう、どちらも奥より低くする
+    /// 手前の柵はペンギンの足元を隠さないよう、ボスラッシュの石の柵は奥より低くする（おもちゃの柵は奥と同じ高さ）
     /// </summary>
     public sealed class ArenaFenceStyle
     {
@@ -48,7 +48,7 @@ namespace PenmonScramble.Game
         /// <summary>奥（闘技場のまん中より上）の柱の高さ</summary>
         public float PostHeight { get; }
 
-        /// <summary>手前の柱の高さ。手前のペンギンの足元を隠さないよう低くする</summary>
+        /// <summary>手前の柱の高さ。手前のペンギンの足元を隠さないよう低くする（コロシアムは奥より低くする）</summary>
         public float FrontPostHeight { get; }
         public float CapDiameter { get; }
 

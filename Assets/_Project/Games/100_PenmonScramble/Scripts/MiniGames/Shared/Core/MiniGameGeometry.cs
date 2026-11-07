@@ -6,7 +6,7 @@ namespace PenmonScramble.MiniGames.Core
 {
     /// <summary>
     /// ミニゲームの地面の形の計算（多角形の中か・線分の一番近い点・多角形の三角形への分け方）。
-    /// どのミニゲームでも使う汎用の物だけを置く（ゴルフで作り、サッカーでも使うので共通側へ移した）
+    /// どのミニゲームでも使う汎用の物だけを置く
     /// </summary>
     public static class MiniGameGeometry
     {

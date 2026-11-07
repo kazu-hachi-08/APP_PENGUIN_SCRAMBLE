@@ -30,7 +30,7 @@ namespace PenmonScramble.Baseball.Game
     }
 
     /// <summary>
-    /// 野球の試合（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 4・5）。ひとりでは自分の3体 対 球場の野生のペンモン3体（CPU）、
+    /// 野球の試合。ひとりでは自分の3体 対 球場の野生のペンモン3体（CPU）、
     /// みんなでは赤・青のチーム（BaseballTeamPlan）で、3イニングの試合を最後まで遊ぶ（試しの打席は同じ側をくり返すだけで終わらない）。
     /// ルール（カウント・走者・点・攻守交代・試合の終わり・魔球と必殺打の残り）は Core の BaseballGame、
     /// 1球は投げ方と2人の入力の記録から BaseballPitchSession が 1/30 秒の固定の刻みで計算し、描くときは前の歩との間を補間する。

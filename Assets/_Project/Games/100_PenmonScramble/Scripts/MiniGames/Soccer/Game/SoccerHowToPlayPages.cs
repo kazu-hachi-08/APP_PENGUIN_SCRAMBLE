@@ -6,7 +6,7 @@ namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
     /// サッカーの遊び方の「ルール」のページ（本編の遊び方の画面に、サッカーのシーンが起動時に差し替える）。
-    /// 中身はサッカーのルールの要約（仕様書 §13.4）なので、ルールや数値を変えたらここも直す
+    /// 中身はサッカーのルールの要約なので、ルールや数値を変えたらここも直す
     /// </summary>
     public static class SoccerHowToPlayPages
     {

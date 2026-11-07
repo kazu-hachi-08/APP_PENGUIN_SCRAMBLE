@@ -1,4 +1,3 @@
-using PenmonScramble.MiniGames.Core;
 using PenmonScramble.Common.Editor;
 using PenmonScramble.Common.Online;
 using PenmonScramble.Game;
@@ -82,7 +81,6 @@ namespace PenmonScramble.Editor
 
         /// <summary>
         /// 対戦 / 協力の札（並びは MiniGameOnlineMode の番号）。選んでいる札は後ろに白い縁を光らせて大きく（ボスラッシュの難易度の札と同じ見た目）。
-        /// ゲストは押せないが、選ばれた札は濃く見せたいので、ボタンの「押せないときは薄く」は切る
         /// </summary>
         private static void CreateTeamRoomModes(Transform card, SerializedObject so)
         {

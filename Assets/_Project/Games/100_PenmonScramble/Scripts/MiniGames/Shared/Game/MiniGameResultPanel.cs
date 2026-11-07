@@ -38,7 +38,7 @@ namespace PenmonScramble.MiniGames.Game
 
     /// <summary>
     /// ミニゲームの結果の欄: 結果の点・ベストの一言・コインの内訳・下に「もう一度」「コース（スタジアム）を選ぶ」「ロビーへ」の札。
-    /// 札は左右で選び、決定（J / × / Enter）で押す。最初は「もう一度」を選んでおく（続けて遊びやすいように）。
+    /// 札は左右で選び、決定（J / × / Enter）で押す。最初は出している札の一番左を選んでおく（一人で遊んだときは「もう一度」。続けて遊びやすいように）。
     /// 中身（MiniGameResultView）はミニゲームごとに作って渡す
     /// </summary>
     public class MiniGameResultPanel : MonoBehaviour

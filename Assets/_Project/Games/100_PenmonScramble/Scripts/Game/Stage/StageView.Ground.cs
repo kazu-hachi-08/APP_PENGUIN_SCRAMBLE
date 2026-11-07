@@ -148,7 +148,7 @@ namespace PenmonScramble.Game
         }
 
         /// <summary>
-        /// ワールドの地面の絵と、それに掛ける色。絵がまだ無いワールド（4・5）は、前のワールドの絵を借りて色を替える。
+        /// ワールドの地面の絵と、それに掛ける色。絵が無いワールドは、StageTheme.FallbackArtWorld のワールドの絵を借りて色を替える。
         /// どちらも無ければ白い板（色は掛けない）
         /// </summary>
         private static (Texture texture, Color tint) GroundArt(int world, StageTheme theme)
@@ -182,7 +182,7 @@ namespace PenmonScramble.Game
 
         /// <summary>
         /// ボスラッシュのコロシアムの床。1枚の石の舞台の絵に、その大ボスのワールドの色を掛ける。
-        /// 絵がまだ無ければ、ストーリーの闘技場の床で代わりにする
+        /// 絵が無ければ、ストーリーの闘技場の床で代わりにする
         /// </summary>
         private Material ColosseumFloor(int world, StageTheme theme, Texture worldTexture, Color worldTint, int index)
         {

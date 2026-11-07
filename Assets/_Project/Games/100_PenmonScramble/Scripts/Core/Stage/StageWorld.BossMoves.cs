@@ -89,7 +89,7 @@ namespace PenmonScramble.Core
             }
         }
 
-        /// <summary>背びれの当たりの幅の半分。体全体ではなく背びれだけが当たるので、体の半径より細い</summary>
+        /// <summary>背びれの当たりの幅の半分。体全体ではなく背びれの道だけが当たる幅で、体の半径に背びれの当たる分（AreaRadius）を足す（最低でも MinFinHalfWidth）</summary>
         private static float FinHalfWidth(Unit boss, SkillDef skill) => MathF.Max(MinFinHalfWidth, boss.Radius + skill.AreaRadius);
 
         /// <summary>1本目はボス自身がもぐったまま走る（突進と同じ当たり）。2本目からは床を走る範囲を出す</summary>

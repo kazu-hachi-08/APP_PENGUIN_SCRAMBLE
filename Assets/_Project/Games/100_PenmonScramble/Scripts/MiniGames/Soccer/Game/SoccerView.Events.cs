@@ -9,7 +9,7 @@ namespace PenmonScramble.Soccer.Game
     /// </summary>
     public partial class SoccerView
     {
-        // 網・柵を揺らす当たりの速さの下限（壁沿いに転がるだけでは揺らさない）
+        // 柵を揺らす当たりの速さの下限（壁沿いに転がるだけでは揺らさない）
         private const float BoardPopMinSpeed = 4f;
 
         // パスの蹴る動きの大きさ（シュートより小さく振る）

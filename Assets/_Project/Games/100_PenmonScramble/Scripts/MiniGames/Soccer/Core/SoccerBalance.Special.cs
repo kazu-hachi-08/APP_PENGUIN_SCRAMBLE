@@ -4,7 +4,7 @@ using PenmonScramble.Core;
 namespace PenmonScramble.Soccer.Core
 {
     /// <summary>
-    /// 必殺シュートの調整値（案。フェーズ 7 の試遊で決め直す）。★（1〜3）で強さが変わる所は ★1・★2・★3 の順の表
+    /// 必殺シュートの調整値（案。試遊で決め直す）。★（1〜3）で強さが変わる所は ★1・★2・★3 の順の表
     /// </summary>
     public static partial class SoccerBalance
     {

@@ -9,7 +9,7 @@ namespace PenmonScramble.Golf.Game
     /// <summary>
     /// ホールの見た目（おもちゃのミニゴルフの台）。ホールの定義表から地面・壁・カップを組み、毎フレーム球を写す。
     /// 地面は GolfHoleView.Ground.cs、壁は .Walls.cs、カップと旗とティーは .Cup.cs、
-    /// 動く物・押し流す帯・間欠泉・ワープの泡は .Gimmicks.cs。球・ガイド線・打つ子は別の部品
+    /// 動く物・押し流す帯・間欠泉・ワープの泡は .Gimmicks.cs、特殊ショット（氷の道・水切り・雷の加速）の見た目は .Specials.cs。球・ガイド線・打つ子は別の部品
     /// </summary>
     public partial class GolfHoleView : MonoBehaviour
     {

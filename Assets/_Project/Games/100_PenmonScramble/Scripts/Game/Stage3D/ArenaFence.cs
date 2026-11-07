@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 大ボスの闘技場の楕円に沿って並べる柵。ストーリーはおもちゃの丸い柵（丸い柱・柱の上の玉・柱をつなぐ太い横木）、
+    /// 大ボスの闘技場の楕円に沿って並べる柵。ストーリーはおもちゃの丸い柵（丸い柱・柱の上の玉・柱をつなぐ丸い横木）、
     /// ボスラッシュはコロシアムらしい太い石の柱と低い石の壁と旗（ArenaFenceStyle）。
     /// 柱は百本近くになるので、部品の種類ごとに1つのメッシュへまとめて描く回数を減らす。
     /// 入口（前のエリアからの通り道）と出口（次の闘技場への通り道）にかかる柱だけは別にまとめ、開いている間は隠す。
@@ -171,7 +171,7 @@ namespace PenmonScramble.Game
             }
 
             /// <param name="index">飾りの色を1本おきに変える（おもちゃらしく、柵の続きが目で追えるように）</param>
-            /// <param name="back">奥の柱か（手前の柱は、ペンギンの足元を隠さないよう低くする）</param>
+            /// <param name="back">奥の柱か（コロシアムでは手前の柱を奥より低くする）</param>
             public void AddPost(Vector2 point, int index, bool back)
             {
                 var floor = point.ToFloor();
