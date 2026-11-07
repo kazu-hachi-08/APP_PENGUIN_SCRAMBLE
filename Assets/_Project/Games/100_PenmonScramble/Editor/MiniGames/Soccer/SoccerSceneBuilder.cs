@@ -63,6 +63,7 @@ namespace PenmonScramble.Editor
 
             var placeholder = CreatePlaceholder(canvas, out var course, out var back);
             var hud = CreateHud(canvas);
+            AvoidTouchButtons(camera, hud.Touch, canvas.GetComponent<Canvas>());
             var cutIn = PenmonScrambleSceneBuilder.CreateSoccerCutIn(canvas);
             var result = PenmonScrambleSceneBuilder.CreateMiniGameResultPanel(canvas, "スタジアムを選ぶ", "ホストがスタジアムを選ぶと、みんなで待ちの窓へ戻ります");
             // メニューは HUD・結果より手前に、遊び方はメニューよりさらに手前に出す（CreateStageMenu が並べ替える）
@@ -101,6 +102,22 @@ namespace PenmonScramble.Editor
             so.FindProperty("_camera").objectReferenceValue = camera;
             so.ApplyModifiedProperties();
             return rig;
+        }
+
+        /// <summary>タッチの端末では、右下のボタンの下にゴールが入らないようにカメラを置く（SoccerCamera.Avoid.cs）</summary>
+        private static void AvoidTouchButtons(SoccerCamera camera, PenmonScrambleSceneBuilder.SoccerTouchParts touch, Canvas canvas)
+        {
+            var buttons = new[] { touch.Pass, touch.Shoot, touch.Special, touch.Switch };
+            var so = new SerializedObject(camera);
+            var list = so.FindProperty("_avoidButtons");
+            list.arraySize = buttons.Length;
+            for (var i = 0; i < buttons.Length; i++)
+            {
+                list.GetArrayElementAtIndex(i).objectReferenceValue = buttons[i].GetComponent<RectTransform>();
+            }
+
+            so.FindProperty("_canvas").objectReferenceValue = canvas;
+            so.ApplyModifiedProperties();
         }
 
         /// <summary>まだ作っていないスタジアムのときの板（スタジアムの名前・準備中・もどる）。試合を始めたら隠す</summary>

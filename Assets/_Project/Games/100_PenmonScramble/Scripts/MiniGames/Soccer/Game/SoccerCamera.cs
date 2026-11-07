@@ -6,9 +6,10 @@ namespace PenmonScramble.Soccer.Game
     /// <summary>
     /// サッカーのカメラ: 横長のピッチを斜め上からほぼ全部見せ、ボールの方へ少しだけ寄る（どこにいても全体が分かり、ボールの側が少し大きく見える）。
     /// ゴールの瞬間はそのゴールへぐっと寄り、キックオフで全体へ戻る。
-    /// PK戦では、蹴る子の後ろの少し上からゴールを見る（スティックの左右・上が、そのまま狙う左右・高さに見えるように）
+    /// PK戦では、蹴る子の後ろの少し上からゴールを見る（スティックの左右・上が、そのまま狙う左右・高さに見えるように）。
+    /// タッチの端末では、右下のボタンの下にゴールが入らないように置く（SoccerCamera.Avoid.cs）
     /// </summary>
-    public class SoccerCamera : MonoBehaviour
+    public partial class SoccerCamera : MonoBehaviour
     {
         [SerializeField] private Camera _camera;
 
@@ -49,6 +50,8 @@ namespace PenmonScramble.Soccer.Game
         private float _zoomVelocity;
         private Vector3? _goal;
         private bool _penalty;
+        private SoccerPitchDef _pitchDef;
+        private Vector2Int _fittedScreen;
 
         // 収まる距離を探す範囲と、探す回数（半分ずつ狭める）
         private const float FitNear = 1f;
@@ -60,10 +63,10 @@ namespace PenmonScramble.Soccer.Game
         public void ShowPitch(SoccerPitchDef pitch)
         {
             _penalty = false;
+            _pitchDef = pitch;
             _halfSize = new Vector2(pitch.HalfLength, pitch.HalfWidth);
-            _center = Vector3.zero;
-            _distance = FitDistance(Corners(pitch));
             _goal = null;
+            Fit();
             _look = _center;
             _lookVelocity = Vector3.zero;
             _zoom = 0f;
@@ -94,6 +97,7 @@ namespace PenmonScramble.Soccer.Game
                 return;
             }
 
+            RefitIfScreenChanged();
             ball.y = 0f;
             Vector3 look;
             float zoom;
@@ -115,6 +119,31 @@ namespace PenmonScramble.Soccer.Game
             _look = Vector3.SmoothDamp(_look, look, ref _lookVelocity, smooth, Mathf.Infinity, deltaTime);
             _zoom = Mathf.SmoothDamp(_zoom, zoom, ref _zoomVelocity, smooth, Mathf.Infinity, deltaTime);
             Apply();
+        }
+
+        /// <summary>ピッチ全体が収まる見る所（_center）と距離を決める。ボタンを避けられなければ、今までどおり真ん中で収める</summary>
+        private void Fit()
+        {
+            _fittedScreen = new Vector2Int(Screen.width, Screen.height);
+            var corners = Corners(_pitchDef);
+            if (!FitAvoidingButtons(corners))
+            {
+                _center = Vector3.zero;
+                _distance = FitDistance(_center, corners);
+            }
+        }
+
+        /// <summary>ブラウザの窓の大きさを変えた・端末を回したときは、収め直す（寄っている分はそのまま）</summary>
+        private void RefitIfScreenChanged()
+        {
+            if (Screen.width == _fittedScreen.x && Screen.height == _fittedScreen.y)
+            {
+                return;
+            }
+
+            var previous = _center;
+            Fit();
+            _look += _center - previous;
         }
 
         /// <summary>柵とゴールの網の外側を囲む箱の角（地面と、バーの上の高さ）</summary>
@@ -141,15 +170,14 @@ namespace PenmonScramble.Soccer.Game
         /// <summary>
         /// 斜めに見下ろすと手前ほど大きく映るので、式で近似せず、実際に置いて全部の角が画面に入る一番近い距離を半分ずつ探す
         /// </summary>
-        private float FitDistance(Vector3[] corners)
+        private float FitDistance(Vector3 center, Vector3[] corners)
         {
-            var rotation = Quaternion.Euler(_pitch, 0f, 0f);
             var near = FitNear;
             var far = FitFar;
             for (var i = 0; i < FitIterations; i++)
             {
                 var middle = (near + far) * 0.5f;
-                _camera.transform.SetPositionAndRotation(_center - rotation * Vector3.forward * middle, rotation);
+                Place(center, middle);
                 if (AllVisible(corners))
                 {
                     far = middle;
@@ -179,9 +207,21 @@ namespace PenmonScramble.Soccer.Game
 
         private void Apply()
         {
+            var look = _look;
+            var zoom = _zoom;
+            if (_avoiding)
+            {
+                KeepGoalsClear(ref look, ref zoom);
+            }
+
+            Place(look, _distance * (1f - zoom));
+        }
+
+        /// <summary>look を distance だけ離れて、決まった角度で見下ろす所に置く</summary>
+        private void Place(Vector3 look, float distance)
+        {
             var rotation = Quaternion.Euler(_pitch, 0f, 0f);
-            var position = _look - rotation * Vector3.forward * (_distance * (1f - _zoom));
-            _camera.transform.SetPositionAndRotation(position, rotation);
+            _camera.transform.SetPositionAndRotation(look - rotation * Vector3.forward * distance, rotation);
         }
     }
 }

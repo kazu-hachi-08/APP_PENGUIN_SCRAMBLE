@@ -15,9 +15,12 @@ namespace PenmonScramble.Game
         private CanvasGroup _group;
         private bool _shown;
 
+        /// <summary>仮想スティック・ボタンを出す端末か（ボタンを避けて置くカメラなども同じ判定を使う）</summary>
+        public static bool IsTouchDevice => Application.isMobilePlatform || Touchscreen.current != null;
+
         private void Awake()
         {
-            gameObject.SetActive(Application.isMobilePlatform || Touchscreen.current != null);
+            gameObject.SetActive(IsTouchDevice);
             _group = GetComponent<CanvasGroup>();
             Apply(0f);
         }

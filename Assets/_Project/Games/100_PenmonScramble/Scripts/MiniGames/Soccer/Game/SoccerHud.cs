@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using PenmonScramble.Game;
 using PenmonScramble.Soccer.Core;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace PenmonScramble.Soccer.Game
@@ -59,7 +58,7 @@ namespace PenmonScramble.Soccer.Game
         {
             _banner.gameObject.SetActive(false);
             // スマホ（触れる画面）では説明の代わりにボタンを出す
-            _isTouch = Application.isMobilePlatform || Touchscreen.current != null;
+            _isTouch = TouchControlsVisibility.IsTouchDevice;
             _help.SetActive(!_isTouch);
             _specialHint.gameObject.SetActive(false);
             _gaugeColors = new Color[_gauges.Length];
