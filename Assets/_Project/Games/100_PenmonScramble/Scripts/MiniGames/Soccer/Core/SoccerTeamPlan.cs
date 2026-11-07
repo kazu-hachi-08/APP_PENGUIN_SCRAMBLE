@@ -1,17 +1,9 @@
 using System;
 using System.Collections.Generic;
+using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Soccer.Core
 {
-    /// <summary>みんなでの遊び方。値は通信で送るので、一度配ったら番号を変えない</summary>
-    public enum SoccerOnlineMode
-    {
-        /// <summary>人を赤・青に分けて戦う（1対1・2対1・2対2・3対1）</summary>
-        Versus = 0,
-        /// <summary>人は全員赤で、CPU（青）と戦う</summary>
-        Coop = 1,
-    }
-
     /// <summary>
     /// チームの組み方（Docs/MINIGAME_SOCCER_PLAN.md「オンライン」）。席ごとのチームと編成から、フィールドの子の並び・種類・持ち主を決める。
     /// - 人が1人のチーム: その人の編成の3体（切り替えて動かす）
@@ -26,7 +18,7 @@ namespace PenmonScramble.Soccer.Core
         private readonly int[] _seatTeam;
         private readonly int[] _leader;
 
-        private SoccerTeamPlan(SoccerOnlineMode mode, int perTeam, int[] seatTeam, int[] species, int[] owner, int[] leader)
+        private SoccerTeamPlan(MiniGameOnlineMode mode, int perTeam, int[] seatTeam, int[] species, int[] owner, int[] leader)
         {
             Mode = mode;
             PerTeam = perTeam;
@@ -36,7 +28,7 @@ namespace PenmonScramble.Soccer.Core
             _leader = leader;
         }
 
-        public SoccerOnlineMode Mode { get; }
+        public MiniGameOnlineMode Mode { get; }
 
         /// <summary>1チームのフィールドの子の数（両チーム同じ）</summary>
         public int PerTeam { get; }
@@ -50,7 +42,7 @@ namespace PenmonScramble.Soccer.Core
         public int SeatCount => _seatTeam.Length;
 
         /// <summary>CPU のチーム（協力の青）。人だけの対戦なら −1</summary>
-        public int CpuTeam => Mode == SoccerOnlineMode.Coop ? SoccerRules.Blue : -1;
+        public int CpuTeam => Mode == MiniGameOnlineMode.Coop ? SoccerRules.Blue : -1;
 
         /// <summary>その席のチーム。抜けた席・知らない席は −1</summary>
         public int TeamOf(int seat) => seat >= 0 && seat < _seatTeam.Length ? _seatTeam[seat] : -1;
@@ -73,66 +65,25 @@ namespace PenmonScramble.Soccer.Core
             return seats;
         }
 
-        /// <summary>席の初めのチーム（待ちの窓で、ホストが替えるまで）: P1・P3 が赤、P2・P4 が青</summary>
-        public static int DefaultTeam(int seat) => seat % SoccerRules.TeamCount == 0 ? SoccerRules.Red : SoccerRules.Blue;
-
-        /// <summary>協力は全員赤。対戦は渡されたチーム（赤・青のどちらでもない値は初めのチーム）</summary>
-        public static int[] ResolveTeams(SoccerOnlineMode mode, IReadOnlyList<int> seatTeams, int seatCount)
-        {
-            var teams = new int[seatCount];
-            for (var seat = 0; seat < seatCount; seat++)
-            {
-                var team = seatTeams != null && seat < seatTeams.Count ? seatTeams[seat] : DefaultTeam(seat);
-                teams[seat] = mode == SoccerOnlineMode.Coop ? SoccerRules.Red
-                    : team == SoccerRules.Red || team == SoccerRules.Blue ? team : DefaultTeam(seat);
-            }
-
-            return teams;
-        }
-
-        /// <summary>開始できるか: 協力は1人から。対戦は赤・青の両方に人がいること</summary>
-        public static bool CanStart(SoccerOnlineMode mode, IReadOnlyList<int> seatTeams, int seatCount)
-        {
-            if (seatCount < 1)
-            {
-                return false;
-            }
-
-            if (mode == SoccerOnlineMode.Coop)
-            {
-                return true;
-            }
-
-            var teams = ResolveTeams(mode, seatTeams, seatCount);
-            return Array.IndexOf(teams, SoccerRules.Red) >= 0 && Array.IndexOf(teams, SoccerRules.Blue) >= 0;
-        }
-
         /// <summary>1チームの子の数。人が4人のチームだけ4体（各自の先頭）、ほかは3体</summary>
-        public static int PlayersPerTeam(SoccerOnlineMode mode, IReadOnlyList<int> seatTeams, int seatCount)
+        public static int PlayersPerTeam(MiniGameOnlineMode mode, IReadOnlyList<int> seatTeams, int seatCount)
         {
-            var teams = ResolveTeams(mode, seatTeams, seatCount);
-            var most = 0;
-            for (var team = 0; team < SoccerRules.TeamCount; team++)
-            {
-                most = Math.Max(most, Array.FindAll(teams, t => t == team).Length);
-            }
-
-            return Math.Max(SoccerRules.PlayersPerTeam, most);
+            return Math.Max(SoccerRules.PlayersPerTeam, MiniGameTeams.LargestTeam(mode, seatTeams, seatCount));
         }
 
         /// <summary>ひとりで: 自分（席 0）が赤で、CPU が青</summary>
         public static SoccerTeamPlan Solo(IReadOnlyList<int> party, IReadOnlyList<int> wild)
         {
-            return Create(SoccerOnlineMode.Coop, new[] { SoccerRules.Red }, new[] { party }, wild);
+            return Create(MiniGameOnlineMode.Coop, new[] { SoccerRules.Red }, new[] { party }, wild);
         }
 
         /// <param name="seatTeams">席ごとのチーム（協力では無視して全員赤）</param>
         /// <param name="parties">席ごとの編成のペンモンの種類（届いていない席は null。足りない分は仮の種類で埋める）</param>
         /// <param name="wild">CPU のチームの種類（PlayersPerTeam 体ぶん。足りない分は仮の種類）</param>
-        public static SoccerTeamPlan Create(SoccerOnlineMode mode, IReadOnlyList<int> seatTeams, IReadOnlyList<IReadOnlyList<int>> parties, IReadOnlyList<int> wild)
+        public static SoccerTeamPlan Create(MiniGameOnlineMode mode, IReadOnlyList<int> seatTeams, IReadOnlyList<IReadOnlyList<int>> parties, IReadOnlyList<int> wild)
         {
             var seatCount = parties.Count;
-            var teams = ResolveTeams(mode, seatTeams, seatCount);
+            var teams = MiniGameTeams.Resolve(mode, seatTeams, seatCount);
             var perTeam = PlayersPerTeam(mode, teams, seatCount);
             var species = new int[perTeam * SoccerRules.TeamCount];
             var owner = new int[species.Length];

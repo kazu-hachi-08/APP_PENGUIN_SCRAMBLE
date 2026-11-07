@@ -1,3 +1,4 @@
+using PenmonScramble.MiniGames.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -82,7 +83,7 @@ namespace PenmonScramble.Soccer.Core
             var s = new SoccerSnapshot
             {
                 Stadium = reader.ReadByte(),
-                Mode = reader.ReadByte() == (byte)SoccerOnlineMode.Coop ? SoccerOnlineMode.Coop : SoccerOnlineMode.Versus,
+                Mode = reader.ReadByte() == (byte)MiniGameOnlineMode.Coop ? MiniGameOnlineMode.Coop : MiniGameOnlineMode.Versus,
                 PerTeam = reader.ReadByte(),
             };
             var seats = reader.ReadByte();

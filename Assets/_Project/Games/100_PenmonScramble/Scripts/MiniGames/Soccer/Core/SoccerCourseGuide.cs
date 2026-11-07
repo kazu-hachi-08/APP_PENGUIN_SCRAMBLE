@@ -22,7 +22,7 @@ namespace PenmonScramble.Soccer.Core
         /// <summary>
         /// みんなでの中身: 協力は人数で上がった CPU の強さ（「CPUの強さ ★★★☆☆（3人）」）、対戦は人どうし。後ろに仕掛けの一言
         /// </summary>
-        public string OnlineLayout(int courseNo, SoccerOnlineMode mode, int humans)
+        public string OnlineLayout(int courseNo, MiniGameOnlineMode mode, int humans)
         {
             var stadium = SoccerStadiumTable.Get(courseNo);
             if (stadium == null)
@@ -30,7 +30,7 @@ namespace PenmonScramble.Soccer.Core
                 return string.Empty;
             }
 
-            if (mode == SoccerOnlineMode.Versus)
+            if (mode == MiniGameOnlineMode.Versus)
             {
                 return $"人どうしの対戦  {stadium.Gimmick}";
             }

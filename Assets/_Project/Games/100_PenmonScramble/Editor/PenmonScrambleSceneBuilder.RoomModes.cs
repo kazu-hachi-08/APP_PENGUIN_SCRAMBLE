@@ -1,6 +1,8 @@
 using PenmonScramble.Common.Editor;
 using PenmonScramble.Common.Online;
+using PenmonScramble.Baseball.Game;
 using PenmonScramble.Game;
+using PenmonScramble.Soccer.Game;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,29 +10,31 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 「みんなで遊ぶ」の待ちの窓の右側: 上に遊ぶものの札（ボスラッシュ / ゴルフ / サッカー。RoomModeSelector）、その下に選んだ遊びの板
-    /// （ボスラッシュは RushLobby.cs、ゴルフは MiniGames/Golf の GolfRoom.cs、サッカーは MiniGames/Soccer の SoccerRoom.cs）。部屋に入っている間は、左に接続の状態（参加コード・人数）が寄る
+    /// 「みんなで遊ぶ」の待ちの窓の右側: 上に遊ぶものの札（ボスラッシュ / ゴルフ / サッカー / 野球。RoomModeSelector）、その下に選んだ遊びの板
+    /// （ボスラッシュは RushLobby.cs、ゴルフは MiniGames/Golf の GolfRoom.cs、サッカー・野球は MiniGames の TeamRoom.cs）。部屋に入っている間は、左に接続の状態（参加コード・人数）が寄る
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
         // 札の並び（窓のまん中から測る）。遊びの板の上の端に置く（板の見出しの代わり）
         private static readonly Vector2 RoomTabsPosition = new Vector2(270f, 312f);
-        private const float RoomTabSpacing = 330f;
-        private static readonly Vector2 RoomTabSize = new Vector2(300f, 80f);
+        // 4枚（ボスラッシュ・ゴルフ・サッカー・野球）が左の接続の状態と重ならない幅
+        private const float RoomTabSpacing = 262f;
+        private static readonly Vector2 RoomTabSize = new Vector2(240f, 80f);
         private static readonly Vector2 RoomTabMarkPadding = new Vector2(14f, 14f);
-        private const int RoomTabFontSize = 38;
+        private const int RoomTabFontSize = 34;
         private static readonly Color RoomTabColor = new Color(0.95f, 0.62f, 0.20f);
 
         private static readonly Vector2 WaitingStatusBesidePosition = new Vector2(-520f, 60f);
         private static readonly Vector2 WaitingStatusBesideSize = new Vector2(500f, 460f);
 
-        /// <summary>遊びの板を作って、札でつなぐ。札の並びはボスラッシュ・ゴルフ・サッカー（先頭が最初に選ばれている）</summary>
+        /// <summary>遊びの板を作って、札でつなぐ。札の並びはボスラッシュ・ゴルフ・サッカー・野球（先頭が最初に選ばれている）</summary>
         private static RoomModeSelector CreateRoomModes(ModeSelectPanel title, OnlineSession session, Transform waitingPanel, Text status)
         {
             var rush = CreateRushLobby(title, waitingPanel);
             var golf = CreateGolfRoomPanel(title, session, waitingPanel);
-            var soccer = CreateSoccerRoomPanel(title, session, waitingPanel);
-            var modes = new MonoBehaviour[] { rush, golf, soccer };
+            var soccer = CreateTeamRoomPanel<SoccerRoomPanel>(title, session, waitingPanel, "Soccer");
+            var baseball = CreateTeamRoomPanel<BaseballRoomPanel>(title, session, waitingPanel, "Baseball");
+            var modes = new MonoBehaviour[] { rush, golf, soccer, baseball };
 
             var selector = title.gameObject.AddComponent<RoomModeSelector>();
             var so = new SerializedObject(selector);

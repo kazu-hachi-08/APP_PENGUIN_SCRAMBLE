@@ -64,6 +64,8 @@ namespace PenmonScramble.Game
             HoldParts(pose, standing, ref p);
             DespairParts(pose, standing, ref p);
             KickParts(pose, standing, ref p);
+            ThrowParts(pose, standing, ref p);
+            FieldParts(pose, standing, ref p);
             Hit(pose, ref p);
             KnockParts(pose, ref p);
             SlideParts(pose, ref p);

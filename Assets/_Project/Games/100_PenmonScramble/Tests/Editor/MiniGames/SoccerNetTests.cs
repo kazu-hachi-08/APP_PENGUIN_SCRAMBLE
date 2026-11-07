@@ -1,3 +1,4 @@
+using PenmonScramble.MiniGames.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace PenmonScramble.Tests
 
         private static int Steps(float seconds) => (int)MathF.Ceiling(seconds / Dt);
 
-        private static SoccerTeamPlan Plan(SoccerOnlineMode mode, int[] teams, params int[][] parties)
+        private static SoccerTeamPlan Plan(MiniGameOnlineMode mode, int[] teams, params int[][] parties)
         {
             return SoccerTeamPlan.Create(mode, teams, parties, Wild);
         }
@@ -45,7 +46,7 @@ namespace PenmonScramble.Tests
         public void Plan_TwoHumansOnATeam_AreBothLeadersPlusTheYoungerSeatsSecond()
         {
             // 初めの赤・青（P1・P3 が赤、P2 が青）
-            var plan = Plan(SoccerOnlineMode.Versus, null, PartyA, PartyB, PartyC);
+            var plan = Plan(MiniGameOnlineMode.Versus, null, PartyA, PartyB, PartyC);
 
             Assert.That(plan.PerTeam, Is.EqualTo(3));
             Assert.That(plan.Species, Is.EqualTo(new[] { 11, 31, 12, 21, 22, 23 }));
@@ -59,7 +60,7 @@ namespace PenmonScramble.Tests
         public void Plan_ThreeHumansOnATeam_AreTheirLeaders()
         {
             var teams = new[] { SoccerRules.Red, SoccerRules.Red, SoccerRules.Red, SoccerRules.Blue };
-            var plan = Plan(SoccerOnlineMode.Versus, teams, PartyA, PartyB, PartyC, PartyD);
+            var plan = Plan(MiniGameOnlineMode.Versus, teams, PartyA, PartyB, PartyC, PartyD);
 
             Assert.That(plan.PerTeam, Is.EqualTo(3));
             Assert.That(plan.Species.Take(3), Is.EqualTo(new[] { 11, 21, 31 }));
@@ -69,7 +70,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Plan_CoopWithFour_IsFourAgainstFourCpu()
         {
-            var plan = Plan(SoccerOnlineMode.Coop, new[] { SoccerRules.Blue, SoccerRules.Blue, SoccerRules.Blue, SoccerRules.Blue }, PartyA, PartyB, PartyC, PartyD);
+            var plan = Plan(MiniGameOnlineMode.Coop, new[] { SoccerRules.Blue, SoccerRules.Blue, SoccerRules.Blue, SoccerRules.Blue }, PartyA, PartyB, PartyC, PartyD);
 
             Assert.That(plan.PerTeam, Is.EqualTo(4));
             Assert.That(plan.Species, Is.EqualTo(new[] { 11, 21, 31, 41, 51, 52, 53, 54 }));
@@ -81,7 +82,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Plan_MissingParty_FillsWithTheFallbackSpecies()
         {
-            var plan = Plan(SoccerOnlineMode.Versus, null, new[] { 11 }, null);
+            var plan = Plan(MiniGameOnlineMode.Versus, null, new[] { 11 }, null);
 
             Assert.That(plan.Species, Is.EqualTo(new[]
             {
@@ -93,10 +94,10 @@ namespace PenmonScramble.Tests
         [Test]
         public void CanStart_VersusNeedsBothTeams_CoopStartsAlone()
         {
-            Assert.That(SoccerTeamPlan.CanStart(SoccerOnlineMode.Versus, null, 1), Is.False, "ひとりは対戦できない");
-            Assert.That(SoccerTeamPlan.CanStart(SoccerOnlineMode.Versus, null, 2), Is.True);
-            Assert.That(SoccerTeamPlan.CanStart(SoccerOnlineMode.Versus, new[] { SoccerRules.Red, SoccerRules.Red }, 2), Is.False);
-            Assert.That(SoccerTeamPlan.CanStart(SoccerOnlineMode.Coop, null, 1), Is.True);
+            Assert.That(MiniGameTeams.CanStart(MiniGameOnlineMode.Versus, null, 1), Is.False, "ひとりは対戦できない");
+            Assert.That(MiniGameTeams.CanStart(MiniGameOnlineMode.Versus, null, 2), Is.True);
+            Assert.That(MiniGameTeams.CanStart(MiniGameOnlineMode.Versus, new[] { SoccerRules.Red, SoccerRules.Red }, 2), Is.False);
+            Assert.That(MiniGameTeams.CanStart(MiniGameOnlineMode.Coop, null, 1), Is.True);
         }
 
         [Test]
@@ -135,7 +136,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Humans_StartOnTheirLeaders_AndDriveOnlyThem()
         {
-            var plan = Plan(SoccerOnlineMode.Versus, null, PartyA, PartyB, PartyC);
+            var plan = Plan(MiniGameOnlineMode.Versus, null, PartyA, PartyB, PartyC);
             var match = PlayingMatch(plan);
             var humans = new SoccerHumans(plan, match.World.Players.Count);
             var inputs = new SoccerInput[match.World.Players.Count];
@@ -151,7 +152,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Humans_OnTheSameTeam_NeverTakeTheSamePlayer()
         {
-            var plan = Plan(SoccerOnlineMode.Versus, null, PartyA, PartyB, PartyC);
+            var plan = Plan(MiniGameOnlineMode.Versus, null, PartyA, PartyB, PartyC);
             var match = PlayingMatch(plan);
             var humans = new SoccerHumans(plan, match.World.Players.Count);
             var inputs = new SoccerInput[match.World.Players.Count];
@@ -168,7 +169,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Humans_DoNotSwitchToAPlayerAnotherHumanControls()
         {
-            var plan = Plan(SoccerOnlineMode.Versus, null, PartyA, PartyB, PartyC);
+            var plan = Plan(MiniGameOnlineMode.Versus, null, PartyA, PartyB, PartyC);
             var match = PlayingMatch(plan);
             var humans = new SoccerHumans(plan, match.World.Players.Count);
             var inputs = new SoccerInput[match.World.Players.Count];
@@ -184,7 +185,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Humans_RemovedSeat_LeavesItsPlayerToTheAi()
         {
-            var plan = Plan(SoccerOnlineMode.Versus, null, PartyA, PartyB, PartyC);
+            var plan = Plan(MiniGameOnlineMode.Versus, null, PartyA, PartyB, PartyC);
             var match = PlayingMatch(plan);
             var humans = new SoccerHumans(plan, match.World.Players.Count);
             var inputs = new SoccerInput[match.World.Players.Count];
@@ -215,7 +216,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void ShootoutSeat_TwoHumansOnATeam_TakeTurns()
         {
-            var plan = Plan(SoccerOnlineMode.Versus, null, PartyA, PartyB, PartyC);
+            var plan = Plan(MiniGameOnlineMode.Versus, null, PartyA, PartyB, PartyC);
             var world = SoccerMatchSetup.CreateWorld(SoccerPitchTable.Standard(), plan.Species, 1, plan.PerTeam);
             var shootout = new SoccerShootout(world, 1);
             var events = new List<SoccerEvent>();
@@ -306,7 +307,7 @@ namespace PenmonScramble.Tests
         /// <summary>CPU どうしで少し試合を進めたホストの試合（ボールが動いて、点やゲージが入っている所）</summary>
         private static (SoccerMatch Match, SoccerTeamPlan Plan, SoccerHumans Humans, List<SoccerEvent> Events) HostMatch(float seconds)
         {
-            var plan = Plan(SoccerOnlineMode.Coop, null, PartyA, PartyB);
+            var plan = Plan(MiniGameOnlineMode.Coop, null, PartyA, PartyB);
             var match = PlayingMatch(plan, 5);
             var humans = new SoccerHumans(plan, match.World.Players.Count);
             var ai = new SoccerAi(match.World, 9);
@@ -334,7 +335,7 @@ namespace PenmonScramble.Tests
 
             Assert.That(read, Is.Not.Null);
             Assert.That(read.Stadium, Is.EqualTo(1));
-            Assert.That(read.Mode, Is.EqualTo(SoccerOnlineMode.Coop));
+            Assert.That(read.Mode, Is.EqualTo(MiniGameOnlineMode.Coop));
             Assert.That(read.PerTeam, Is.EqualTo(3));
             Assert.That(read.SeatTeam, Is.EqualTo(snapshot.SeatTeam));
             Assert.That(read.SeatControlled, Is.EqualTo(snapshot.SeatControlled));
@@ -382,7 +383,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Mirror_CopiesTheShootout_WithoutTheKickersAim()
         {
-            var plan = Plan(SoccerOnlineMode.Versus, null, PartyA, PartyB);
+            var plan = Plan(MiniGameOnlineMode.Versus, null, PartyA, PartyB);
             var world = SoccerMatchSetup.CreateWorld(SoccerPitchTable.Standard(), plan.Species, 1, plan.PerTeam);
             var match = new SoccerMatch(world, 1);
             var events = new List<SoccerEvent>();
@@ -421,7 +422,7 @@ namespace PenmonScramble.Tests
         [Test]
         public void Mirror_FollowsAWholeFourOnFourMatch_ThroughTheCodec()
         {
-            var plan = Plan(SoccerOnlineMode.Coop, null, PartyA, PartyB, PartyC, PartyD);
+            var plan = Plan(MiniGameOnlineMode.Coop, null, PartyA, PartyB, PartyC, PartyD);
             var world = SoccerMatchSetup.CreateWorld(SoccerPitchTable.Standard(), plan.Species, 11, plan.PerTeam);
             var match = new SoccerMatch(world, 11);
             var ai = new SoccerAi(world, 12);
@@ -466,7 +467,7 @@ namespace PenmonScramble.Tests
 
         private static SoccerSnapshot HostMatchWithFour()
         {
-            var plan = Plan(SoccerOnlineMode.Coop, null, PartyA, PartyB, PartyC, PartyD);
+            var plan = Plan(MiniGameOnlineMode.Coop, null, PartyA, PartyB, PartyC, PartyD);
             var match = PlayingMatch(plan);
             return SoccerSnapshot.Capture(1, match, plan, new SoccerHumans(plan, match.World.Players.Count), null, null);
         }
@@ -498,25 +499,25 @@ namespace PenmonScramble.Tests
         [Test]
         public void RoomChoice_RoundTrips()
         {
-            var choice = new SoccerRoomChoice(3, SoccerOnlineMode.Versus, 4, new[] { SoccerRules.Blue, SoccerRules.Red, SoccerRules.Red, SoccerRules.Blue });
+            var choice = new MiniGameRoomChoice(3, MiniGameOnlineMode.Versus, 4, new[] { SoccerRules.Blue, SoccerRules.Red, SoccerRules.Red, SoccerRules.Blue });
 
-            var read = SoccerRoomChoice.Decode(choice.Encode());
+            var read = MiniGameRoomChoice.Decode(choice.Encode());
 
-            Assert.That(read.Stadium, Is.EqualTo(3));
-            Assert.That(read.Mode, Is.EqualTo(SoccerOnlineMode.Versus));
+            Assert.That(read.Course, Is.EqualTo(3));
+            Assert.That(read.Mode, Is.EqualTo(MiniGameOnlineMode.Versus));
             Assert.That(read.SeatCount, Is.EqualTo(4));
             Assert.That(read.Teams, Is.EqualTo(choice.Teams));
             Assert.That(read.CanStart, Is.True);
-            Assert.That(SoccerRoomChoice.Decode(new byte[] { 1, 9, 2, 0 }), Is.Null, "知らない遊び方は読まない");
-            Assert.That(new SoccerRoomChoice(1, SoccerOnlineMode.Versus, 1).CanStart, Is.False);
+            Assert.That(MiniGameRoomChoice.Decode(new byte[] { 1, 9, 2, 0 }), Is.Null, "知らない遊び方は読まない");
+            Assert.That(new MiniGameRoomChoice(1, MiniGameOnlineMode.Versus, 1).CanStart, Is.False);
         }
 
         [Test]
         public void Mvp_IsTheTopScorers_OrNobody()
         {
-            Assert.That(SoccerMvp.Find(new[] { 1, 3, 0, 2 }), Is.EqualTo(new[] { 1 }));
-            Assert.That(SoccerMvp.Find(new[] { 2, 0, 2 }), Is.EqualTo(new[] { 0, 2 }));
-            Assert.That(SoccerMvp.Find(new[] { 0, 0 }), Is.Empty);
+            Assert.That(MiniGameMvp.Find(new[] { 1, 3, 0, 2 }), Is.EqualTo(new[] { 1 }));
+            Assert.That(MiniGameMvp.Find(new[] { 2, 0, 2 }), Is.EqualTo(new[] { 0, 2 }));
+            Assert.That(MiniGameMvp.Find(new[] { 0, 0 }), Is.Empty);
         }
     }
 }

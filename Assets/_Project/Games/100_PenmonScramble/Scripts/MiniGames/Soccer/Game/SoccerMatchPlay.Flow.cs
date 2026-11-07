@@ -114,7 +114,7 @@ namespace PenmonScramble.Soccer.Game
                 return;
             }
 
-            var seats = SoccerMvp.Find(_seatGoals);
+            var seats = MiniGameMvp.Find(_seatGoals);
             if (seats.Count == 0)
             {
                 return;

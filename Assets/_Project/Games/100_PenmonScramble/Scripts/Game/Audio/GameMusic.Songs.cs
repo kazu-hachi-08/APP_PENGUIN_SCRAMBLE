@@ -24,6 +24,7 @@ namespace PenmonScramble.Game
                 case MusicTrack.Boss: return BossSong;
                 case MusicTrack.Golf: return GolfSong;
                 case MusicTrack.Soccer: return SoccerSong;
+                case MusicTrack.Baseball: return BaseballSong;
                 default: return TitleSong;
             }
         }
@@ -156,6 +157,33 @@ namespace PenmonScramble.Game
                 C3 . C3 G2 . C3 G2 .
                 D3 . D3 A2 G2 - - .",
             Drums = "k.hsk.hsk.h.khs.",
+        };
+
+        // 野球: スタンドの応援のように、手拍子に乗って跳ねる明るい曲（F - B♭ - C - F / Dm - Gm - C - F）。
+        // 1球ごとに間があるゲームなので、サッカーより少しゆったり・ゴルフより元気に
+        private static readonly Song BaseballSong = new Song
+        {
+            Name = "Bgm_Baseball",
+            Bpm = 138f,
+            Melody = @"
+                C5 - F5 - A5 - F5 -
+                D5 - F5 - A#5 - - .
+                C5 - E5 - G5 - E5 C5
+                F5 - - - . . C5 C5
+                D5 - F5 - A5 - D5 -
+                G5 - F5 - D5 - A#4 -
+                C5 - E5 - G5 - A#5 -
+                A5 - - - F5 - . .",
+            Bass = @"
+                F2 . C3 . F2 . C3 .
+                A#2 . F3 . A#2 . F3 .
+                C3 . G3 . C3 . G3 .
+                F2 . C3 . F2 A2 C3 .
+                D3 . A2 . D3 . A2 .
+                G2 . D3 . G2 . D3 .
+                C3 . G2 . C3 . E3 .
+                F2 . C3 . F2 - - .",
+            Drums = "k.s.k.shk.s.kss.",
         };
     }
 }

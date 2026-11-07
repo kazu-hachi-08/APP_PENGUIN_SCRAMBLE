@@ -91,6 +91,7 @@ namespace PenmonScramble.Editor
             // ミニゲームは別のシーン。本編の絵（ボタンなど）を使うので本編の後に作り、最後に本編のシーンを開き直す
             GolfSceneBuilder.BuildScene();
             SoccerSceneBuilder.BuildScene();
+            BaseballSceneBuilder.BuildScene();
             EditorSceneManager.OpenScene(ScenePath);
         }
 
