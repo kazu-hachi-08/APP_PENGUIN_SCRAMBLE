@@ -7,7 +7,8 @@ using UnityEngine.UI;
 namespace PenmonScramble.Soccer.Game
 {
     /// <summary>
-    /// みんなでのとき、人が動かしている子の頭の上に、その人の名前を席の色で出す（誰がどの子かを見分ける）。
+    /// みんなでのとき、ほかの人が動かしている子の頭の上に、その人の名前を席の色で出す（誰がどの子かを見分ける）。
+    /// 自分の子には出さない（頭の上の黄色い印 SoccerControlMarker で分かり、名前と重なるため）。
     /// HUD の上の文字を、子の頭の位置へ毎フレーム置き直す（3D の文字にしないのは、HUD と同じ字で読みやすくするため）
     /// </summary>
     public class SoccerNameTags : MonoBehaviour
@@ -34,15 +35,15 @@ namespace PenmonScramble.Soccer.Game
             }
         }
 
-        /// <summary>seatShown は席ごとの、名前を出す子（−1 なら出さない）</summary>
-        public void Sync(IReadOnlyList<int> seatShown, SoccerView view)
+        /// <summary>seatShown は席ごとの、名前を出す子（−1 なら出さない）。localSeat（この端末の人）の名前は出さない</summary>
+        public void Sync(IReadOnlyList<int> seatShown, int localSeat, SoccerView view)
         {
             var camera = Camera.main;
             for (var seat = 0; seat < seatShown.Count; seat++)
             {
                 var tag = TagOf(seat);
                 var feet = view.PlayerPosition(seatShown[seat]);
-                var shown = camera != null && feet.HasValue && Place(tag.rectTransform, camera, feet.Value + Vector3.up * _headHeight);
+                var shown = seat != localSeat && camera != null && feet.HasValue && Place(tag.rectTransform, camera, feet.Value + Vector3.up * _headHeight);
                 tag.gameObject.SetActive(shown);
             }
 

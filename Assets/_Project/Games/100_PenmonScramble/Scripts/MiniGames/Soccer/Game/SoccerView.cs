@@ -60,14 +60,17 @@ namespace PenmonScramble.Soccer.Game
         }
 
         /// <summary>
-        /// 人が動かしている子の印（足元の太い輪）。seatShown は席ごとの、印を付ける子（−1 なら無し）
+        /// 人が動かしている子の印（足元の太い輪。この端末の人の子には頭の上の黄色い印も）。seatShown は席ごとの、印を付ける子（−1 なら無し）、
+        /// localSeat はこの端末の人の席、localSwitched はこの端末の人の子が今替わった（輪と印をポンと弾ませる）
         /// </summary>
-        public void SetControllers(IReadOnlyList<int> seatShown)
+        public void SetControllers(IReadOnlyList<int> seatShown, int localSeat, bool localSwitched)
         {
+            var local = seatShown != null && localSeat >= 0 && localSeat < seatShown.Count ? seatShown[localSeat] : -1;
             for (var i = 0; i < _players.Count; i++)
             {
                 var seat = seatShown != null ? IndexOf(seatShown, i) : -1;
-                _players[i].SetControlled(seat >= 0);
+                var isLocal = i == local;
+                _players[i].SetControlled(seat >= 0, isLocal, isLocal && localSwitched);
             }
         }
 

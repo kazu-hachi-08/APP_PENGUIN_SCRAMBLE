@@ -55,6 +55,8 @@ namespace PenmonScramble.Soccer.Game
         Cheer,
         /// <summary>おしい・止められたときの観客のどよめき（おお〜）</summary>
         Ooh,
+        /// <summary>自分の動かす子が替わった（ピコッ）</summary>
+        Switch,
     }
 
     /// <summary>
@@ -103,6 +105,8 @@ namespace PenmonScramble.Soccer.Game
             // 観客の声は、ゴールのファンファーレ・キーパーの音の後ろで鳴る大きさに
             { SoccerSound.Cheer, 0.35f },
             { SoccerSound.Ooh, 0.3f },
+            // 切り替えはよく起きるので、蹴る音・ボールを持つ音の邪魔をしない小ささに
+            { SoccerSound.Switch, 0.2f },
         };
 
         /// <summary>蹴る音。strength はため（0〜1）</summary>
@@ -176,6 +180,7 @@ namespace PenmonScramble.Soccer.Game
                 case SoccerSound.Geyser: return Geyser();
                 case SoccerSound.Cheer: return Cheer();
                 case SoccerSound.Ooh: return Ooh();
+                case SoccerSound.Switch: return Switch();
                 default: return ToySynth.Jingle("Soccer_Goal", new[] { 523f, 659f, 784f, 1047f, 1319f });
             }
         }
@@ -286,6 +291,19 @@ namespace PenmonScramble.Soccer.Game
                 murmur = Mathf.Lerp(murmur, (float)random.NextDouble() * 2f - 1f, 0.08f);
                 var envelope = Mathf.Min(1f, t / 0.1f) * Mathf.Exp(-t * 2.5f);
                 return (voice * 0.12f + murmur * 0.8f) * envelope;
+            });
+        }
+
+        /// <summary>切り替えの「ピコッ」: 短い高い音を2つ、下から上へ（カウントダウンの「ピッ」と聞き分けられるように）</summary>
+        private static AudioClip Switch()
+        {
+            const float step = 0.045f;
+            const float duration = step * 2f;
+            return ToySynth.CreateClip("Soccer_Switch", duration, t =>
+            {
+                var pitch = t < step ? 1047f : 1568f;
+                var local = t % step;
+                return ToySynth.Square(pitch, t) * 0.35f * Mathf.Min(1f, local / 0.004f) * Mathf.Exp(-local * 40f);
             });
         }
 

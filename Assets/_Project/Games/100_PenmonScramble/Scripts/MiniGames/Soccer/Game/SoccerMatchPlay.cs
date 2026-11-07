@@ -258,7 +258,9 @@ namespace PenmonScramble.Soccer.Game
         }
 
         /// <summary>
-        /// 人が動かしている子の足元に席の色の輪（PK戦では、蹴る番の人の蹴る子）。みんなでは頭の上に名前も出す
+        /// 人が動かしている子の足元に太い輪（PK戦では、蹴る番の人の蹴る子）、この端末の人の子には頭の上の黄色い印。
+        /// この端末の人の子が替わったら、輪と印を弾ませて「ピコッ」と鳴らす（いつの間にか別の子を動かしていた、を無くす）。
+        /// みんなではほかの人の子の頭の上に名前も出す
         /// </summary>
         private void ShowControllers()
         {
@@ -269,13 +271,22 @@ namespace PenmonScramble.Soccer.Game
 
             if (_shownSeats == null || !SameSeats(_shownSeats, _seatShown))
             {
+                var local = _mode.LocalSeat;
+                var mine = local < _seatShown.Length ? _seatShown[local] : SoccerBall.NoPlayer;
+                // 試合のはじめ（前が無い）も弾ませて、どの子から動かすかを見せる
+                var switched = mine >= 0 && (_shownSeats == null || _shownSeats[local] != mine);
                 _shownSeats = (int[])_seatShown.Clone();
-                _view.SetControllers(_seatShown);
+                _view.SetControllers(_seatShown, local, switched);
+                // 音は試合が動いている間だけ（キックオフの並び直し・PK戦の番の替わりでは、笛・合図と重ねない）
+                if (switched && _match.IsPlaying)
+                {
+                    SoccerSounds.Play(SoccerSound.Switch);
+                }
             }
 
             if (_mode.IsOnline)
             {
-                _nameTags.Sync(_seatShown, _view);
+                _nameTags.Sync(_seatShown, _mode.LocalSeat, _view);
             }
         }
 
