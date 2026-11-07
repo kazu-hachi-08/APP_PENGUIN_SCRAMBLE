@@ -62,7 +62,7 @@ namespace PenmonScramble.Baseball.Core
     }
 
     /// <summary>
-    /// 球場の定義表（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 6 の表）。いまは球場1「海岸」だけ（残りはフェーズ 6）。
+    /// 球場の定義表（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 6 の表）。奥のワールドほど CPU が強く（★1〜★5）、盤に仕掛けがある（BaseballFieldTable）。
     /// CPU のチームの種類は、本編のそのワールドの雑魚と同じ混ぜ方（★が高い子ほど魔球・必殺打が強い。サッカーと同じ）
     /// </summary>
     public static class BaseballStadiumTable
@@ -70,12 +70,20 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>CPU のチームの人数（ひとりの相手は編成と同じ3体）</summary>
         public const int CpuLineup = 3;
 
-        // 本編の StageTable のワールド 1 の雑魚の混ぜ方と同じ
+        // 本編の StageTable の雑魚の混ぜ方と同じ（Weak → Mixed → Strong → Elite → Ace。サッカーと同じ）
         private static readonly int[] BeachWild = { 1, 2, 3, 6, 7, 11, 12, 13, 16, 17 };
+        private static readonly int[] IcebergWild = { 1, 2, 3, 6, 7, 11, 12, 13, 16, 17, 4, 8, 9, 14, 18, 19 };
+        private static readonly int[] DeepSeaWild = { 4, 8, 9, 14, 18, 19, 3, 7, 11, 16 };
+        private static readonly int[] StormWild = { 4, 8, 9, 14, 18, 19, 5, 10, 15, 20 };
+        private static readonly int[] VolcanoWild = { 5, 10, 15, 20, 4, 8, 14, 19 };
 
         private static readonly BaseballStadiumDef[] All =
         {
             new BaseballStadiumDef(1, "海岸", 1, 1, "ふつうの盤", BeachWild, BaseballFieldTable.Beach),
+            new BaseballStadiumDef(2, "氷山", 2, 2, "外野が氷（よく転がり、長打が出やすい）", IcebergWild, BaseballFieldTable.Iceberg),
+            new BaseballStadiumDef(3, "深海", 3, 3, "水流の帯（転がる打球を横へ流す）", DeepSeaWild, BaseballFieldTable.DeepSea),
+            new BaseballStadiumDef(4, "嵐の崖", 4, 4, "左右に動くフライの穴と、浮いた球を流す風", StormWild, BaseballFieldTable.StormCliff),
+            new BaseballStadiumDef(5, "火山の入り江", 5, 5, "間欠泉（打球を跳ね上げる）と、近くて高いフェンス", VolcanoWild, BaseballFieldTable.VolcanoCove),
         };
 
         public static IReadOnlyList<BaseballStadiumDef> Stadiums => All;

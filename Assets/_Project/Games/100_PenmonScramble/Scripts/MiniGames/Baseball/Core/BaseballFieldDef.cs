@@ -21,16 +21,37 @@ namespace PenmonScramble.Baseball.Core
     /// <summary>盤の穴。入ったら Result の結果（アウトの穴の後ろには守備の子が立つ）</summary>
     public sealed class BaseballHole
     {
-        public BaseballHole(BaseballHitResult result, Vec2 center, float radius)
+        public BaseballHole(BaseballHitResult result, Vec2 center, float radius, BaseballHoleSway sway = null)
         {
             Result = result;
             Center = center;
             Radius = radius;
+            Sway = sway;
         }
 
         public BaseballHitResult Result { get; }
+
+        /// <summary>穴の真ん中（動く穴は動きの真ん中。今の位置は CenterAt）</summary>
         public Vec2 Center { get; }
+
         public float Radius { get; }
+
+        /// <summary>左右に動く穴の動き（動かない穴は null）</summary>
+        public BaseballHoleSway Sway { get; }
+
+        public bool Moves => Sway != null;
+
+        /// <summary>盤の時計（BaseballClock）での穴の位置。動く穴はホームからの距離を保って方角だけ動く</summary>
+        public Vec2 CenterAt(float clock)
+        {
+            if (Sway == null)
+            {
+                return Center;
+            }
+
+            var degrees = BaseballFieldDef.DegreesOf(Center) + Sway.OffsetAt(clock);
+            return BaseballFieldDef.At(degrees, Center.Length);
+        }
 
         public bool IsOut => BaseballResults.IsOut(Result);
     }
@@ -67,7 +88,8 @@ namespace PenmonScramble.Baseball.Core
             Vec2 mound,
             Vec2 batPivot,
             float baseDistance,
-            Vec2 bowlCenter)
+            Vec2 bowlCenter,
+            BaseballGimmicks gimmicks = null)
         {
             if (stopZones.Count == 0)
             {
@@ -86,6 +108,7 @@ namespace PenmonScramble.Baseball.Core
             BatPivot = batPivot;
             BaseDistance = baseDistance;
             BowlCenter = bowlCenter;
+            Gimmicks = gimmicks ?? BaseballGimmicks.None;
         }
 
         public string Name { get; }
@@ -123,6 +146,9 @@ namespace PenmonScramble.Baseball.Core
 
         /// <summary>すり鉢の底（動いている打球がゆるく引かれる先）</summary>
         public Vec2 BowlCenter { get; }
+
+        /// <summary>盤の仕掛け（氷・水流・風・間欠泉。動く穴は穴が持つ）</summary>
+        public BaseballGimmicks Gimmicks { get; }
 
         /// <summary>方角（センターから何度。負が左）と距離の点</summary>
         public static Vec2 At(float degrees, float distance)

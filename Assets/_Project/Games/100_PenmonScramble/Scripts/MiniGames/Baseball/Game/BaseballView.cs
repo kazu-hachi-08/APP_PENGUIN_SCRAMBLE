@@ -8,7 +8,7 @@ namespace PenmonScramble.Baseball.Game
     /// <summary>
     /// 野球の見た目（ブリキの縁と木の台のおもちゃの盤）。盤の定義から台・土と芝・線・塁・フェンス・穴を組み、毎フレーム球・バット・子を写す。
     /// 台・土と芝・線・塁・マウンド・まわりの景色は BaseballView.Board.cs、フェンスは .Fence.cs、穴と札は .Holes.cs、
-    /// 投げた球の通り道（曲げられる区間）とストライクのゾーンの枠は .Lane.cs。球・バット・子はそれぞれ別の部品
+    /// 投げた球の通り道（曲げられる区間）とストライクのゾーンの枠は .Lane.cs、球場の仕掛け（水流・風・間欠泉）は .Gimmicks.cs。球・バット・子はそれぞれ別の部品
     /// </summary>
     public partial class BaseballView : MonoBehaviour
     {
@@ -50,15 +50,19 @@ namespace PenmonScramble.Baseball.Game
             BuildBoard(field, world, theme);
             BuildFence(field, theme);
             BuildHoles(field);
+            BuildGimmicks(field);
             BuildLane(field);
             _ball = new BaseballBallView(Materials, _root);
             _bat = new BaseballBatView(field, Materials, _root);
             Figures = new BaseballFigures(field, Materials, _root);
         }
 
-        /// <summary>補間した1歩の写しを描く</summary>
-        public void Draw(BaseballBoard board, BaseballFrame frame, float deltaTime)
+        /// <summary>補間した1歩の写しを描く。clock は描く時点の盤の時計（仕掛け・動く穴の様子）</summary>
+        public void Draw(BaseballBoard board, BaseballFrame frame, float deltaTime, float clock)
         {
+            FollowHoles(clock, deltaTime);
+            TickGimmicks(clock, deltaTime);
+            Figures.FollowHoles(HoleShownAt);
             _ball.Sync(board, frame, deltaTime);
             _bat.Sync(board, frame.BatDegrees);
             Figures.Tick(board, frame, _ball.Position, deltaTime);
@@ -141,6 +145,7 @@ namespace PenmonScramble.Baseball.Game
             _meshes.Clear();
             _textures.Clear();
             _holes.Clear();
+            ClearGimmicks();
             _ball = null;
             _bat = null;
             Figures = null;

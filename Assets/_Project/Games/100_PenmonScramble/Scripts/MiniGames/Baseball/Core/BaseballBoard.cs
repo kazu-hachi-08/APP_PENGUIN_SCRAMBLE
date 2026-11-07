@@ -93,6 +93,12 @@ namespace PenmonScramble.Baseball.Core
         public BaseballSpecial HitSpecial => _hitSpecial;
 
         /// <summary>
+        /// 盤の時計（仕掛けの様子を決める秒。BaseballClock）。投げたときに決まり、球が動いている間だけ進む
+        /// （結果が出たら止まり、次に投げるまでそのまま）
+        /// </summary>
+        public float Clock { get; private set; }
+
+        /// <summary>
         /// 必殺打を使った（振って当てた。ファウルも）。空振り・見送り・バントでは使わない（Docs/MINIGAME_BASEBALL_PLAN.md「魔球と必殺打」）
         /// </summary>
         public bool SpecialHitUsed => _hitSpecial.IsActive && LastHit is { Bunt: false };
@@ -115,7 +121,8 @@ namespace PenmonScramble.Baseball.Core
 
         /// <param name="magic">投げる人が出した魔球（出していなければ None）</param>
         /// <param name="hitSpecial">打つ人が出した必殺打（出していなければ None。振って当てたときだけ打球が変わる）</param>
-        public void Throw(BaseballPitchType type, BaseballPitchMagic magic, BaseballSpecial hitSpecial, List<BaseballEvent> events)
+        /// <param name="clock">投げた瞬間の盤の時計（BaseballClock.AtThrow。仕掛けの様子がここから進む）</param>
+        public void Throw(BaseballPitchType type, BaseballPitchMagic magic, BaseballSpecial hitSpecial, List<BaseballEvent> events, float clock = 0f)
         {
             if (Phase != BaseballBoardPhase.Ready)
             {
@@ -123,6 +130,7 @@ namespace PenmonScramble.Baseball.Core
             }
 
             _hitSpecial = hitSpecial;
+            Clock = clock;
             _pitch.Start(type, magic);
             Phase = BaseballBoardPhase.Pitching;
             events.Add(new BaseballEvent(BaseballEventKind.Pitch, _pitch.Position, (int)type));
@@ -162,6 +170,16 @@ namespace PenmonScramble.Baseball.Core
                 }
 
                 PitchSubstep(input.Bend, dt, events);
+                if (Phase == BaseballBoardPhase.Pitching || Phase == BaseballBoardPhase.Done)
+                {
+                    Clock += dt;
+                }
+            }
+
+            // 打球が出た歩は、打球が残りの時間を自分の時計で進めたので、そちらに合わせる
+            if (Phase == BaseballBoardPhase.BallInPlay)
+            {
+                Clock = _ball.Clock;
             }
         }
 
@@ -218,12 +236,14 @@ namespace PenmonScramble.Baseball.Core
 
         private void Contact(BaseballHit hit, bool bunt, List<BaseballEvent> events)
         {
+            // 当たった細かい1歩のぶんを足した時計から打球を出す
+            var clock = Clock + BaseballRules.StepSeconds / PitchSubsteps;
             var at = _pitch.Position;
             _pitch.Stop();
             _bat.Finish();
             LastHit = hit;
             var special = bunt ? BaseballSpecial.None : _hitSpecial;
-            _ball.Launch(at, hit, special);
+            _ball.Launch(at, hit, special, clock);
             Phase = BaseballBoardPhase.BallInPlay;
             events.Add(new BaseballEvent(BaseballEventKind.Contact, at, hit.Power, hit.Lofted));
             if (special.IsActive)
@@ -235,6 +255,7 @@ namespace PenmonScramble.Baseball.Core
         private void StepBallInPlay(List<BaseballEvent> events)
         {
             _ball.Step(BaseballRules.StepSeconds, events);
+            Clock = _ball.Clock;
             if (_ball.Result is not { } result)
             {
                 return;

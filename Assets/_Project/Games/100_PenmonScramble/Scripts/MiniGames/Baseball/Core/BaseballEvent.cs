@@ -46,6 +46,8 @@ namespace PenmonScramble.Baseball.Core
         SpecialHit,
         /// <summary>水切りヒットが盤の上で跳ねた</summary>
         Skip,
+        /// <summary>間欠泉が打球を跳ね上げた（Index は間欠泉の番号）</summary>
+        GeyserLaunch,
     }
 
     /// <summary>盤の上で起きたこと。表示と音へはこれをイベントで渡す（Core は表示を知らない）</summary>

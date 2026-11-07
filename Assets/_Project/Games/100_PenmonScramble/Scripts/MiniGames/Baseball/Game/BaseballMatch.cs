@@ -220,10 +220,28 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>前の歩と今の歩の間を補間して描く。計算し直して球が跳んだ分は、少しずつ寄せて消す</summary>
         private void Draw(float dt)
         {
-            var frame = BaseballFrame.Lerp(_previous, _current, _accumulator / BaseballRules.StepSeconds);
+            var alpha = _accumulator / BaseballRules.StepSeconds;
+            var frame = BaseballFrame.Lerp(_previous, _current, alpha);
             _ballOffset = Vector3.Lerp(_ballOffset, Vector3.zero, 1f - Mathf.Exp(-_ballCatchUp * dt));
-            _view.Draw(Board, frame.WithBallOffset(_ballOffset), dt);
+            _view.Draw(Board, frame.WithBallOffset(_ballOffset), dt, ShownClock(alpha));
             _camera.Follow(CameraTarget());
+        }
+
+        /// <summary>
+        /// 描く時点の盤の時計（仕掛け・動く穴の様子）。投げる前は次の球の投げた瞬間の時計で止めておき（仕掛けは投げたら動き出す）、
+        /// 球が動いている間は、補間して1歩遅れて描いている球に合わせて戻す
+        /// </summary>
+        private float ShownClock(float alpha)
+        {
+            switch (Board.Phase)
+            {
+                case BaseballBoardPhase.Ready:
+                    return BaseballClock.AtThrow(_throwCount + 1);
+                case BaseballBoardPhase.Done:
+                    return Board.Clock;
+                default:
+                    return Board.Clock - (1f - alpha) * BaseballRules.StepSeconds;
+            }
         }
 
         /// <summary>打球が出ている間（とその結果を見せる間）だけ球を追う。ホームランは飛んでいく球を追う</summary>

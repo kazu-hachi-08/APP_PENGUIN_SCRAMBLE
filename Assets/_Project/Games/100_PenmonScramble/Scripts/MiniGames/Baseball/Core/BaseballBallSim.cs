@@ -9,12 +9,15 @@ namespace PenmonScramble.Baseball.Core
     /// 浮いた球は放物線で飛び（浮いている間は穴に落ちない）、フェンスより高く越えたらホームラン・低ければ跳ね返る。
     /// 転がる球は摩擦とすり鉢の引きで遅くなり、穴の上を遅く通れば落ち（速いと縁で曲がって通り過ぎる）、穴に入らずに止まったら止まった場所の札で決まる。
     /// ファウルラインの外へ出たらファウル。
-    /// 必殺打の打球はここで動きが変わる: 氷は通り道が凍ってアウトの穴の上を滑り、水は跳ねて穴を飛び越え、風は打った人が左右に曲げられ、雷は速くて穴に落ちない
+    /// 必殺打の打球はここで動きが変わる: 氷は通り道が凍ってアウトの穴の上を滑り、水は跳ねて穴を飛び越え、風は打った人が左右に曲げられ、雷は速くて穴に落ちない。
+    /// 球場の仕掛け（BaseballGimmicks）もここで効く: 氷の床はよく転がり、水流は転がる球を弧に沿って流し、風は浮いた球を左右へ流し、
+    /// 間欠泉は口の上を転がる球を跳ね上げ、動く穴は盤の時計（Clock）での位置で落ちるかを見る
     /// </summary>
     public sealed class BaseballBallSim
     {
         private readonly BaseballFieldDef _field;
         private readonly HashSet<int> _overHoles = new HashSet<int>();
+        private readonly Dictionary<int, long> _geyserLaunches = new Dictionary<int, long>();
         private float _elapsed;
         private float _iceLeft;
         private int _skipsLeft;
@@ -47,6 +50,9 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>必殺打（出していなければ None）</summary>
         public BaseballSpecial Special { get; private set; }
 
+        /// <summary>盤の時計（BaseballClock。仕掛けの様子を決める）</summary>
+        public float Clock { get; private set; }
+
         /// <summary>アイスロードの凍った道の上を転がっている（アウトの穴に落ちない）</summary>
         public bool IsOnIce => _iceLeft > 0f && !IsFlying;
 
@@ -55,8 +61,11 @@ namespace PenmonScramble.Baseball.Core
 
         public void Launch(Vec2 from, BaseballHit hit) => Launch(from, hit, BaseballSpecial.None);
 
-        public void Launch(Vec2 from, BaseballHit hit, BaseballSpecial special)
+        /// <param name="clock">打った瞬間の盤の時計（仕掛けの様子。BaseballClock）</param>
+        public void Launch(Vec2 from, BaseballHit hit, BaseballSpecial special, float clock = 0f)
         {
+            Clock = clock;
+            _geyserLaunches.Clear();
             Position = from;
             Velocity = hit.Direction * hit.Speed;
             Height = 0f;
@@ -119,14 +128,18 @@ namespace PenmonScramble.Baseball.Core
 
         private void SubStep(float dt, List<BaseballEvent> events)
         {
+            Clock += dt;
             Steer(dt);
             if (IsFlying)
             {
+                Blow(dt);
                 Fly(dt, events);
             }
             else
             {
                 Roll(dt);
+                Flow(dt);
+                TryGeysers(events);
             }
 
             if (!IsActive || CheckFence(events) || CheckFoul(events))
@@ -171,12 +184,78 @@ namespace PenmonScramble.Baseball.Core
         {
             var speed = Velocity.Length;
             var pull = (_field.BowlCenter - Position).Normalized * (BaseballBalance.BowlPull * dt);
-            var friction = _iceLeft > 0f ? BaseballBalance.RollFriction * BaseballBalance.IceRoadFriction : BaseballBalance.RollFriction;
+            var friction = BaseballBalance.RollFriction;
+            friction *= _iceLeft > 0f ? BaseballBalance.IceRoadFriction : 1f;
+            friction *= _field.Gimmicks.IsOnIce(Position) ? BaseballBalance.IceFloorFriction : 1f;
             var slowed = Math.Max(speed - friction * dt, 0f);
             Velocity = (speed > 0f ? Velocity * (slowed / speed) : Vec2.Zero) + pull;
             var moved = Velocity * dt;
             Position += moved;
             _iceLeft = Math.Max(0f, _iceLeft - moved.Length);
+        }
+
+        /// <summary>水流の帯: 転がる球を弧に沿って押す（流れの向きの速さが上限に届くまで）</summary>
+        private void Flow(float dt)
+        {
+            foreach (var current in _field.Gimmicks.Currents)
+            {
+                if (!current.Band.Contains(Position))
+                {
+                    continue;
+                }
+
+                var direction = current.DirectionAt(Position, Clock);
+                var along = Vec2.Dot(Velocity, direction);
+                var push = Math.Min(current.Accel * dt, current.MaxSpeed - along);
+                if (push > 0f)
+                {
+                    Velocity += direction * push;
+                }
+            }
+        }
+
+        /// <summary>風: 浮いている球だけを左右へ流す</summary>
+        private void Blow(float dt)
+        {
+            var wind = _field.Gimmicks.Wind;
+            if (wind == null)
+            {
+                return;
+            }
+
+            var side = wind.SideAt(Clock);
+            if (side != 0f)
+            {
+                Velocity += new Vec2(side * wind.Accel * dt, 0f);
+            }
+        }
+
+        /// <summary>間欠泉: 噴いている口の上を転がる球を跳ね上げ、口の真ん中から外へ押し出す（1回噴く間に1度だけ）</summary>
+        private void TryGeysers(List<BaseballEvent> events)
+        {
+            var geysers = _field.Gimmicks.Geysers;
+            for (var i = 0; i < geysers.Count; i++)
+            {
+                var geyser = geysers[i];
+                if (!geyser.IsErupting(Clock) || !geyser.Contains(Position))
+                {
+                    continue;
+                }
+
+                var eruption = geyser.Eruption(Clock);
+                if (_geyserLaunches.TryGetValue(i, out var last) && last == eruption)
+                {
+                    continue;
+                }
+
+                _geyserLaunches[i] = eruption;
+                var away = Position - geyser.Center;
+                var outward = away.IsNearlyZero ? Position.Normalized : away.Normalized;
+                Velocity = Velocity * BaseballBalance.GeyserKeepSpeed + outward * BaseballBalance.GeyserPushSpeed;
+                VerticalSpeed = BaseballBalance.GeyserUpSpeed;
+                events.Add(new BaseballEvent(BaseballEventKind.GeyserLaunch, Position, index: i));
+                return;
+            }
         }
 
         /// <summary>水切り: 跳ねるたびに山を低くして、また跳ぶ（跳んでいる間は穴に落ちない）</summary>
@@ -271,7 +350,8 @@ namespace PenmonScramble.Baseball.Core
                     continue;
                 }
 
-                var toCenter = hole.Center - Position;
+                var center = hole.CenterAt(Clock);
+                var toCenter = center - Position;
                 if (toCenter.Length > hole.Radius)
                 {
                     if (_overHoles.Remove(i))
@@ -285,9 +365,9 @@ namespace PenmonScramble.Baseball.Core
                 var speed = Velocity.Length;
                 if (speed < BaseballBalance.HoleCaptureSpeed)
                 {
-                    Position = hole.Center;
+                    Position = center;
                     Finish(hole.Result, i);
-                    events.Add(new BaseballEvent(BaseballEventKind.HoleIn, hole.Center, speed, index: i, result: hole.Result));
+                    events.Add(new BaseballEvent(BaseballEventKind.HoleIn, center, speed, index: i, result: hole.Result));
                     return true;
                 }
 

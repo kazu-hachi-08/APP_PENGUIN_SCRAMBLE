@@ -49,6 +49,9 @@ namespace PenmonScramble.Baseball.Game
 
         public void SetBatter(int species, bool wild) => _batter.Use(species, wild);
 
+        /// <summary>動く穴の後ろの守備の子を、穴の見えている位置について行かせる</summary>
+        public void FollowHoles(System.Func<int, PenmonScramble.Core.Vec2> shownAt) => _fielders.FollowHoles(shownAt);
+
         public void Tick(BaseballBoard board, BaseballFrame frame, Vector3 ball, float deltaTime)
         {
             var ballVisible = board.Phase != BaseballBoardPhase.Ready;

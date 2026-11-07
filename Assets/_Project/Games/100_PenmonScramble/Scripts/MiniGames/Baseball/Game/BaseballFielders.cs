@@ -19,6 +19,7 @@ namespace PenmonScramble.Baseball.Game
         private static readonly Vector3 MittOffset = new Vector3(0f, 0.3f, 0.3f);
         private const float ReactSeconds = 1.4f;
 
+        private readonly BaseballFieldDef _field;
         private readonly ToonMaterials _materials;
         private readonly Transform _parent;
         private readonly List<(int Hole, Vector3 Spot)> _spots = new List<(int, Vector3)>();
@@ -32,6 +33,7 @@ namespace PenmonScramble.Baseball.Game
 
         public BaseballFielders(BaseballFieldDef field, ToonMaterials materials, Transform parent)
         {
+            _field = field;
             _materials = materials;
             _parent = parent;
             for (var i = 0; i < field.Holes.Count; i++)
@@ -39,8 +41,25 @@ namespace PenmonScramble.Baseball.Game
                 var hole = field.Holes[i];
                 if (hole.IsOut)
                 {
-                    var spot = hole.Center + hole.Center.Normalized * (hole.Radius + BehindHole);
-                    _spots.Add((i, BaseballSpace.ToWorld(spot)));
+                    _spots.Add((i, SpotBehind(hole, hole.Center)));
+                }
+            }
+        }
+
+        private static Vector3 SpotBehind(BaseballHole hole, Vec2 center)
+        {
+            return BaseballSpace.ToWorld(center + center.Normalized * (hole.Radius + BehindHole));
+        }
+
+        /// <summary>動く穴（嵐の崖）の後ろの子を、穴の見えている位置について行かせる</summary>
+        public void FollowHoles(System.Func<int, Vec2> shownAt)
+        {
+            for (var i = 0; i < _spots.Count && i < _fielders.Count; i++)
+            {
+                var hole = _field.Holes[_spots[i].Hole];
+                if (hole.Moves)
+                {
+                    _fielders[i].Root.localPosition = SpotBehind(hole, shownAt(_spots[i].Hole));
                 }
             }
         }

@@ -103,11 +103,16 @@ namespace PenmonScramble.Baseball.Game
             var zones = field.StopZones;
             var plain = Texture2D.whiteTexture;
             var stripes = StripeTexture("BaseballStripes", StripeLight, StripeDark);
+            var iceStripes = field.Gimmicks.Ice.Count > 0 ? StripeTexture("BaseballIceStripes", IceStripeLight, IceStripeDark) : null;
             Vector2 RingUv(Vec2 p) => new Vector2(p.Length / (StripeWidth * 2f), 0.5f);
             for (var i = zones.Count - 1; i >= 0; i--)
             {
                 var radius = i == zones.Count - 1 ? field.FenceRadius : zones[i].OuterRadius;
-                var material = ZoneMaterial(zones[i].Result, plain, stripes);
+                var inner = i == 0 ? 0f : zones[i - 1].OuterRadius;
+                // 氷の床（氷山）の所は、同じ区切りのまま氷の色にする（止まったら何になるかは色の濃さで分かる）
+                var material = iceStripes != null && IsIcyRing(field, inner, radius)
+                    ? IceZoneMaterial(zones[i].Result, iceStripes)
+                    : ZoneMaterial(zones[i].Result, plain, stripes);
                 AddOwnedMesh($"Zone{i}", MiniGameMeshes.Flat($"BaseballZone{i}", Fan(field, radius), LayerLift * (zones.Count - i + 1), RingUv), material);
             }
 
@@ -124,6 +129,14 @@ namespace PenmonScramble.Baseball.Game
                 BaseballHitResult.Double or BaseballHitResult.Triple => Materials.Floor(plain, BandColor),
                 _ => Materials.Floor(plain, DirtColor),
             };
+        }
+
+        /// <summary>氷の床の上の札の色: 単打の所は氷の縞、長打の所は濃い氷の色</summary>
+        private Material IceZoneMaterial(BaseballHitResult result, Texture iceStripes)
+        {
+            return result == BaseballHitResult.Single
+                ? Materials.Floor(iceStripes, Color.white)
+                : Materials.Floor(Texture2D.whiteTexture, IceBandColor);
         }
 
         /// <summary>ファウルライン（ホームからフェンスまで）と、一塁・三塁から二塁への線</summary>

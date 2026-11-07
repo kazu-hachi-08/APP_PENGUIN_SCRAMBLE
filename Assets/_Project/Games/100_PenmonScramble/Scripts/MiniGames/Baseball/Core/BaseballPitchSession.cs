@@ -194,7 +194,7 @@ namespace PenmonScramble.Baseball.Core
             DoneStep = -1;
             PitcherNeeded = 0;
             BatterNeeded = 0;
-            Board.Throw(Throw.Type, Throw.Magic, Throw.HitSpecial, events);
+            Board.Throw(Throw.Type, Throw.Magic, Throw.HitSpecial, events, BaseballClock.AtThrow(Throw.Id));
         }
 
         /// <summary>投げた所から今の歩まで計算し直し、前に出した起きたことと同じ所から先だけを出す</summary>

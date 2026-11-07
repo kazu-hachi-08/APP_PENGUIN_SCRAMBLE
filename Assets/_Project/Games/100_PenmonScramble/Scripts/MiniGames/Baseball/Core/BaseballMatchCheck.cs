@@ -181,7 +181,7 @@ namespace PenmonScramble.Baseball.Core
             batter.BeginPitch(game);
             board.Reset();
             events.Clear();
-            board.Throw(plan.Type, magic, hitSpecial, events);
+            board.Throw(plan.Type, magic, hitSpecial, events, BaseballClock.AtThrow(stats.Pitches + 1));
             var steps = 0;
             for (; steps < MaxStepsPerPitch && board.Phase != BaseballBoardPhase.Done; steps++)
             {

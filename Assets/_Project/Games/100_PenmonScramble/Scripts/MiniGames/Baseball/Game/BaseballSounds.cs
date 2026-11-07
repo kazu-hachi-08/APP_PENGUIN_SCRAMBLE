@@ -54,6 +54,8 @@ namespace PenmonScramble.Baseball.Game
         Vanish,
         /// <summary>水切りヒットが跳ねた（ピチャッ）</summary>
         Skip,
+        /// <summary>間欠泉が打球を跳ね上げた（シュワッ）</summary>
+        Geyser,
     }
 
     /// <summary>
@@ -98,6 +100,7 @@ namespace PenmonScramble.Baseball.Game
             { BaseballSound.Freeze, 0.45f },
             { BaseballSound.Vanish, 0.4f },
             { BaseballSound.Skip, 0.35f },
+            { BaseballSound.Geyser, 0.4f },
         };
 
         /// <summary>バットに当たった音。power は当たりの強さ（0〜1）</summary>
@@ -160,6 +163,7 @@ namespace PenmonScramble.Baseball.Game
                 case BaseballSound.Vanish: return ToySynth.Sweep("Baseball_Vanish", 0.15f, 1800f, 500f);
                 // 水切りの「ピチャッ」: 短く高めの打撃
                 case BaseballSound.Skip: return ToySynth.Impact("Baseball_Skip", 0.05f, 900f);
+                case BaseballSound.Geyser: return ToySynth.Whoosh("Baseball_Geyser");
                 default: return ToySynth.Jingle("Baseball_HomeRun", new[] { 523f, 659f, 784f, 1047f, 784f, 1047f, 1319f });
             }
         }

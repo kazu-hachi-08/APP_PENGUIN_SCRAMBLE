@@ -345,7 +345,7 @@ namespace PenmonScramble.Tests
             var beach = BaseballStadiumTable.Get(1);
             Assert.That(beach, Is.Not.Null);
             Assert.That(beach.CpuStars, Is.EqualTo(1));
-            Assert.That(BaseballStadiumTable.Get(2), Is.Null);
+            Assert.That(BaseballStadiumTable.Get(6), Is.Null);
             var picked = beach.PickWild(BaseballStadiumTable.CpuLineup, 5);
             Assert.That(picked.Distinct().Count(), Is.EqualTo(picked.Length));
             Assert.That(picked.All(s => beach.WildSpecies.Contains(s)), Is.True);

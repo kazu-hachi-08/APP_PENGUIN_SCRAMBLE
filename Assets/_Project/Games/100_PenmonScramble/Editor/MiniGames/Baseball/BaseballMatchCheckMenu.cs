@@ -12,11 +12,13 @@ namespace PenmonScramble.Editor
     /// CPU の試合の確認（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 3）。CPU 同士の3イニングを描かずに計算だけで何試合も回し、
     /// 1試合の点・打率・ホームラン・三振・四球・打球の結果の割合・穴ごとの入った割合・1試合の長さ・強さの差での勝ち負けを Console に出す
     /// （サッカーの試合の確認と同じ考え方）。魔球は属性ごとに打たれた割合、必殺打は当てた後の結果の割合も出す（フェーズ 4）。
-    /// Play しなくてよい。裏の糸で回し、進み具合を出す
+    /// Play しなくてよい。裏の糸で回し、進み具合を出す。
+    /// 「全球場」は5球場の盤（仕掛けつき）で、球場の強さどうしと ★1 対 ★5 を回す（フェーズ 6。仕掛けで球が詰まらないか・点の入り方・強さの順）
     /// </summary>
     public static class BaseballMatchCheckMenu
     {
         private const int MatchesPerPairing = 200;
+        private const int MatchesPerStadiumPairing = 100;
         private const int FirstSeed = 1000;
 
         // 強さの組み合わせ（先攻 vs 後攻）。同じ強さは先攻・後攻の差が無いか、違う強さは強い方が勝つかを見る
@@ -29,15 +31,39 @@ namespace PenmonScramble.Editor
         public static void Run()
         {
             var field = BaseballFieldTable.Test();
+            var results = RunPairings("野球: CPUの試合の確認", field, Pairings, MatchesPerPairing, out var cancelled);
+            Debug.Log(Report("[Baseball] CPUの試合の確認", field, results, MatchesPerPairing, cancelled));
+        }
+
+        [MenuItem(EditorMenu.Baseball + "CPUの試合の確認（全球場）", priority = EditorMenu.BaseballPriority + 21)]
+        public static void RunStadiums()
+        {
+            foreach (var stadium in BaseballStadiumTable.Stadiums)
+            {
+                var field = stadium.CreateField();
+                var stars = stadium.CpuStars;
+                var pairings = new[] { (stars, stars), (1, 5) };
+                var results = RunPairings($"野球: CPUの試合の確認（{stadium.Name}）", field, pairings, MatchesPerStadiumPairing, out var cancelled);
+                Debug.Log(Report($"[Baseball] CPUの試合の確認 球場{stadium.No}「{stadium.Name}」（{stadium.Gimmick}）", field, results, MatchesPerStadiumPairing, cancelled));
+                if (cancelled)
+                {
+                    return;
+                }
+            }
+        }
+
+        private static List<(int away, int home, List<BaseballMatchStats> stats)> RunPairings(
+            string title, BaseballFieldDef field, (int away, int home)[] pairings, int matches, out bool cancelled)
+        {
             using var cancel = new CancellationTokenSource();
             var results = new List<(int away, int home, List<BaseballMatchStats> stats)>();
             var done = 0;
             var thread = new Thread(() =>
             {
-                foreach (var (away, home) in Pairings)
+                foreach (var (away, home) in pairings)
                 {
                     var stats = new List<BaseballMatchStats>();
-                    for (var i = 0; i < MatchesPerPairing && !cancel.IsCancellationRequested; i++)
+                    for (var i = 0; i < matches && !cancel.IsCancellationRequested; i++)
                     {
                         stats.Add(BaseballMatchCheck.Play(BaseballBalance.AiSkill(away), BaseballBalance.AiSkill(home), FirstSeed + i, field));
                         Interlocked.Increment(ref done);
@@ -51,10 +77,10 @@ namespace PenmonScramble.Editor
             }) { IsBackground = true };
             thread.Start();
 
-            var total = Pairings.Length * MatchesPerPairing;
+            var total = pairings.Length * matches;
             while (thread.IsAlive)
             {
-                if (EditorUtility.DisplayCancelableProgressBar("野球: CPUの試合の確認", $"CPU 同士で試合をしています… {done}/{total} 試合", (float)done / total))
+                if (EditorUtility.DisplayCancelableProgressBar(title, $"CPU 同士で試合をしています… {done}/{total} 試合", (float)done / total))
                 {
                     cancel.Cancel();
                 }
@@ -63,13 +89,14 @@ namespace PenmonScramble.Editor
             }
 
             EditorUtility.ClearProgressBar();
-            Debug.Log(Report(field, results, cancel.IsCancellationRequested));
+            cancelled = cancel.IsCancellationRequested;
+            return results;
         }
 
-        private static string Report(BaseballFieldDef field, List<(int away, int home, List<BaseballMatchStats> stats)> results, bool cancelled)
+        private static string Report(string title, BaseballFieldDef field, List<(int away, int home, List<BaseballMatchStats> stats)> results, int matches, bool cancelled)
         {
-            var text = new StringBuilder(cancelled ? "[Baseball] CPUの試合の確認（途中でやめました）\n" : "[Baseball] CPUの試合の確認\n");
-            text.AppendLine($"1組 {MatchesPerPairing} 試合・{BaseballRules.Innings} イニング。点・ホームラン・三振・四球・球数・分 は1試合の平均。打球の割合はファウルを除くフェアの打球に対して");
+            var text = new StringBuilder(cancelled ? $"{title}（途中でやめました）\n" : $"{title}\n");
+            text.AppendLine($"1組 {matches} 試合・{BaseballRules.Innings} イニング。点・ホームラン・三振・四球・球数・分 は1試合の平均。打球の割合はファウルを除くフェアの打球に対して");
             foreach (var (away, home, stats) in results)
             {
                 if (stats.Count == 0)

@@ -103,16 +103,17 @@ namespace PenmonScramble.Tests
         }
 
         [Test]
-        public void Guide_OnlyBeachIsReady()
+        public void Guide_AllStadiumsAreReady()
         {
             var guide = new BaseballCourseGuide();
-            Assert.That(guide.IsReady(1), Is.True, "球場1「海岸」はフェーズ 4 で遊べる");
-            Assert.That(guide.Layout(1), Does.Contain("★☆☆☆☆"));
-            Assert.That(guide.Reward(1, true), Does.Contain("ボーナス"));
-            for (var no = 2; no <= 5; no++)
+            for (var no = 1; no <= 5; no++)
             {
-                Assert.That(guide.IsReady(no), Is.False);
+                Assert.That(guide.IsReady(no), Is.True, $"球場{no} はフェーズ 6 で遊べる");
             }
+
+            Assert.That(guide.Layout(1), Does.Contain("★☆☆☆☆"));
+            Assert.That(guide.Layout(5), Does.Contain("★★★★★"));
+            Assert.That(guide.Reward(1, true), Does.Contain("ボーナス"));
 
             Assert.That(guide.FormatBest(1, 3), Is.EqualTo("+3"));
             Assert.That(guide.FormatBest(1, 0), Is.EqualTo("±0"));

@@ -418,12 +418,13 @@ namespace PenmonScramble.Baseball.Core
             var best = float.MaxValue;
             foreach (var hole in board.Field.Holes)
             {
-                if (hole.IsOut || hole.Center.Length <= ball.Position.Length)
+                var center = hole.CenterAt(ball.Clock);
+                if (hole.IsOut || center.Length <= ball.Position.Length)
                 {
                     continue;
                 }
 
-                var diff = BaseballFieldDef.DegreesOf(hole.Center - ball.Position) - heading;
+                var diff = BaseballFieldDef.DegreesOf(center - ball.Position) - heading;
                 if (Math.Abs(diff) < Math.Abs(best))
                 {
                     best = diff;

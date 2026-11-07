@@ -70,6 +70,9 @@ namespace PenmonScramble.Baseball.Game
                 case BaseballEventKind.Skip:
                     BaseballSounds.Play(BaseballSound.Skip);
                     break;
+                case BaseballEventKind.GeyserLaunch:
+                    BaseballSounds.Play(BaseballSound.Geyser);
+                    break;
             }
         }
 
