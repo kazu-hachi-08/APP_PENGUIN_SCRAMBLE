@@ -1,0 +1,23 @@
+{
+    "name": "PenmonScramble.Baseball.Game",
+    "rootNamespace": "PenmonScramble.Baseball.Game",
+    "references": [
+        "PenmonScramble.Core",
+        "PenmonScramble.Common",
+        "PenmonScramble.Game",
+        "PenmonScramble.MiniGames.Core",
+        "PenmonScramble.MiniGames.Game",
+        "PenmonScramble.Baseball.Core",
+        "Unity.InputSystem",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

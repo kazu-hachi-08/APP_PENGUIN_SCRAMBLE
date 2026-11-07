@@ -12,6 +12,8 @@
         "PenmonScramble.Golf.Game",
         "PenmonScramble.Soccer.Core",
         "PenmonScramble.Soccer.Game",
+        "PenmonScramble.Baseball.Core",
+        "PenmonScramble.Baseball.Game",
         "Unity.InputSystem",
         "UnityEngine.UI",
         "Unity.RenderPipelines.Core.Runtime",

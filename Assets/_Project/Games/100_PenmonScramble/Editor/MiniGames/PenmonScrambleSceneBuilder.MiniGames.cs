@@ -171,7 +171,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>
-        /// カードの絵（MiniGameTable.All と同じ並び）。ゴルフは旗の絵、サッカーはボールの絵（PenmonScrambleSceneBuilder.SoccerArt.cs）
+        /// カードの絵（MiniGameTable.All と同じ並び）。ゴルフは旗の絵、サッカーはボールの絵（PenmonScrambleSceneBuilder.SoccerArt.cs）、野球は球の絵（PenmonScrambleSceneBuilder.BaseballArt.cs）
         /// </summary>
         private static Object[] MiniGameCardArt()
         {
@@ -183,6 +183,7 @@ namespace PenmonScramble.Editor
                 {
                     MiniGameTable.GolfId => UiSprite(MiniGameIconPath),
                     MiniGameTable.SoccerId => UiSprite(SoccerCardPath),
+                    MiniGameTable.BaseballId => UiSprite(BaseballCardPath),
                     _ => null,
                 };
             }
@@ -203,6 +204,7 @@ namespace PenmonScramble.Editor
         {
             WriteUiSprite(MiniGameIconPath, DrawIcon(MiniGamePixel), 0);
             CreateSoccerArt();
+            CreateBaseballArt();
         }
 
         /// <summary>奥から重ねる: 芝の丸 → カップ → 旗の棒 → 旗 → 球</summary>
