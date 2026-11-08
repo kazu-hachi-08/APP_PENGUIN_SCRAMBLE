@@ -77,23 +77,13 @@ namespace PenmonScramble.Editor
             thread.Start();
 
             var total = jobs.Count * MatchesPerPairing;
-            while (thread.IsAlive)
-            {
-                if (EditorUtility.DisplayCancelableProgressBar("サッカー: CPUの試合の確認", $"CPU 同士で試合をしています… {done}/{total} 試合", (float)done / total))
-                {
-                    cancel.Cancel();
-                }
-
-                Thread.Sleep(100);
-            }
-
-            EditorUtility.ClearProgressBar();
+            BalanceLabMenu.WaitWithProgress(thread, cancel, "サッカー: CPUの試合の確認", () => $"CPU 同士で試合をしています… {done}/{total} 試合", () => (float)done / total);
             return (results, cancel.IsCancellationRequested);
         }
 
         private static string Report(string title, List<(Job job, List<SoccerMatchStats> stats)> results, bool cancelled)
         {
-            var text = new StringBuilder(cancelled ? $"{title}（途中でやめました）\n" : $"{title}\n");
+            var text = new StringBuilder(BalanceLabMenu.ReportHeader(title, cancelled) + "\n");
             text.AppendLine($"1組 {MatchesPerPairing} 試合・1試合 {SoccerRules.MatchSeconds:0} 秒。点・シュート・パス・奪った・外した は1試合の平均");
             foreach (var (job, stats) in results)
             {

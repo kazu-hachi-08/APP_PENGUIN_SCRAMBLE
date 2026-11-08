@@ -48,7 +48,7 @@ namespace PenmonScramble.Core
             brain.TelegraphSeconds -= dt;
             foreach (var warning in brain.Warnings)
             {
-                warning.Remaining = MathF.Max(0f, warning.Remaining - dt);
+                warning.Remaining = Decay(warning.Remaining, dt);
             }
 
             if (brain.TelegraphSeconds > 0f)
@@ -141,7 +141,7 @@ namespace PenmonScramble.Core
                     // もぐっている間は攻撃が効かない。飛び出す場所は、もぐった瞬間の一番近いプレイヤーの足元
                     boss.IsSubmerged = true;
                     boss.KnockbackVelocity = Vec2.Zero;
-                    AddWarning(brain, target.Position, target.Position, skill.AreaRadius);
+                    AddCircleWarning(brain, target.Position, skill.AreaRadius);
                     break;
                 case BossAttackKind.Vortex:
                     StartVortex(brain, attack, target);
@@ -166,15 +166,14 @@ namespace PenmonScramble.Core
             {
                 if (unit.Team == Team.Player && unit.IsAlive)
                 {
-                    AddWarning(brain, unit.Position, unit.Position, skill.AreaRadius);
+                    AddCircleWarning(brain, unit.Position, skill.AreaRadius);
                 }
             }
 
             var count = (int)MathF.Round(skill.Count * MathF.Sqrt(Area.Size / (Balance.AreaWidth * Balance.AreaHeight)));
             for (var i = 0; i < count; i++)
             {
-                var point = RandomPointInArea(skill.AreaRadius);
-                AddWarning(brain, point, point, skill.AreaRadius);
+                AddCircleWarning(brain, RandomPointInArea(skill.AreaRadius), skill.AreaRadius);
             }
         }
 
@@ -209,20 +208,18 @@ namespace PenmonScramble.Core
         private void StartVortex(BigBossBrain brain, BossAttackDef attack, Unit target)
         {
             var skill = attack.Skill;
-            AddWarning(brain, target.Position, target.Position, skill.AreaRadius);
+            AddCircleWarning(brain, target.Position, skill.AreaRadius);
             var count = skill.Count + brain.ExtraFor(attack);
             for (var i = 1; i < count; i++)
             {
-                var point = RandomPointInArea(skill.AreaRadius);
-                AddWarning(brain, point, point, skill.AreaRadius);
+                AddCircleWarning(brain, RandomPointInArea(skill.AreaRadius), skill.AreaRadius);
             }
         }
 
         /// <summary>稲妻: ボスの足元から一番近いプレイヤーの方へ、柵まで（Range があればそこまで）の帯</summary>
         private void StartBeam(Unit boss, BigBossBrain brain, SkillDef skill, Unit target)
         {
-            brain.Direction = AwayFrom(boss.Position, target, boss.Facing);
-            boss.Facing = brain.Direction;
+            AimBossAway(boss, brain, target);
             var wall = Area.DistanceToWall(boss.Position, brain.Direction, 0f);
             var length = skill.Range > 0f ? MathF.Min(skill.Range, wall) : wall;
             AddWarning(brain, boss.Position, boss.Position + brain.Direction * length, skill.AreaRadius);
@@ -311,6 +308,9 @@ namespace PenmonScramble.Core
             brain.Warnings.Add(warning);
             _warnings.Add(warning);
         }
+
+        /// <summary>円の予告（from と to が同じ＝動かない円）。足元や狙った場所に出す形がほとんどなので、呼び出しを短くする</summary>
+        private void AddCircleWarning(BigBossBrain brain, Vec2 center, float radius) => AddWarning(brain, center, center, radius);
 
         /// <summary>攻撃が終わった・大ボスが倒れたときに、その大ボスの予告を消す</summary>
         private void ClearWarnings(BigBossBrain brain)

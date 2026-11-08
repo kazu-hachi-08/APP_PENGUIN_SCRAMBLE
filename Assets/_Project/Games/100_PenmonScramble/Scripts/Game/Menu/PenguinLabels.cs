@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PenmonScramble.Core;
 using UnityEngine;
 
@@ -65,5 +66,19 @@ namespace PenmonScramble.Game
         }
 
         public static string CardPower(int power) => $"パワー {power}";
+
+        /// <summary>一覧の中の位置（編成の枠の番号など）を探す。無ければ -1。並びは数十件までなので線形探索で足りる</summary>
+        public static int IndexOf(IReadOnlyList<int> list, int value)
+        {
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (list[i] == value)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
     }
 }

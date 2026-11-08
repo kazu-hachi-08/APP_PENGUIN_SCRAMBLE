@@ -217,8 +217,7 @@ namespace PenmonScramble.Game
             obj.transform.localPosition = localPosition;
             obj.transform.localRotation = rotation;
             obj.transform.localScale = scale;
-            var renderer = ToyParts.AddMesh(obj, mesh, _materials.Toon.Get(color, gloss));
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ToyParts.AddMeshNoShadow(obj, mesh, _materials.Toon.Get(color, gloss));
             return obj.transform;
         }
 

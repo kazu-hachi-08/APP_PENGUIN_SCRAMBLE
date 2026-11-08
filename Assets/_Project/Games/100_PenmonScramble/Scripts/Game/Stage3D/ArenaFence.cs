@@ -254,8 +254,7 @@ namespace PenmonScramble.Game
                 var obj = new GameObject(objName);
                 obj.transform.SetParent(parent, false);
                 obj.AddComponent<OwnedMesh>().Mesh = mesh;
-                var renderer = ToyParts.AddMesh(obj, mesh, _materials.Get(color, gloss));
-                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                ToyParts.AddMeshNoShadow(obj, mesh, _materials.Get(color, gloss));
             }
         }
     }

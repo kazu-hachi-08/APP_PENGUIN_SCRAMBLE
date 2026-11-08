@@ -85,9 +85,8 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>移っている間にホストが落ちて部屋を引き継げなかったら、ロビーへ戻る</summary>
         private void StartOnline()
         {
-            if (!_session.IsInRoom || !_session.IsMatchStarted)
+            if (MiniGameLaunch.IsRoomLost(_session, nameof(BaseballSceneRunner)))
             {
-                Debug.LogWarning("[BaseballSceneRunner] 部屋を引き継げなかったのでロビーへ戻ります");
                 _leaving = true;
                 MiniGameLaunch.ReturnToLobby();
                 return;

@@ -48,9 +48,7 @@ namespace PenmonScramble.Soccer.Game
         public void Begin(int stadiumNo)
         {
             _online = true;
-            _session.ContinueWhenMemberLeaves = true;
-            _session.OnPeerDisconnected += Leave;
-            _session.OnConnectionLost += Leave;
+            MiniGameLaunch.BindRoom(_session, Leave);
             // メッセージの名前は配った版どうしで合わせるので変えない
             _link = new MiniGameLink("scramble.soccer");
             _link.Open();
@@ -79,8 +77,7 @@ namespace PenmonScramble.Soccer.Game
                 return;
             }
 
-            _session.OnPeerDisconnected -= Leave;
-            _session.OnConnectionLost -= Leave;
+            MiniGameLaunch.UnbindRoom(_session, Leave);
             _session.OnMemberLeft -= OnMemberLeft;
             _session.OnReturnToRoom -= MiniGameLaunch.ReturnToRoom;
             _link?.Close();
@@ -234,8 +231,7 @@ namespace PenmonScramble.Soccer.Game
             }
 
             _leaving = true;
-            _session.ReturnToRoom();
-            MiniGameLaunch.ReturnToRoom();
+            MiniGameLaunch.LeaveToRoom(_session);
         }
 
         // ---- ゲスト ----

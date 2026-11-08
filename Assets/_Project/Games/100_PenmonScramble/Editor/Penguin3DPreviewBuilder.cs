@@ -1,3 +1,4 @@
+using System.IO;
 using PenmonScramble.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -54,6 +55,38 @@ namespace PenmonScramble.Editor
             }
 
             return stage;
+        }
+
+        /// <summary>撮影の入口。場を探して開き、撮影結果の保存先を作ってから返す（開けなかったら null で、保存先は作らない）</summary>
+        private static PenguinPreviewStage OpenCaptureStage()
+        {
+            var stage = FindOrOpenPreviewStage();
+            if (stage == null)
+            {
+                return null;
+            }
+
+            Directory.CreateDirectory(CaptureFolder);
+            return stage;
+        }
+
+        /// <summary>撮る1体だけを見せ、ほかは隠す（ほかのペンギンが絵に映り込まないように）</summary>
+        private static void ShowOnly(PenguinPreviewStage stage, PenguinMotion only)
+        {
+            foreach (var penguin in stage.Penguins)
+            {
+                penguin.gameObject.SetActive(penguin == only);
+            }
+        }
+
+        /// <summary>撮影の後片付け。隠したペンギンを戻し、姿勢も初期に戻して次の撮影に残さない</summary>
+        private static void RestorePenguins(PenguinPreviewStage stage)
+        {
+            foreach (var penguin in stage.Penguins)
+            {
+                penguin.gameObject.SetActive(true);
+                penguin.ResetPose();
+            }
         }
 
         /// <summary>撮る前の共通設定。影は撮影用に切って、輪郭線は必ず描く</summary>

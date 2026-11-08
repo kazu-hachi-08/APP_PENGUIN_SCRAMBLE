@@ -57,8 +57,7 @@ namespace PenmonScramble.Game
 
         public static PenguinModel Build(PenguinLook look, ToonMaterials materials, Transform parent)
         {
-            var root = new GameObject("Penguin3D");
-            root.transform.SetParent(parent, false);
+            var root = ToyParts.NewChild("Penguin3D", parent, Vector3.zero);
             var model = root.AddComponent<PenguinModel>();
             model.SetMaterials(materials);
             var parts = new ToyParts(model, materials);

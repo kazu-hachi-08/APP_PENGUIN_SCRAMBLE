@@ -118,7 +118,7 @@ namespace PenmonScramble.Game
             _plate.color = Color.Lerp(Dim(_color), _color, ease);
             _arrow.SetActive(_selected);
             var glow = _glow.color;
-            var pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * _glowPulsePerSecond * Mathf.PI * 2f);
+            var pulse = ToyEasing.Pulse01(Time.unscaledTime, _glowPulsePerSecond);
             glow.a = ease * Mathf.Lerp(0.55f, 1f, pulse);
             _glow.color = glow;
         }

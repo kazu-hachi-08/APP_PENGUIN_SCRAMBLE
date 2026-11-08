@@ -1,6 +1,5 @@
 using PenmonScramble.Golf.Game;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 
 namespace PenmonScramble.Editor
 {
@@ -16,16 +15,7 @@ namespace PenmonScramble.Editor
         [MenuItem(EditorMenu.Golf + "試しのホール（2人で交代）", priority = EditorMenu.GolfPriority + 1)]
         public static void TestHoleTwo() => Play(2);
 
-        private static void Play(int players)
-        {
-            if (EditorApplication.isPlaying || !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            {
-                return;
-            }
-
-            EditorSceneManager.OpenScene(GolfSceneBuilder.ScenePath);
-            SessionState.SetInt(GolfDevRequest.PlayersKey, players);
-            EditorApplication.EnterPlaymode();
-        }
+        private static void Play(int players) =>
+            DevStageMenu.OpenTestScene(GolfSceneBuilder.ScenePath, () => SessionState.SetInt(GolfDevRequest.PlayersKey, players));
     }
 }

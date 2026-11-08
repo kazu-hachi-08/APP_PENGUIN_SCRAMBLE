@@ -51,6 +51,34 @@ namespace PenmonScramble.MiniGames.Game
             return mesh;
         }
 
+        /// <summary>
+        /// ToyMeshes の形を子の部品として置く。Unity の基本の形は使わない（当たりは Core が持つので Collider は付けない）。
+        /// 親に付けてからローカルの値を入れる順番は、ビューごとの見た目を変えないためそのまま守る
+        /// </summary>
+        public static Transform AddPart(string objectName, Mesh mesh, Transform parent, Vector3 localPosition, Quaternion localRotation, Vector3 localScale, Material material)
+        {
+            var obj = new GameObject(objectName);
+            obj.transform.SetParent(parent, false);
+            obj.transform.localPosition = localPosition;
+            obj.transform.localRotation = localRotation;
+            obj.transform.localScale = localScale;
+            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
+            obj.AddComponent<MeshRenderer>().sharedMaterial = material;
+            return obj.transform;
+        }
+
+        /// <summary>ビューが作ったメッシュを owned に登録して置く（ビューを消すときに一緒に消すため、登録は置く前に行う）</summary>
+        public static MeshRenderer AddOwnedMesh(List<Mesh> owned, string objectName, Mesh mesh, Transform parent, params Material[] materials)
+        {
+            owned.Add(mesh);
+            var obj = new GameObject(objectName);
+            obj.transform.SetParent(parent, false);
+            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var renderer = obj.AddComponent<MeshRenderer>();
+            renderer.sharedMaterials = materials;
+            return renderer;
+        }
+
         private static Vector3 ToWorld(Vec2 point, float height) => new Vector3(point.X, height, point.Y);
 
         private static List<int> BuildTop(IReadOnlyList<Vec2> shape, Func<Vec2, float> top, Func<Vec2, Vector2> uv, List<Vector3> vertices, List<Vector2> uvs)

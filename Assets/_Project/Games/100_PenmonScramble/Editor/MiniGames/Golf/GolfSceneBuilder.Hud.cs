@@ -121,8 +121,7 @@ namespace PenmonScramble.Editor
         /// <summary>試しのホールを開くまで隠しておく（ミニゲーム画面から来たときは準備中の板だけ）</summary>
         private static GolfHudParts CreateHud(Transform canvas)
         {
-            var root = UIDialogBuilder.CreateUIObject("GolfHud", canvas);
-            UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
+            var root = UIDialogBuilder.CreateStretchedUIObject("GolfHud", canvas);
             // ドラッグを受ける板は、ほかの部品より奥（最初）に置く
             var pad = CreateDragPad(root.transform);
             var safe = B.CreateStretchGroup(root.transform, "Safe");
@@ -151,8 +150,7 @@ namespace PenmonScramble.Editor
 
         private static GolfDragPad CreateDragPad(Transform parent)
         {
-            var obj = UIDialogBuilder.CreateUIObject("DragPad", parent);
-            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
+            var obj = UIDialogBuilder.CreateStretchedUIObject("DragPad", parent);
             // 見えないが、指を受けるために raycast は残す
             var image = obj.AddComponent<Image>();
             image.color = Color.clear;
@@ -350,11 +348,7 @@ namespace PenmonScramble.Editor
         private static void CreateBanner(Transform safe, SerializedObject so)
         {
             var text = B.CreateLabel(safe, "Banner", string.Empty, BannerFontSize, BannerPosition, BannerSize);
-            text.fontStyle = FontStyle.Bold;
-            text.gameObject.GetComponent<Outline>().effectDistance = new Vector2(4f, -4f);
-            var shadow = text.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.5f);
-            shadow.effectDistance = new Vector2(0f, -8f);
+            B.StyleBannerText(text);
             var group = text.gameObject.AddComponent<CanvasGroup>();
             group.blocksRaycasts = false;
             var banner = text.gameObject.AddComponent<GolfBanner>();
@@ -377,10 +371,7 @@ namespace PenmonScramble.Editor
         /// <summary>anchor の点から position だけずらした所に置く（CreateLabel などはまん中に置くので、留める角を付け替える）</summary>
         private static void Place(RectTransform rect, Vector2 anchor, Vector2 position, Vector2 size)
         {
-            rect.anchorMin = rect.anchorMax = anchor;
-            rect.pivot = Center;
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
+            B.PlaceAt(rect, anchor, position, size);
         }
     }
 }

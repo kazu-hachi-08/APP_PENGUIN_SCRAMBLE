@@ -197,7 +197,7 @@ namespace PenmonScramble.Game
             }
 
             _popAge += dt;
-            _model.transform.localScale = Vector3.one * (_modelScale * ToyEasing.Pop(_popAge / PopSeconds, PopStart));
+            ToyEasing.ApplyPopScale(_model.transform, _modelScale, _popAge, PopSeconds, PopStart);
         }
     }
 }

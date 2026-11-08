@@ -1,6 +1,5 @@
 using PenmonScramble.Baseball.Game;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 
 namespace PenmonScramble.Editor
 {
@@ -22,16 +21,7 @@ namespace PenmonScramble.Editor
         [MenuItem(EditorMenu.Baseball + "試しの試合（後攻）", priority = EditorMenu.BaseballPriority + 3)]
         public static void MatchHome() => Open(BaseballPlayMode.MatchHome);
 
-        private static void Open(BaseballPlayMode mode)
-        {
-            if (EditorApplication.isPlaying || !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-            {
-                return;
-            }
-
-            EditorSceneManager.OpenScene(BaseballSceneBuilder.ScenePath);
-            SessionState.SetInt(BaseballDevRequest.ModeKey, (int)mode);
-            EditorApplication.EnterPlaymode();
-        }
+        private static void Open(BaseballPlayMode mode) =>
+            DevStageMenu.OpenTestScene(BaseballSceneBuilder.ScenePath, () => SessionState.SetInt(BaseballDevRequest.ModeKey, (int)mode));
     }
 }

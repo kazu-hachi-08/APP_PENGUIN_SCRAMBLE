@@ -36,5 +36,32 @@ namespace PenmonScramble.Game
             var angle = (index + Random.value * jitter) / count * Mathf.PI * 2f;
             return new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
         }
+
+        /// <summary>
+        /// 寿命の時計を deltaSeconds 進めて、寿命に対する経過の割合を返す（1 以上で寿命切れ）。
+        /// 消す処理は呼び出し側に任せる（クラスごとに後始末が違うため）
+        /// </summary>
+        public static float Advance(ref float age, float deltaSeconds, float lifeSeconds)
+        {
+            age += deltaSeconds;
+            return age / lifeSeconds;
+        }
+
+        /// <summary>
+        /// ぽんと出る拡大を model の大きさへ反映する。加算と終わりの判定は呼び出し側が行う
+        /// </summary>
+        public static void ApplyPopScale(Transform model, float baseScale, float popAge, float popSeconds, float popStart)
+        {
+            model.localScale = Vector3.one * (baseScale * Pop(popAge / popSeconds, popStart));
+        }
+
+        /// <summary>
+        /// 0〜1 をなめらかに往復する点滅の値。time は呼び出し側の時計（Time.unscaledTime など）をそのまま渡す。
+        /// 0.5 + 0.5 * sin で、暗い方が 0・明るい方が 1 になる
+        /// </summary>
+        public static float Pulse01(float time, float perSecond)
+        {
+            return 0.5f + 0.5f * Mathf.Sin(time * perSecond * Mathf.PI * 2f);
+        }
     }
 }

@@ -1,6 +1,5 @@
 using PenmonScramble.Soccer.Game;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 
 namespace PenmonScramble.Editor
 {
@@ -31,17 +30,11 @@ namespace PenmonScramble.Editor
         [MenuItem(StadiumMenu + "5 火山の入り江", priority = EditorMenu.SoccerPriority + 5)]
         public static void VolcanoCove() => Open(SoccerDevRequest.TestPitchKey, 5);
 
-        private static void Open(string requestKey, int stadium)
-        {
-            if (EditorApplication.isPlaying || !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+        private static void Open(string requestKey, int stadium) =>
+            DevStageMenu.OpenTestScene(SoccerSceneBuilder.ScenePath, () =>
             {
-                return;
-            }
-
-            EditorSceneManager.OpenScene(SoccerSceneBuilder.ScenePath);
-            SessionState.SetBool(requestKey, true);
-            SessionState.SetInt(SoccerDevRequest.StadiumKey, stadium);
-            EditorApplication.EnterPlaymode();
-        }
+                SessionState.SetBool(requestKey, true);
+                SessionState.SetInt(SoccerDevRequest.StadiumKey, stadium);
+            });
     }
 }

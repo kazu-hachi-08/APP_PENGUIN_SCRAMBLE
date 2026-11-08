@@ -76,12 +76,7 @@ namespace PenmonScramble.Golf.Game
                 return string.Empty;
             }
 
-            if (info.FirstPlay)
-            {
-                return "はじめての記録！";
-            }
-
-            return info.NewBest ? $"ベスト更新！（前は {info.PreviousBest} 打）" : $"ベスト {info.PreviousBest} 打";
+            return MiniGameResultView.BestSentence(info.FirstPlay, info.NewBest, $"{info.PreviousBest} 打");
         }
     }
 }

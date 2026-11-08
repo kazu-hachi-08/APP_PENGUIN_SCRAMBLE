@@ -20,6 +20,11 @@ namespace PenmonScramble.Game
         private const float ChinStrapTilt = 35f;
         private const float ChinStrapDrop = 0.18f;
 
+        /// <summary>
+        /// 頭の球を height の高さで水平に切った輪の半径に、outset だけ外へ足す。輪は頭の表面にぴったり沿わせ、少し外へ出して埋もれないようにする
+        /// </summary>
+        private static float HeadBandRadius(float height, float outset) => Mathf.Sqrt(HeadRadius * HeadRadius - height * height) + outset;
+
         /// <summary>頭の球の表面の点（dir の向き。lift だけ外へ）</summary>
         private static Vector3 HeadSurface(Vector3 dir, float lift = 0f) => HeadCenter + dir.normalized * (HeadRadius + lift);
 
@@ -100,7 +105,7 @@ namespace PenmonScramble.Game
         {
             var rotation = Quaternion.Euler(ChinStrapTilt, 0f, 0f);
             var center = HeadCenter - rotation * Vector3.up * ChinStrapDrop;
-            var radius = Mathf.Sqrt(HeadRadius * HeadRadius - ChinStrapDrop * ChinStrapDrop) + 0.005f;
+            var radius = HeadBandRadius(ChinStrapDrop, 0.005f);
             rig.HeadBand("ChinStrap", center, rotation, radius, 0.03f, c, BodyGloss);
         }
 
@@ -198,7 +203,7 @@ namespace PenmonScramble.Game
         /// <summary>頭を一周する帯。height は頭の球の中心からの高さ。はちまきは後ろで結んだ端を垂らす</summary>
         private static void Headband(Rig rig, Color c, float height, bool tails)
         {
-            var radius = Mathf.Sqrt(HeadRadius * HeadRadius - height * height) + 0.012f;
+            var radius = HeadBandRadius(height, 0.012f);
             var tilt = tails ? -14f : 0f;
             rig.HeadBand("Headband", HeadCenter + Vector3.up * height, Quaternion.Euler(tilt, 0f, 0f), radius, 0.06f, c, ClothGloss);
             if (!tails)

@@ -45,7 +45,7 @@ namespace PenmonScramble.Core
 
             var (a, b) = InnerAxes(margin);
             var d = point - Center;
-            return (d.X / a) * (d.X / a) + (d.Y / b) * (d.Y / b) <= 1f;
+            return EllipseLevel(d, a, b) <= 1f;
         }
 
         /// <summary>縁から margin 内側の範囲で、point に一番近い点。中にあればそのまま</summary>
@@ -99,9 +99,9 @@ namespace PenmonScramble.Core
             // (o + t·d) を楕円の式に入れた t の2次式の、正の解
             var (a, b) = InnerAxes(margin);
             var o = origin - Center;
-            var qa = (direction.X / a) * (direction.X / a) + (direction.Y / b) * (direction.Y / b);
+            var qa = EllipseLevel(direction, a, b);
             var qb = 2f * (o.X * direction.X / (a * a) + o.Y * direction.Y / (b * b));
-            var qc = (o.X / a) * (o.X / a) + (o.Y / b) * (o.Y / b) - 1f;
+            var qc = EllipseLevel(o, a, b) - 1f;
             var discriminant = qb * qb - 4f * qa * qc;
             if (qa <= 0f || qc > 0f || discriminant < 0f)
             {
@@ -174,6 +174,9 @@ namespace PenmonScramble.Core
         }
 
         /// <summary>楕円の縁の点で、外向きの向き（長さ1）</summary>
+        /// <summary>楕円の式の左辺（中心からの点の位置を半径の軸 a, b で割って2乗和）。1 より小さければ中、1 なら縁、1 より大きければ外</summary>
+        private static float EllipseLevel(Vec2 v, float a, float b) => (v.X / a) * (v.X / a) + (v.Y / b) * (v.Y / b);
+
         private Vec2 OutwardNormal(Vec2 onEdge, float margin)
         {
             var (a, b) = InnerAxes(margin);

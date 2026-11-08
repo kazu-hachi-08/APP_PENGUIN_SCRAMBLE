@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using PenmonScramble.Baseball.Core;
 using PenmonScramble.Game;
+using PenmonScramble.MiniGames.Game;
 using UnityEngine;
 
 namespace PenmonScramble.Baseball.Game
@@ -190,12 +191,7 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>この端末の編成のペンモンの種類（空なら仮の3体）</summary>
         public static IReadOnlyList<int> PartySpecies()
         {
-            var species = new List<int>();
-            foreach (var penguin in GameSave.Record.PartyPenguins())
-            {
-                species.Add(penguin.speciesNo);
-            }
-
+            IReadOnlyList<int> species = MiniGameLaunch.PartySpecies();
             return species.Count > 0 ? species : FallbackParty;
         }
 

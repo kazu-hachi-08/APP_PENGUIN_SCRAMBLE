@@ -49,34 +49,40 @@ namespace PenmonScramble.Game
         private const float IceTopRatio = 0.62f;
 
         /// <summary>直径1の球</summary>
-        public static Mesh Sphere => _sphere != null ? _sphere : _sphere = Lathe("ToySphere", SphereProfile(_ => 1f));
+        public static Mesh Sphere => Cached(ref _sphere, () => Lathe("ToySphere", SphereProfile(_ => 1f)));
 
         /// <summary>高さ1・いちばん太い所の直径が約1の卵形（下が太い）</summary>
-        public static Mesh Egg => _egg != null ? _egg : _egg = Lathe("ToyEgg", SphereProfile(y => 1f - EggBulge * y));
+        public static Mesh Egg => Cached(ref _egg, () => Lathe("ToyEgg", SphereProfile(y => 1f - EggBulge * y)));
 
         /// <summary>高さ1・下の太い所の直径が1のしずく形。先は +Y。とげ・羽・炎・水滴に使う</summary>
-        public static Mesh Drop => _drop != null ? _drop : _drop = Lathe("ToyDrop", DropProfile);
+        public static Mesh Drop => Cached(ref _drop, () => Lathe("ToyDrop", DropProfile));
 
         /// <summary>直径1・高さ1の、角の丸い円柱。軸は Y。帽子・太鼓・レンズに使う</summary>
-        public static Mesh Puck => _puck != null ? _puck : _puck = Lathe("ToyPuck", PuckProfile);
+        public static Mesh Puck => Cached(ref _puck, () => Lathe("ToyPuck", PuckProfile));
 
         /// <summary>底の直径1・高さ0.5の半球。底（平ら）が原点で、丸い方が +Y。ガチャのカプセルの殻に使う</summary>
-        public static Mesh Hemisphere => _hemisphere != null ? _hemisphere : _hemisphere = Lathe("ToyHemisphere", HemisphereProfile);
+        public static Mesh Hemisphere => Cached(ref _hemisphere, () => Lathe("ToyHemisphere", HemisphereProfile));
 
         /// <summary>外側の直径1の輪（ドーナツ）。軸は Y。帯・マフラー・メガネに使う</summary>
-        public static Mesh Torus => _torus != null ? _torus : _torus = CreateTorus();
+        public static Mesh Torus => Cached(ref _torus, CreateTorus);
 
         /// <summary>上を向いた1x1の板（床・丸い影）</summary>
-        public static Mesh FloorQuad => _quad != null ? _quad : _quad = CreateFloorQuad();
+        public static Mesh FloorQuad => Cached(ref _quad, CreateFloorQuad);
 
         /// <summary>上を向いた直径1の円の板。絵は円を囲む四角いっぱいに貼る（闘技場の楕円の床）</summary>
-        public static Mesh FloorDisc => _disc != null ? _disc : _disc = CreateFloorDisc();
+        public static Mesh FloorDisc => Cached(ref _disc, CreateFloorDisc);
 
         /// <summary>外側の直径1の、ふくらんだ五角の星。厚みは Z。撃破のときに飛び散る星に使う</summary>
-        public static Mesh Star => _star != null ? _star : _star = CreateStar();
+        public static Mesh Star => Cached(ref _star, CreateStar);
 
         /// <summary>高さ1・直径約1の氷の塊。底が原点。面ごとに法線を分けて、角ばった面がはっきり光るようにする</summary>
-        public static Mesh IceChunk => _ice != null ? _ice : _ice = CreateIceChunk();
+        public static Mesh IceChunk => Cached(ref _ice, CreateIceChunk);
+
+        /// <summary>
+        /// 作ってある物を返し、無ければ作って覚える。Mesh 専用の非ジェネリックにしてあるのは、Unity で破棄された Mesh を作り直すため:
+        /// ジェネリック（T : class）にすると != が参照比較になり、Unity の破棄済み判定（null と同じ扱い）が効かなくなる
+        /// </summary>
+        private static Mesh Cached(ref Mesh cache, Func<Mesh> create) => cache != null ? cache : cache = create();
 
         /// <summary>球の輪郭（y = -0.5〜0.5）の半径に widthScale(y) を掛ける。y は -1（下）〜1（上）</summary>
         private static Func<float, Vector2> SphereProfile(Func<float, float> widthScale)

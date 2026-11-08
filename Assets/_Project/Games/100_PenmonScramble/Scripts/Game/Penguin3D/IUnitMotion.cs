@@ -96,6 +96,9 @@ namespace PenmonScramble.Game
 
         public static float Advance(float progress, float dt, float seconds) => Mathf.Min(1f, progress + dt / seconds);
 
+        /// <summary>on なら 1、off なら 0 へ、rate（1秒あたり）で少しずつ寄せる。姿勢の混ざり具合（ブレンド）に使う</summary>
+        internal static float BlendToward(float current, bool on, float rate, float dt) => Mathf.MoveTowards(current, on ? 1f : 0f, rate * dt);
+
         public static float YawOf(Vector3 direction) => Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
 
         /// <summary>まばたきまでの間隔。ペンギンと大ボスで範囲が違うので、呼び出し側が min・max を渡す</summary>

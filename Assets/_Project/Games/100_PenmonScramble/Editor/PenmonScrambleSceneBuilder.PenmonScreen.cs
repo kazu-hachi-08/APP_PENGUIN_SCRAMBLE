@@ -436,9 +436,7 @@ namespace PenmonScramble.Editor
             fill.raycastTarget = false;
             // 角の丸い絵は塗りつぶしで切ると端が欠けるので、棒は四角で描く
             fill.sprite = null;
-            fill.type = Image.Type.Filled;
-            fill.fillMethod = Image.FillMethod.Horizontal;
-            fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            SetHorizontalFill(fill);
             return fill;
         }
 
@@ -497,12 +495,7 @@ namespace PenmonScramble.Editor
         /// <summary>技の形のアイコン（絵と色は実行時に入れる）</summary>
         private static Image CreateSkillIcon(Transform parent, Vector2 position, float size)
         {
-            var iconObj = UIDialogBuilder.CreateUIObject("Icon", parent);
-            PlaceCenter(iconObj.GetComponent<RectTransform>(), position, Vector2.one * size);
-            var icon = iconObj.AddComponent<Image>();
-            icon.raycastTarget = false;
-            icon.preserveAspect = true;
-            return icon;
+            return AddIconImage(parent, "Icon", null, position, size);
         }
 
         /// <summary>
@@ -552,8 +545,7 @@ namespace PenmonScramble.Editor
         /// <summary>縁取りの無い文字（色の板の上に置くので、CreateLabel の縁取りは要らない）</summary>
         private static Text CreatePlainText(Transform parent, string name, string value, int fontSize, Vector2 position, Vector2 size, TextAnchor alignment, Color color)
         {
-            var obj = UIDialogBuilder.CreateUIObject(name, parent);
-            PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
+            var obj = CreateCenteredObject(parent, name, position, size);
             var text = AddText(obj, value, fontSize);
             text.alignment = alignment;
             text.color = color;

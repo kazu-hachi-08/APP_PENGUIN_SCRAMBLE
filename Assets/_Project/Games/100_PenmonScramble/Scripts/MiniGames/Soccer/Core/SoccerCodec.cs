@@ -161,19 +161,19 @@ namespace PenmonScramble.Soccer.Core
         private static void ReadMatch(BinaryReader reader, SoccerSnapshot s)
         {
             s.Phase = (SoccerMatchPhase)Math.Min(reader.ReadByte(), (byte)SoccerMatchPhase.Finished);
-            s.PhaseSeconds = Finite(reader.ReadSingle());
-            s.TimeLeft = Math.Max(0f, Finite(reader.ReadSingle()));
+            s.PhaseSeconds = ReadFinite(reader);
+            s.TimeLeft = Math.Max(0f, ReadFinite(reader));
             s.Winner = Team(reader.ReadSByte());
             s.WonByShootout = reader.ReadBoolean();
             for (var team = 0; team < SoccerRules.TeamCount; team++)
             {
                 s.Score[team] = reader.ReadByte();
-                s.Gauge[team] = Math.Clamp(Finite(reader.ReadSingle()), 0f, 1f);
+                s.Gauge[team] = Math.Clamp(ReadFinite(reader), 0f, 1f);
             }
 
-            s.CutInSeconds = Math.Max(0f, Finite(reader.ReadSingle()));
+            s.CutInSeconds = Math.Max(0f, ReadFinite(reader));
             s.GoalScored = reader.ReadBoolean();
-            s.WorldTime = Math.Max(0f, Finite(reader.ReadSingle()));
+            s.WorldTime = Math.Max(0f, ReadFinite(reader));
         }
 
         private static void WriteBall(BinaryWriter writer, SoccerBallSnap ball)
@@ -193,8 +193,8 @@ namespace PenmonScramble.Soccer.Core
             {
                 Position = ReadVec2(reader),
                 Velocity = ReadVec2(reader),
-                Height = Math.Max(0f, Finite(reader.ReadSingle())),
-                VerticalSpeed = Finite(reader.ReadSingle()),
+                Height = Math.Max(0f, ReadFinite(reader)),
+                VerticalSpeed = ReadFinite(reader),
                 Holder = Player(reader.ReadSByte(), players),
                 KeeperTeam = Team(reader.ReadSByte()),
                 LastToucher = Player(reader.ReadSByte(), players),
@@ -259,12 +259,12 @@ namespace PenmonScramble.Soccer.Core
                 Velocity = ReadVec2(reader),
                 Facing = ReadVec2(reader),
                 State = (SoccerPlayerState)Math.Min(reader.ReadByte(), (byte)SoccerPlayerState.Frozen),
-                StateSeconds = Finite(reader.ReadSingle()),
+                StateSeconds = ReadFinite(reader),
                 IsCharging = reader.ReadBoolean(),
-                ChargeSeconds = Math.Max(0f, Finite(reader.ReadSingle())),
-                SlideCooldown = Math.Max(0f, Finite(reader.ReadSingle())),
-                DashCooldown = Math.Max(0f, Finite(reader.ReadSingle())),
-                FrozenSeconds = Math.Max(0f, Finite(reader.ReadSingle())),
+                ChargeSeconds = Math.Max(0f, ReadFinite(reader)),
+                SlideCooldown = Math.Max(0f, ReadFinite(reader)),
+                DashCooldown = Math.Max(0f, ReadFinite(reader)),
+                FrozenSeconds = Math.Max(0f, ReadFinite(reader)),
             };
         }
 
@@ -282,10 +282,10 @@ namespace PenmonScramble.Soccer.Core
             return new SoccerKeeperSnap
             {
                 Position = ReadVec2(reader),
-                Speed = Finite(reader.ReadSingle()),
+                Speed = ReadFinite(reader),
                 State = (SoccerKeeperState)Math.Min(reader.ReadByte(), (byte)SoccerKeeperState.Hold),
-                StateSeconds = Finite(reader.ReadSingle()),
-                DiveSide = Finite(reader.ReadSingle()),
+                StateSeconds = ReadFinite(reader),
+                DiveSide = ReadFinite(reader),
             };
         }
 
@@ -328,10 +328,10 @@ namespace PenmonScramble.Soccer.Core
             var s = new SoccerShootoutSnap
             {
                 Phase = (SoccerShootoutPhase)Math.Min(reader.ReadByte(), (byte)SoccerShootoutPhase.Finished),
-                PhaseSeconds = Finite(reader.ReadSingle()),
+                PhaseSeconds = ReadFinite(reader),
                 KickingTeam = Team((sbyte)reader.ReadByte()),
                 Kicker = Player(reader.ReadSByte(), players),
-                Charge01 = Math.Clamp(Finite(reader.ReadSingle()), 0f, 1f),
+                Charge01 = Math.Clamp(ReadFinite(reader), 0f, 1f),
                 IsCharging = reader.ReadBoolean(),
                 KeeperSide = Math.Clamp((int)reader.ReadSByte(), -1, 1),
                 LastResult = (SoccerPenaltyResult)Math.Min(reader.ReadByte(), (byte)SoccerPenaltyResult.Missed),
@@ -372,7 +372,7 @@ namespace PenmonScramble.Soccer.Core
             var team = Team(reader.ReadSByte());
             var other = Player(reader.ReadSByte(), players);
             var position = ReadVec2(reader);
-            var strength = Finite(reader.ReadSingle());
+            var strength = ReadFinite(reader);
             var lofted = reader.ReadBoolean();
             return new SoccerEvent(kind, player, team, position, strength, lofted, other);
         }
@@ -455,6 +455,9 @@ namespace PenmonScramble.Soccer.Core
 
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;
 
+        // 読んだ値を有限にそろえてから使う。読む回数と順番は通信の形式なので変えない
+        private static float ReadFinite(BinaryReader reader) => Finite(reader.ReadSingle());
+
         private static byte[] Encode(Action<BinaryWriter> write)
         {
             using var stream = new MemoryStream();
@@ -495,6 +498,6 @@ namespace PenmonScramble.Soccer.Core
             writer.Write(value.Y);
         }
 
-        private static Vec2 ReadVec2(BinaryReader reader) => new Vec2(Finite(reader.ReadSingle()), Finite(reader.ReadSingle()));
+        private static Vec2 ReadVec2(BinaryReader reader) => new Vec2(ReadFinite(reader), ReadFinite(reader));
     }
 }

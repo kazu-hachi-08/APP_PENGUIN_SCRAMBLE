@@ -12,8 +12,6 @@ namespace PenmonScramble.Editor
     /// </summary>
     public static partial class GolfSceneBuilder
     {
-        private const string ShaderFolder = "Assets/_Project/Games/100_PenmonScramble/Shaders/";
-
         // 寄って見たときに、ペンモンと球が大きく見えるよう画角は狭めにする
         private const float CameraFieldOfView = 40f;
 
@@ -24,9 +22,7 @@ namespace PenmonScramble.Editor
 
             var view = root.AddComponent<GolfHoleView>();
             var viewSo = new SerializedObject(view);
-            viewSo.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
-            viewSo.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
-            viewSo.ApplyModifiedProperties();
+            PenmonScrambleSceneBuilder.BindToonAndBlobShaders(viewSo);
 
             var golfCamera = root.AddComponent<GolfCamera>();
             var cameraSo = new SerializedObject(golfCamera);

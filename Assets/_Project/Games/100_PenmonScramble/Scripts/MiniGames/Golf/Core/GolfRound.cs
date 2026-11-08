@@ -104,36 +104,30 @@ namespace PenmonScramble.Golf.Core
                 return 0;
             }
 
-            var total = 0;
-            for (var hole = 0; hole < HoleCount; hole++)
-            {
-                total += _recorded[hole] ? _strokes[hole, player] : 0;
-            }
-
-            return total;
+            return SumRecorded(hole => _strokes[hole, player]);
         }
 
         /// <summary>書き終えたホールのパーの合計（途中のパーとの差を出すため）</summary>
         public int ParThroughRecorded()
         {
-            var par = 0;
-            for (var hole = 0; hole < HoleCount; hole++)
-            {
-                par += _recorded[hole] ? Course.Holes[hole].Par : 0;
-            }
-
-            return par;
+            return SumRecorded(hole => Course.Holes[hole].Par);
         }
 
         public int HoleInOnes(int player)
         {
-            var count = 0;
+            return SumRecorded(hole => _strokes[hole, player] == 1 ? 1 : 0);
+        }
+
+        /// <summary>書き終えたホールだけ値を足す（まだ書いていないホールは値を見ずに 0 として数える）</summary>
+        private int SumRecorded(Func<int, int> valueOf)
+        {
+            var sum = 0;
             for (var hole = 0; hole < HoleCount; hole++)
             {
-                count += _recorded[hole] && _strokes[hole, player] == 1 ? 1 : 0;
+                sum += _recorded[hole] ? valueOf(hole) : 0;
             }
 
-            return count;
+            return sum;
         }
 
         /// <summary>

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using PenmonScramble.Common.Profile;
 using UnityEngine;
 
 namespace PenmonScramble.MiniGames.Game
@@ -16,5 +18,17 @@ namespace PenmonScramble.MiniGames.Game
         };
 
         public static Color ColorOf(int seat) => Colors[Mathf.Abs(seat) % Colors.Length];
+
+        /// <summary>席の表示名を「・」でつなぐ（MVP が並んだとき用。名前の並びは席の順）</summary>
+        public static string NamesOf(IReadOnlyList<int> seats)
+        {
+            var names = new List<string>();
+            foreach (var seat in seats)
+            {
+                names.Add(SeatNames.Get(seat));
+            }
+
+            return string.Join("・", names);
+        }
     }
 }

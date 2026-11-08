@@ -25,10 +25,8 @@ namespace PenmonScramble.Editor
         [MenuItem(EditorMenu.Capture + "Penguin Lineup", priority = EditorMenu.CapturePriority + 2)]
         public static void CaptureLineup()
         {
-            var stage = FindOrOpenPreviewStage();
+            var stage = OpenCaptureStage();
             if (stage == null) return;
-
-            Directory.CreateDirectory(CaptureFolder);
             var shadows = stage.RealShadows;
             var preset = stage.CameraPreset;
             try
@@ -66,10 +64,7 @@ namespace PenmonScramble.Editor
             for (var i = 0; i < count; i++)
             {
                 var penguin = stage.Penguins[i];
-                foreach (var other in stage.Penguins)
-                {
-                    other.gameObject.SetActive(other == penguin);
-                }
+                ShowOnly(stage, penguin);
 
                 var spot = penguin.transform.localPosition;
                 penguin.transform.localPosition = Vector3.zero;

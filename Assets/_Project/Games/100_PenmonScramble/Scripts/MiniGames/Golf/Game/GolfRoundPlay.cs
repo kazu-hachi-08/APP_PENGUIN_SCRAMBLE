@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using PenmonScramble.Common.Input;
 using PenmonScramble.Game;
 using PenmonScramble.Golf.Core;
+using PenmonScramble.MiniGames.Game;
 using UnityEngine;
 
 namespace PenmonScramble.Golf.Game
@@ -72,16 +73,7 @@ namespace PenmonScramble.Golf.Game
             BuildHole();
         }
 
-        public static List<int> PartySpecies()
-        {
-            var species = new List<int>();
-            foreach (var penguin in GameSave.Record.PartyPenguins())
-            {
-                species.Add(penguin.speciesNo);
-            }
-
-            return species;
-        }
+        public static List<int> PartySpecies() => MiniGameLaunch.PartySpecies();
 
         /// <summary>ホールの見た目を組み直して、全体を見せるところから始める（次のホール・やり直し・もう一度）</summary>
         private void BuildHole()

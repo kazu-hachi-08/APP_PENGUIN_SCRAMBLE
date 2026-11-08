@@ -160,15 +160,10 @@ namespace PenmonScramble.Editor
                 var difficulty = (Difficulty)i;
                 var slot = CreateHudRect(card, $"Difficulty{i}", Middle, new Vector2((i - 1) * RushColumnSpacing, RushDifficultyY), RushDifficultySize);
                 slots[i] = slot.gameObject.AddComponent<CanvasGroup>();
-                var mark = UIDialogBuilder.CreateUIObject("Selected", slot);
-                PlaceCenter(mark.GetComponent<RectTransform>(), Vector2.zero, RushDifficultySize + RushDifficultyMarkPadding);
-                AddSliced(mark, RoundRectPath, Color.white, CornerScale(ButtonCornerRadius + RushDifficultyMarkPadding.y * 0.5f)).raycastTarget = false;
-                marks[i] = mark;
+                marks[i] = CreateSelectedMark(slot, RushDifficultySize, RushDifficultyMarkPadding);
 
                 var button = CreateTitleButton(slot, "Button", DifficultyNames.NameOf(difficulty), Vector2.zero, RushDifficultySize, DifficultyNames.ColorOf(difficulty), RushDifficultyFontSize);
-                var motion = new SerializedObject(button.GetComponent<UiButtonMotion>());
-                motion.FindProperty("_disabledAlpha").floatValue = 1f;
-                motion.ApplyModifiedProperties();
+                KeepOpaqueWhenDisabled(button);
                 buttons[i] = button;
 
                 var lockIcon = CreateHudImage(slot, "Lock", LockIconPath, RushLockIconColor, Middle, RushDifficultyLockPosition, Vector2.one * RushDifficultyLockSize);

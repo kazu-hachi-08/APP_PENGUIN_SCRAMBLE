@@ -18,9 +18,15 @@ namespace PenmonScramble.Core
         /// <summary>突風: 一番近いプレイヤーの方へ扇を出す</summary>
         private void StartGust(Unit boss, BigBossBrain brain, SkillDef skill, Unit target)
         {
+            AimBossAway(boss, brain, target);
+            AddWarning(brain, boss.Position, boss.Position + brain.Direction * skill.Range, 0f, skill.HalfAngleDegrees);
+        }
+
+        /// <summary>ボスが一番近いプレイヤーから離れる向きを向く（向きと攻撃の向きをそろえる）。重なっていたら今の向きのまま</summary>
+        private void AimBossAway(Unit boss, BigBossBrain brain, Unit target)
+        {
             brain.Direction = AwayFrom(boss.Position, target, boss.Facing);
             boss.Facing = brain.Direction;
-            AddWarning(brain, boss.Position, boss.Position + brain.Direction * skill.Range, 0f, skill.HalfAngleDegrees);
         }
 
         /// <summary>扇の中のプレイヤーを、ボスから外へ押し流し始める。当たった瞬間は痛くない（柵に当たると痛い。HitWallByGust）</summary>
@@ -72,8 +78,7 @@ namespace PenmonScramble.Core
         private void AddFinPaths(Unit boss, BigBossBrain brain, SkillDef skill, Unit target)
         {
             var halfWidth = FinHalfWidth(boss, skill);
-            brain.Direction = AwayFrom(boss.Position, target, boss.Facing);
-            boss.Facing = brain.Direction;
+            AimBossAway(boss, brain, target);
             brain.DashDistance = MathF.Min(skill.Range, Area.DistanceToWall(boss.Position, brain.Direction, boss.Radius));
             AddWarning(brain, boss.Position, boss.Position + brain.Direction * brain.DashDistance, halfWidth);
 
@@ -144,8 +149,7 @@ namespace PenmonScramble.Core
                 ApplyHit(fin.OwnerId, target, fin.Damage, fin.Skill.Knockback, direction, fin.Skill);
             }
 
-            fin.Remaining -= dt;
-            fin.IsDead = fin.Remaining <= 0f;
+            AgeEffect(fin, dt);
         }
 
         /// <summary>攻撃の後に、攻撃の円の縁のすぐ外へ残す範囲（サメの食いつきの溶岩のしぶき）。向きは毎回ずらす</summary>

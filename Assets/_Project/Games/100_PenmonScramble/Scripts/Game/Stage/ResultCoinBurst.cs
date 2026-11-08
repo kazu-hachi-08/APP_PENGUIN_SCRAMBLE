@@ -67,10 +67,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            foreach (var coin in _coins)
-            {
-                coin.Rect.gameObject.SetActive(false);
-            }
+            ResultConfetti.HideAll(_coins, coin => coin.Rect);
         }
 
         private void Build()

@@ -131,15 +131,7 @@ namespace PenmonScramble.Core
 
         private static SpeciesDef PickSpecies(int stars, List<int> used, Random random)
         {
-            var pool = new List<SpeciesDef>();
-            foreach (var species in SpeciesTable.Species)
-            {
-                if (species.Stars == stars && !used.Contains(species.No))
-                {
-                    pool.Add(species);
-                }
-            }
-
+            var pool = SpeciesTable.OfStars(stars).FindAll(species => !used.Contains(species.No));
             return pool[random.Next(pool.Count)];
         }
     }

@@ -84,8 +84,14 @@ namespace PenmonScramble.Core
                 zone.IntervalTimer += zone.Skill.Interval;
             }
 
-            zone.Remaining -= dt;
-            zone.IsDead = zone.Remaining <= 0f;
+            AgeEffect(zone, dt);
+        }
+
+        /// <summary>範囲の残り時間を進め、切れたら消す。残り時間の持ち方は範囲の種類によらず同じ（雷雲・背びれの走りも同じ）</summary>
+        private static void AgeEffect(AreaEffect effect, float dt)
+        {
+            effect.Remaining -= dt;
+            effect.IsDead = effect.Remaining <= 0f;
         }
 
         private void UpdateDrop(AreaEffect drop, float dt)

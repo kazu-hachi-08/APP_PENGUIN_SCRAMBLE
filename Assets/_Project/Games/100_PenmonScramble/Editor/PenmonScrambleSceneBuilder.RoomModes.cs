@@ -71,15 +71,10 @@ namespace PenmonScramble.Editor
             {
                 var slot = CreateHudRect(row.transform, $"Tab{i}", Middle, new Vector2((i - (count - 1) * 0.5f) * RoomTabSpacing, 0f), RoomTabSize);
                 slots[i] = slot.gameObject.AddComponent<CanvasGroup>();
-                var mark = UIDialogBuilder.CreateUIObject("Selected", slot);
-                PlaceCenter(mark.GetComponent<RectTransform>(), Vector2.zero, RoomTabSize + RoomTabMarkPadding);
-                AddSliced(mark, RoundRectPath, Color.white, CornerScale(ButtonCornerRadius + RoomTabMarkPadding.y * 0.5f)).raycastTarget = false;
-                marks[i] = mark;
+                marks[i] = CreateSelectedMark(slot, RoomTabSize, RoomTabMarkPadding);
 
                 var button = CreateTitleButton(slot, "Button", string.Empty, Vector2.zero, RoomTabSize, RoomTabColor, RoomTabFontSize);
-                var motion = new SerializedObject(button.GetComponent<UiButtonMotion>());
-                motion.FindProperty("_disabledAlpha").floatValue = 1f;
-                motion.ApplyModifiedProperties();
+                KeepOpaqueWhenDisabled(button);
                 tabs[i] = button;
             }
 
@@ -88,6 +83,15 @@ namespace PenmonScramble.Editor
             SetObjectArray(so.FindProperty("_tabSlots"), slots);
             SetObjectArray(so.FindProperty("_tabMarks"), marks);
             SetObjectArray(so.FindProperty("_tabs"), tabs);
+        }
+
+        /// <summary>札の後ろに置く白い縁（選んでいる札だけ見せる）。札より少し大きく、角の丸みも縁の分だけ広げる</summary>
+        private static GameObject CreateSelectedMark(Transform slot, Vector2 size, Vector2 markPadding)
+        {
+            var mark = UIDialogBuilder.CreateUIObject("Selected", slot);
+            PlaceCenter(mark.GetComponent<RectTransform>(), Vector2.zero, size + markPadding);
+            AddSliced(mark, RoundRectPath, Color.white, CornerScale(ButtonCornerRadius + markPadding.y * 0.5f)).raycastTarget = false;
+            return mark;
         }
     }
 }

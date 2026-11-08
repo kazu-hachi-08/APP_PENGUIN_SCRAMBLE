@@ -35,7 +35,7 @@ namespace PenmonScramble.Game
 
         private void TickField(float dt)
         {
-            _pose.Field = Mathf.MoveTowards(_pose.Field, Fielding && !Down ? 1f : 0f, FieldBlendRate * dt);
+            _pose.Field = BlendToward(_pose.Field, Fielding && !Down, FieldBlendRate, dt);
             _pose.Catch = Advance(_pose.Catch, dt, CatchSeconds);
         }
 
@@ -46,7 +46,7 @@ namespace PenmonScramble.Game
             {
                 p.Squash(FieldCrouch * w);
                 p.Body.Euler.x += FieldLean * w;
-                p.Head.Euler.x -= FieldHeadUp * w;
+                p.LiftHead(FieldHeadUp * w);
                 p.SwingFlippers(-FieldFlipperForward * w);
                 p.OpenFlippers(FieldFlipperOpen * w);
             }

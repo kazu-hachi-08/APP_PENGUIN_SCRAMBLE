@@ -78,24 +78,14 @@ namespace PenmonScramble.Editor
             thread.Start();
 
             var total = pairings.Length * matches;
-            while (thread.IsAlive)
-            {
-                if (EditorUtility.DisplayCancelableProgressBar(title, $"CPU 同士で試合をしています… {done}/{total} 試合", (float)done / total))
-                {
-                    cancel.Cancel();
-                }
-
-                Thread.Sleep(100);
-            }
-
-            EditorUtility.ClearProgressBar();
+            BalanceLabMenu.WaitWithProgress(thread, cancel, title, () => $"CPU 同士で試合をしています… {done}/{total} 試合", () => (float)done / total);
             cancelled = cancel.IsCancellationRequested;
             return results;
         }
 
         private static string Report(string title, BaseballFieldDef field, List<(int away, int home, List<BaseballMatchStats> stats)> results, int matches, bool cancelled)
         {
-            var text = new StringBuilder(cancelled ? $"{title}（途中でやめました）\n" : $"{title}\n");
+            var text = new StringBuilder(BalanceLabMenu.ReportHeader(title, cancelled) + "\n");
             text.AppendLine($"1組 {matches} 試合・{BaseballRules.Innings} イニング。点・ホームラン・三振・四球・球数・分 は1試合の平均。打球の割合はファウルを除くフェアの打球に対して");
             foreach (var (away, home, stats) in results)
             {

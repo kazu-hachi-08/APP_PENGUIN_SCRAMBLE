@@ -68,10 +68,8 @@ namespace PenmonScramble.Editor
         [MenuItem(EditorMenu.Capture + "Penguin Motions", priority = EditorMenu.CapturePriority + 3)]
         public static void CaptureMotions()
         {
-            var stage = FindOrOpenPreviewStage();
+            var stage = OpenCaptureStage();
             if (stage == null) return;
-
-            Directory.CreateDirectory(CaptureFolder);
             var shadows = stage.RealShadows;
             var player = stage.Player;
             var spot = player.transform.localPosition;
@@ -84,11 +82,7 @@ namespace PenmonScramble.Editor
             {
                 stage.SetRealShadows(shadows);
                 player.transform.localPosition = spot;
-                foreach (var penguin in stage.Penguins)
-                {
-                    penguin.gameObject.SetActive(true);
-                    penguin.ResetPose();
-                }
+                RestorePenguins(stage);
             }
 
             Debug.Log($"[Penguin3DPreviewBuilder] {Path.GetFullPath(CaptureFolder)} に動きのスクショを保存しました（上から {RowNames()}）");
@@ -97,10 +91,7 @@ namespace PenmonScramble.Editor
         private static Texture2D CaptureMotionSheet(PenguinPreviewStage stage, PenguinMotion player)
         {
             var sheet = new Texture2D(MotionCellSize * MotionSamples, MotionCellSize * MotionRows.Length, TextureFormat.RGB24, false);
-            foreach (var penguin in stage.Penguins)
-            {
-                penguin.gameObject.SetActive(penguin == player);
-            }
+            ShowOnly(stage, player);
 
             player.transform.localPosition = Vector3.zero;
             player.ResetPose();

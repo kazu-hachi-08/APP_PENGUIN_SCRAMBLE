@@ -137,26 +137,12 @@ namespace PenmonScramble.Golf.Game
 
         private void OnResultChosen(int card)
         {
-            switch (card)
+            // 「もう一度」は同じ顔ぶれ・同じコースで、スコアカードを空にしてはじめから
+            MiniGameResultView.RouteResultCard(card, _mode.IsOnline, () =>
             {
-                case MiniGameResultPanel.RetryCard:
-                    // 同じ顔ぶれ・同じコースで、スコアカードを空にしてはじめから
-                    _round.Restart();
-                    PlayMusic();
-                    break;
-                case MiniGameResultPanel.CoursesCard:
-                    if (_mode.IsOnline)
-                    {
-                        RequestRoom();
-                        break;
-                    }
-
-                    MiniGameLaunch.ReturnToHub();
-                    break;
-                case MiniGameResultPanel.LobbyCard:
-                    MiniGameLaunch.ReturnToLobby();
-                    break;
-            }
+                _round.Restart();
+                PlayMusic();
+            }, RequestRoom);
         }
     }
 }

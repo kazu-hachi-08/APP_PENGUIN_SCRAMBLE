@@ -414,15 +414,9 @@ namespace PenmonScramble.Golf.Core
                 throw new ArgumentException("打つ順は 1〜4 人", nameof(order));
             }
 
-            var seen = new bool[order.Count];
-            foreach (var seat in order)
+            if (!GolfTurnOrder.IsPermutation(order))
             {
-                if (seat < 0 || seat >= order.Count || seen[seat])
-                {
-                    throw new ArgumentException("打つ順は 0〜人数−1 を1回ずつ", nameof(order));
-                }
-
-                seen[seat] = true;
+                throw new ArgumentException("打つ順は 0〜人数−1 を1回ずつ", nameof(order));
             }
         }
     }

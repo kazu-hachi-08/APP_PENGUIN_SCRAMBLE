@@ -94,14 +94,8 @@ namespace PenmonScramble.Baseball.Game
                 return line;
             }
 
-            if (info.FirstPlay)
-            {
-                return $"{line}\nはじめての記録！";
-            }
-
-            return info.NewBest
-                ? $"{line}\nベスト更新！（前は {BaseballCourseGuide.FormatRunDifference(info.PreviousBest)}）"
-                : $"{line}\nベスト {BaseballCourseGuide.FormatRunDifference(info.PreviousBest)}";
+            var best = MiniGameResultView.BestSentence(info.FirstPlay, info.NewBest, BaseballCourseGuide.FormatRunDifference(info.PreviousBest));
+            return $"{line}\n{best}";
         }
     }
 }

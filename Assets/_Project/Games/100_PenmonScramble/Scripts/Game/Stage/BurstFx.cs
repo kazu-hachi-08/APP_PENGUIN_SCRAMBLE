@@ -49,8 +49,7 @@ namespace PenmonScramble.Game
 
         private void Update()
         {
-            _age += Time.deltaTime;
-            var t = _age / _seconds;
+            var t = ToyEasing.Advance(ref _age, Time.deltaTime, _seconds);
             if (t >= 1f)
             {
                 Destroy(gameObject);

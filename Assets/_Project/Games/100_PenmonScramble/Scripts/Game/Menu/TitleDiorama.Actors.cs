@@ -323,7 +323,7 @@ namespace PenmonScramble.Game
                 }
 
                 _popAge += dt;
-                _model.transform.localScale = Vector3.one * (ModelScale * ToyEasing.Pop(_popAge / PopSeconds, PopStart));
+                ToyEasing.ApplyPopScale(_model.transform, ModelScale, _popAge, PopSeconds, PopStart);
             }
 
             private void TickFlash(float dt)

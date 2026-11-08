@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using PenmonScramble.Common.Online;
 using PenmonScramble.Common.Scene;
 using PenmonScramble.Game;
@@ -69,30 +71,78 @@ namespace PenmonScramble.MiniGames.Game
             IsOnline = false;
         }
 
-        /// <summary>本編のシーンを読み直して、ミニゲーム画面から始める（ロビーの上に開く）。部屋にいれば抜ける</summary>
-        public static void ReturnToHub()
+        /// <summary>
+        /// みんなで: 部屋を試合ごと引き継げていなければ（部屋が切れた・試合が始まっていない）警告を出して true。
+        /// 呼び出し側は _leaving を立ててからロビーへ戻る
+        /// </summary>
+        public static bool IsRoomLost(OnlineSession session, string runnerName)
         {
-            IsOnline = false;
-            LobbyReturn.Request(LobbyScreen.MiniGames);
-            Load(SceneNames.Title);
+            if (session.IsInRoom && session.IsMatchStarted)
+            {
+                return false;
+            }
+
+            Debug.LogWarning($"[{runnerName}] 部屋を引き継げなかったのでロビーへ戻ります");
+            return true;
         }
 
-        /// <summary>本編のシーンを読み直して、ロビーから始める（スタート画面は飛ばす）。部屋にいれば抜ける</summary>
-        public static void ReturnToLobby()
+        /// <summary>
+        /// みんなで: 3つのミニゲームで同じ部屋の配線。人が抜けても試合を止めず（ContinueWhenMemberLeaves）、
+        /// 切断・接続切れは leave（ロビーへ戻る）で受ける。解除は UnbindRoom に同じデリゲートを渡すこと
+        /// </summary>
+        public static void BindRoom(OnlineSession session, Action leave)
         {
-            IsOnline = false;
-            LobbyReturn.Request(LobbyScreen.Lobby);
-            Load(SceneNames.Title);
+            session.ContinueWhenMemberLeaves = true;
+            session.OnPeerDisconnected += leave;
+            session.OnConnectionLost += leave;
         }
+
+        /// <summary>みんなで: BindRoom の配線を外す（OnDestroy）</summary>
+        public static void UnbindRoom(OnlineSession session, Action leave)
+        {
+            session.OnPeerDisconnected -= leave;
+            session.OnConnectionLost -= leave;
+        }
+
+        /// <summary>
+        /// みんなで（ホストのみ）: 結果で「もう一度・選び直し」へ進むとき、部屋を全員の待ちの窓へ戻してから本編の待ちの窓へ移る。
+        /// 先に OnlineSession.ReturnToRoom を呼んでゲストにも知らせる必要がある
+        /// </summary>
+        public static void LeaveToRoom(OnlineSession session)
+        {
+            session.ReturnToRoom();
+            ReturnToRoom();
+        }
+
+        /// <summary>この端末の編成のペンモンの種類（並び順のまま）。ひとり・みんなで共通</summary>
+        public static List<int> PartySpecies()
+        {
+            var species = new List<int>();
+            foreach (var penguin in GameSave.Record.PartyPenguins())
+            {
+                species.Add(penguin.speciesNo);
+            }
+
+            return species;
+        }
+
+        /// <summary>本編のシーンを読み直して、ミニゲーム画面から始める（ロビーの上に開く）。部屋にいれば抜ける</summary>
+        public static void ReturnToHub() => ReturnToTitle(LobbyScreen.MiniGames);
+
+        /// <summary>本編のシーンを読み直して、ロビーから始める（スタート画面は飛ばす）。部屋にいれば抜ける</summary>
+        public static void ReturnToLobby() => ReturnToTitle(LobbyScreen.Lobby);
 
         /// <summary>
         /// みんなでのみ: 同じ顔ぶれのまま部屋の待ちの窓へ戻る（本編のシーンを読み直すと、待ちの窓が部屋を引き継いで開く）。
         /// ホストは先に OnlineSession.ReturnToRoom を呼んでゲストにも知らせる。ゲストは OnReturnToRoom を受けて呼ぶ
         /// </summary>
-        public static void ReturnToRoom()
+        public static void ReturnToRoom() => ReturnToTitle(LobbyScreen.Lobby);
+
+        /// <summary>本編のシーンを読み直して、指定のロビー画面から始める（3つの戻り先で共通の手順）</summary>
+        private static void ReturnToTitle(LobbyScreen screen)
         {
             IsOnline = false;
-            LobbyReturn.Request(LobbyScreen.Lobby);
+            LobbyReturn.Request(screen);
             Load(SceneNames.Title);
         }
 

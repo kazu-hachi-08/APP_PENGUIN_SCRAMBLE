@@ -93,10 +93,7 @@ namespace PenmonScramble.Editor
                 var position = new Vector2((i - (count - 1) * 0.5f) * TeamRoomModeSpacing, TeamRoomModeY);
                 var slot = CreateHudRect(card, $"Mode{i}", Middle, position, TeamRoomModeSize);
                 slots[i] = slot.gameObject.AddComponent<CanvasGroup>();
-                var mark = UIDialogBuilder.CreateUIObject("Selected", slot);
-                PlaceCenter(mark.GetComponent<RectTransform>(), Vector2.zero, TeamRoomModeSize + TeamRoomModeMarkPadding);
-                AddSliced(mark, RoundRectPath, Color.white, CornerScale(ButtonCornerRadius + TeamRoomModeMarkPadding.y * 0.5f)).raycastTarget = false;
-                marks[i] = mark;
+                marks[i] = CreateSelectedMark(slot, TeamRoomModeSize, TeamRoomModeMarkPadding);
                 var button = CreateTitleButton(slot, "Button", TeamRoomModeLabels[i], Vector2.zero, TeamRoomModeSize, TeamRoomModeColors[i], TeamRoomModeFontSize);
                 KeepOpaqueWhenDisabled(button);
                 buttons[i] = button;

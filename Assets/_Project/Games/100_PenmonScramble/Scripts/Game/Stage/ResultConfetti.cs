@@ -81,9 +81,18 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            foreach (var piece in _pieces)
+            HideAll(_pieces, piece => piece.Rect);
+        }
+
+        /// <summary>
+        /// 使い回す飾りを全部隠す。コインの結果演出と同じ処理なので共有する。
+        /// System.Func と書くのは、using System を足すと UnityEngine.Random と曖昧になるため
+        /// </summary>
+        internal static void HideAll<T>(T[] items, System.Func<T, RectTransform> rectOf)
+        {
+            foreach (var item in items)
             {
-                piece.Rect.gameObject.SetActive(false);
+                rectOf(item).gameObject.SetActive(false);
             }
         }
 

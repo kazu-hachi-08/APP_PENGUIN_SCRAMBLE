@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using PenmonScramble.Baseball.Core;
 using PenmonScramble.Game;
+using PenmonScramble.MiniGames.Game;
 using UnityEngine;
 
 namespace PenmonScramble.Baseball.Game
@@ -103,26 +104,13 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>Unity の基本の形の代わりに、ToyMeshes の形を置く（当たりは Core が持つので Collider は付けない）</summary>
         private Transform AddPart(string objectName, Mesh mesh, Transform parent, Vector3 position, Quaternion rotation, Vector3 scale, Material material)
         {
-            var obj = new GameObject(objectName);
-            obj.transform.SetParent(parent, false);
-            obj.transform.localPosition = position;
-            obj.transform.localRotation = rotation;
-            obj.transform.localScale = scale;
-            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
-            obj.AddComponent<MeshRenderer>().sharedMaterial = material;
-            return obj.transform;
+            return MiniGameMeshes.AddPart(objectName, mesh, parent, position, rotation, scale, material);
         }
 
         /// <summary>このビューが作ったメッシュを置く（消すときに一緒に消す）</summary>
         private MeshRenderer AddOwnedMesh(string objectName, Mesh mesh, params Material[] materials)
         {
-            _meshes.Add(mesh);
-            var obj = new GameObject(objectName);
-            obj.transform.SetParent(_root, false);
-            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
-            var renderer = obj.AddComponent<MeshRenderer>();
-            renderer.sharedMaterials = materials;
-            return renderer;
+            return MiniGameMeshes.AddOwnedMesh(_meshes, objectName, mesh, _root, materials);
         }
 
         private void Clear()

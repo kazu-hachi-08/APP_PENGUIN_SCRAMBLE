@@ -52,8 +52,7 @@ namespace PenmonScramble.Game
             ball.transform.SetParent(transform, false);
             ball.transform.localPosition = Vector3.up * FlyHeight;
             ball.transform.localScale = Vector3.one * size;
-            var renderer = ToyParts.AddMesh(ball, ToyMeshes.Sphere, materials.Toon.Get(color, BallGloss));
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ToyParts.AddMeshNoShadow(ball, ToyMeshes.Sphere, materials.Toon.Get(color, BallGloss));
         }
 
         private void CreateGlow(StageMaterials materials, Color color, float alpha, float size)

@@ -217,10 +217,10 @@ namespace PenmonScramble.Game
             var moving = speed > MovingThreshold;
             Turn(local, moving, dt);
 
-            _pose.Move = Mathf.MoveTowards(_pose.Move, moving ? 1f : 0f, MoveBlendRate * dt);
+            _pose.Move = BlendToward(_pose.Move, moving, MoveBlendRate, dt);
             _pose.Phase = Mathf.Repeat(_pose.Phase + CycleRate(speed) * dt, 1f);
-            _pose.Telegraph = Mathf.MoveTowards(_pose.Telegraph, _telegraph.HasValue ? 1f : 0f, TelegraphBlendRate * dt);
-            _pose.Dash = Mathf.MoveTowards(_pose.Dash, Sliding ? 1f : 0f, DashBlendRate * dt);
+            _pose.Telegraph = BlendToward(_pose.Telegraph, _telegraph.HasValue, TelegraphBlendRate, dt);
+            _pose.Dash = BlendToward(_pose.Dash, Sliding, DashBlendRate, dt);
             _pose.Submerge = _submerged ? Mathf.Min(1f, _pose.Submerge + dt / SubmergeSeconds) : 0f;
             _pose.Strike = Advance(_pose.Strike, dt, StrikeSeconds);
             _pose.Emerge = Advance(_pose.Emerge, dt, EmergeSeconds);
@@ -256,7 +256,7 @@ namespace PenmonScramble.Game
         /// <summary>羽ばたき・這う・泳ぐ動きの速さ（周/秒）。動く・構える・突進するほど速くなる</summary>
         private float CycleRate(float speed)
         {
-            var style = Style;
+            var style = StyleOf(BigBossModel.SpeciesOf(_model.BossNo));
             return style.CycleBase + speed * style.CyclePerUnit + _pose.Telegraph * style.CycleTelegraph + _pose.Dash * style.CycleDash;
         }
 
@@ -275,6 +275,9 @@ namespace PenmonScramble.Game
         /// <summary>攻撃が出た瞬間の動きのうち、kind の攻撃のものだけ Bell を返す（別の攻撃の出た瞬間では 0）</summary>
         private static float StrikeBell(BigBossPose pose, BossAttackKind kind, float start, float peak, float end) =>
             pose.StrikeKind == kind ? Bell(pose.Strike, start, peak, end) : 0f;
+
+        /// <summary>噛みつきの出た瞬間の Bell。Orca・Seal・Shark で同じ時間帯を使うので1か所にまとめた</summary>
+        private static float BiteBell(BigBossPose pose) => StrikeBell(pose, BossAttackKind.Charge, 0f, 0.1f, 0.35f);
 
         /// <summary>羽ばたき・這う・泳ぐ周期の角度（ラジアン）。Phase は周単位なので 2π を掛ける</summary>
         private static float CyclePhase(BigBossPose pose) => pose.Phase * Mathf.PI * 2f;
@@ -348,18 +351,15 @@ namespace PenmonScramble.Game
             }
         }
 
-        private MotionStyle Style
+        private static MotionStyle StyleOf(BigBossSpecies species)
         {
-            get
+            switch (species)
             {
-                switch (BigBossModel.SpeciesOf(_model.BossNo))
-                {
-                    case BigBossSpecies.Skua: return SkuaStyle;
-                    case BigBossSpecies.LeopardSeal: return SealStyle;
-                    case BigBossSpecies.Fulmar: return FulmarStyle;
-                    case BigBossSpecies.Shark: return SharkStyle;
-                    default: return OrcaStyle;
-                }
+                case BigBossSpecies.Skua: return SkuaStyle;
+                case BigBossSpecies.LeopardSeal: return SealStyle;
+                case BigBossSpecies.Fulmar: return FulmarStyle;
+                case BigBossSpecies.Shark: return SharkStyle;
+                default: return OrcaStyle;
             }
         }
     }

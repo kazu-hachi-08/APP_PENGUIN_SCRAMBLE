@@ -83,9 +83,7 @@ namespace PenmonScramble.Editor
             var gaugeGroup = B.CreateStretchGroup(panel.transform, "Gauge");
             B.CreateHudImage(gaugeGroup.transform, "Back", null, B.HudBackColor, BottomCenter, PenaltyGaugePosition, PenaltyGaugeSize + Vector2.one * PenaltyGaugePadding);
             var fill = B.CreateHudImage(gaugeGroup.transform, "Fill", null, PenaltyGaugeColor, BottomCenter, PenaltyGaugePosition, PenaltyGaugeSize);
-            fill.type = Image.Type.Filled;
-            fill.fillMethod = Image.FillMethod.Horizontal;
-            fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            B.SetHorizontalFill(fill);
             fill.fillAmount = 0f;
             // 赤い所（PenaltyRedZone より上）を、棒の右の端に重ねる
             var redWidth = PenaltyGaugeSize.x * (1f - SoccerBalance.PenaltyRedZone);

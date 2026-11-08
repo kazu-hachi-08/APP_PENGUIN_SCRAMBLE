@@ -170,11 +170,11 @@ namespace PenmonScramble.Game
             var moving = speed > MovingThreshold && !knocked && !Down;
             Turn(local, moving, dt);
 
-            _pose.Walk = Mathf.MoveTowards(_pose.Walk, moving && !Sliding ? 1f : 0f, WalkBlendRate * dt);
+            _pose.Walk = BlendToward(_pose.Walk, moving && !Sliding, WalkBlendRate, dt);
             _pose.WalkPhase = Mathf.Repeat(_pose.WalkPhase + speed * CyclesPerUnit * dt, 1f);
-            _pose.Slide = Mathf.MoveTowards(_pose.Slide, Sliding && !Down ? 1f : 0f, SlideBlendRate * dt);
-            _pose.Down = Mathf.MoveTowards(_pose.Down, Down ? 1f : 0f, DownBlendRate * dt);
-            _pose.WindUp = Mathf.MoveTowards(_pose.WindUp, WindingUp ? 1f : 0f, WindUpBlendRate * dt);
+            _pose.Slide = BlendToward(_pose.Slide, Sliding && !Down, SlideBlendRate, dt);
+            _pose.Down = BlendToward(_pose.Down, Down, DownBlendRate, dt);
+            _pose.WindUp = BlendToward(_pose.WindUp, WindingUp, WindUpBlendRate, dt);
             TickCheer(dt);
             TickHold(dt);
             TickKick(dt);
@@ -239,6 +239,11 @@ namespace PenmonScramble.Game
             ApplyShadow(pose, figure);
             ApplyBlink(pose);
         }
+
+        /// <summary>
+        /// seconds の時刻に、1秒あたり ratePerSecond 回の往復で振れる値（±amplitude）。掛ける順は呼吸・ばたつき・震えの元の式と同じ（浮動小数の結果を変えないため）
+        /// </summary>
+        private static float Wobble(float seconds, float ratePerSecond, float amplitude) => Mathf.Sin(seconds * ratePerSecond * Mathf.PI * 2f) * amplitude;
 
         /// <summary>組み立てたときの部品の位置・向き・大きさ</summary>
         private readonly struct Rest
@@ -309,6 +314,9 @@ namespace PenmonScramble.Game
                 FlipperLeft.Euler.x += degrees;
                 FlipperRight.Euler.x += degrees;
             }
+
+            /// <summary>頭を上げる（顔を上へ向ける）。正で上げる。Euler.x は負の向きが上</summary>
+            public void LiftHead(float degrees) => Head.Euler.x -= degrees;
 
             /// <summary>胴をつぶす（正）・伸ばす（負）。つぶすと横に広がる</summary>
             public void Squash(float amount)

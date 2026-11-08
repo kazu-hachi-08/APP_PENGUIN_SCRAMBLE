@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace PenmonScramble.Game
 {
@@ -21,7 +20,7 @@ namespace PenmonScramble.Game
             var s = look.HeadSize;
             var material = materials.Get(color, ClothGloss);
             var height = HeadbandHeight;
-            var radius = Mathf.Sqrt(HeadRadius * HeadRadius - height * height) + TeamBandOutset;
+            var radius = HeadBandRadius(height, TeamBandOutset);
             var center = (HeadCenter + Vector3.up * height) * s;
             var bandScale = new Vector3(radius / TorusCenterRadius, TeamBandThickness / TorusTubeDiameter, radius / TorusCenterRadius) * s;
             AddTeamPart("TeamBand", ToyMeshes.Torus, model.Head, center, Quaternion.Euler(TeamBandTilt, 0f, 0f), bandScale, material);
@@ -35,13 +34,11 @@ namespace PenmonScramble.Game
 
         private static void AddTeamPart(string objName, Mesh mesh, Transform parent, Vector3 position, Quaternion rotation, Vector3 scale, Material material)
         {
-            var obj = new GameObject(objName);
-            obj.transform.SetParent(parent, false);
-            obj.transform.localPosition = position;
+            var obj = ToyParts.NewChild(objName, parent, position);
             obj.transform.localRotation = rotation;
             obj.transform.localScale = scale;
             // ミニゲームは足元の丸い影なので、本物の影は落とさない
-            ToyParts.AddMesh(obj, mesh, material).shadowCastingMode = ShadowCastingMode.Off;
+            ToyParts.AddMeshNoShadow(obj, mesh, material);
         }
     }
 }

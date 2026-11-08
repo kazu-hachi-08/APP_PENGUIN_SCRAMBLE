@@ -139,8 +139,7 @@ namespace PenmonScramble.MiniGames.Game
                 Setup.Course = option;
             }
 
-            SendChoice();
-            Refresh();
+            SendAndRefresh();
         }
 
         /// <summary>全員がミニゲームのシーンへ移る（部屋は試合ごと引き継ぐ。遊び方とチームはシーンに入ってからホストが送る）</summary>
@@ -188,8 +187,7 @@ namespace PenmonScramble.MiniGames.Game
             }
 
             _memberCount = Mathf.Clamp(count, 1, MiniGameRoomChoice.MaxSeats);
-            SendChoice();
-            Refresh();
+            SendAndRefresh();
         }
 
         private void OnChoiceReceived(byte[] data)
@@ -214,8 +212,7 @@ namespace PenmonScramble.MiniGames.Game
             }
 
             Setup.Course = next.No;
-            SendChoice();
-            Refresh();
+            SendAndRefresh();
         }
 
         private void SelectMode(MiniGameOnlineMode mode)
@@ -226,8 +223,7 @@ namespace PenmonScramble.MiniGames.Game
             }
 
             Setup.Mode = mode;
-            SendChoice();
-            Refresh();
+            SendAndRefresh();
         }
 
         /// <summary>対戦の間だけ、押した席の赤・青を入れ替える</summary>
@@ -239,8 +235,7 @@ namespace PenmonScramble.MiniGames.Game
             }
 
             Setup.SetTeam(seat, MiniGameTeams.Opponent(Setup.Teams[seat]));
-            SendChoice();
-            Refresh();
+            SendAndRefresh();
         }
 
         private void SendChoice()
@@ -249,6 +244,12 @@ namespace PenmonScramble.MiniGames.Game
             {
                 _link.Send(HostChoice.Encode());
             }
+        }
+
+        private void SendAndRefresh()
+        {
+            SendChoice();
+            Refresh();
         }
 
         private void Refresh()

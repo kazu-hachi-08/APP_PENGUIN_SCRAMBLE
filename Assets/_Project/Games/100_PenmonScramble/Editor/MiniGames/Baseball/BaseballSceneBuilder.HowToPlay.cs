@@ -141,10 +141,9 @@ namespace PenmonScramble.Editor
         /// <summary>スマホの枠と画面・上のまん中の見出し・右上の ‖。中身を置く画面を返す</summary>
         private static Transform CreatePhone(Transform root, string name, float x, string caption)
         {
-            var rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>(B.RoundedSpritePath);
             var position = new Vector2(x, PhoneY);
-            B.CreateRoundedBox(root, $"{name}Body", position, PhoneScreenSize + Vector2.one * (B.PhoneBezel * 2f), B.PhoneBodyColor, rounded);
-            var screen = B.CreateRoundedBox(root, name, position, PhoneScreenSize, B.PhoneScreenColor, rounded).transform;
+            B.CreateRoundedBox(root, $"{name}Body", position, PhoneScreenSize + Vector2.one * (B.PhoneBezel * 2f), B.PhoneBodyColor);
+            var screen = B.CreateRoundedBox(root, name, position, PhoneScreenSize, B.PhoneScreenColor).transform;
             var title = B.CreateLabel(screen, "Caption", caption, PhoneCaptionFontSize, Vector2.zero, PhoneCaptionSize);
             title.fontStyle = FontStyle.Bold;
             Place(title.rectTransform, TopCenter, Vector2.down * PhoneCaptionMargin, PhoneCaptionSize);
@@ -155,11 +154,10 @@ namespace PenmonScramble.Editor
         /// <summary>投げる番の下の球種の札（試合の HUD と同じ所・同じ色）</summary>
         private static void CreatePhonePitchCards(Transform screen, float scale)
         {
-            var rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>(B.RoundedSpritePath);
             var size = CardSize * scale;
             for (var i = 0; i < PhoneCardLabels.Length; i++)
             {
-                var card = B.CreateRoundedBox(screen, $"Pitch{i}", Vector2.zero, size, CardColors[i], rounded);
+                var card = B.CreateRoundedBox(screen, $"Pitch{i}", Vector2.zero, size, CardColors[i]);
                 Place(card.rectTransform, BottomCenter, new Vector2(CardX[i], CardY) * scale, size);
                 B.CreateLabel(card.transform, "Text", PhoneCardLabels[i], PhoneCardFontSize, Vector2.zero, size);
             }
@@ -168,9 +166,8 @@ namespace PenmonScramble.Editor
         /// <summary>魔球・必殺打の札（球種の札の左。打つ番にも出る）</summary>
         private static void CreatePhoneSpecialToggle(Transform screen, string label, float scale)
         {
-            var rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>(B.RoundedSpritePath);
             var size = SpecialToggleSize * scale;
-            var toggle = B.CreateRoundedBox(screen, "SpecialToggle", Vector2.zero, size, SpecialToggleColor, rounded);
+            var toggle = B.CreateRoundedBox(screen, "SpecialToggle", Vector2.zero, size, SpecialToggleColor);
             Place(toggle.rectTransform, BottomCenter, SpecialTogglePosition * scale, size);
             B.CreateLabel(toggle.transform, "Text", label, PhoneCardFontSize, Vector2.zero, size);
         }

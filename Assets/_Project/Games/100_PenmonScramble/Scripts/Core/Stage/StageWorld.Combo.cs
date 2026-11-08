@@ -151,8 +151,7 @@ namespace PenmonScramble.Core
                 Burst?.Invoke(new BurstEvent(BurstShape.Blast, cloud.Element, cloud.Position, cloud.Radius, false));
             }
 
-            cloud.Remaining -= dt;
-            cloud.IsDead = cloud.Remaining <= 0f;
+            AgeEffect(cloud, dt);
         }
     }
 }

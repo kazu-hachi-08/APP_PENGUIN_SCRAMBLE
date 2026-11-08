@@ -111,14 +111,8 @@ namespace PenmonScramble.Soccer.Game
                 return line;
             }
 
-            if (info.FirstPlay)
-            {
-                return $"{line}\nはじめての記録！";
-            }
-
-            return info.NewBest
-                ? $"{line}\nベスト更新！（前は {SoccerCourseGuide.FormatGoalDifference(info.PreviousBest)}）"
-                : $"{line}\nベスト {SoccerCourseGuide.FormatGoalDifference(info.PreviousBest)}";
+            var best = MiniGameResultView.BestSentence(info.FirstPlay, info.NewBest, SoccerCourseGuide.FormatGoalDifference(info.PreviousBest));
+            return $"{line}\n{best}";
         }
     }
 }

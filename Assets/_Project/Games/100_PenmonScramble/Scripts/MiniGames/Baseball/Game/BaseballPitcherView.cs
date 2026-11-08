@@ -34,12 +34,7 @@ namespace PenmonScramble.Baseball.Game
         public void Use(int species, bool wild)
         {
             // 同じ種類が両方のチームにいることがあるので、CPU の暗い色の体とは別に持つ
-            var key = (species, wild);
-            if (!_bodies.TryGetValue(key, out var body))
-            {
-                body = BaseballPenguin.Build($"Pitcher{species}", species, wild, _materials, _parent);
-                _bodies.Add(key, body);
-            }
+            var body = BaseballPenguin.GetOrBuild(_bodies, "Pitcher", species, wild, _materials, _parent);
 
             var changed = _current != body;
             _current?.SetActive(false);

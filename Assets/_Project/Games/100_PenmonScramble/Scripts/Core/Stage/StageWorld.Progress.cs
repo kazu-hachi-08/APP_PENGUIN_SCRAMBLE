@@ -99,7 +99,7 @@ namespace PenmonScramble.Core
 
         private void UpdateWaves(float dt)
         {
-            _waveDelay = MathF.Max(0f, _waveDelay - dt);
+            _waveDelay = Decay(_waveDelay, dt);
             // 最初の波は出入口が閉じてから少し待つ。2つ目からは、残りが少なくなったらすぐ出す
             var ready = WaveIndex == 0 ? _waveDelay <= 0f : CountAlive(Team.Enemy) <= Balance.NextWaveEnemiesLeft;
             if (ready)

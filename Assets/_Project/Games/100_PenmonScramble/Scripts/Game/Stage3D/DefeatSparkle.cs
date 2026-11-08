@@ -69,16 +69,14 @@ namespace PenmonScramble.Game
             piece.transform.SetParent(transform, false);
             piece.transform.localScale = size;
             piece.transform.localRotation = Random.rotation;
-            var renderer = ToyParts.AddMesh(piece, mesh, material);
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ToyParts.AddMeshNoShadow(piece, mesh, material);
             return piece.transform;
         }
 
         private void Update()
         {
             var dt = Time.deltaTime;
-            _age += dt;
-            var t = _age / LifeSeconds;
+            var t = ToyEasing.Advance(ref _age, dt, LifeSeconds);
             if (t >= 1f)
             {
                 Destroy(gameObject);

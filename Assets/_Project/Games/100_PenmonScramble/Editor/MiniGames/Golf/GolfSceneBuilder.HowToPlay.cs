@@ -91,9 +91,7 @@ namespace PenmonScramble.Editor
         {
             var panel = B.CreateStretchGroup(parent, "Touch");
             var root = panel.transform;
-            var rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>(B.RoundedSpritePath);
-            B.CreateRoundedBox(root, "PhoneBody", B.PhoneScreenPosition, B.PhoneScreenSize + Vector2.one * (B.PhoneBezel * 2f), B.PhoneBodyColor, rounded);
-            var screen = B.CreateRoundedBox(root, "PhoneScreen", B.PhoneScreenPosition, B.PhoneScreenSize, B.PhoneScreenColor, rounded).transform;
+            var screen = B.CreatePhoneFrame(root, "PhoneBody", "PhoneScreen", B.PhoneScreenPosition);
 
             // ゴルフの HUD と同じ並びを、画面の絵の大きさまで縮める（基準の高さ 1080 → 絵の高さ）
             var scale = B.PhoneScreenSize.y / B.ReferenceResolution.y;

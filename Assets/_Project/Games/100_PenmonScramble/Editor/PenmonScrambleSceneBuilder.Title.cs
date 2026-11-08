@@ -138,8 +138,7 @@ namespace PenmonScramble.Editor
             var outline = prompt.GetComponent<Outline>();
             outline.effectColor = StartPromptOutlineColor;
             outline.effectDistance = StartPromptOutlineDistance;
-            prompt.gameObject.AddComponent<CanvasGroup>();
-            prompt.gameObject.AddComponent<UiPulse>();
+            AddPulse(prompt.gameObject);
             return splash;
         }
 
@@ -216,8 +215,7 @@ namespace PenmonScramble.Editor
 
         internal static Text CreateLabel(Transform parent, string name, string value, int fontSize, Vector2 position, Vector2 size)
         {
-            var obj = UIDialogBuilder.CreateUIObject(name, parent);
-            PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
+            var obj = CreateCenteredObject(parent, name, position, size);
             var text = AddText(obj, value, fontSize);
             text.alignment = TextAnchor.MiddleCenter;
             text.color = Color.white;
@@ -230,11 +228,47 @@ namespace PenmonScramble.Editor
             return text;
         }
 
+        // 大きな知らせの字の影（縁と落ち影の位置は PenmonScrambleSceneBuilder.Hud.cs の BannerOutlineDistance / BannerShadowDistance）
+        private static readonly Color BannerShadowColor = new Color(0f, 0f, 0f, 0.5f);
+
+        /// <summary>
+        /// ミニゲームの真ん中に出す大きな知らせの字の装飾。太字にして縁と影を付ける。
+        /// 付ける順番（Outline → Shadow）は、Inspector に並ぶコンポーネントの順になるので変えない
+        /// </summary>
+        internal static void StyleBannerText(Text text)
+        {
+            text.fontStyle = FontStyle.Bold;
+            text.gameObject.GetComponent<Outline>().effectDistance = BannerOutlineDistance;
+            var shadow = text.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = BannerShadowColor;
+            shadow.effectDistance = BannerShadowDistance;
+        }
+
         private static void PlaceCenter(RectTransform rect, Vector2 position, Vector2 size)
         {
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
+        }
+
+        /// <summary>
+        /// anchor の点から position だけずらした所に、中心を留めて置く（ミニゲームの HUD が角から測るのに使う）。
+        /// CreateLabel などはまん中に置くので、留める角を付け替える
+        /// </summary>
+        internal static void PlaceAt(RectTransform rect, Vector2 anchor, Vector2 position, Vector2 size)
+        {
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+        }
+
+        /// <summary>まん中を基準に置いた空の UI（名前と位置・大きさだけ。中身は呼んだ側が付ける）</summary>
+        private static GameObject CreateCenteredObject(Transform parent, string name, Vector2 position, Vector2 size)
+        {
+            var obj = UIDialogBuilder.CreateUIObject(name, parent);
+            PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
+            return obj;
         }
     }
 }

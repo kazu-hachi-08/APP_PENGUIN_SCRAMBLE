@@ -93,7 +93,7 @@ namespace PenmonScramble.Game
             }
 
             _elapsed += Time.unscaledDeltaTime;
-            var wave = 0.5f + 0.5f * Mathf.Sin(_elapsed * _pulsePerSecond * Mathf.PI * 2f);
+            var wave = ToyEasing.Pulse01(_elapsed, _pulsePerSecond);
             _current.localScale = Vector3.one * _currentBaseScale * (1f + _pulseScale * wave);
         }
     }
