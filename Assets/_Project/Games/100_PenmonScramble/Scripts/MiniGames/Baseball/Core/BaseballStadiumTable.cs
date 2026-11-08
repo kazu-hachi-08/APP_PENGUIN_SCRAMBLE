@@ -79,11 +79,11 @@ namespace PenmonScramble.Baseball.Core
 
         private static readonly BaseballStadiumDef[] All =
         {
-            new BaseballStadiumDef(1, "海岸", 1, 1, "ふつうの盤", BeachWild, BaseballFieldTable.Beach),
+            new BaseballStadiumDef(1, "海岸", 1, 1, "仕掛けなし", BeachWild, BaseballFieldTable.Beach),
             new BaseballStadiumDef(2, "氷山", 2, 2, "外野が氷（よく転がり、長打が出やすい）", IcebergWild, BaseballFieldTable.Iceberg),
             new BaseballStadiumDef(3, "深海", 3, 3, "水流の帯（転がる打球を横へ流す）", DeepSeaWild, BaseballFieldTable.DeepSea),
             new BaseballStadiumDef(4, "嵐の崖", 4, 4, "左右に動くフライの穴と、浮いた球を流す風", StormWild, BaseballFieldTable.StormCliff),
-            new BaseballStadiumDef(5, "火山の入り江", 5, 5, "間欠泉（打球を跳ね上げる）と、近くて高いフェンス", VolcanoWild, BaseballFieldTable.VolcanoCove),
+            new BaseballStadiumDef(5, "火山の入り江", 5, 5, "間欠泉（打球が跳ねる）と近くて高いフェンス", VolcanoWild, BaseballFieldTable.VolcanoCove),
         };
 
         public static IReadOnlyList<BaseballStadiumDef> Stadiums => All;

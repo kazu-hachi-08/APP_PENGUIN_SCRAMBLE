@@ -23,22 +23,23 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 TeamRoomModeMarkPadding = new Vector2(16f, 16f);
         private const int TeamRoomModeFontSize = 40;
 
-        private const float TeamRoomSeatY = -48f;
+        private const float TeamRoomSeatY = -40f;
         private const float TeamRoomSeatSpacing = 230f;
         private static readonly Vector2 TeamRoomSeatSize = new Vector2(206f, 80f);
         private const int TeamRoomSeatFontSize = 34;
 
-        private static readonly Vector2 TeamRoomLayoutPosition = new Vector2(0f, -135f);
-        private static readonly Vector2 TeamRoomLayoutSize = new Vector2(900f, 56f);
-        private const int TeamRoomLayoutFontSize = 32;
-        private static readonly Vector2 TeamRoomLockPosition = new Vector2(0f, -135f);
-        private static readonly Vector2 TeamRoomLockSize = new Vector2(900f, 80f);
+        // 強さと仕掛けの一言は2行（MiniGameGuides.TwoLines）。鍵の板はその2行の上に重ねる
+        private static readonly Vector2 TeamRoomLayoutPosition = new Vector2(0f, -126f);
+        private static readonly Vector2 TeamRoomLayoutSize = new Vector2(900f, 92f);
+        private const int TeamRoomLayoutFontSize = 30;
+        private static readonly Vector2 TeamRoomLockPosition = TeamRoomLayoutPosition;
+        private static readonly Vector2 TeamRoomLockSize = TeamRoomLayoutSize;
         private static readonly Vector2 TeamRoomLockIconPosition = new Vector2(-380f, 0f);
         private const float TeamRoomLockIconSize = 60f;
         private static readonly Vector2 TeamRoomLockTextSize = new Vector2(760f, 70f);
         private const int TeamRoomLockFontSize = 32;
-        private static readonly Vector2 TeamRoomRewardIconPosition = new Vector2(-420f, -212f);
-        private static readonly Vector2 TeamRoomRewardPosition = new Vector2(40f, -212f);
+        private static readonly Vector2 TeamRoomRewardIconPosition = new Vector2(-420f, -216f);
+        private static readonly Vector2 TeamRoomRewardPosition = new Vector2(40f, -216f);
         private static readonly Vector2 TeamRoomRewardSize = new Vector2(860f, 84f);
         private const int TeamRoomRewardFontSize = 28;
 
@@ -67,9 +68,9 @@ namespace PenmonScramble.Editor
         private static void CreateTeamRoomStadiumRow(Transform card, SerializedObject so)
         {
             var plate = CreatePanel(card, "Stadium", new Vector2(0f, RushStageY), RushStagePlateSize).transform;
-            var no = CreateLabel(plate, "No", string.Empty, RushStageNoFontSize, RushStageNoPosition, RushStageTextSize);
+            var no = CreateLabel(plate, "No", string.Empty, RushStageNoFontSize, RushStageNoPosition, RushStageNoSize);
             no.color = StageNoColor;
-            var name = CreateLabel(plate, "Name", string.Empty, RushStageNameFontSize, RushStageNamePosition, RushStageTextSize);
+            var name = CreateLabel(plate, "Name", string.Empty, RushStageNameFontSize, RushStageNamePosition, RushStageNameSize);
             name.fontStyle = FontStyle.Bold;
             var prev = CreateTitleButton(card, "PrevStadium", "◀", new Vector2(-RushArrowX, RushStageY), RushArrowSize, ArrowColor, MenuFontSize);
             var next = CreateTitleButton(card, "NextStadium", "▶", new Vector2(RushArrowX, RushStageY), RushArrowSize, ArrowColor, MenuFontSize);

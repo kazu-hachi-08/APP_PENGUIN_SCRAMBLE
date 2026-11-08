@@ -38,6 +38,7 @@ namespace PenmonScramble.Editor
 
             CheckRulePages(font, issues);
             CheckPenmonScreen(font, issues);
+            CheckMiniGames(font, issues);
 
             if (issues.Count == 0)
             {

@@ -8,12 +8,13 @@ namespace PenmonScramble.Golf.Core
     /// </summary>
     public sealed class GolfCourseDef
     {
-        public GolfCourseDef(int no, string name, int world, IReadOnlyList<GolfHoleDef> holes)
+        public GolfCourseDef(int no, string name, int world, IReadOnlyList<GolfHoleDef> holes, string gimmick = "")
         {
             No = no;
             Name = name;
             World = world;
             Holes = holes;
+            Gimmick = gimmick;
         }
 
         public int No { get; }
@@ -23,6 +24,9 @@ namespace PenmonScramble.Golf.Core
         public int World { get; }
 
         public IReadOnlyList<GolfHoleDef> Holes { get; }
+
+        /// <summary>仕掛けの一言（コース選びに出す。サッカー・野球の仕掛けの一言と同じ役目）</summary>
+        public string Gimmick { get; }
 
         public int TotalPar
         {
@@ -54,6 +58,16 @@ namespace PenmonScramble.Golf.Core
             { 5, GolfCourse5.Holes },
         };
 
+        // コース選びに出す仕掛けの一言。3ホールに出てくる仕掛けのうち、そのコースらしいものを短く
+        private static readonly Dictionary<int, string> Gimmicks = new Dictionary<int, string>
+        {
+            { 1, "流氷の壁と海" },
+            { 2, "氷の床・凍った坂・つらら" },
+            { 3, "海流とワープの泡" },
+            { 4, "崖へ吹く風と回る風車" },
+            { 5, "溶岩の川・間欠泉・動く岩" },
+        };
+
         /// <summary>番号のコース。表に無い・まだ作っていなければ null</summary>
         public static GolfCourseDef Get(int courseNo)
         {
@@ -63,7 +77,7 @@ namespace PenmonScramble.Golf.Core
                 return null;
             }
 
-            return new GolfCourseDef(row.No, row.Name, row.World, holes);
+            return new GolfCourseDef(row.No, row.Name, row.World, holes, Gimmicks.TryGetValue(courseNo, out var gimmick) ? gimmick : string.Empty);
         }
 
         /// <summary>開発用の試しのホールだけの1ホールのコース（記録には書かない）</summary>

@@ -16,7 +16,8 @@ namespace PenmonScramble.Editor
         private const float GolfRoomFlagSize = 120f;
         private static readonly Vector2 GolfRoomLayoutPosition = new Vector2(70f, 40f);
         private static readonly Vector2 GolfRoomLayoutSize = new Vector2(700f, 110f);
-        private const int GolfRoomLayoutFontSize = 40;
+        // コースの中身は2行（ホールとパー / 仕掛けの一言）。2行が枠の高さに入る大きさ
+        private const int GolfRoomLayoutFontSize = 36;
         private static readonly Vector2 GolfRoomLockPosition = new Vector2(0f, 40f);
         private static readonly Vector2 GolfRoomRewardIconPosition = new Vector2(-420f, -130f);
         private static readonly Vector2 GolfRoomRewardPosition = new Vector2(40f, -130f);
@@ -45,9 +46,9 @@ namespace PenmonScramble.Editor
         private static void CreateGolfRoomCourseRow(Transform card, SerializedObject so)
         {
             var plate = CreatePanel(card, "Course", new Vector2(0f, RushStageY), RushStagePlateSize).transform;
-            var no = CreateLabel(plate, "No", string.Empty, RushStageNoFontSize, RushStageNoPosition, RushStageTextSize);
+            var no = CreateLabel(plate, "No", string.Empty, RushStageNoFontSize, RushStageNoPosition, RushStageNoSize);
             no.color = StageNoColor;
-            var name = CreateLabel(plate, "Name", string.Empty, RushStageNameFontSize, RushStageNamePosition, RushStageTextSize);
+            var name = CreateLabel(plate, "Name", string.Empty, RushStageNameFontSize, RushStageNamePosition, RushStageNameSize);
             name.fontStyle = FontStyle.Bold;
             var prev = CreateTitleButton(card, "PrevCourse", "◀", new Vector2(-RushArrowX, RushStageY), RushArrowSize, ArrowColor, MenuFontSize);
             var next = CreateTitleButton(card, "NextCourse", "▶", new Vector2(RushArrowX, RushStageY), RushArrowSize, ArrowColor, MenuFontSize);
