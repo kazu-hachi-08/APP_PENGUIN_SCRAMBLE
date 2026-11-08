@@ -45,7 +45,6 @@ namespace PenmonScramble.Baseball.Game
             var batting = _game.BattingTeam;
             _view.Figures.SetBatter(_teams[batting][_game.CurrentBatter], _plan.IsCpuTeam(batting));
             _hud.ShowLineups(_game);
-            _hud.SetSteerStick(false);
             ShowTurn();
         }
 
@@ -128,7 +127,6 @@ namespace PenmonScramble.Baseball.Game
             BaseballSoundCues.PlayOutcome(outcome, play.Plate);
             ShowScore();
             _hud.ShowLineups(_game);
-            _hud.SetSteerStick(false);
             _stage = BaseballStage.Result;
             RefreshSpecialToggle();
         }

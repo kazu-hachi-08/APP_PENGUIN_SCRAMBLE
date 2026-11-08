@@ -8,6 +8,7 @@ namespace PenmonScramble.Baseball.Game
     /// <summary>
     /// 打つ子: バットの軸の左（三塁側）に、ホームの方を向いて立つ（右打ち）。両ヒレで軸の金具を握り、
     /// バットの角度に合わせて体をひねる（構えではバットが捕手の側＝右後ろ、振るとヒレと体が前へ回る）。
+    /// 軸が打席の中を左右へ動いたら、握ったまま横歩きでついて行く。
     /// 当たったら一塁へ走り出し、ホームランで喜ぶ・アウトと三振で悔しがる・四球は一塁へ歩く。
     /// 種類ごとの体は一度作ったら取っておく（打者が替わっても作り直さない）
     /// </summary>
@@ -34,6 +35,7 @@ namespace PenmonScramble.Baseball.Game
         private float _runSpeed;
         private bool _running;
         private bool _inStance;
+        private float _batOffset;
 
         public BaseballBatterView(BaseballFieldDef field, ToonMaterials materials, Transform parent)
         {
@@ -42,7 +44,7 @@ namespace PenmonScramble.Baseball.Game
             _parent = parent;
         }
 
-        private Vector3 StandPoint => BaseballSpace.ToWorld(_field.BatPivot) + new Vector3(-StandLeft, 0f, -StandBack);
+        private Vector3 StandPoint => BaseballSpace.ToWorld(_field.BatPivot) + new Vector3(_batOffset - StandLeft, 0f, -StandBack);
 
         /// <summary>この子を打席に立たせる（ほかの子は隠す）。替わったときはぽんと出す</summary>
         public void Use(int species, bool wild)
@@ -73,23 +75,34 @@ namespace PenmonScramble.Baseball.Game
             _inStance = true;
         }
 
-        public void Tick(BaseballBoard board, float batDegrees, float deltaTime)
+        public void Tick(float batDegrees, float batOffset, float deltaTime)
         {
+            _batOffset = batOffset;
             if (_current == null)
             {
                 return;
             }
 
-            _current.Tick(deltaTime);
             if (_inStance)
             {
+                FollowPivot(deltaTime);
                 PoseWithBat(batDegrees);
             }
 
+            _current.Tick(deltaTime);
             if (_running)
             {
                 TickRun(deltaTime);
             }
+        }
+
+        /// <summary>軸について横へ動く（動いた速さを渡して、足踏みさせる）</summary>
+        private void FollowPivot(float deltaTime)
+        {
+            var root = _current.Root;
+            var to = StandPoint;
+            _current.Motion.Velocity = deltaTime > 0f ? (to - root.localPosition) / deltaTime : Vector3.zero;
+            root.localPosition = to;
         }
 
         /// <summary>バットの角度（正が投手の方）から、体の向きとヒレの振り（正が右へ振り上げる）を決める</summary>

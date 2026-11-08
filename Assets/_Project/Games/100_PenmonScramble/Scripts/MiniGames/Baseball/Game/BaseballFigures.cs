@@ -53,10 +53,11 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>動く穴の後ろの守備の子を、穴の見えている位置について行かせる</summary>
         public void FollowHoles(System.Func<int, PenmonScramble.Core.Vec2> shownAt) => _fielders.FollowHoles(shownAt);
 
-        public void Tick(BaseballBoard board, BaseballFrame frame, Vector3 ball, float deltaTime)
+        /// <param name="batOffset">描くバットの軸のずれ（打つ子はバットについて左右へ動く）</param>
+        public void Tick(BaseballBoard board, BaseballFrame frame, float batOffset, Vector3 ball, float deltaTime)
         {
             var ballVisible = board.Phase != BaseballBoardPhase.Ready;
-            _batter.Tick(board, frame.BatDegrees, deltaTime);
+            _batter.Tick(frame.BatDegrees, batOffset, deltaTime);
             _pitcher.Tick(board, ball, ballVisible, deltaTime);
             _fielders.Tick(board, ball, ballVisible, deltaTime);
             Runners.Tick(deltaTime);

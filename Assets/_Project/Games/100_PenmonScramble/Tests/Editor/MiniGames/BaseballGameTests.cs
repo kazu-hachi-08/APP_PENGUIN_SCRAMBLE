@@ -332,7 +332,7 @@ namespace PenmonScramble.Tests
                 for (var step = 0; step < MaxSteps && board.Phase != BaseballBoardPhase.Done; step++)
                 {
                     var bat = ai.BatInput(board);
-                    board.Step(new BaseballInput(0f, bat.Swing, bat.Bunt, bat.SwingTime), events);
+                    board.Step(new BaseballInput(0f, bat.Swing, bat.Bunt, bat.SwingTime, bat.Move), events);
                 }
 
                 bunted = board.LastHit is { Bunt: true };

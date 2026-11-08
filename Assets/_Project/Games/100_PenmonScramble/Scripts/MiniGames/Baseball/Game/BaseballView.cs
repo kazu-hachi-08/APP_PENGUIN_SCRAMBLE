@@ -13,6 +13,9 @@ namespace PenmonScramble.Baseball.Game
     /// </summary>
     public partial class BaseballView : MonoBehaviour
     {
+        // 球と球の間に、打つ子が構えの所へ歩いて戻る速さ（毎秒。打席の中を動く速さより少し速く）
+        private const float BatReturnSpeed = 3f;
+
         [SerializeField] private Shader _toonShader;
         [SerializeField] private Shader _blobShadowShader;
 
@@ -23,6 +26,7 @@ namespace PenmonScramble.Baseball.Game
         private BaseballFieldDef _field;
         private BaseballBallView _ball;
         private BaseballBatView _bat;
+        private float _batOffset;
 
         public ToonMaterials Materials => _materials ??= new ToonMaterials(_toonShader, _blobShadowShader);
 
@@ -65,10 +69,23 @@ namespace PenmonScramble.Baseball.Game
             TickGimmicks(clock, deltaTime);
             Figures.FollowHoles(HoleShownAt);
             _ball.Sync(board, frame, deltaTime);
-            _bat.Sync(board, frame.BatDegrees);
-            Figures.Tick(board, frame, _ball.Position, deltaTime);
+            var batOffset = ShownBatOffset(board, frame, deltaTime);
+            _bat.Sync(board, frame.BatDegrees, batOffset);
+            Figures.Tick(board, frame, batOffset, _ball.Position, deltaTime);
             TickLane(board, deltaTime);
             TickHoles(deltaTime);
+        }
+
+        /// <summary>
+        /// 描くバットの軸のずれ。投げた球が来ている間は計算どおり（芯の位置が見たとおりでないと打てない）。
+        /// それ以外は、次の球で構えの所へ戻ったずれへ歩いて戻る（一瞬で跳ばないように）
+        /// </summary>
+        private float ShownBatOffset(BaseballBoard board, BaseballFrame frame, float deltaTime)
+        {
+            _batOffset = board.Phase == BaseballBoardPhase.Pitching
+                ? frame.BatOffset
+                : Mathf.MoveTowards(_batOffset, frame.BatOffset, BatReturnSpeed * deltaTime);
+            return _batOffset;
         }
 
         /// <summary>盤の上で起きたことへの見た目の反応（ゾーンの枠が光る・穴が光る・ホームランの球が飛んでいく・子が捕る）</summary>

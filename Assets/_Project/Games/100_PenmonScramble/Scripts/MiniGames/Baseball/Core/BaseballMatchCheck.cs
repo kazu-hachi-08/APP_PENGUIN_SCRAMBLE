@@ -179,7 +179,7 @@ namespace PenmonScramble.Baseball.Core
             {
                 var bat = batter.BatInput(board);
                 var bend = board.Phase == BaseballBoardPhase.BallInPlay ? BaseballAi.Steer(board) : BaseballAi.Bend(board.Pitch, plan, field);
-                board.Step(new BaseballInput(bend, bat.Swing, bat.Bunt, bat.SwingTime), events);
+                board.Step(new BaseballInput(bend, bat.Swing, bat.Bunt, bat.SwingTime, bat.Move), events);
             }
 
             foreach (var e in events)

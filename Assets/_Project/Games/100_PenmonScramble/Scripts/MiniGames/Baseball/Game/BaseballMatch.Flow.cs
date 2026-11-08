@@ -72,7 +72,6 @@ namespace PenmonScramble.Baseball.Game
             {
                 BaseballSoundCues.Play(e, Board);
                 _view.OnEvent(e, Board);
-                OnSpecialEvent(e);
             }
 
             _events.Clear();

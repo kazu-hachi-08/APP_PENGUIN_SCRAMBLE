@@ -4,7 +4,7 @@ using UnityEngine;
 namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
-    /// 1歩ぶんの写し（球の位置とバットの角度）。前の歩と今の歩の写しの間を補間して描く
+    /// 1歩ぶんの写し（球の位置とバットの角度・軸のずれ）。前の歩と今の歩の写しの間を補間して描く
     /// （計算は 1/30 秒ごとなので、そのまま描くと画面のフレームによってはカクつくため）
     /// </summary>
     public readonly struct BaseballFrame
@@ -15,25 +15,29 @@ namespace PenmonScramble.Baseball.Game
         /// <summary>バットの角度（度。BaseballBat.Degrees）</summary>
         public readonly float BatDegrees;
 
-        private BaseballFrame(Vector3 ball, float batDegrees)
+        /// <summary>バットの軸の横のずれ（BaseballBat.Offset。打つ子が左右へ動いた分）</summary>
+        public readonly float BatOffset;
+
+        private BaseballFrame(Vector3 ball, float batDegrees, float batOffset)
         {
             Ball = ball;
             BatDegrees = batDegrees;
+            BatOffset = batOffset;
         }
 
         public static BaseballFrame Capture(BaseballBoard board)
         {
             var p = board.BallPosition;
             var center = new Vector3(p.X, board.BallHeight + BaseballBalance.BallRadius, p.Y);
-            return new BaseballFrame(center, board.Bat.Degrees);
+            return new BaseballFrame(center, board.Bat.Degrees, board.Bat.Offset);
         }
 
         /// <summary>球だけずらした写し（計算し直して跳んだ分を、描くときに寄せて消すため）</summary>
-        public BaseballFrame WithBallOffset(Vector3 offset) => new BaseballFrame(Ball + offset, BatDegrees);
+        public BaseballFrame WithBallOffset(Vector3 offset) => new BaseballFrame(Ball + offset, BatDegrees, BatOffset);
 
         public static BaseballFrame Lerp(BaseballFrame a, BaseballFrame b, float t)
         {
-            return new BaseballFrame(Vector3.Lerp(a.Ball, b.Ball, t), Mathf.Lerp(a.BatDegrees, b.BatDegrees, t));
+            return new BaseballFrame(Vector3.Lerp(a.Ball, b.Ball, t), Mathf.Lerp(a.BatDegrees, b.BatDegrees, t), Mathf.Lerp(a.BatOffset, b.BatOffset, t));
         }
     }
 }

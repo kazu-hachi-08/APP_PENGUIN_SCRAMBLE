@@ -32,7 +32,7 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 SpaceKeySize = new Vector2(400f, 100f);
         private const float SideLabelGap = 30f;
         private static readonly Vector2 SideLabelSize = new Vector2(420f, 60f);
-        private const string KeyboardTip = "打つ番は J で振る・K でバント。投げる番は J K L で投げて、←→ で曲げる";
+        private const string KeyboardTip = "打つ番は ←→ で動いて J で振る・K でバント。投げる番は J K L で投げて、←→ で曲げる";
 
         private static readonly (string Label, Key Key, string Bat, string Pitch)[] ActionKeys =
         {
@@ -49,7 +49,7 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 PhoneCaptionSize = new Vector2(400f, 50f);
         private const int PhoneCaptionFontSize = 30;
         private const int PhoneCardFontSize = 18;
-        private const string TouchTip = "球種の札を押すと投げる。投げた後はスティックで曲げる。右上の ‖ でメニュー";
+        private const string TouchTip = "打つ番はスティックで動いて芯を合わせる。投げる番は札で投げて、スティックで曲げる";
         private static readonly string[] PhoneCardLabels = { "ストレート", "カーブ", "チェンジ\nアップ" };
 
         private static HowToPlayScreen CreateHowToPlay(Transform canvas)
@@ -70,7 +70,7 @@ namespace PenmonScramble.Editor
             B.CreateKeyCross(root, ArrowsCenter, new[] { "↑", "←", "↓", "→" }, new[] { Key.UpArrow, Key.LeftArrow, Key.DownArrow, Key.RightArrow });
             var moveCenter = (WasdCenter + ArrowsCenter) * 0.5f;
             B.CreateLabel(root, "Or", "または", B.ControlTipFontSize, new Vector2(moveCenter.x, WasdCenter.y), B.KeyLabelSize);
-            B.CreateLabel(root, "MoveLabel", "←→ 曲げる　↑↓ 投げる子を選ぶ", B.KeyWordFontSize, moveCenter + Vector2.down * (B.KeyPitch * 0.5f + B.KeyLabelGap), MoveLabelSize);
+            B.CreateLabel(root, "MoveLabel", "←→ 動く・曲げる　↑↓ 投げる子を選ぶ", B.KeyWordFontSize, moveCenter + Vector2.down * (B.KeyPitch * 0.5f + B.KeyLabelGap), MoveLabelSize);
 
             B.CreateLabel(root, "Legend", $"上: {Colored("打つ番", BatWordColor)}　下: {Colored("投げる番", PitchWordColor)}", B.ControlTipFontSize, LegendPosition, LegendSize);
             for (var i = 0; i < ActionKeys.Length; i++)
@@ -107,14 +107,14 @@ namespace PenmonScramble.Editor
         {
             var panel = B.CreateStretchGroup(parent, "Gamepad");
             var root = panel.transform;
-            // 左の列: 曲げる・魔球と必殺打・メニュー / 右の列: 振る・バント・球種（本編と同じく、よく押すボタンを右手側に）
-            B.CreatePadRow(root, 0, 0, "LStick", "L", new[] { "leftStick", "dpad" }, B.PadNeutralColor, true, "曲げる・投げる子を選ぶ");
+            // 左の列: 動く / 曲げる・魔球と必殺打・メニュー / 右の列: 振る・バント・球種（本編と同じく、よく押すボタンを右手側に）
+            B.CreatePadRow(root, 0, 0, "LStick", "L", new[] { "leftStick", "dpad" }, B.PadNeutralColor, true, "動く・曲げる・投げる子を選ぶ");
             B.CreatePadRow(root, 0, 1, "L1", "L1", new[] { "leftShoulder" }, B.PadNeutralColor, false, "魔球・必殺打の ON / OFF");
             B.CreatePadRow(root, 0, 2, "Options", "OPTIONS", new[] { "start" }, B.PadNeutralColor, false, "メニュー");
             B.CreatePadRow(root, 1, 0, "Cross", "×", new[] { "buttonSouth" }, B.PadCrossColor, true, "振る / ストレート");
             B.CreatePadRow(root, 1, 1, "Circle", "○", new[] { "buttonEast" }, B.PadCircleColor, true, "バント / カーブ");
             B.CreatePadRow(root, 1, 2, "Triangle", "△", new[] { "buttonNorth" }, B.PadTriangleColor, true, "チェンジアップ");
-            B.CreateControlTip(root, "打つ番は × で振る・○ でバント。投げる番は × ○ △ で投げて、スティックで曲げる");
+            B.CreateControlTip(root, "打つ番はスティックで動いて × で振る。投げる番は × ○ △ で投げて、スティックで曲げる");
             return panel;
         }
 
@@ -126,11 +126,12 @@ namespace PenmonScramble.Editor
             var scale = PhoneScreenSize.y / B.ReferenceResolution.y;
 
             var bat = CreatePhone(root, "BatPhone", -PhoneX, "打つ番");
+            B.CreateBaseballPhoneStick(bat, "動く", scale);
             B.CreateBaseballPhoneBatButtons(bat, scale);
             CreatePhoneSpecialToggle(bat, "必殺打", scale);
 
             var pitch = CreatePhone(root, "PitchPhone", PhoneX, "投げる番");
-            B.CreateBaseballPhoneStick(pitch, scale);
+            B.CreateBaseballPhoneStick(pitch, "曲げる", scale);
             CreatePhonePitchCards(pitch, scale);
             CreatePhoneSpecialToggle(pitch, "魔球", scale);
 
