@@ -5,7 +5,7 @@ using PenmonScramble.Baseball.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>野球の走者・試合の流れ・CPU のバント・試合の確認（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 3）</summary>
+    /// <summary>野球の走者・試合の流れ・CPU のバント・試合の確認</summary>
     public class BaseballGameTests
     {
         private const int Batter = 0;

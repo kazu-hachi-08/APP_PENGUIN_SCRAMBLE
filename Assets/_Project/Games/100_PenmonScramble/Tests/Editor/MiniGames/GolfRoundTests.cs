@@ -8,7 +8,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>ゴルフの特殊ショット・1コースのラウンド・報酬・コース1（Docs/MINIGAME_GOLF_PLAN.md フェーズ 4）</summary>
+    /// <summary>ゴルフの特殊ショット・1コースのラウンド・報酬・コース1</summary>
     public class GolfRoundTests
     {
         private const int MaxSteps = 20000;

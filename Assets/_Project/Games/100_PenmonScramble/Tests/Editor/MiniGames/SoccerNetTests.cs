@@ -9,7 +9,7 @@ using PenmonScramble.Soccer.Core;
 namespace PenmonScramble.Tests
 {
     /// <summary>
-    /// サッカーのオンライン（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 5）: チームの組み方・席ごとの操作・PK戦の番・
+    /// サッカーのオンライン: チームの組み方・席ごとの操作・PK戦の番・
     /// 入力の受け方・スナップショットとバイト列・写しの試合・待ちの窓の選び・MVP
     /// </summary>
     public class SoccerNetTests

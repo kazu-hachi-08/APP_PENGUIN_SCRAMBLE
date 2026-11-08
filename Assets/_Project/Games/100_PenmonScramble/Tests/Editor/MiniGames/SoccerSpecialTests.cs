@@ -7,7 +7,7 @@ using PenmonScramble.Soccer.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>サッカーの必殺シュート（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 4）: チームのゲージ・カットイン・属性ごとの軌道</summary>
+    /// <summary>サッカーの必殺シュート: チームのゲージ・カットイン・属性ごとの軌道</summary>
     public class SoccerSpecialTests
     {
         private const float Dt = SoccerRules.StepSeconds;

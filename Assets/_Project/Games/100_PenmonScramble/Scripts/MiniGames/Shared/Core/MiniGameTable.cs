@@ -4,7 +4,7 @@ namespace PenmonScramble.MiniGames.Core
 {
     /// <summary>
     /// ミニゲームの定義表。1つのミニゲームにつき1行。ここに1行足せば、ミニゲーム画面にカードが並ぶ
-    /// （足すときの手順は Docs/MINIGAME_GOLF_PLAN.md の「新しいミニゲームを足すときの手順」）
+    /// （足すときの手順は Docs/PENMON_SCRAMBLE_SPEC.md §13.1 の「新しいミニゲームを足すときの手順」）
     /// </summary>
     public static class MiniGameTable
     {

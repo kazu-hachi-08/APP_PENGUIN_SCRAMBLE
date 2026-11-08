@@ -11,7 +11,7 @@ namespace PenmonScramble.Soccer.Core
     /// </summary>
     public static class SoccerPitchTable
     {
-        // 横 28 × 縦 16 マス・ゴールの口 幅 5 × 高さ 1.6 マス（案。計画書「ピッチ」）
+        // 横 28 × 縦 16 マス・ゴールの口 幅 5 × 高さ 1.6 マス
         private const float HalfLength = 14f;
         private const float HalfWidth = 8f;
         private const float CornerCut = 1.6f;

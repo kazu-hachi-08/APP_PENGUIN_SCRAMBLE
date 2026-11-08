@@ -8,7 +8,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>野球の盤の上の計算（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 1）</summary>
+    /// <summary>野球の盤の上の計算</summary>
     public class BaseballTests
     {
         private const float Dt = BaseballRules.StepSeconds;

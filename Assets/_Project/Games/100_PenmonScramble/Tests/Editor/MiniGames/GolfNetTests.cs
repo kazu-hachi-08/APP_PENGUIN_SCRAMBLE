@@ -7,7 +7,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>ゴルフのオンライン（Docs/MINIGAME_GOLF_PLAN.md フェーズ 5）: 送る中身の読み書き・ゲストの写し・抜けた人・順位と報酬</summary>
+    /// <summary>ゴルフのオンライン: 送る中身の読み書き・ゲストの写し・抜けた人・順位と報酬</summary>
     public class GolfNetTests
     {
         private const int MaxTicks = 20000;

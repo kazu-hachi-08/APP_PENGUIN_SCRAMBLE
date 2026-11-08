@@ -3,7 +3,7 @@ namespace PenmonScramble.Game
     /// <summary>
     /// 部屋の待ちの窓で選べる「遊ぶもの」1つ（ボスラッシュ・ゴルフ・…）。待ちの窓の右の板（その遊びの選択）を受け持つ。
     /// 本編はミニゲームを知らないので、ミニゲームは自分の板をこの形で作り、RoomModeSelector に並べてもらう
-    /// （SceneBuilder がつなぐ。Docs/MINIGAME_GOLF_PLAN.md「新しいミニゲームを足すときの手順」の 4）
+    /// （SceneBuilder がつなぐ。Docs/PENMON_SCRAMBLE_SPEC.md §13.1「新しいミニゲームを足すときの手順」の 4）
     /// </summary>
     public interface IRoomMode
     {

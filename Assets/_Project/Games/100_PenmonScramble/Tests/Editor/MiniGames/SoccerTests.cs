@@ -8,7 +8,7 @@ using PenmonScramble.Soccer.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>サッカーのピッチの上の計算（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 1）</summary>
+    /// <summary>サッカーのピッチの上の計算</summary>
     public class SoccerTests
     {
         private const float Dt = SoccerRules.StepSeconds;

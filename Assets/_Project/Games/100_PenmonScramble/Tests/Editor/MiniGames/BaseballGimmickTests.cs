@@ -8,7 +8,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>野球の球場と仕掛け（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 6）: 盤の時計・氷の床・水流・風・動く穴・間欠泉・5球場の盤</summary>
+    /// <summary>野球の球場と仕掛け: 盤の時計・氷の床・水流・風・動く穴・間欠泉・5球場の盤</summary>
     public class BaseballGimmickTests
     {
         private const float Dt = BaseballRules.StepSeconds;

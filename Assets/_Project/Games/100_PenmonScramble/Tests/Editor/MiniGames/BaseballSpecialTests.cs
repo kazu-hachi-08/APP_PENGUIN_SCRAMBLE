@@ -7,7 +7,7 @@ using PenmonScramble.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>野球の魔球・必殺打・球場・報酬（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 4）</summary>
+    /// <summary>野球の魔球・必殺打・球場・報酬</summary>
     public class BaseballSpecialTests
     {
         private const float Dt = BaseballRules.StepSeconds;

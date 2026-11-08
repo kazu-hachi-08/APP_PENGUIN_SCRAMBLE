@@ -9,7 +9,7 @@ using PenmonScramble.Soccer.Core;
 namespace PenmonScramble.Tests
 {
     /// <summary>
-    /// サッカーのひとりで1試合（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 4）: 試合の流れ・PK戦・報酬・スタジアムの定義表
+    /// サッカーのひとりで1試合: 試合の流れ・PK戦・報酬・スタジアムの定義表
     /// </summary>
     public class SoccerMatchTests
     {

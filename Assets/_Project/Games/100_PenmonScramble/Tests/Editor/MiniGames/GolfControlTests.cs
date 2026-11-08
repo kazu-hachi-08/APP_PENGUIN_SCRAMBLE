@@ -4,7 +4,7 @@ using PenmonScramble.Golf.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>ゴルフの操作まわりの計算: パワーゲージ・打つ子の選び方・打数の呼び名（Docs/MINIGAME_GOLF_PLAN.md フェーズ 3）</summary>
+    /// <summary>ゴルフの操作まわりの計算: パワーゲージ・打つ子の選び方・打数の呼び名</summary>
     public class GolfControlTests
     {
         private const float Cycle = GolfRules.GaugeCycleSeconds;
