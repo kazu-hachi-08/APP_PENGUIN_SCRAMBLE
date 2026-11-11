@@ -100,7 +100,6 @@ namespace PenmonScramble.Core
         {
             return new BigBossBrain(def.Attacks, def.RestSeconds, Balance.BigBossFirstAttackDelay, telegraphScale)
             {
-                Def = def,
                 Rage = serious ? def.Rage : null,
                 IsSerious = serious,
             };
@@ -113,9 +112,6 @@ namespace PenmonScramble.Core
                 IsGiant = true,
             };
         }
-
-        /// <summary>大ボスの定義。巨大ペンモンは null</summary>
-        public BigBossDef Def { get; private set; }
 
         /// <summary>この順に繰り返す</summary>
         public IReadOnlyList<BossAttackDef> Attacks { get; }

@@ -11,7 +11,6 @@ namespace PenmonScramble.Game
     {
         private static readonly Color White = Hex(0xF7F7F2);
         private static readonly Color Dark = Hex(0x1F2330);
-        private static readonly Color Orange = Hex(0xFF8F24);
         private static readonly Color Gold = Hex(0xFFD23F);
         private static readonly Color Yellow = Hex(0xFFD633);
         private static readonly Color PinkFeet = Hex(0xE89AA0);

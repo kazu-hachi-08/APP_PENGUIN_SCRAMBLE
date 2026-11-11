@@ -27,7 +27,9 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 RushArrowSize = new Vector2(90f, 110f);
         private static readonly Vector2 RushStageNoPosition = new Vector2(0f, 30f);
         private static readonly Vector2 RushStageNamePosition = new Vector2(0f, -18f);
-        private static readonly Vector2 RushStageTextSize = new Vector2(640f, 56f);
+        // 枠の高さは字の行の高さ（字の大きさの約 1.45 倍）が入るように。名前（50）は番号（28）より高い枠にする
+        private static readonly Vector2 RushStageNoSize = new Vector2(640f, 44f);
+        private static readonly Vector2 RushStageNameSize = new Vector2(640f, 76f);
         private const int RushStageNoFontSize = 28;
         private const int RushStageNameFontSize = 50;
 
@@ -91,9 +93,9 @@ namespace PenmonScramble.Editor
         private static void CreateRushStageRow(Transform card, SerializedObject so)
         {
             var plate = CreatePanel(card, "Stage", new Vector2(0f, RushStageY), RushStagePlateSize).transform;
-            var no = CreateLabel(plate, "No", string.Empty, RushStageNoFontSize, RushStageNoPosition, RushStageTextSize);
+            var no = CreateLabel(plate, "No", string.Empty, RushStageNoFontSize, RushStageNoPosition, RushStageNoSize);
             no.color = StageNoColor;
-            var name = CreateLabel(plate, "Name", string.Empty, RushStageNameFontSize, RushStageNamePosition, RushStageTextSize);
+            var name = CreateLabel(plate, "Name", string.Empty, RushStageNameFontSize, RushStageNamePosition, RushStageNameSize);
             name.fontStyle = FontStyle.Bold;
             var prev = CreateTitleButton(card, "PrevStage", "◀", new Vector2(-RushArrowX, RushStageY), RushArrowSize, ArrowColor, MenuFontSize);
             var next = CreateTitleButton(card, "NextStage", "▶", new Vector2(RushArrowX, RushStageY), RushArrowSize, ArrowColor, MenuFontSize);
@@ -160,15 +162,10 @@ namespace PenmonScramble.Editor
                 var difficulty = (Difficulty)i;
                 var slot = CreateHudRect(card, $"Difficulty{i}", Middle, new Vector2((i - 1) * RushColumnSpacing, RushDifficultyY), RushDifficultySize);
                 slots[i] = slot.gameObject.AddComponent<CanvasGroup>();
-                var mark = UIDialogBuilder.CreateUIObject("Selected", slot);
-                PlaceCenter(mark.GetComponent<RectTransform>(), Vector2.zero, RushDifficultySize + RushDifficultyMarkPadding);
-                AddSliced(mark, RoundRectPath, Color.white, CornerScale(ButtonCornerRadius + RushDifficultyMarkPadding.y * 0.5f)).raycastTarget = false;
-                marks[i] = mark;
+                marks[i] = CreateSelectedMark(slot, RushDifficultySize, RushDifficultyMarkPadding);
 
                 var button = CreateTitleButton(slot, "Button", DifficultyNames.NameOf(difficulty), Vector2.zero, RushDifficultySize, DifficultyNames.ColorOf(difficulty), RushDifficultyFontSize);
-                var motion = new SerializedObject(button.GetComponent<UiButtonMotion>());
-                motion.FindProperty("_disabledAlpha").floatValue = 1f;
-                motion.ApplyModifiedProperties();
+                KeepOpaqueWhenDisabled(button);
                 buttons[i] = button;
 
                 var lockIcon = CreateHudImage(slot, "Lock", LockIconPath, RushLockIconColor, Middle, RushDifficultyLockPosition, Vector2.one * RushDifficultyLockSize);

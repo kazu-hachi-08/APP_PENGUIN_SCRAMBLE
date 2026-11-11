@@ -7,7 +7,7 @@ using PenmonScramble.Soccer.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>サッカーの3対3（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 3）: パス・スライディング・ダッシュ・動かす子の切り替え・AI</summary>
+    /// <summary>サッカーの3対3: パス・スライディング・ダッシュ・動かす子の切り替え・AI</summary>
     public class SoccerTeamPlayTests
     {
         private const float Dt = SoccerRules.StepSeconds;

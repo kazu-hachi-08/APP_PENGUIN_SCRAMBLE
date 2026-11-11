@@ -155,14 +155,19 @@ namespace PenmonScramble.Editor
             label.alignment = TextAnchor.MiddleLeft;
         }
 
+        // 遊び方のスマホの外枠（本体の角丸）と画面を重ねる。中身を置く画面の Transform を返す
+        internal static Transform CreatePhoneFrame(Transform root, string bodyName, string screenName, Vector2 position)
+        {
+            CreateRoundedBox(root, bodyName, position, PhoneScreenSize + Vector2.one * (PhoneBezel * 2f), PhoneBodyColor);
+            return CreateRoundedBox(root, screenName, position, PhoneScreenSize, PhoneScreenColor).transform;
+        }
+
         internal static GameObject CreateTouchPanel(Transform parent, ControlWords words = null)
         {
             words ??= StageWords;
             var panel = CreateStretchGroup(parent, "Touch");
             var root = panel.transform;
-            var rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>(RoundedSpritePath);
-            CreateRoundedBox(root, "PhoneBody", PhoneScreenPosition, PhoneScreenSize + Vector2.one * (PhoneBezel * 2f), PhoneBodyColor, rounded);
-            var screen = CreateRoundedBox(root, "PhoneScreen", PhoneScreenPosition, PhoneScreenSize, PhoneScreenColor, rounded).transform;
+            var screen = CreatePhoneFrame(root, "PhoneBody", "PhoneScreen", PhoneScreenPosition);
 
             // ステージ中と同じ並びを、画面の絵の大きさまで縮める（基準の高さ 1080 → 絵の高さ）
             var scale = PhoneScreenSize.y / ReferenceResolution.y;
@@ -245,6 +250,12 @@ namespace PenmonScramble.Editor
 
             so.ApplyModifiedProperties();
             return key;
+        }
+
+        // 角丸の絵を既定の絵（RoundedSpritePath）で作る。呼び出し側で絵を読む手間を省く
+        internal static Image CreateRoundedBox(Transform parent, string name, Vector2 position, Vector2 size, Color color)
+        {
+            return CreateRoundedBox(parent, name, position, size, color, AssetDatabase.GetBuiltinExtraResource<Sprite>(RoundedSpritePath));
         }
 
         internal static Image CreateRoundedBox(Transform parent, string name, Vector2 position, Vector2 size, Color color, Sprite sprite)

@@ -301,6 +301,14 @@ namespace PenmonScramble.Editor
             image.fillClockwise = true;
         }
 
+        /// <summary>左から右へ伸びる棒（ゲージ）。fillOrigin は fillMethod の後に入れる（fillMethod を変えると origin が戻るため）</summary>
+        internal static void SetHorizontalFill(Image image)
+        {
+            image.type = Image.Type.Filled;
+            image.fillMethod = Image.FillMethod.Horizontal;
+            image.fillOrigin = (int)Image.OriginHorizontal.Left;
+        }
+
         /// <summary>見た目の部品は押す邪魔をしない（触れる範囲はボタンの親が持つ）</summary>
         internal static void DisableRaycasts(Transform visual)
         {

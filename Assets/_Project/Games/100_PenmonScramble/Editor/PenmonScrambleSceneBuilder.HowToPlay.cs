@@ -118,9 +118,7 @@ namespace PenmonScramble.Editor
 
         internal static GameObject CreateStretchGroup(Transform parent, string name)
         {
-            var obj = UIDialogBuilder.CreateUIObject(name, parent);
-            UIDialogBuilder.SetStretchAll(obj.GetComponent<RectTransform>());
-            return obj;
+            return UIDialogBuilder.CreateStretchedUIObject(name, parent);
         }
 
         internal static void SetObjectArray(SerializedProperty property, UnityEngine.Object[] values)

@@ -7,7 +7,7 @@
 ## 1. Unityバージョン
 
 - **バージョン**: `Unity 6000.6.2f1`（ペンモンと同じ。`ProjectSettings/ProjectVersion.txt` と同じものを使う）
-- レンダーパイプライン: URP（2D）
+- レンダーパイプライン: URP（Universal Renderer）
 
 ## 2. 必要なUnityモジュール
 
@@ -40,7 +40,7 @@ Assets/
 │       └── 100_PenmonScramble/       # ゲーム本体
 │           ├── Art/                  # 絵（Icon / Portraits / Stage / Title / UI）
 │           ├── Editor/               # エディタ拡張（3D プレビュー・ビルド・ベンチマーク）
-│           ├── Scenes/               # ゲームのシーン（PenmonScrambleScene / Preview3D）
+│           ├── Scenes/               # ゲームのシーン（PenmonScrambleScene / Preview3D / GolfScene / SoccerScene / BaseballScene）
 │           ├── Scripts/              # Core / Game
 │           ├── Settings/             # URP の設定アセット
 │           ├── Shaders/              # Toon / BlobShadow / Fx

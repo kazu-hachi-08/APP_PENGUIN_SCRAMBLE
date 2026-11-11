@@ -4,7 +4,7 @@ using PenmonScramble.Core;
 namespace PenmonScramble.Baseball.Core
 {
     /// <summary>
-    /// 魔球・必殺打の中身（持ち主の子の属性と★）。属性で動きが、★（1〜3）で強さが決まる（Docs/MINIGAME_BASEBALL_PLAN.md「魔球と必殺打」）。
+    /// 魔球・必殺打の中身（持ち主の子の属性と★）。属性で動きが、★（1〜3）で強さが決まる。
     /// パワー（育成）は効かせない（育てた子だけが強くならないように。ミニゲームは編成の誰でも同じように遊べる）
     /// </summary>
     public readonly struct BaseballSpecial

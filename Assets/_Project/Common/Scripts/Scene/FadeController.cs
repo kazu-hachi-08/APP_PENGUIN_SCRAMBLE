@@ -15,8 +15,6 @@ namespace PenmonScramble.Common.Scene
         [SerializeField] private Image _fadeImage;
         [SerializeField] private float _defaultDuration = 0.5f;
 
-        public bool IsFading { get; private set; }
-
         private void Awake()
         {
             if (_canvasGroup == null)
@@ -59,7 +57,6 @@ namespace PenmonScramble.Common.Scene
 
         private IEnumerator FadeRoutine(float fromAlpha, float toAlpha, float duration)
         {
-            IsFading = true;
             if (_canvasGroup != null)
             {
                 _canvasGroup.blocksRaycasts = true;
@@ -76,7 +73,6 @@ namespace PenmonScramble.Common.Scene
                 _canvasGroup.alpha = toAlpha;
                 _canvasGroup.blocksRaycasts = toAlpha > 0.01f;
             }
-            IsFading = false;
         }
     }
 }

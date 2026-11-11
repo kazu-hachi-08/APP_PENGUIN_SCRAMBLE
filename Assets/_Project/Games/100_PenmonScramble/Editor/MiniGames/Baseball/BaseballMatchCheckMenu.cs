@@ -9,11 +9,11 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// CPU の試合の確認（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 3）。CPU 同士の3イニングを描かずに計算だけで何試合も回し、
+    /// CPU の試合の確認。CPU 同士の3イニングを描かずに計算だけで何試合も回し、
     /// 1試合の点・打率・ホームラン・三振・四球・打球の結果の割合・穴ごとの入った割合・1試合の長さ・強さの差での勝ち負けを Console に出す
-    /// （サッカーの試合の確認と同じ考え方）。魔球は属性ごとに打たれた割合、必殺打は当てた後の結果の割合も出す（フェーズ 4）。
+    /// （サッカーの試合の確認と同じ考え方）。魔球は属性ごとに打たれた割合、必殺打は当てた後の結果の割合も出す。
     /// Play しなくてよい。裏の糸で回し、進み具合を出す。
-    /// 「全球場」は5球場の盤（仕掛けつき）で、球場の強さどうしと ★1 対 ★5 を回す（フェーズ 6。仕掛けで球が詰まらないか・点の入り方・強さの順）
+    /// 「全球場」は5球場の盤（仕掛けつき）で、球場の強さどうしと ★1 対 ★5 を回す（仕掛けで球が詰まらないか・点の入り方・強さの順）
     /// </summary>
     public static class BaseballMatchCheckMenu
     {
@@ -78,24 +78,14 @@ namespace PenmonScramble.Editor
             thread.Start();
 
             var total = pairings.Length * matches;
-            while (thread.IsAlive)
-            {
-                if (EditorUtility.DisplayCancelableProgressBar(title, $"CPU 同士で試合をしています… {done}/{total} 試合", (float)done / total))
-                {
-                    cancel.Cancel();
-                }
-
-                Thread.Sleep(100);
-            }
-
-            EditorUtility.ClearProgressBar();
+            BalanceLabMenu.WaitWithProgress(thread, cancel, title, () => $"CPU 同士で試合をしています… {done}/{total} 試合", () => (float)done / total);
             cancelled = cancel.IsCancellationRequested;
             return results;
         }
 
         private static string Report(string title, BaseballFieldDef field, List<(int away, int home, List<BaseballMatchStats> stats)> results, int matches, bool cancelled)
         {
-            var text = new StringBuilder(cancelled ? $"{title}（途中でやめました）\n" : $"{title}\n");
+            var text = new StringBuilder(BalanceLabMenu.ReportHeader(title, cancelled) + "\n");
             text.AppendLine($"1組 {matches} 試合・{BaseballRules.Innings} イニング。点・ホームラン・三振・四球・球数・分 は1試合の平均。打球の割合はファウルを除くフェアの打球に対して");
             foreach (var (away, home, stats) in results)
             {

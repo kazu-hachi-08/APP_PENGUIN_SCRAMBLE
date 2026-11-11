@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using PenmonScramble.Baseball.Core;
-using PenmonScramble.Common.Profile;
 using PenmonScramble.Game;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
@@ -106,8 +104,7 @@ namespace PenmonScramble.Baseball.Game
                 return;
             }
 
-            _resultLeft -= dt;
-            if (_resultLeft <= 0f)
+            if (MiniGameResultView.TickResultTimer(ref _resultLeft, dt))
             {
                 _resultLeft = -1f;
                 ShowResult();
@@ -148,13 +145,7 @@ namespace PenmonScramble.Baseball.Game
                 return;
             }
 
-            var names = new List<string>();
-            foreach (var seat in seats)
-            {
-                names.Add(SeatNames.Get(seat));
-            }
-
-            _hud.ShowMvp(string.Join("・", names), _seatRbi[seats[0]], MiniGameSeats.ColorOf(seats[0]));
+            _hud.ShowMvp(MiniGameSeats.NamesOf(seats), _seatRbi[seats[0]], MiniGameSeats.ColorOf(seats[0]));
         }
 
         /// <summary>
@@ -173,7 +164,7 @@ namespace PenmonScramble.Baseball.Game
             var hadBest = records.TryGetBest(game.Id, courseNo, out var previousBest);
             var firstWin = (records.Find(game.Id, courseNo)?.special ?? 0) == 0;
             var reward = BaseballReward.Compute(runs, outcome, _record && firstWin);
-            var info = new BaseballResultInfo(runs, conceded, outcome, reward, _record, previousBest, hadBest);
+            var info = new BaseballResultInfo(runs, conceded, outcome, reward, _record, previousBest);
             if (!_record)
             {
                 return info;
@@ -187,24 +178,7 @@ namespace PenmonScramble.Baseball.Game
 
         private void OnResultChosen(int card)
         {
-            switch (card)
-            {
-                case MiniGameResultPanel.RetryCard:
-                    PlayAgain();
-                    break;
-                case MiniGameResultPanel.CoursesCard:
-                    if (IsOnline)
-                    {
-                        RoomRequested?.Invoke();
-                        break;
-                    }
-
-                    MiniGameLaunch.ReturnToHub();
-                    break;
-                case MiniGameResultPanel.LobbyCard:
-                    MiniGameLaunch.ReturnToLobby();
-                    break;
-            }
+            MiniGameResultView.RouteResultCard(card, IsOnline, PlayAgain, () => RoomRequested?.Invoke());
         }
 
         /// <summary>もう一度: 試合なら先攻と後攻を入れ替えて始め直す</summary>

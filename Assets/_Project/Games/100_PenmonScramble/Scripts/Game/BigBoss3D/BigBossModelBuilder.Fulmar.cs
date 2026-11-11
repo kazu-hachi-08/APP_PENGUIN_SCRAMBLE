@@ -24,7 +24,7 @@ namespace PenmonScramble.Game
         private static readonly Vector3 FulmarHeadPivot = new Vector3(0f, 0.28f, 0.66f);
         private static readonly Vector3 FulmarHeadCenter = new Vector3(0f, 0.08f, 0.08f);
 
-        // 翼の付け根の横の位置と、内側の翼の長さ。広げた幅はカモメ（約 1.8 倍）より広い 2.2 倍ほど
+        // 翼の付け根の横の位置と、内側の翼の長さ。広げた幅はオオトウゾクカモメ（約 1.8 倍）より広い 2.2 倍ほど
         private const float FulmarShoulderX = 0.46f;
         private const float FulmarInnerWing = 0.82f;
 

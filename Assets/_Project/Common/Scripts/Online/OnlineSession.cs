@@ -228,7 +228,7 @@ namespace PenmonScramble.Common.Online
             if (!IsHost || _matchStarted || (_memberIds.Count == 0 && !allowAlone)) return;
 
             _matchStarted = true;
-            int count = _memberIds.Count + 1;
+            int count = MemberCount;
             string[] names = CollectMemberNames();
             for (int i = 0; i < _memberIds.Count; i++)
             {
@@ -269,9 +269,7 @@ namespace PenmonScramble.Common.Online
 
             foreach (ulong id in _memberIds)
             {
-                using var writer = new FastBufferWriter(InitialMessageSize, Allocator.Temp, MaxMessageSize);
-                NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RoomMessage, id, writer,
-                    NetworkDelivery.ReliableSequenced);
+                SendReliable(RoomMessage, id, null);
             }
 
             _carryRoomOverReload = true;
@@ -472,7 +470,7 @@ namespace PenmonScramble.Common.Online
 
         /// <summary>
         /// NetworkManager はシーンに置かず実行時に1つだけ作る。
-        /// Scene に置くとオフライン（NPC戦）でも常に存在してしまい、2人開発での Scene 差分も増えるため。
+        /// Scene に置くとオフライン（NPC戦）でも常に存在してしまうため。
         /// NetworkManager 自身が DontDestroyOnLoad になるので、再戦時は作り直さず使い回す。
         /// </summary>
         private static void EnsureNetworkManager()
@@ -540,7 +538,7 @@ namespace PenmonScramble.Common.Online
 
             _memberIds.Add(clientId);
             _peerConnected = true;
-            OnMemberCountChanged?.Invoke(_memberIds.Count + 1);
+            OnMemberCountChanged?.Invoke(MemberCount);
         }
 
         private void HandleClientDisconnected(ulong clientId)
@@ -577,7 +575,7 @@ namespace PenmonScramble.Common.Online
             if (!_matchStarted)
             {
                 _peerConnected = _memberIds.Count > 0;
-                OnMemberCountChanged?.Invoke(_memberIds.Count + 1);
+                OnMemberCountChanged?.Invoke(MemberCount);
                 return;
             }
 
@@ -595,7 +593,7 @@ namespace PenmonScramble.Common.Online
         /// <summary>席順（ホスト=0、以降は参加順）の名前。名前が届いていない人は空欄にして「P{n}」表示に任せる</summary>
         private string[] CollectMemberNames()
         {
-            var names = new string[_memberIds.Count + 1];
+            var names = new string[MemberCount];
             names[0] = UserProfile.Name;
             for (int i = 0; i < _memberIds.Count; i++)
             {
@@ -607,11 +605,23 @@ namespace PenmonScramble.Common.Online
 
         private static void SendStart(ulong clientId, int seat, string[] names)
         {
+            SendReliable(StartMessage, clientId, writer =>
+            {
+                writer.WriteValueSafe(seat);
+                writer.WriteValueSafe(names.Length);
+                foreach (string name in names) writer.WriteValueSafe(name);
+            });
+        }
+
+        /// <summary>
+        /// 1人に確実な順で送る。書き込み先は送信のたびに作って同じ場所で捨てる
+        /// （Allocator.Temp は短命なバッファ用なので、溜めて使い回さない）
+        /// </summary>
+        private static void SendReliable(string messageName, ulong clientId, Action<FastBufferWriter> writeBody)
+        {
             using var writer = new FastBufferWriter(InitialMessageSize, Allocator.Temp, MaxMessageSize);
-            writer.WriteValueSafe(seat);
-            writer.WriteValueSafe(names.Length);
-            foreach (string name in names) writer.WriteValueSafe(name);
-            NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(StartMessage, clientId, writer,
+            writeBody?.Invoke(writer);
+            NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(messageName, clientId, writer,
                 NetworkDelivery.ReliableSequenced);
         }
 
@@ -637,10 +647,7 @@ namespace PenmonScramble.Common.Online
 
         private static void SendName(ulong clientId)
         {
-            using var writer = new FastBufferWriter(InitialMessageSize, Allocator.Temp, MaxMessageSize);
-            writer.WriteValueSafe(UserProfile.Name);
-            NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(NameMessage, clientId, writer,
-                NetworkDelivery.ReliableSequenced);
+            SendReliable(NameMessage, clientId, writer => writer.WriteValueSafe(UserProfile.Name));
         }
 
         private void ReceiveName(ulong senderId, FastBufferReader reader)

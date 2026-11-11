@@ -47,7 +47,7 @@ namespace PenmonScramble.Soccer.Core
             }
         }
 
-        /// <summary>ゲストのみ: 届いた写しを書き込む。子・キーパーの数が違う写しは無視する（呼ぶ側が先に確かめる）</summary>
+        /// <summary>ゲストのみ: 届いた写しを書き込む。子・キーパーの数は呼ぶ側（SoccerMatch.ApplySnapshot）が先に確かめてから渡す。ここでは数の少ない方まで書く</summary>
         internal void ApplySnapshot(SoccerSnapshot snapshot)
         {
             for (var team = 0; team < SoccerRules.TeamCount; team++)

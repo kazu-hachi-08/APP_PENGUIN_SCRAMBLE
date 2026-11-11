@@ -23,10 +23,8 @@ namespace PenmonScramble.Core
         public int Players { get; }
         public BotSkill Skill { get; }
         public BalanceParty Party { get; }
-        public IReadOnlyList<BalanceRunResult> Results => _results;
 
         public float ClearRate => Average(r => r.Cleared ? 1f : 0f);
-        public float TimeoutRate => Average(r => r.TimedOut ? 1f : 0f);
 
         /// <summary>クリアできた回の平均の秒数（クリアが無ければ全部の平均）</summary>
         public float ClearSeconds => HasClear ? Average(r => r.Seconds, r => r.Cleared) : Average(r => r.Seconds);
@@ -84,7 +82,7 @@ namespace PenmonScramble.Core
 
     /// <summary>
     /// バランスの試験場: ステージ（1-1〜5-3・ボスラッシュ×3難易度）× 人数 × 編成 × 種 をボットで回して、表にまとめる。
-    /// 目標（計画書 §7.2 / 仕様書 §11）と並べて、どこを直すべきかを見る
+    /// 目標と並べて、どこを直すべきかを見る
     /// </summary>
     public static partial class BalanceLab
     {

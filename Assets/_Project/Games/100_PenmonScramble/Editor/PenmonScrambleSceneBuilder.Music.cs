@@ -6,7 +6,7 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// 素材の曲（Music/）を MusicClips につなぐ。曲は規約でリポジトリに入れられないので、無ければ空のままにして仮の曲で鳴らす。
-    /// どの曲を使うか・入手先は Docs/PENMON_SCRAMBLE_SPEC.md §9.7
+    /// どの曲を使うか・入手先は Docs/PENMON_SCRAMBLE_SPEC.md
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {

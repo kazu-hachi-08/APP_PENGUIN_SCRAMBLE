@@ -5,7 +5,7 @@ namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
     /// 走者の見せ場: 塁にいた走者が動く打席は、打球を少し見せてからカメラをダイヤモンドへ戻し、戻ってから走者を走らせる
-    /// （打球を追っている間に走者が画面の外で走り終えてしまい、何が起きたか分からなかったため）。
+    /// （打球を追っている間に走者が画面の外で走り終えると、何が起きたか分からないので）。
     /// 走り終えるまで結果を長めに見せ、ホームへ還った子ごとに「+1」と音を出す（BaseballRunners）
     /// </summary>
     public partial class BaseballMatch

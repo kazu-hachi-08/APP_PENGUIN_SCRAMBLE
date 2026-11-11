@@ -19,7 +19,7 @@ namespace PenmonScramble.Core
             text.AppendLine("# バランスの試験場の結果");
             text.AppendLine();
             text.AppendLine($"> `Tools > PenmonScramble > Balance > Run` で作った表（1条件 {seeds} 回）。ふつうの人＝ボットの Casual（気づくまで 0.35 秒・2 割見落とす）、うまい人＝ Expert（0.15 秒・見落とさない）。");
-            text.AppendLine("> ボットは技を出し続けるので、人より手数が多い。ここで合わせた後、実機で遊んで確かめる（計画書 §7.3）。");
+            text.AppendLine("> ボットは技を出し続けるので、人より手数が多い。ここで合わせた後、実機で遊んで確かめる。");
             text.AppendLine();
             AppendChecks(text, Check(cases));
             AppendStory(text, cases);

@@ -1,4 +1,3 @@
-using PenmonScramble.Common.Editor;
 using PenmonScramble.Game;
 using UnityEditor;
 using UnityEngine;
@@ -138,9 +137,7 @@ namespace PenmonScramble.Editor
             fill.raycastTarget = false;
             // 角の丸い絵は塗りつぶしで切ると端が欠けるので、四角で描く
             fill.sprite = null;
-            fill.type = Image.Type.Filled;
-            fill.fillMethod = Image.FillMethod.Horizontal;
-            fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            SetHorizontalFill(fill);
             return fill;
         }
 

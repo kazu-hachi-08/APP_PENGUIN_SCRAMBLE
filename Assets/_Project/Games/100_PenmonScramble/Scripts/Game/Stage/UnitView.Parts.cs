@@ -97,7 +97,7 @@ namespace PenmonScramble.Game
         {
             if (_label != null)
             {
-                // もぐっている・空から降りてくる間は、体が床の上に無いので名前も出さない
+                // もぐっている・空から降りてくる間は名前も出さない（湯気と同じ条件）
                 _label.gameObject.SetActive(!IsSubmerged && !IsDroppingIn);
                 // メニューを開いている間は止まっているので、仲間が「やられそう」と心配しないよう分かるようにする
                 var text = IsInMenu ? _labelText + InMenuSuffix : _labelText;

@@ -86,8 +86,7 @@ namespace PenmonScramble.Game
             // しずく形の先を上（少し後ろへ倒す）、平たい面を横へ向ける（大ボスのヒレと同じ向きの決め方）
             blade.transform.localRotation = Quaternion.LookRotation(Vector3.right, Quaternion.Euler(-FinLean, 0f, 0f) * Vector3.up);
             blade.transform.localScale = FinSize;
-            var renderer = ToyParts.AddMesh(blade, ToyMeshes.Drop, materials.Toon.Get(BigBossModelBuilder.SharkBack, BigBossModelBuilder.SharkGloss));
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ToyParts.AddMeshNoShadow(blade, ToyMeshes.Drop, materials.Toon.Get(BigBossModelBuilder.SharkBack, BigBossModelBuilder.SharkGloss));
         }
 
         /// <summary>1マスの大きさで作り、根元の大きさで半径に合わせる（脈打たせるため）</summary>

@@ -108,7 +108,7 @@ namespace PenmonScramble.Editor
         }
 
         /// <summary>
-        /// 画素を左上から1行ずつ塗ったテクスチャを作る（RGBA32・mipmap なし）。
+        /// 画素を下の行（y=0）から1行ずつ塗ったテクスチャを作る（RGBA32・mipmap なし）。
         /// 絵の描き方は呼び出し側の colorAt で決める。描く順番を変えると絵が変わるので、ここの順番は動かさない
         /// </summary>
         private static Texture2D PaintTexture(int width, int height, Func<int, int, Color> colorAt)

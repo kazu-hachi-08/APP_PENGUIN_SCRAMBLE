@@ -8,7 +8,7 @@ using PenmonScramble.Soccer.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>サッカーのスタジアム2〜5と仕掛け（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 6）</summary>
+    /// <summary>サッカーのスタジアム2〜5と仕掛け</summary>
     public class SoccerGimmickTests
     {
         private const float Dt = SoccerRules.StepSeconds;

@@ -53,7 +53,7 @@ namespace PenmonScramble.Soccer.Game
             Bar(new Vector3(backX, BackBarRadius, -halfWidth), new Vector3(backX, BackBarRadius, halfWidth), BackBarRadius, post);
         }
 
-        /// <summary>a から b への丸い棒（両端は丸いので、太さの分だけ長くして角を埋める）</summary>
+        /// <summary>a から b への丸い棒</summary>
         private void Bar(Vector3 a, Vector3 b, float radius, Material material)
         {
             var along = b - a;

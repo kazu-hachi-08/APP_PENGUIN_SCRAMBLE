@@ -63,7 +63,7 @@ namespace PenmonScramble.Baseball.Game
         }
 
         /// <summary>
-        /// チームの呼び方: ひとりは「あなた」と「CPU」、協力は「みんな」と「CPU」、対戦は「赤」「青」（スコアボードと打順のカードの見出し）
+        /// チームの呼び方: ひとりは「あなた」と「CPU」、協力は「みんな」と「CPU」、対戦は「赤チーム」「青チーム」（スコアボードと打順のカードの見出し）
         /// </summary>
         private string TeamName(int team)
         {

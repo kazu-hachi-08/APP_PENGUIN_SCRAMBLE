@@ -17,7 +17,7 @@ namespace PenmonScramble.Soccer.Game
         private const string SuddenDeathMessage = "サドンデス";
         private const string SpecialHeading = "の必殺シュート！";
 
-        // 知らせを出しておく秒（ゴール・時間切れは、その演出の長さだけ出す）
+        // 知らせを出しておく秒（キックオフ・PK戦の開始・抜けた人の知らせ。ゴールと時間切れは SoccerRules の止まる秒の長さで出す）
         private const float BannerSeconds = 1.6f;
 
         private void HandleEvents()

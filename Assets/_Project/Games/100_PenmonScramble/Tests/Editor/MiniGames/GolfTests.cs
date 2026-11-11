@@ -8,7 +8,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>ゴルフの球の計算・ホールの進行・ガイド線（Docs/MINIGAME_GOLF_PLAN.md フェーズ 2）</summary>
+    /// <summary>ゴルフの球の計算・ホールの進行・ガイド線</summary>
     public class GolfTests
     {
         private const int MaxSteps = 20000;

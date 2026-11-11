@@ -60,11 +60,10 @@ namespace PenmonScramble.Editor
             }
         }
 
-        /// <summary>試合を始めるまで隠しておく（ミニゲーム画面から来て、まだ作っていないスタジアムのときは準備中の板だけ）</summary>
+        /// <summary>試合を始めるまで隠しておく（ミニゲーム画面から来て、準備中のスタジアムのときは準備中の板だけ）</summary>
         private static SoccerHudParts CreateHud(Transform canvas)
         {
-            var root = UIDialogBuilder.CreateUIObject("SoccerHud", canvas);
-            UIDialogBuilder.SetStretchAll(root.GetComponent<RectTransform>());
+            var root = UIDialogBuilder.CreateStretchedUIObject("SoccerHud", canvas);
             // 頭の上の名前は、点・知らせ・ボタンより奥に出す
             var nameTags = CreateNameTags(root.transform);
             var safe = B.CreateStretchGroup(root.transform, "Safe");
@@ -130,9 +129,7 @@ namespace PenmonScramble.Editor
                 var position = new Vector2(GaugeOffset.x * side, GaugeOffset.y);
                 B.CreateHudImage(group.transform, "GaugeBack", null, B.HudBackColor, TopCenter, position, GaugeSize + Vector2.one * GaugeBackPadding);
                 var fill = B.CreateHudImage(group.transform, "Gauge", null, SoccerColors.Team(team), TopCenter, position, GaugeSize);
-                fill.type = Image.Type.Filled;
-                fill.fillMethod = Image.FillMethod.Horizontal;
-                fill.fillOrigin = (int)Image.OriginHorizontal.Left;
+                B.SetHorizontalFill(fill);
                 fill.fillAmount = 0f;
                 gauges[team] = fill;
             }
@@ -144,11 +141,7 @@ namespace PenmonScramble.Editor
         private static Text CreateBanner(Transform safe)
         {
             var text = B.CreateLabel(safe, "Banner", string.Empty, BannerFontSize, BannerPosition, BannerSize);
-            text.fontStyle = FontStyle.Bold;
-            text.gameObject.GetComponent<Outline>().effectDistance = new Vector2(4f, -4f);
-            var shadow = text.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.5f);
-            shadow.effectDistance = new Vector2(0f, -8f);
+            B.StyleBannerText(text);
             text.raycastTarget = false;
             text.gameObject.SetActive(false);
             return text;
@@ -157,10 +150,7 @@ namespace PenmonScramble.Editor
         /// <summary>anchor の点から position だけずらした所に置く（CreateLabel などはまん中に置くので、留める角を付け替える）</summary>
         private static void Place(RectTransform rect, Vector2 anchor, Vector2 position, Vector2 size)
         {
-            rect.anchorMin = rect.anchorMax = anchor;
-            rect.pivot = Center;
-            rect.anchoredPosition = position;
-            rect.sizeDelta = size;
+            B.PlaceAt(rect, anchor, position, size);
         }
     }
 }

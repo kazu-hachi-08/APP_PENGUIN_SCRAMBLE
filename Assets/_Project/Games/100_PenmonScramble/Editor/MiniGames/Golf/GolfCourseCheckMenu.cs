@@ -9,7 +9,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// コースの確認（Docs/MINIGAME_GOLF_PLAN.md フェーズ 6）。試しの打ち手に向きと強さ（動くギミックのあるホールは打つ時刻も）を総当たりさせ、
+    /// コースの確認。試しの打ち手に向きと強さ（動くギミックのあるホールは打つ時刻も）を総当たりさせ、
     /// 全ホールで「パー以内で入る打ち方がある」「詰んで出られない所が無い」「止まらない所が無い」「ティーとカップの置き方」を確かめる。
     /// 全コースで数分かかる（裏の糸で回し、ホールごとに進み具合を出す）。Play しなくてよい。結果は Console に出す
     /// </summary>
@@ -41,18 +41,7 @@ namespace PenmonScramble.Editor
                 }
             }) { IsBackground = true };
             job.Start();
-            while (job.IsAlive)
-            {
-                var progress = (float)done / holes.Count;
-                if (EditorUtility.DisplayCancelableProgressBar("ゴルフ: コースの確認", $"試しの打ち手で打っています… {done}/{holes.Count} ホール", progress))
-                {
-                    cancel.Cancel();
-                }
-
-                Thread.Sleep(100);
-            }
-
-            EditorUtility.ClearProgressBar();
+            BalanceLabMenu.WaitWithProgress(job, cancel, "ゴルフ: コースの確認", () => $"試しの打ち手で打っています… {done}/{holes.Count} ホール", () => (float)done / holes.Count);
             Report(results, cancel.IsCancellationRequested);
         }
 
@@ -78,7 +67,7 @@ namespace PenmonScramble.Editor
 
         private static void Report(List<(GolfCourseDef course, GolfHoleCheck check)> results, bool cancelled)
         {
-            var text = new StringBuilder(cancelled ? "[Golf] コースの確認（途中でやめました）\n" : "[Golf] コースの確認\n");
+            var text = new StringBuilder(BalanceLabMenu.ReportHeader("[Golf] コースの確認", cancelled) + "\n");
             var failed = 0;
             foreach (var (course, check) in results)
             {

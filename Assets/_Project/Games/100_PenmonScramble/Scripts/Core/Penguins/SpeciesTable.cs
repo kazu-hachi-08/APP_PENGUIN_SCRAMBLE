@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace PenmonScramble.Core
@@ -87,6 +86,21 @@ namespace PenmonScramble.Core
         };
 
         public static IReadOnlyList<SpeciesDef> Species => All;
+
+        /// <summary>★が一致する種類を、Species の並び順のまま返す。ガチャの乱数の結果が並び順で決まるので、並べ替えない</summary>
+        public static List<SpeciesDef> OfStars(int stars)
+        {
+            var result = new List<SpeciesDef>();
+            foreach (var species in All)
+            {
+                if (species.Stars == stars)
+                {
+                    result.Add(species);
+                }
+            }
+
+            return result;
+        }
 
         /// <summary>番号（1〜20）から引く。範囲外は null（通信で壊れた値が届いたときに落ちないように）</summary>
         public static SpeciesDef Get(int no)

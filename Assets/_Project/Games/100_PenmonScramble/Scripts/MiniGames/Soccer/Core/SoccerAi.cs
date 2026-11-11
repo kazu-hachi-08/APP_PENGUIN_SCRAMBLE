@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using PenmonScramble.Core;
 
 namespace PenmonScramble.Soccer.Core
@@ -71,8 +70,6 @@ namespace PenmonScramble.Soccer.Core
                     break;
             }
         }
-
-        public SoccerAiLevel LevelOf(int team) => _levels[team];
 
         /// <summary>
         /// 人が動かしていない子（isHuman が false）の、この歩の入力を inputs に書く。人の子の入力には触らない

@@ -108,8 +108,7 @@ namespace PenmonScramble.Game
         {
             Clear();
             _materials = new ToonMaterials(_toonShader, _blobShadowShader);
-            _generated = new GameObject("Generated");
-            _generated.transform.SetParent(transform, false);
+            _generated = ToyParts.NewChild("Generated", transform, Vector3.zero);
             BuildFloor();
 
             var scale = PenguinModelBuilder.ScaleForRadius(Balance.PenguinRadius);

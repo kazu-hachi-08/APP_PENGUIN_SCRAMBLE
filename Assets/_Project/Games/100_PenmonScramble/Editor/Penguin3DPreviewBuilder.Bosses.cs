@@ -105,10 +105,8 @@ namespace PenmonScramble.Editor
         [MenuItem(EditorMenu.Capture + "Boss Motions", priority = EditorMenu.CapturePriority + 4)]
         public static void CaptureBosses()
         {
-            var stage = FindOrOpenPreviewStage();
+            var stage = OpenCaptureStage();
             if (stage == null) return;
-
-            Directory.CreateDirectory(CaptureFolder);
             var shadows = stage.RealShadows;
             var preset = stage.CameraPreset;
             var holder = new GameObject("BossCapture");
@@ -133,11 +131,7 @@ namespace PenmonScramble.Editor
                 Object.DestroyImmediate(holder);
                 stage.SetRealShadows(shadows);
                 stage.SetCameraPreset(preset);
-                foreach (var penguin in stage.Penguins)
-                {
-                    penguin.gameObject.SetActive(true);
-                    penguin.ResetPose();
-                }
+                RestorePenguins(stage);
             }
 
             Debug.Log($"[Penguin3DPreviewBuilder] {Path.GetFullPath(CaptureFolder)} に大ボスのスクショを保存しました");

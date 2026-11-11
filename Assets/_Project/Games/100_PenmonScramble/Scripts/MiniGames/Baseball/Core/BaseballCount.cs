@@ -14,7 +14,7 @@ namespace PenmonScramble.Baseball.Core
     }
 
     /// <summary>
-    /// ボール・ストライク・アウトのカウント（Docs/MINIGAME_BASEBALL_PLAN.md「打つ」）。
+    /// ボール・ストライク・アウトのカウント。
     /// 3ストライクで三振・4ボールで四球。ファウルは 2ストライク未満ならストライクを1つ足す（バントのファウルも同じ）。
     /// 走者・点は BaseballBases が持つ（ゲッツーの2つ目のアウトは BaseballGame が AddOut で足す）
     /// </summary>

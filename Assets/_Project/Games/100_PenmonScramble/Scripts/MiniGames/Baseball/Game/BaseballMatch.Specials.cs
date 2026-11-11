@@ -179,15 +179,6 @@ namespace PenmonScramble.Baseball.Game
             }
         }
 
-        /// <summary>人が追い風ヒットで打ち返したら、スマホでは打球を曲げるスティックを出す（打席の終わりで隠す）</summary>
-        private void OnSpecialEvent(BaseballEvent e)
-        {
-            if (e.Kind == BaseballEventKind.SpecialHit && LocalBats && Board.Ball.Special.Is(PenmonScramble.Core.Element.Wind))
-            {
-                _hud.SetSteerStick(true);
-            }
-        }
-
         /// <summary>打席が替わったら、人の必殺打の ON を戻す（ON はその打席の子のもの）</summary>
         private void ResetSpecialToggles()
         {

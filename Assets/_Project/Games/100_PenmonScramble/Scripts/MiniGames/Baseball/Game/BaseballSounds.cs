@@ -134,20 +134,8 @@ namespace PenmonScramble.Baseball.Game
 
         public static void Play(BaseballSound sound) => Play(sound, Volumes.TryGetValue(sound, out var volume) ? volume : 0.5f, 1f);
 
-        private static void Play(BaseballSound sound, float volume, float pitch)
-        {
-            if (!Clips.TryGetValue(sound, out var clip) || clip == null)
-            {
-                clip = Create(sound);
-                Clips[sound] = clip;
-            }
-
-            var audio = AudioManager.Instance;
-            if (audio != null)
-            {
-                audio.PlaySeClip(clip, volume, pitch);
-            }
-        }
+        private static void Play(BaseballSound sound, float volume, float pitch) =>
+            MiniGameCrowdSounds.PlayCached(Clips, Create, sound, volume, pitch);
 
         private static AudioClip Create(BaseballSound sound)
         {

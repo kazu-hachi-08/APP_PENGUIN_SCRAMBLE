@@ -47,7 +47,7 @@ namespace PenmonScramble.Game
 
         private void TickCheer(float dt)
         {
-            _pose.Cheer = Mathf.MoveTowards(_pose.Cheer, Cheering && !Down ? 1f : 0f, CheerBlendRate * dt);
+            _pose.Cheer = BlendToward(_pose.Cheer, Cheering && !Down, CheerBlendRate, dt);
             if (Cheering)
             {
                 _pose.CheerTime += dt;
@@ -96,10 +96,10 @@ namespace PenmonScramble.Game
             var air = Bell(t, CheerJumpStart, (CheerJumpStart + CheerJumpEnd) * 0.5f, CheerJumpEnd);
             var land = Bell(t, CheerJumpEnd - 0.05f, CheerJumpEnd + 0.08f, 1f);
             p.Squash((crouch * CheerCrouch - air * CheerStretch + land * CheerLand) * w);
-            var wave = Mathf.Sin(pose.CheerTime * CheerWaveRate * Mathf.PI * 2f) * CheerFlipperWave;
+            var wave = Wobble(pose.CheerTime, CheerWaveRate, CheerFlipperWave);
             p.FlipperLeft.Euler.z -= (CheerFlipperRaise + wave) * w;
             p.FlipperRight.Euler.z += (CheerFlipperRaise - wave) * w;
-            p.Head.Euler += new Vector3(-air * CheerHeadLift * w, 0f, 0f);
+            p.LiftHead(air * CheerHeadLift * w);
         }
     }
 }

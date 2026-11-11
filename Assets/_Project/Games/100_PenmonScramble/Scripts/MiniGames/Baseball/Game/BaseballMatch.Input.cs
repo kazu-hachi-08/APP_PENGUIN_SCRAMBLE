@@ -4,7 +4,8 @@ using PenmonScramble.Common.Input;
 namespace PenmonScramble.Baseball.Game
 {
     /// <summary>
-    /// 入力: 打つ人は 振る（J / × / 右の大ボタン。押した時刻を歩の中まで渡す）と バント（K / ○ / 右の中ボタンを押している間）。
+    /// 入力: 打つ人は 打席の中を左右へ動く（←→ / 左スティック / スマホのスティック。投げた球が来ている間）と
+    /// 振る（J / × / 右の大ボタン。押した時刻を歩の中まで渡す）と バント（K / ○ / 右の中ボタンを押している間）。
     /// 投げる人は 構えの間に球種（J ストレート / K カーブ / L チェンジアップ。× ○ △・画面の札でも）を選んで投げ、
     /// 投げた後は ←→ / 左スティック / スマホのスティックで曲げる。打席の始めは ↑↓（画面の札）で投げる子を替えられる。
     /// 魔球・必殺打の ON / OFF は Space / L1（画面の札）。追い風ヒットで打った後は ←→ / スティックで打球を曲げる。
@@ -152,17 +153,17 @@ namespace PenmonScramble.Baseball.Game
             else if (CpuBats && !IsGuest)
             {
                 var bat = _ai.BatInput(Board);
-                _session.BatterLog.Record(0f, bat.Bunt, bat.Swing, bat.SwingTime);
+                _session.BatterLog.Record(bat.Move, bat.Bunt, bat.Swing, bat.SwingTime);
             }
         }
 
-        /// <summary>振る・バントは人。追い風ヒットで打った後は、人のスティックで打球を曲げる</summary>
+        /// <summary>左右・振る・バントは人。←→ / スティックは、投げた球が来ている間は打席の中の左右、追い風ヒットで打った後は打球を曲げる</summary>
         private void RecordLocalBat(int step)
         {
             var input = Input;
             var usable = input != null && !IsMenuOpen;
             var bunt = usable && input.IsActionHeld(BuntAction);
-            var steer = usable && Board.Phase == BaseballBoardPhase.BallInPlay ? input.MoveVector.x : 0f;
+            var steer = usable ? input.MoveVector.x : 0f;
             var log = _session.BatterLog;
             while (log.Progress < step && log.Progress < BaseballRoleLog.MaxSteps)
             {

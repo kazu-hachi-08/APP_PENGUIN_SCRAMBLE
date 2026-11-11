@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using PenmonScramble.Common.Profile;
 using PenmonScramble.Game;
 using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
@@ -87,8 +85,7 @@ namespace PenmonScramble.Soccer.Game
                 return;
             }
 
-            _resultLeft -= dt;
-            if (_resultLeft <= 0f)
+            if (MiniGameResultView.TickResultTimer(ref _resultLeft, dt))
             {
                 _resultLeft = -1f;
                 ShowResult();
@@ -120,13 +117,7 @@ namespace PenmonScramble.Soccer.Game
                 return;
             }
 
-            var names = new List<string>();
-            foreach (var seat in seats)
-            {
-                names.Add(SeatNames.Get(seat));
-            }
-
-            _hud.ShowMvp(string.Join("・", names), _seatGoals[seats[0]], MiniGameSeats.ColorOf(seats[0]));
+            _hud.ShowMvp(MiniGameSeats.NamesOf(seats), _seatGoals[seats[0]], MiniGameSeats.ColorOf(seats[0]));
         }
 
         /// <summary>
@@ -160,24 +151,7 @@ namespace PenmonScramble.Soccer.Game
 
         private void OnResultChosen(int card)
         {
-            switch (card)
-            {
-                case MiniGameResultPanel.RetryCard:
-                    StartSolo();
-                    break;
-                case MiniGameResultPanel.CoursesCard:
-                    if (_mode.IsOnline)
-                    {
-                        RequestRoom();
-                        break;
-                    }
-
-                    MiniGameLaunch.ReturnToHub();
-                    break;
-                case MiniGameResultPanel.LobbyCard:
-                    MiniGameLaunch.ReturnToLobby();
-                    break;
-            }
+            MiniGameResultView.RouteResultCard(card, _mode.IsOnline, StartSolo, RequestRoom);
         }
     }
 }

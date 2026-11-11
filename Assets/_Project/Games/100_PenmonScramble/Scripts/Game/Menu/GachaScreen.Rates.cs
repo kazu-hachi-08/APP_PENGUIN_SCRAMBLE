@@ -53,12 +53,9 @@ namespace PenmonScramble.Game
         private static List<string> SpeciesNames(int stars)
         {
             var names = new List<string>();
-            foreach (var species in SpeciesTable.Species)
+            foreach (var species in SpeciesTable.OfStars(stars))
             {
-                if (species.Stars == stars)
-                {
-                    names.Add(species.Name);
-                }
+                names.Add(species.Name);
             }
 
             return names;

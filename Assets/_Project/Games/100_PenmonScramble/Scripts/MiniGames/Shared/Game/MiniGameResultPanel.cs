@@ -34,11 +34,61 @@ namespace PenmonScramble.MiniGames.Game
             _rewards.Add((label, coins));
             return this;
         }
+
+        /// <summary>
+        /// 結果の札が押されたときの振り分け（どのミニゲームも同じ）。「もう一度」の中身と、部屋（待ちの窓）へ戻す要求だけは各ゲームが渡す。
+        /// コースを選ぶ札は、オンラインなら部屋へ戻し、ひとりならミニゲームの画面へ戻る
+        /// </summary>
+        public static void RouteResultCard(int card, bool isOnline, Action retry, Action requestRoom)
+        {
+            switch (card)
+            {
+                case MiniGameResultPanel.RetryCard:
+                    retry();
+                    break;
+                case MiniGameResultPanel.CoursesCard:
+                    if (isOnline)
+                    {
+                        requestRoom();
+                        break;
+                    }
+
+                    MiniGameLaunch.ReturnToHub();
+                    break;
+                case MiniGameResultPanel.LobbyCard:
+                    MiniGameLaunch.ReturnToLobby();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 結果を出すまでのカウントダウンを1フレーム進める。0 になったら true（呼び出し側が結果を出す）。
+        /// 止めるための値（-1 など）は呼び出し側で決める
+        /// </summary>
+        public static bool TickResultTimer(ref float left, float dt)
+        {
+            left -= dt;
+            return left <= 0f;
+        }
+
+        /// <summary>
+        /// ベストの一言。初めての記録なら「はじめての記録！」、ベスト更新なら「ベスト更新！（前は …）」、それ以外は「ベスト …」。
+        /// previousText は各ゲームで整形した前のベスト（「27 打」「+2」など）。記録が無いときは呼び出し側で空にする
+        /// </summary>
+        public static string BestSentence(bool firstPlay, bool newBest, string previousText)
+        {
+            if (firstPlay)
+            {
+                return "はじめての記録！";
+            }
+
+            return newBest ? $"ベスト更新！（前は {previousText}）" : $"ベスト {previousText}";
+        }
     }
 
     /// <summary>
     /// ミニゲームの結果の欄: 結果の点・ベストの一言・コインの内訳・下に「もう一度」「コース（スタジアム）を選ぶ」「ロビーへ」の札。
-    /// 札は左右で選び、決定（J / × / Enter）で押す。最初は「もう一度」を選んでおく（続けて遊びやすいように）。
+    /// 札は左右で選び、決定（J / × / Enter）で押す。最初は出している札の一番左を選んでおく（一人で遊んだときは「もう一度」。続けて遊びやすいように）。
     /// 中身（MiniGameResultView）はミニゲームごとに作って渡す
     /// </summary>
     public class MiniGameResultPanel : MonoBehaviour

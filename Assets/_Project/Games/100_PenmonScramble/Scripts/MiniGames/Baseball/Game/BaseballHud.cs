@@ -53,15 +53,13 @@ namespace PenmonScramble.Baseball.Game
         [SerializeField] private TouchControlsVisibility _touch;
         [Tooltip("スマホの「振る」「バント」のボタン（打つ番だけ）")]
         [SerializeField] private GameObject[] _batButtons;
-        [Tooltip("スマホの曲げるスティック（投げる番と、追い風ヒットで打った後）")]
+        [Tooltip("スマホのスティック（投げる番は球を曲げる・打つ番は打席の中を左右へ動く）")]
         [SerializeField] private GameObject _bendStick;
-        [SerializeField, TextArea] private string _batHelp = "振る J / ×（タイミングよく）　バント K / ○（押している間）　必殺打 Space / L1（投げる前に）　メニュー Esc";
+        [SerializeField, TextArea] private string _batHelp = "芯を合わせる ←→　振る J / ×（タイミングよく）　バント K / ○（押している間）　必殺打 Space / L1（投げる前に）　メニュー Esc";
         [SerializeField, TextArea] private string _pitchHelp = "投げる J ストレート / K カーブ / L チェンジアップ（× ○ △）　投げた後に曲げる ←→　魔球 Space / L1（投げる前に）　投げる子 ↑↓　メニュー Esc";
 
         private bool _isTouch;
-        private bool _batting;
         private bool _mine = true;
-        private bool _steering;
         private float _bannerLeft;
         private float _bannerTime;
         private Color _bandColor;
@@ -94,9 +92,7 @@ namespace PenmonScramble.Baseball.Game
         public void SetSide(bool batting, bool mine, string turnName)
         {
             gameObject.SetActive(true);
-            _batting = batting;
             _mine = mine;
-            _steering = false;
             var action = batting ? "打つ" : "投げる";
             _help.text = mine ? batting ? _batHelp : _pitchHelp : $"{turnName} が{action}番です";
             _help.gameObject.SetActive(HelpShown);
@@ -105,18 +101,10 @@ namespace PenmonScramble.Baseball.Game
                 button.SetActive(batting && mine);
             }
 
-            ApplyStick();
+            // スティックは打つ番にも使う（打席の中の左右・追い風ヒットの打球を曲げる）
+            _bendStick.SetActive(mine);
             _touch.SetShown(true);
         }
-
-        /// <summary>追い風ヒットで打った後だけ、打つ番でも曲げるスティックを出す</summary>
-        public void SetSteerStick(bool steering)
-        {
-            _steering = steering;
-            ApplyStick();
-        }
-
-        private void ApplyStick() => _bendStick.SetActive(_mine && (!_batting || _steering));
 
         /// <summary>説明は PC だけ。ほかの人の番の一言はスマホでも出す</summary>
         private bool HelpShown => !_isTouch || !_mine;

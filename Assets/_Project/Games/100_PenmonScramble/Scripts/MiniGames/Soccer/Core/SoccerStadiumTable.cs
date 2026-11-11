@@ -62,7 +62,7 @@ namespace PenmonScramble.Soccer.Core
     }
 
     /// <summary>
-    /// スタジアムの定義表（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 6 の表）。奥のワールドほど CPU が強く（★1〜★5）、
+    /// スタジアムの定義表。奥のワールドほど CPU が強く（★1〜★5）、
     /// ピッチに仕掛けがある（SoccerPitchTable）。CPU のチームの種類は、本編のそのワールドの雑魚と同じ混ぜ方
     /// （★が高い子ほど必殺シュートが強い）
     /// </summary>

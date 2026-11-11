@@ -1,4 +1,5 @@
 using UnityEngine;
+using static PenmonScramble.Game.ToyMotionMath;
 
 namespace PenmonScramble.Game
 {
@@ -41,9 +42,9 @@ namespace PenmonScramble.Game
 
         private void TickHold(float dt)
         {
-            _pose.Hold = Mathf.MoveTowards(_pose.Hold, Holding && !Down ? 1f : 0f, HoldBlendRate * dt);
+            _pose.Hold = BlendToward(_pose.Hold, Holding && !Down, HoldBlendRate, dt);
             _pose.HoldSwing = HoldSwing;
-            _pose.Despair = Mathf.MoveTowards(_pose.Despair, Despairing && !Down ? 1f : 0f, DespairBlendRate * dt);
+            _pose.Despair = BlendToward(_pose.Despair, Despairing && !Down, DespairBlendRate, dt);
         }
 
         private static void HoldParts(PenguinPose pose, float standing, ref PartPose p)
@@ -72,7 +73,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            var shake = Mathf.Sin(pose.Time * DespairShakeRate * Mathf.PI * 2f) * DespairShake;
+            var shake = Wobble(pose.Time, DespairShakeRate, DespairShake);
             p.Squash(DespairSlump * w);
             p.Body.Euler.x += DespairLean * w;
             p.Head.Euler += new Vector3(DespairHeadDown * w, shake * w, 0f);

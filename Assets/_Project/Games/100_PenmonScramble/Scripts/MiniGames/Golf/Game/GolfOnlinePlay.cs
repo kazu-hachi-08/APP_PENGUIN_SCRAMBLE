@@ -50,9 +50,7 @@ namespace PenmonScramble.Golf.Game
         public void Begin(int courseNo)
         {
             _online = true;
-            _session.ContinueWhenMemberLeaves = true;
-            _session.OnPeerDisconnected += Leave;
-            _session.OnConnectionLost += Leave;
+            MiniGameLaunch.BindRoom(_session, Leave);
             // メッセージの名前は配った版どうしで合わせるので変えない
             _link = new MiniGameLink("scramble.golf");
             _link.Open();
@@ -81,8 +79,7 @@ namespace PenmonScramble.Golf.Game
                 return;
             }
 
-            _session.OnPeerDisconnected -= Leave;
-            _session.OnConnectionLost -= Leave;
+            MiniGameLaunch.UnbindRoom(_session, Leave);
             _session.OnMemberLeft -= OnMemberLeft;
             _session.OnReturnToRoom -= MiniGameLaunch.ReturnToRoom;
             _link?.Close();
@@ -228,8 +225,7 @@ namespace PenmonScramble.Golf.Game
             }
 
             _leaving = true;
-            _session.ReturnToRoom();
-            MiniGameLaunch.ReturnToRoom();
+            MiniGameLaunch.LeaveToRoom(_session);
         }
 
         // ---- ゲスト ----

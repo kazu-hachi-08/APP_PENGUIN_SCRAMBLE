@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using PenmonScramble.Common.Audio;
 using PenmonScramble.Game;
+using PenmonScramble.MiniGames.Game;
 using UnityEngine;
 
 namespace PenmonScramble.Golf.Game
@@ -103,20 +104,8 @@ namespace PenmonScramble.Golf.Game
 
         public static void Play(GolfSound sound) => Play(sound, Volumes.TryGetValue(sound, out var volume) ? volume : 0.5f, 1f);
 
-        private static void Play(GolfSound sound, float volume, float pitch)
-        {
-            if (!Clips.TryGetValue(sound, out var clip) || clip == null)
-            {
-                clip = Create(sound);
-                Clips[sound] = clip;
-            }
-
-            var audio = AudioManager.Instance;
-            if (audio != null)
-            {
-                audio.PlaySeClip(clip, volume, pitch);
-            }
-        }
+        private static void Play(GolfSound sound, float volume, float pitch) =>
+            MiniGameCrowdSounds.PlayCached(Clips, Create, sound, volume, pitch);
 
         private static AudioClip Create(GolfSound sound)
         {
@@ -154,43 +143,25 @@ namespace PenmonScramble.Golf.Game
         }
 
         /// <summary>カップの中で「カラン」と2回鳴ってから、上がっていく短いジングル</summary>
-        private static AudioClip CupIn()
-        {
-            const float rattle = 0.16f;
-            float[] notes = { 784f, 988f, 1175f, 1568f };
-            const float noteSeconds = 0.09f;
-            var duration = rattle + noteSeconds * (notes.Length + 1);
-            return ToySynth.CreateClip("Golf_CupIn", duration, t =>
-            {
-                if (t < rattle)
-                {
-                    // 2回の短い金属音（高い矩形波がすぐ減る）
-                    var local = t % (rattle * 0.5f);
-                    return ToySynth.Square(2349f, t) * Mathf.Exp(-local * 60f);
-                }
-
-                var s = t - rattle;
-                var note = Mathf.Min(notes.Length - 1, Mathf.FloorToInt(s / noteSeconds));
-                var into = s - note * noteSeconds;
-                var length = note == notes.Length - 1 ? noteSeconds * 2f : noteSeconds;
-                return ToySynth.Square(notes[note], t) * Mathf.Max(0f, 1f - into / length);
-            });
-        }
+        private static AudioClip CupIn() =>
+            Chime("Golf_CupIn", new[] { 784f, 988f, 1175f, 1568f }, 0.09f, 0.09f * 2f);
 
         /// <summary>
         /// ホールインワン: カップインの「カラン」の後に、上がっていく音を2回重ねてから高い音を伸ばす（ふつうのカップインと聞き分けられるように）
         /// </summary>
-        private static AudioClip HoleInOne()
+        private static AudioClip HoleInOne() =>
+            Chime("Golf_HoleInOne", new[] { 784f, 988f, 1175f, 1568f, 1175f, 1568f, 2093f }, 0.085f, 0.45f);
+
+        /// <summary>カップに入った音の共通部分: 「カラン」の後に音程の列を順に鳴らし、最後の音だけ lastSeconds 伸ばす</summary>
+        private static AudioClip Chime(string name, float[] notes, float noteSeconds, float lastSeconds)
         {
             const float rattle = 0.16f;
-            float[] notes = { 784f, 988f, 1175f, 1568f, 1175f, 1568f, 2093f };
-            const float noteSeconds = 0.085f;
-            const float lastSeconds = 0.45f;
             var duration = rattle + noteSeconds * (notes.Length - 1) + lastSeconds;
-            return ToySynth.CreateClip("Golf_HoleInOne", duration, t =>
+            return ToySynth.CreateClip(name, duration, t =>
             {
                 if (t < rattle)
                 {
+                    // 2回の短い金属音（高い矩形波がすぐ減る）
                     var local = t % (rattle * 0.5f);
                     return ToySynth.Square(2349f, t) * Mathf.Exp(-local * 60f);
                 }

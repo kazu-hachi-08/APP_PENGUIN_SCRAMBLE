@@ -114,7 +114,7 @@ namespace PenmonScramble.Core
             return basePower + (int)MathF.Round((cap - basePower) * Growth);
         }
 
-        /// <summary>真ん中のパワー（コインの流れの表で、強化のコインの目安に使う）</summary>
+        /// <summary>3体の平均パワー（コインの流れの表で、強化のコインの目安に使う）</summary>
         public int TypicalPower()
         {
             var total = 0f;
@@ -131,15 +131,7 @@ namespace PenmonScramble.Core
 
         private static SpeciesDef PickSpecies(int stars, List<int> used, Random random)
         {
-            var pool = new List<SpeciesDef>();
-            foreach (var species in SpeciesTable.Species)
-            {
-                if (species.Stars == stars && !used.Contains(species.No))
-                {
-                    pool.Add(species);
-                }
-            }
-
+            var pool = SpeciesTable.OfStars(stars).FindAll(species => !used.Contains(species.No));
             return pool[random.Next(pool.Count)];
         }
     }

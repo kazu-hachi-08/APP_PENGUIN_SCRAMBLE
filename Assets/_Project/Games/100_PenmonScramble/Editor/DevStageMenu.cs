@@ -28,14 +28,26 @@ namespace PenmonScramble.Editor
 
         private static void Play(int stageNo, Difficulty difficulty)
         {
+            OpenTestScene(PenmonScrambleSceneBuilder.ScenePath, () =>
+            {
+                SessionState.SetInt(DevStageRequest.StageKey, stageNo);
+                SessionState.SetInt(DevStageRequest.DifficultyKey, (int)difficulty);
+            });
+        }
+
+        /// <summary>
+        /// 開発用の遊びを、シーンを開いて再生する共通の流れ。再生中や保存を断ったときは何もしない。
+        /// 要求（SessionState）は開いたシーンの再生が読むので、再生に入る前に setRequest で入れる
+        /// </summary>
+        internal static void OpenTestScene(string scenePath, System.Action setRequest)
+        {
             if (EditorApplication.isPlaying || !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
                 return;
             }
 
-            EditorSceneManager.OpenScene(PenmonScrambleSceneBuilder.ScenePath);
-            SessionState.SetInt(DevStageRequest.StageKey, stageNo);
-            SessionState.SetInt(DevStageRequest.DifficultyKey, (int)difficulty);
+            EditorSceneManager.OpenScene(scenePath);
+            setRequest();
             EditorApplication.EnterPlaymode();
         }
     }

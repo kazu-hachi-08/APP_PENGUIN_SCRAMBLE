@@ -60,7 +60,7 @@ namespace PenmonScramble.Golf.Core
         }
 
         /// <summary>
-        /// ホール3「火山の入り江」パー 4: まん中を溶岩の川が流れ、奥の岩場だけが向こう岸へつながる。
+        /// ホール3「間欠泉の渡し」パー 4: まん中を溶岩の川が流れ、奥の岩場だけが向こう岸へつながる。
         /// 近道は、川の手前の間欠泉で跳び越えること。向こう岸ではカップの手前を動く岩が上り下りする
         /// </summary>
         private static GolfHoleDef VolcanoCove()
@@ -82,7 +82,7 @@ namespace PenmonScramble.Golf.Core
                 GolfMover.Block(new Vec2(12.4f, 7.2f), 2.6f, 1.1f, new Vec2(0f, 4.2f), 4.6f),
             };
 
-            return new GolfHoleDef("火山の入り江", 4, new Vec2(2f, 2.4f), new Vec2(12.4f, 3f), ground, walls, areas, movers);
+            return new GolfHoleDef("間欠泉の渡し", 4, new Vec2(2f, 2.4f), new Vec2(12.4f, 3f), ground, walls, areas, movers);
         }
     }
 }

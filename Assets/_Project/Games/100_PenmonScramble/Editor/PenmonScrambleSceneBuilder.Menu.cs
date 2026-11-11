@@ -49,6 +49,24 @@ namespace PenmonScramble.Editor
             return obj;
         }
 
+        // 「待っています」の幕（ミニゲームで全員の準備・ホストを待つ間に画面を覆う）。暗くして、後ろのボタンを押せなくする
+        private static readonly Color WaitingBackColor = new Color(0.02f, 0.03f, 0.10f, 0.7f);
+        private static readonly Vector2 WaitingTextSize = new Vector2(1400f, 120f);
+        private const int WaitingFontSize = 60;
+
+        /// <summary>
+        /// 「待っています」の幕。最初は隠しておき、待つ間に呼んだ側が出す。字の中身（文）は呼んだ側が入れる。
+        /// 3つのミニゲームで同じ見た目にそろえるため、ここで作る
+        /// </summary>
+        internal static GameObject CreateWaitingBacking(Transform canvas, out Text text)
+        {
+            var waiting = CreateFullScreenBacking(canvas, "Waiting", WaitingBackColor);
+            text = CreateLabel(waiting.transform, "Text", string.Empty, WaitingFontSize, Vector2.zero, WaitingTextSize);
+            text.fontStyle = FontStyle.Bold;
+            waiting.SetActive(false);
+            return waiting;
+        }
+
         /// <summary>丸い絵（ペンモンの顔・ボタンの丸）。下のボタンを押す邪魔をしない</summary>
         private static Image CreateCircle(Transform parent, string name, Vector2 position, float size, Color color)
         {

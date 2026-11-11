@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using PenmonScramble.Core;
 using PenmonScramble.Game;
 using PenmonScramble.Golf.Core;
+using PenmonScramble.MiniGames.Game;
 using UnityEngine;
 
 namespace PenmonScramble.Golf.Game
@@ -9,7 +10,7 @@ namespace PenmonScramble.Golf.Game
     /// <summary>
     /// ホールの見た目（おもちゃのミニゴルフの台）。ホールの定義表から地面・壁・カップを組み、毎フレーム球を写す。
     /// 地面は GolfHoleView.Ground.cs、壁は .Walls.cs、カップと旗とティーは .Cup.cs、
-    /// 動く物・押し流す帯・間欠泉・ワープの泡は .Gimmicks.cs。球・ガイド線・打つ子は別の部品
+    /// 動く物・押し流す帯・間欠泉・ワープの泡は .Gimmicks.cs、特殊ショット（氷の道・水切り・雷の加速）の見た目は .Specials.cs。球・ガイド線・打つ子は別の部品
     /// </summary>
     public partial class GolfHoleView : MonoBehaviour
     {
@@ -98,26 +99,13 @@ namespace PenmonScramble.Golf.Game
         /// <summary>Unity の基本の形の代わりに、ToyMeshes の形を置く（当たり判定は Core が持つので Collider は付けない）</summary>
         private Transform AddPart(string objectName, Mesh mesh, Transform parent, Vector3 position, Quaternion rotation, Vector3 scale, Material material)
         {
-            var obj = new GameObject(objectName);
-            obj.transform.SetParent(parent, false);
-            obj.transform.localPosition = position;
-            obj.transform.localRotation = rotation;
-            obj.transform.localScale = scale;
-            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
-            obj.AddComponent<MeshRenderer>().sharedMaterial = material;
-            return obj.transform;
+            return MiniGameMeshes.AddPart(objectName, mesh, parent, position, rotation, scale, material);
         }
 
         /// <summary>このビューが作ったメッシュを置く（消すときに一緒に消す）</summary>
         private MeshRenderer AddOwnedMesh(string objectName, Mesh mesh, params Material[] materials)
         {
-            _meshes.Add(mesh);
-            var obj = new GameObject(objectName);
-            obj.transform.SetParent(_course, false);
-            obj.AddComponent<MeshFilter>().sharedMesh = mesh;
-            var renderer = obj.AddComponent<MeshRenderer>();
-            renderer.sharedMaterials = materials;
-            return renderer;
+            return MiniGameMeshes.AddOwnedMesh(_meshes, objectName, mesh, _course, materials);
         }
 
         private void Clear()

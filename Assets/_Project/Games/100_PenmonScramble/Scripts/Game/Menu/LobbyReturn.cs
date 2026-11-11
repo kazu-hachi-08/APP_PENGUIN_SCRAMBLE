@@ -16,7 +16,7 @@ namespace PenmonScramble.Game
 
     /// <summary>
     /// シーンをまたいで残す小さな「戻り先」。ミニゲームは別のシーンなので、本編のシーンへ戻るときに
-    /// どの画面から始めるかをここで渡す（ステージから戻ったときはロビーから、の TitleFlow の仕組みを広げたもの）。
+    /// どの画面から始めるかをここで渡す。
     /// 頼まれていれば TitleFlow は「タップしてスタート」を出さずにロビーへ入り、頼まれた画面が自分で開く
     /// </summary>
     public static class LobbyReturn

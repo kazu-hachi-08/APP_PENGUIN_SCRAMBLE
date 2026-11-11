@@ -7,7 +7,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>野球のみんなで（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 5）: 打順の組み方・1球の記録と計算し直し・試合の写し・通信の中身</summary>
+    /// <summary>野球のみんなで: 打順の組み方・1球の記録と計算し直し・試合の写し・通信の中身</summary>
     public class BaseballNetTests
     {
         private const int MaxSteps = 600;

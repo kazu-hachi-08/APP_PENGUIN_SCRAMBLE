@@ -5,7 +5,7 @@ using PenmonScramble.MiniGames.Core;
 namespace PenmonScramble.Soccer.Core
 {
     /// <summary>
-    /// チームの組み方（Docs/MINIGAME_SOCCER_PLAN.md「オンライン」）。席ごとのチームと編成から、フィールドの子の並び・種類・持ち主を決める。
+    /// チームの組み方。席ごとのチームと編成から、フィールドの子の並び・種類・持ち主を決める。
     /// - 人が1人のチーム: その人の編成の3体（切り替えて動かす）
     /// - 2人のチーム: 各自の編成の先頭＋席の若い人の編成の2番目（AI）
     /// - 3人のチーム: 各自の先頭

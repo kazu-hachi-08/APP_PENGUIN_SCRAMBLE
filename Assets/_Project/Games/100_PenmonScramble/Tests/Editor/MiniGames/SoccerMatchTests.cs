@@ -9,7 +9,7 @@ using PenmonScramble.Soccer.Core;
 namespace PenmonScramble.Tests
 {
     /// <summary>
-    /// サッカーのひとりで1試合（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 4）: 試合の流れ・PK戦・報酬・スタジアムの定義表
+    /// サッカーのひとりで1試合: 試合の流れ・PK戦・報酬・スタジアムの定義表
     /// </summary>
     public class SoccerMatchTests
     {
@@ -348,6 +348,19 @@ namespace PenmonScramble.Tests
 
             Assert.That(guide.IsReady(1), Is.True);
             Assert.That(guide.Layout(1), Does.Contain("★☆☆☆☆"));
+        }
+
+        /// <summary>強さと仕掛けの一言は2行に分ける（1行に並べると枠の幅を越えて折り返し、上下の行に重なる）</summary>
+        [Test]
+        public void Guide_LayoutIsStrengthThenGimmickOnTwoLines()
+        {
+            var guide = new SoccerCourseGuide();
+            foreach (var stadium in SoccerStadiumTable.Stadiums)
+            {
+                Assert.That(guide.Layout(stadium.No).Split('\n'), Is.EqualTo(new[] { $"CPUの強さ {SoccerCourseGuide.Stars(stadium.CpuStars)}", stadium.Gimmick }));
+                Assert.That(guide.OnlineLayout(stadium.No, MiniGameOnlineMode.Versus, 4).Split('\n'), Is.EqualTo(new[] { "人どうしの対戦", stadium.Gimmick }));
+                Assert.That(guide.OnlineLayout(stadium.No, MiniGameOnlineMode.Coop, 3).Split('\n')[0], Does.EndWith("（3人）"));
+            }
         }
 
         [Test]

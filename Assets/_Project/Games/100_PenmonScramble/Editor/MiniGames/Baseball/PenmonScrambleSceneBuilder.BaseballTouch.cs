@@ -7,7 +7,7 @@ using UnityEngine;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 野球のスマホの操作: 本編と同じ仮想スティック（左。投げる番に曲げる）と、本編の技1の位置の「振る」（右の大）・
+    /// 野球のスマホの操作: 本編と同じ仮想スティック（左。投げる番は球を曲げる・打つ番は打席の中を左右へ動く）と、本編の技1の位置の「振る」（右の大）・
     /// 技2の位置の「バント」（右の中。押している間構える）。置き場所と見た目は本編のタッチ操作と同じ部品（本編で覚えた手のまま遊べるように）。
     /// 球種は HUD の札を直接押す（BaseballSceneBuilder.Hud.cs）
     /// </summary>
@@ -64,13 +64,13 @@ namespace PenmonScramble.Editor
             CreatePhoneControl(screen, "バント", Vector2.right, Skill2Position, Skill2Size, BaseballBuntColor, scale);
         }
 
-        /// <summary>遊び方のスマホの絵: 投げる番に出る、曲げるスティック（本編の移動のスティックと同じ所）</summary>
-        internal static void CreateBaseballPhoneStick(Transform screen, float scale)
+        /// <summary>遊び方のスマホの絵: スティック（本編の移動のスティックと同じ所。label は打つ番「動く」・投げる番「曲げる」）</summary>
+        internal static void CreateBaseballPhoneStick(Transform screen, string label, float scale)
         {
-            CreatePhoneControl(screen, "曲げる", Vector2.zero, JoystickPosition, JoystickSize, JoystickBackColor, scale);
+            CreatePhoneControl(screen, label, Vector2.zero, JoystickPosition, JoystickSize, JoystickBackColor, scale);
         }
 
-        /// <summary>試しの打席のシーン用: 仮想スティックを InputManager に、振るを Action1・バントを Action2 につなぐ</summary>
+        /// <summary>野球のシーン用: 仮想スティックを InputManager に、振るを Action1・バントを Action2 につなぐ</summary>
         internal static void BindBaseballInput(InputManager manager, BaseballTouchParts touch)
         {
             var so = new SerializedObject(manager);

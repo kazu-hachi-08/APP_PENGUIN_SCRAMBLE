@@ -16,17 +16,18 @@ namespace PenmonScramble.Baseball.Core
         Done,
     }
 
-    /// <summary>1歩の入力。投げる人の曲げる入力と、打つ人の振る・バント（オンラインでは別の人の入力をホストがまとめる）</summary>
+    /// <summary>1歩の入力。投げる人の曲げる入力と、打つ人の左右・振る・バント（オンラインでは別の人の入力をホストがまとめる）</summary>
     public readonly struct BaseballInput
     {
         public static readonly BaseballInput None = default;
 
-        public BaseballInput(float bend, bool swing, bool bunt, float swingTime = 0f)
+        public BaseballInput(float bend, bool swing, bool bunt, float swingTime = 0f, float move = 0f)
         {
             Bend = bend;
             Swing = swing;
             Bunt = bunt;
             SwingTime = swingTime;
+            Move = move;
         }
 
         /// <summary>曲げる（−1 で左・1 で右）。投げた球は投げる人が、追い風ヒットの打球は打った人が曲げる</summary>
@@ -43,6 +44,9 @@ namespace PenmonScramble.Baseball.Core
         /// 歩の刻み（1/30 秒）のままだとバットの角度が 36° ずつ飛び、ジャストに当たるかが運になるので、押した時刻を歩の中まで渡す
         /// </summary>
         public float SwingTime { get; }
+
+        /// <summary>打つ子が打席の中を左右へ動く（−1 で左・1 で右）。投げた球が来ている間だけ効く</summary>
+        public float Move { get; }
     }
 
     /// <summary>
@@ -73,6 +77,9 @@ namespace PenmonScramble.Baseball.Core
         public BaseballBoardPhase Phase { get; private set; } = BaseballBoardPhase.Ready;
         public BaseballPitch Pitch => _pitch;
         public BaseballBat Bat => _bat;
+
+        /// <summary>今のバットの軸（打つ子が左右へ動いた分を含む）</summary>
+        public Vec2 BatPivot => _bat.Pivot(Field);
         public BaseballBallSim Ball => _ball;
 
         public BaseballPitchOutcome Outcome { get; private set; } = BaseballPitchOutcome.None;
@@ -86,9 +93,6 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>今の球の高さ（転がっていれば 0）</summary>
         public float BallHeight => Phase == BaseballBoardPhase.BallInPlay || (Phase == BaseballBoardPhase.Done && LastHit.HasValue) ? _ball.Height : 0f;
 
-        /// <summary>投げた球がゾーンの中を通ったか（ホームの線を越えた後に決まる）</summary>
-        public bool InZone => _inZone;
-
         /// <summary>この球で打つ人が出した必殺打（出していなければ None）</summary>
         public BaseballSpecial HitSpecial => _hitSpecial;
 
@@ -99,7 +103,7 @@ namespace PenmonScramble.Baseball.Core
         public float Clock { get; private set; }
 
         /// <summary>
-        /// 必殺打を使った（振って当てた。ファウルも）。空振り・見送り・バントでは使わない（Docs/MINIGAME_BASEBALL_PLAN.md「魔球と必殺打」）
+        /// 必殺打を使った（振って当てた。ファウルも）。空振り・見送り・バントでは使わない
         /// </summary>
         public bool SpecialHitUsed => _hitSpecial.IsActive && LastHit is { Bunt: false };
 
@@ -154,7 +158,7 @@ namespace PenmonScramble.Baseball.Core
         {
             if (_bat.SetBunt(input.Bunt))
             {
-                events.Add(new BaseballEvent(BaseballEventKind.BuntSquare, Field.BatPivot));
+                events.Add(new BaseballEvent(BaseballEventKind.BuntSquare, BatPivot));
             }
 
             var dt = BaseballRules.StepSeconds / PitchSubsteps;
@@ -169,7 +173,7 @@ namespace PenmonScramble.Baseball.Core
                     StartSwing(start - swingAt, events);
                 }
 
-                PitchSubstep(input.Bend, dt, events);
+                PitchSubstep(input, dt, events);
                 if (Phase == BaseballBoardPhase.Pitching || Phase == BaseballBoardPhase.Done)
                 {
                     Clock += dt;
@@ -188,20 +192,22 @@ namespace PenmonScramble.Baseball.Core
         {
             if (_bat.Swing(elapsed))
             {
-                events.Add(new BaseballEvent(BaseballEventKind.Swing, Field.BatPivot));
+                events.Add(new BaseballEvent(BaseballEventKind.Swing, BatPivot));
             }
         }
 
-        private void PitchSubstep(float bend, float dt, List<BaseballEvent> events)
+        private void PitchSubstep(BaseballInput input, float dt, List<BaseballEvent> events)
         {
             var prevBall = _pitch.Position;
             var prevDegrees = _bat.Degrees;
             var wasLive = _bat.IsLive;
             var bunting = _bat.State == BaseballBatState.Bunting;
-            _pitch.Step(bend, dt, events);
+            _pitch.Step(input.Bend, dt, events);
 
+            // 足を動かしてから当たりを見る（バントの構えのまま横へ寄っても、寝かせたバットの線の上を滑るだけなので、すり抜けない）
+            _bat.Move(input.Move, dt);
             _bat.Step(dt);
-            if (wasLive && BaseballBat.TryContact(Field.BatPivot, prevDegrees, _bat.Degrees, prevBall, _pitch.Position, out var along))
+            if (wasLive && BaseballBat.TryContact(BatPivot, prevDegrees, _bat.Degrees, prevBall, _pitch.Position, out var along))
             {
                 Contact(bunting ? BaseballBat.BuntHit(along) : BaseballBat.SwingHit(_bat.Degrees, along), bunting, events);
                 return;

@@ -1,4 +1,3 @@
-using System.Linq;
 using PenmonScramble.Common.Editor;
 using PenmonScramble.Common.Input;
 using PenmonScramble.Common.Online;
@@ -16,16 +15,15 @@ namespace PenmonScramble.Editor
     /// <summary>
     /// サッカーのシーン（SoccerScene）をコードから生成する。シーンは生成物なので手で編集せず、ここを直して Rebuild する
     /// （Rebuild は本編とゴルフのシーンの後にこれを呼ぶ。ボタンの絵などは本編の SceneBuilder が描いた物を使う）。
-    /// まだ作っていないスタジアムのときの「準備中」の板と、ひとりで1試合（SoccerMatchPlay。3対3・キーパー・PK戦・必殺シュート・結果・メニュー）を置く
-    /// （Docs/MINIGAME_SOCCER_PLAN.md フェーズ 4）。みんなで遊ぶための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの SoccerOnlinePlay・
-    /// 始まるまでの「待っています」）も置く（フェーズ 5）。HUD は SoccerSceneBuilder.Hud.cs、PK戦の HUD は SoccerSceneBuilder.HudShootout.cs、
+    /// 準備中のスタジアムのときの「準備中」の板と、ひとりで1試合（SoccerMatchPlay。3対3・キーパー・PK戦・必殺シュート・結果・メニュー）を置く
+    /// 。みんなで遊ぶための部品（本編から部屋を引き継ぐ OnlineSession・通信の段取りの SoccerOnlinePlay・
+    /// 始まるまでの「待っています」）も置く。HUD は SoccerSceneBuilder.Hud.cs、PK戦の HUD は SoccerSceneBuilder.HudShootout.cs、
     /// 遊び方は SoccerSceneBuilder.HowToPlay.cs
     /// </summary>
     public static partial class SoccerSceneBuilder
     {
         public static readonly string ScenePath = "Assets/_Project/Games/100_PenmonScramble/Scenes/" + MiniGameTable.Get(MiniGameTable.SoccerId).SceneName + ".unity";
 
-        private const string ShaderFolder = "Assets/_Project/Games/100_PenmonScramble/Shaders/";
         private const float CameraFarClip = 200f;
         private const float CameraFieldOfView = 40f;
         // 置く位置は SoccerCamera が試しのピッチを始めたときに決める（ここは始まる前の1フレームの位置）
@@ -34,21 +32,6 @@ namespace PenmonScramble.Editor
 
         private const string Heading = "ペンモンサッカー";
         private const string ComingSoon = "スタジアムは準備中です";
-        private static readonly Vector2 HeadingPosition = new Vector2(0f, 160f);
-        private static readonly Vector2 HeadingSize = new Vector2(1200f, 140f);
-        private const int HeadingFontSize = 96;
-        private static readonly Vector2 CoursePosition = new Vector2(0f, 30f);
-        private static readonly Vector2 CourseSize = new Vector2(1200f, 80f);
-        private const int CourseFontSize = 52;
-        private static readonly Vector2 ComingSoonPosition = new Vector2(0f, -60f);
-        private static readonly Vector2 ComingSoonSize = new Vector2(1200f, 70f);
-        private const int ComingSoonFontSize = 40;
-        private static readonly Vector2 BackPosition = new Vector2(0f, -260f);
-        private static readonly Vector2 BackSize = new Vector2(360f, 130f);
-        private const int BackFontSize = 52;
-        private static readonly Color WaitingBackColor = new Color(0.02f, 0.03f, 0.10f, 0.7f);
-        private static readonly Vector2 WaitingTextSize = new Vector2(1400f, 120f);
-        private const int WaitingFontSize = 60;
 
         /// <summary>バッチモードからも呼べるよう、保存の確認はしない（呼ぶ側の Rebuild が済ませている）</summary>
         public static void BuildScene()
@@ -61,7 +44,7 @@ namespace PenmonScramble.Editor
             // 顔の絵と地面の絵は本編と同じもの（本編の SceneBuilder が先に取り込んでいる）
             PenmonScrambleSceneBuilder.CreateCreatureArt();
 
-            var placeholder = CreatePlaceholder(canvas, out var course, out var back);
+            var placeholder = PenmonScrambleSceneBuilder.CreateComingSoonPlaceholder(canvas, Heading, ComingSoon, out var course, out var back);
             var hud = CreateHud(canvas);
             AvoidTouchButtons(camera, hud.Touch, canvas.GetComponent<Canvas>());
             var cutIn = PenmonScrambleSceneBuilder.CreateSoccerCutIn(canvas);
@@ -87,7 +70,7 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            AddToBuildSettings();
+            PenmonScrambleSceneBuilder.AddSceneToBuildSettings(ScenePath, atStart: false);
             Debug.Log($"[SoccerSceneBuilder] {ScenePath} を生成しました");
         }
 
@@ -120,28 +103,13 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        /// <summary>まだ作っていないスタジアムのときの板（スタジアムの名前・準備中・もどる）。試合を始めたら隠す</summary>
-        private static GameObject CreatePlaceholder(Transform canvas, out Text course, out Button back)
-        {
-            var group = UIDialogBuilder.CreateUIObject("Placeholder", canvas);
-            UIDialogBuilder.SetStretchAll(group.GetComponent<RectTransform>());
-            var parent = group.transform;
-            PenmonScrambleSceneBuilder.CreateLabel(parent, "Heading", Heading, HeadingFontSize, HeadingPosition, HeadingSize).fontStyle = FontStyle.Bold;
-            course = PenmonScrambleSceneBuilder.CreateLabel(parent, "Course", string.Empty, CourseFontSize, CoursePosition, CourseSize);
-            PenmonScrambleSceneBuilder.CreateLabel(parent, "ComingSoon", ComingSoon, ComingSoonFontSize, ComingSoonPosition, ComingSoonSize);
-            back = PenmonScrambleSceneBuilder.CreateTitleButton(parent, "Back", "もどる", BackPosition, BackSize, PenmonScrambleSceneBuilder.CancelColor, BackFontSize);
-            return group;
-        }
-
         /// <summary>1試合: ピッチ・球・子・キーパーの見た目（SoccerView）と、試合を進める SoccerMatchPlay</summary>
         private static SoccerMatchPlay CreateMatchPlay(SoccerCamera camera, SoccerHudParts hud, SpecialCutIn cutIn, StageMenu menu, MiniGameResultPanel result)
         {
             var root = new GameObject("Match");
             var view = root.AddComponent<SoccerView>();
             var viewSo = new SerializedObject(view);
-            viewSo.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
-            viewSo.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
-            viewSo.ApplyModifiedProperties();
+            PenmonScrambleSceneBuilder.BindToonAndBlobShaders(viewSo);
 
             var play = root.AddComponent<SoccerMatchPlay>();
             var so = new SerializedObject(play);
@@ -160,10 +128,7 @@ namespace PenmonScramble.Editor
         /// <summary>みんなで遊ぶときの通信の段取りと、始まるまで（全員の準備・ホストを待つ間）画面を覆う「待っています」</summary>
         private static SoccerOnlinePlay CreateOnline(Transform canvas, OnlineSession session, SoccerMatchPlay play)
         {
-            var waiting = PenmonScrambleSceneBuilder.CreateFullScreenBacking(canvas, "Waiting", WaitingBackColor);
-            var text = PenmonScrambleSceneBuilder.CreateLabel(waiting.transform, "Text", string.Empty, WaitingFontSize, Vector2.zero, WaitingTextSize);
-            text.fontStyle = FontStyle.Bold;
-            waiting.SetActive(false);
+            var waiting = PenmonScrambleSceneBuilder.CreateWaitingBacking(canvas, out var text);
 
             var online = play.gameObject.AddComponent<SoccerOnlinePlay>();
             var so = new SerializedObject(online);
@@ -213,17 +178,5 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        /// <summary>本編のシーン（0番目＝起動したときのシーン）の後ろに足す</summary>
-        private static void AddToBuildSettings()
-        {
-            var scenes = EditorBuildSettings.scenes.ToList();
-            if (scenes.Any(s => s.path == ScenePath))
-            {
-                return;
-            }
-
-            scenes.Add(new EditorBuildSettingsScene(ScenePath, true));
-            EditorBuildSettings.scenes = scenes.ToArray();
-        }
     }
 }

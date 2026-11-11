@@ -3,7 +3,7 @@ using PenmonScramble.Core;
 
 namespace PenmonScramble.Golf.Core
 {
-    /// <summary>特殊ショットの種類。属性ごとに1つ（Docs/MINIGAME_GOLF_PLAN.md「打つ子と特殊ショット」）</summary>
+    /// <summary>特殊ショットの種類。属性ごとに1つ</summary>
     public enum GolfSpecialKind
     {
         None,
@@ -66,24 +66,6 @@ namespace PenmonScramble.Golf.Core
                 case GolfSpecialKind.WindCurve: return "追い風カーブ";
                 case GolfSpecialKind.ThunderBoost: return "イナズマブースト";
                 default: return string.Empty;
-            }
-        }
-
-        /// <summary>HUD に出す一言の説明（★で何が変わるかも）</summary>
-        public static string DescribeOf(GolfSpecialKind kind, int stars)
-        {
-            switch (kind)
-            {
-                case GolfSpecialKind.IceRoad:
-                    return $"通り道が凍って止まりにくい。池・砂地も渡れる（{GolfSpecialBalance.IceLength(stars):0}m）";
-                case GolfSpecialKind.SkipBounce:
-                    return $"水切りのように跳ねて、低い壁や池を越える（{GolfSpecialBalance.SkipBounces(stars)}回跳ねる）";
-                case GolfSpecialKind.WindCurve:
-                    return "選んだ向きへ大きく曲がって進む";
-                case GolfSpecialKind.ThunderBoost:
-                    return "転がっている間にもう一度押すと、加速して向きを少し変える";
-                default:
-                    return string.Empty;
             }
         }
     }

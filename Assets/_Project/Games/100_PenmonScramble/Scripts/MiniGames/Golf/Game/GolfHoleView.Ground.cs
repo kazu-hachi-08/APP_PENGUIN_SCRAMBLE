@@ -28,7 +28,7 @@ namespace PenmonScramble.Golf.Game
         private const float AreaLift = 0.006f;
         private const float RimWidth = 0.14f;
 
-        // 坂の矢印（下る向きの「く」の字）: 腕の長さ・太さ・開き・間・数
+        // 「く」の字の印（坂の矢印・海流の押し流す印で共通）: 腕の長さ・太さ・開き・間・数
         private const float ChevronArm = 0.55f;
         private const float ChevronWidth = 0.12f;
         private const float ChevronSpread = 38f;

@@ -3,7 +3,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Golf.Core
 {
-    /// <summary>ミニゲーム画面のコース選びに出す、ゴルフのコースの中身（ホールとパー・ベストのパーとの差・報酬）</summary>
+    /// <summary>ミニゲーム画面のコース選びに出す、ゴルフのコースの中身（ホールとパー・仕掛けの一言・ベストのパーとの差・報酬）</summary>
     public sealed class GolfCourseGuide : IMiniGameCourseGuide
     {
         public bool IsReady(int courseNo) => GolfCourseTable.Get(courseNo) != null;
@@ -17,7 +17,7 @@ namespace PenmonScramble.Golf.Core
             }
 
             var pars = string.Join("・", course.Holes.Select(h => h.Par));
-            return $"{course.Holes.Count}ホール  パー {pars}（合計 {course.TotalPar}）";
+            return MiniGameGuides.TwoLines($"{course.Holes.Count}ホール  パー {pars}（合計 {course.TotalPar}）", course.Gimmick);
         }
 
         public string FormatBest(int courseNo, int best)

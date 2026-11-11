@@ -5,7 +5,7 @@ using PenmonScramble.Baseball.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>野球のカウント・振った時刻・CPU（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 2）</summary>
+    /// <summary>野球のカウント・振った時刻・CPU</summary>
     public class BaseballCountAiTests
     {
         private const float Dt = BaseballRules.StepSeconds;

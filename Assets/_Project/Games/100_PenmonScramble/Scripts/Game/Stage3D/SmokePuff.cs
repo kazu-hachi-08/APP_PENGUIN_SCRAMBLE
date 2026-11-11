@@ -66,16 +66,14 @@ namespace PenmonScramble.Game
             var obj = new GameObject("Puff");
             obj.transform.SetParent(transform, false);
             obj.transform.localPosition = localPosition;
-            var renderer = ToyParts.AddMesh(obj, ToyMeshes.Sphere, material);
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ToyParts.AddMeshNoShadow(obj, ToyMeshes.Sphere, material);
             return obj.transform;
         }
 
         private void Update()
         {
             var dt = Time.deltaTime;
-            _age += dt;
-            var t = _age / LifeSeconds;
+            var t = ToyEasing.Advance(ref _age, dt, LifeSeconds);
             if (t >= 1f)
             {
                 Destroy(gameObject);

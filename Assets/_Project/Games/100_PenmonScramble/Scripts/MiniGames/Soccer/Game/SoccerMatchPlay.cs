@@ -89,16 +89,7 @@ namespace PenmonScramble.Soccer.Game
         }
 
         /// <summary>自分の編成の並び（ひとりの赤・みんなで送る「準備できた」の中身）</summary>
-        public static List<int> PartySpecies()
-        {
-            var species = new List<int>();
-            foreach (var penguin in GameSave.Record.PartyPenguins())
-            {
-                species.Add(penguin.speciesNo);
-            }
-
-            return species;
-        }
+        public static List<int> PartySpecies() => MiniGameLaunch.PartySpecies();
 
         /// <summary>
         /// この端末で試合を計算する（ひとり・ホスト）。人のいないチームは CPU（スタジアムの強さ。協力では人数で上がる）が、

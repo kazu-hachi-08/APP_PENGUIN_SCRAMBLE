@@ -4,7 +4,7 @@ namespace PenmonScramble.MiniGames.Core
 {
     /// <summary>
     /// ミニゲームの定義表。1つのミニゲームにつき1行。ここに1行足せば、ミニゲーム画面にカードが並ぶ
-    /// （足すときの手順は Docs/MINIGAME_GOLF_PLAN.md の「新しいミニゲームを足すときの手順」）
+    /// （足すときの手順は Docs/PENMON_SCRAMBLE_SPEC.md §13.1 の「新しいミニゲームを足すときの手順」）
     /// </summary>
     public static class MiniGameTable
     {
@@ -27,15 +27,8 @@ namespace PenmonScramble.MiniGames.Core
                 maxPlayers: 4,
                 lowerIsBetter: true,
                 scoreUnit: "打",
-                courses: new[]
-                {
-                    // 景色はストーリーの5ワールド。そのワールドに入れたら開く
-                    new MiniGameCourseDef(1, "海岸", 1),
-                    new MiniGameCourseDef(2, "氷山", 2),
-                    new MiniGameCourseDef(3, "深海", 3),
-                    new MiniGameCourseDef(4, "嵐の崖", 4),
-                    new MiniGameCourseDef(5, "火山の入り江", 5),
-                }),
+                // 景色はストーリーの5ワールド。そのワールドに入れたら開く
+                courses: FiveWorldCourses()),
             new MiniGameDef(
                 SoccerId,
                 "ペンモンサッカー",
@@ -45,15 +38,8 @@ namespace PenmonScramble.MiniGames.Core
                 // ベストは1試合の得失点差の最高（大きいほど良い。見せ方は SoccerCourseGuide で「+3」「±0」「−1」）
                 lowerIsBetter: false,
                 scoreUnit: "点差",
-                courses: new[]
-                {
-                    // スタジアムの景色もストーリーの5ワールド。番号は一度配ったら変えない
-                    new MiniGameCourseDef(1, "海岸", 1),
-                    new MiniGameCourseDef(2, "氷山", 2),
-                    new MiniGameCourseDef(3, "深海", 3),
-                    new MiniGameCourseDef(4, "嵐の崖", 4),
-                    new MiniGameCourseDef(5, "火山の入り江", 5),
-                },
+                // 景色は上のゴルフと同じストーリーの5ワールド。番号は一度配ったら変えない
+                courses: FiveWorldCourses(),
                 courseWord: "スタジアム"),
             new MiniGameDef(
                 BaseballId,
@@ -61,20 +47,29 @@ namespace PenmonScramble.MiniGames.Core
                 "魔球を曲げて、タイミングで打ち返す3イニングの試合",
                 "BaseballScene",
                 maxPlayers: 4,
-                // ベストは1試合の得失点差の最高（大きいほど良い。見せ方は BaseballCourseGuide で「+3」「±0」「−1」）
+                // 得失点差（大きいほど良い）。見せ方は BaseballCourseGuide で作る
                 lowerIsBetter: false,
                 scoreUnit: "点差",
-                courses: new[]
-                {
-                    // 球場の景色もストーリーの5ワールド。番号は一度配ったら変えない
-                    new MiniGameCourseDef(1, "海岸", 1),
-                    new MiniGameCourseDef(2, "氷山", 2),
-                    new MiniGameCourseDef(3, "深海", 3),
-                    new MiniGameCourseDef(4, "嵐の崖", 4),
-                    new MiniGameCourseDef(5, "火山の入り江", 5),
-                },
+                // 球場の景色も同じ5ワールド。番号は一度配ったら変えない
+                courses: FiveWorldCourses(),
                 courseWord: "球場"),
         };
+
+        /// <summary>
+        /// ゴルフ・サッカー・野球のコース（景色は同じ5ワールド）。番号と名前は記録に残るので変えない。
+        /// 呼ぶたびに新しい配列を返し、ゲームごとに別の配列を持たせる
+        /// </summary>
+        private static MiniGameCourseDef[] FiveWorldCourses()
+        {
+            return new[]
+            {
+                new MiniGameCourseDef(1, "海岸", 1),
+                new MiniGameCourseDef(2, "氷山", 2),
+                new MiniGameCourseDef(3, "深海", 3),
+                new MiniGameCourseDef(4, "嵐の崖", 4),
+                new MiniGameCourseDef(5, "火山の入り江", 5),
+            };
+        }
 
         /// <summary>Id のミニゲーム。無ければ null（新しい版で増えたミニゲームの記録など）</summary>
         public static MiniGameDef Get(string id)

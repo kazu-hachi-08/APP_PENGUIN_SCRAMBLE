@@ -82,7 +82,7 @@ namespace PenmonScramble.Game
             }
 
             // これから灯る◆は明滅させて、上限解放になることを知らせる
-            var blink = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * PreviewBlinkSpeed * Mathf.PI * 2f);
+            var blink = ToyEasing.Pulse01(Time.unscaledTime, PreviewBlinkSpeed);
             for (var i = 0; i < _pips.Length; i++)
             {
                 if (_pipPreview[i])

@@ -73,7 +73,7 @@ namespace PenmonScramble.Game
             {
                 // 替われる間だけ脈打たせて「今なら交代できる」と見せる
                 var ready = _cooldown.fillAmount <= 0f;
-                var wave = ready ? 0.5f + 0.5f * Mathf.Sin(_elapsed * _nextPulsePerSecond * Mathf.PI * 2f) : 0f;
+                var wave = ready ? ToyEasing.Pulse01(_elapsed, _nextPulsePerSecond) : 0f;
                 _nextRing.color = new Color(1f, 1f, 1f, ready ? Mathf.Lerp(0.55f, 1f, wave) : 0.4f);
             }
         }

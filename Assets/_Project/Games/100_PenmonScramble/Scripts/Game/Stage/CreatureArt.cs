@@ -57,7 +57,7 @@ namespace PenmonScramble.Game
         /// <summary>コロシアムの床の絵。無ければ null（ワールドの闘技場の絵で代わりに敷く）</summary>
         public static Sprite Colosseum() => _instance != null && _instance._colosseum != null ? _instance._colosseum : null;
 
-        /// <summary>UI の顔（カード・ガチャ・カットイン）。絵の無い種類（新しい版で増えた子など）は出さない</summary>
+        /// <summary>UI の顔（カード・ガチャ・カットイン）。絵の無い種類（まだ絵を用意していない子など）は出さない</summary>
         public static void ShowFace(Image image, int speciesNo)
         {
             var art = Find(speciesNo);

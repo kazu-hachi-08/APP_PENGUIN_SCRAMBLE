@@ -38,8 +38,6 @@ namespace PenmonScramble.Game
         private float _bump = BumpSeconds;
         private float _age = -1f;
 
-        public RectTransform Plate => _plate;
-
         /// <summary>出さない札は有効にならず Awake が呼ばれないので、使う前に自分で結び付ける</summary>
         private void Bind()
         {

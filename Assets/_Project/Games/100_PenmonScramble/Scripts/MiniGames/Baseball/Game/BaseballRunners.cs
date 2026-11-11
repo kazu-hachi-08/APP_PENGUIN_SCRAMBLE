@@ -9,7 +9,9 @@ namespace PenmonScramble.Baseball.Game
     /// 塁の上の走者（おもちゃのコマのように塁の横に立つ）。打席の結果が決まってから、Core の走者の動き（BaseballRunnerMove）どおりに
     /// 塁を回って走る（走っている間に何かを決めることは無い）。ホームへ還った子は「+1」を出して喜んで消え、ゲッツーでアウトになった子は「アウト」を出して悔しがって消える。
     /// 立っている塁には光る輪、子の足元には輪、走った跡には丸を、チームの色で出す（BaseballRunnerMarks）。
-    /// 体は「打順・種類・CPU か」ごとに一度作ったら取っておく（攻守が替わるたびに作り直さない）
+    /// 体は「種類・CPU か」ごとに作って取っておき、塁に出た1人ずつに空いている体を貸す（攻守が替わるたびに作り直さない）。
+    /// 編成が3体までなので、塁にいる子がもう一度打席に立って塁に出ることがある。体を打順で決めると2人が1つの体を取り合って
+    /// 片方が消えるので、走者は「何塁にいるか」で探し、体は1人に1つずつ貸す
     /// </summary>
     public sealed class BaseballRunners
     {
@@ -24,7 +26,7 @@ namespace PenmonScramble.Baseball.Game
         // 還った・アウトになった子が消えるまでの秒（「+1」「アウト」を読める長さ）
         private const float LeaveSeconds = 1f;
 
-        private readonly Dictionary<(int Slot, int Species, bool Wild), Body> _bodies = new Dictionary<(int, int, bool), Body>();
+        private readonly Dictionary<(int Species, bool Wild), List<Body>> _bodies = new Dictionary<(int, bool), List<Body>>();
         private readonly List<Runner> _runners = new List<Runner>();
         private readonly bool?[] _standing = new bool?[BaseballRules.BaseCount + 1];
         private readonly BaseballFieldDef _field;
@@ -83,7 +85,7 @@ namespace PenmonScramble.Baseball.Game
             _scoredInPlay = 0;
             foreach (var move in moves)
             {
-                var runner = move.From == 0 ? Enter(move.Runner, batterFrom) : Find(move.Runner);
+                var runner = move.From == 0 ? Enter(move.Runner, batterFrom) : FindOn(move.From);
                 if (runner == null)
                 {
                     continue;
@@ -158,30 +160,60 @@ namespace PenmonScramble.Baseball.Game
                 return null;
             }
 
-            var species = _species[slot];
-            var key = (slot, species, _wild);
-            if (!_bodies.TryGetValue(key, out var body))
-            {
-                var penguin = BaseballPenguin.Build($"Runner{slot}", species, _wild, _materials, _parent);
-                body = new Body(penguin, _marks.BuildFootRing(penguin));
-                _bodies.Add(key, body);
-            }
-
+            var body = FreeBody(_species[slot]);
             body.Ring.sharedMaterial = _marks.TeamMaterial(_mine);
             body.Penguin.SetActive(true);
             body.Penguin.Motion.ResetPose();
             body.Penguin.React(false, false);
             body.Penguin.PlaceAt(from, Vector3.right, false);
-            var runner = new Runner(slot, body);
+            var runner = new Runner(body);
             _runners.Add(runner);
             return runner;
         }
 
-        private Runner Find(int slot)
+        /// <summary>その種類の体で、いま誰も使っていない物（無ければ作る）</summary>
+        private Body FreeBody(int species)
+        {
+            var key = (species, _wild);
+            if (!_bodies.TryGetValue(key, out var bodies))
+            {
+                bodies = new List<Body>();
+                _bodies.Add(key, bodies);
+            }
+
+            foreach (var body in bodies)
+            {
+                if (!InUse(body))
+                {
+                    return body;
+                }
+            }
+
+            var penguin = BaseballPenguin.Build($"Runner{species}_{bodies.Count}", species, _wild, _materials, _parent);
+            var built = new Body(penguin, _marks.BuildFootRing(penguin));
+            bodies.Add(built);
+            return built;
+        }
+
+        private bool InUse(Body body)
         {
             foreach (var runner in _runners)
             {
-                if (runner.Slot == slot && runner.Leaving < 0f)
+                if (runner.Body == body)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>その塁（1〜3）に立っている走者（還った・アウトで消えていく子は除く）</summary>
+        private Runner FindOn(int baseNumber)
+        {
+            foreach (var runner in _runners)
+            {
+                if (runner.Target == baseNumber && runner.Leaving < 0f && !runner.Scored && !runner.Out)
                 {
                     return runner;
                 }
@@ -334,7 +366,6 @@ namespace PenmonScramble.Baseball.Game
 
         private sealed class Runner
         {
-            public readonly int Slot;
             public readonly Body Body;
             public readonly Queue<Vector3> Path = new Queue<Vector3>();
             public float Speed;
@@ -354,9 +385,8 @@ namespace PenmonScramble.Baseball.Game
             /// <summary>消えるまでの残り秒（まだ消えないなら負）</summary>
             public float Leaving = -1f;
 
-            public Runner(int slot, Body body)
+            public Runner(Body body)
             {
-                Slot = slot;
                 Body = body;
             }
         }

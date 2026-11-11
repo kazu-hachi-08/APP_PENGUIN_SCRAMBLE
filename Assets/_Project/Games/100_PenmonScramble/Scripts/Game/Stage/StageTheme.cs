@@ -4,7 +4,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ワールドごとの色と、地面の絵（CreatureArt.Ground）に掛ける色。
-    /// ワールドらしさは絵が受け持つので、絵に掛ける色はエリアの区別だけにする
+    /// ワールドらしさは絵が受け持つので、絵に掛ける色はエリアの区別と、借りた絵・コロシアムの床をこのワールドの色に寄せる分だけにする
     /// </summary>
     public sealed class StageTheme
     {
@@ -18,7 +18,7 @@ namespace PenmonScramble.Game
         {
         }
 
-        /// <param name="fallbackArtWorld">このワールドの地面・闘技場の絵がまだ無いとき、代わりに借りるワールド</param>
+        /// <param name="fallbackArtWorld">このワールドの地面・闘技場の絵が無いとき、代わりに借りるワールド</param>
         /// <param name="fallbackArtTint">借りた絵に掛けて、このワールドの色に寄せる色</param>
         private StageTheme(Color background, Color gate, FenceColors fence, int fallbackArtWorld, Color fallbackArtTint)
         {
@@ -42,7 +42,7 @@ namespace PenmonScramble.Game
         public Color FenceCap { get; }
         public Color FenceAltCap { get; }
 
-        /// <summary>絵が無いときに借りるワールド（0 なら借りない）。ComfyUI の絵ができるまで、色を替えた前のワールドの絵で代わりにする</summary>
+        /// <summary>絵が無いときに借りるワールド（0 なら借りない）。借りた絵に FallbackArtTint を掛けて、このワールドの色に寄せる</summary>
         public int FallbackArtWorld { get; }
         public Color FallbackArtTint { get; }
 

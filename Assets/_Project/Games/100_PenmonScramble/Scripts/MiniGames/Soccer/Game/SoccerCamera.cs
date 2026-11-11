@@ -121,7 +121,7 @@ namespace PenmonScramble.Soccer.Game
             Apply();
         }
 
-        /// <summary>ピッチ全体が収まる見る所（_center）と距離を決める。ボタンを避けられなければ、今までどおり真ん中で収める</summary>
+        /// <summary>ピッチ全体が収まる見る所（_center）と距離を決める。ボタンを避けられなければ真ん中で収める</summary>
         private void Fit()
         {
             _fittedScreen = new Vector2Int(Screen.width, Screen.height);

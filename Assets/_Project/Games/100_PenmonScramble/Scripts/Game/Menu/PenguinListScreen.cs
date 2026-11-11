@@ -182,7 +182,7 @@ namespace PenmonScramble.Game
                 if (visible)
                 {
                     var penguin = sorted[i];
-                    _cards[i].Show(penguin, IndexOf(Record.Party, penguin.id), penguin.id == _selectedId);
+                    _cards[i].Show(penguin, PenguinLabels.IndexOf(Record.Party, penguin.id), penguin.id == _selectedId);
                 }
             }
         }
@@ -206,19 +206,6 @@ namespace PenmonScramble.Game
             _sellLabel.text = !canSell ? (inParty ? "編成中は売れない" : "売る")
                 : _confirmSell ? $"本当に売る？ +{PlayerRecord.SellPrice(penguin)}"
                 : $"売る +{PlayerRecord.SellPrice(penguin)}";
-        }
-
-        private static int IndexOf(IReadOnlyList<int> list, int value)
-        {
-            for (var i = 0; i < list.Count; i++)
-            {
-                if (list[i] == value)
-                {
-                    return i;
-                }
-            }
-
-            return -1;
         }
     }
 }

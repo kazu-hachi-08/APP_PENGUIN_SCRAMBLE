@@ -8,7 +8,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>ゴルフのギミック（氷の床・押し流す帯・間欠泉・ワープ・動く物）とホールの時刻・コースの確認（Docs/MINIGAME_GOLF_PLAN.md フェーズ 6）</summary>
+    /// <summary>ゴルフのギミック（氷の床・押し流す帯・間欠泉・ワープ・動く物）とホールの時刻・コースの確認</summary>
     public class GolfGimmickTests
     {
         private const int MaxSteps = 20000;

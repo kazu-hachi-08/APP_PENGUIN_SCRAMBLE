@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading;
 using PenmonScramble.Core;
@@ -28,17 +29,7 @@ namespace PenmonScramble.Editor
             string report = null;
             var job = new Thread(() => report = BalanceLab.Report(BalanceLab.Run(options, p => progress = p), options.Seeds)) { IsBackground = true };
             job.Start();
-            while (job.IsAlive)
-            {
-                if (EditorUtility.DisplayCancelableProgressBar("Balance Lab", $"ボットで回しています… {progress * 100f:0}%", progress))
-                {
-                    cancel.Cancel();
-                }
-
-                Thread.Sleep(100);
-            }
-
-            EditorUtility.ClearProgressBar();
+            WaitWithProgress(job, cancel, "Balance Lab", () => $"ボットで回しています… {progress * 100f:0}%", () => progress);
             if (cancel.IsCancellationRequested || report == null)
             {
                 Debug.Log("[BalanceLab] やめました（表は書き出していません）");
@@ -48,5 +39,27 @@ namespace PenmonScramble.Editor
             File.WriteAllText(path, report);
             Debug.Log($"[BalanceLab] {ReportPath} に書き出しました");
         }
+
+        /// <summary>
+        /// 裏の糸（job）が終わるまで進み具合の表示を出し、キャンセルが押されたら cancel を立てる。
+        /// 表示は100msごとに更新する（裏の糸を待つだけの空回りで、メインのスレッドを使い切らないため）
+        /// </summary>
+        internal static void WaitWithProgress(Thread job, CancellationTokenSource cancel, string title, Func<string> message, Func<float> progress)
+        {
+            while (job.IsAlive)
+            {
+                if (EditorUtility.DisplayCancelableProgressBar(title, message(), progress()))
+                {
+                    cancel.Cancel();
+                }
+
+                Thread.Sleep(100);
+            }
+
+            EditorUtility.ClearProgressBar();
+        }
+
+        /// <summary>集計の見出し。途中でやめた集計には、その旨を題名の後ろに付ける（改行は呼び出し側で付ける）</summary>
+        internal static string ReportHeader(string title, bool cancelled) => cancelled ? title + "（途中でやめました）" : title;
     }
 }

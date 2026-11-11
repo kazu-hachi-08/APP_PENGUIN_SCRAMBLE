@@ -189,11 +189,7 @@ namespace PenmonScramble.Editor
         private static Button CreateNamePlate(Transform parent, out Text nameText, out Image leaderFace)
         {
             var plate = CreateTitleButton(parent, "NamePlate", string.Empty, NamePlatePosition, NamePlateSize, NamePlateColor, MenuFontSize);
-            var face = UIDialogBuilder.CreateUIObject("Leader", plate.transform);
-            PlaceCenter(face.GetComponent<RectTransform>(), LeaderFacePosition, Vector2.one * LeaderFaceSize);
-            leaderFace = face.AddComponent<Image>();
-            leaderFace.preserveAspect = true;
-            leaderFace.raycastTarget = false;
+            leaderFace = AddIconImage(plate.transform, "Leader", null, LeaderFacePosition, LeaderFaceSize);
             // 顔は TitleMenu が編成から入れる。それまでは白い四角を出さない
             leaderFace.enabled = false;
 

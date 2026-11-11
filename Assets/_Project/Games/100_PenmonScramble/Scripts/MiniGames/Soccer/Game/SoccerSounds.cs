@@ -134,20 +134,8 @@ namespace PenmonScramble.Soccer.Game
             Play(SoccerSound.Countdown, Volumes[SoccerSound.Countdown], pitch);
         }
 
-        private static void Play(SoccerSound sound, float volume, float pitch)
-        {
-            if (!Clips.TryGetValue(sound, out var clip) || clip == null)
-            {
-                clip = Create(sound);
-                Clips[sound] = clip;
-            }
-
-            var audio = AudioManager.Instance;
-            if (audio != null)
-            {
-                audio.PlaySeClip(clip, volume, pitch);
-            }
-        }
+        private static void Play(SoccerSound sound, float volume, float pitch) =>
+            MiniGameCrowdSounds.PlayCached(Clips, Create, sound, volume, pitch);
 
         private static AudioClip Create(SoccerSound sound)
         {

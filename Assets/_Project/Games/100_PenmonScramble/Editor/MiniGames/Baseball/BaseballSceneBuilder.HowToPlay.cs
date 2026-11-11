@@ -32,7 +32,7 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 SpaceKeySize = new Vector2(400f, 100f);
         private const float SideLabelGap = 30f;
         private static readonly Vector2 SideLabelSize = new Vector2(420f, 60f);
-        private const string KeyboardTip = "打つ番は J で振る・K でバント。投げる番は J K L で投げて、←→ で曲げる";
+        private const string KeyboardTip = "打つ番は ←→ で動いて J で振る・K でバント。投げる番は J K L で投げて、←→ で曲げる";
 
         private static readonly (string Label, Key Key, string Bat, string Pitch)[] ActionKeys =
         {
@@ -49,7 +49,7 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 PhoneCaptionSize = new Vector2(400f, 50f);
         private const int PhoneCaptionFontSize = 30;
         private const int PhoneCardFontSize = 18;
-        private const string TouchTip = "球種の札を押すと投げる。投げた後はスティックで曲げる。右上の ‖ でメニュー";
+        private const string TouchTip = "打つ番はスティックで動いて芯を合わせる。投げる番は札で投げて、スティックで曲げる";
         private static readonly string[] PhoneCardLabels = { "ストレート", "カーブ", "チェンジ\nアップ" };
 
         private static HowToPlayScreen CreateHowToPlay(Transform canvas)
@@ -70,7 +70,7 @@ namespace PenmonScramble.Editor
             B.CreateKeyCross(root, ArrowsCenter, new[] { "↑", "←", "↓", "→" }, new[] { Key.UpArrow, Key.LeftArrow, Key.DownArrow, Key.RightArrow });
             var moveCenter = (WasdCenter + ArrowsCenter) * 0.5f;
             B.CreateLabel(root, "Or", "または", B.ControlTipFontSize, new Vector2(moveCenter.x, WasdCenter.y), B.KeyLabelSize);
-            B.CreateLabel(root, "MoveLabel", "←→ 曲げる　↑↓ 投げる子を選ぶ", B.KeyWordFontSize, moveCenter + Vector2.down * (B.KeyPitch * 0.5f + B.KeyLabelGap), MoveLabelSize);
+            B.CreateLabel(root, "MoveLabel", "←→ 動く・曲げる　↑↓ 投げる子を選ぶ", B.KeyWordFontSize, moveCenter + Vector2.down * (B.KeyPitch * 0.5f + B.KeyLabelGap), MoveLabelSize);
 
             B.CreateLabel(root, "Legend", $"上: {Colored("打つ番", BatWordColor)}　下: {Colored("投げる番", PitchWordColor)}", B.ControlTipFontSize, LegendPosition, LegendSize);
             for (var i = 0; i < ActionKeys.Length; i++)
@@ -107,14 +107,14 @@ namespace PenmonScramble.Editor
         {
             var panel = B.CreateStretchGroup(parent, "Gamepad");
             var root = panel.transform;
-            // 左の列: 曲げる・魔球と必殺打・メニュー / 右の列: 振る・バント・球種（本編と同じく、よく押すボタンを右手側に）
-            B.CreatePadRow(root, 0, 0, "LStick", "L", new[] { "leftStick", "dpad" }, B.PadNeutralColor, true, "曲げる・投げる子を選ぶ");
+            // 左の列: 動く / 曲げる・魔球と必殺打・メニュー / 右の列: 振る・バント・球種（本編と同じく、よく押すボタンを右手側に）
+            B.CreatePadRow(root, 0, 0, "LStick", "L", new[] { "leftStick", "dpad" }, B.PadNeutralColor, true, "動く・曲げる・投げる子を選ぶ");
             B.CreatePadRow(root, 0, 1, "L1", "L1", new[] { "leftShoulder" }, B.PadNeutralColor, false, "魔球・必殺打の ON / OFF");
             B.CreatePadRow(root, 0, 2, "Options", "OPTIONS", new[] { "start" }, B.PadNeutralColor, false, "メニュー");
             B.CreatePadRow(root, 1, 0, "Cross", "×", new[] { "buttonSouth" }, B.PadCrossColor, true, "振る / ストレート");
             B.CreatePadRow(root, 1, 1, "Circle", "○", new[] { "buttonEast" }, B.PadCircleColor, true, "バント / カーブ");
             B.CreatePadRow(root, 1, 2, "Triangle", "△", new[] { "buttonNorth" }, B.PadTriangleColor, true, "チェンジアップ");
-            B.CreateControlTip(root, "打つ番は × で振る・○ でバント。投げる番は × ○ △ で投げて、スティックで曲げる");
+            B.CreateControlTip(root, "打つ番はスティックで動いて × で振る。投げる番は × ○ △ で投げて、スティックで曲げる");
             return panel;
         }
 
@@ -126,11 +126,12 @@ namespace PenmonScramble.Editor
             var scale = PhoneScreenSize.y / B.ReferenceResolution.y;
 
             var bat = CreatePhone(root, "BatPhone", -PhoneX, "打つ番");
+            B.CreateBaseballPhoneStick(bat, "動く", scale);
             B.CreateBaseballPhoneBatButtons(bat, scale);
             CreatePhoneSpecialToggle(bat, "必殺打", scale);
 
             var pitch = CreatePhone(root, "PitchPhone", PhoneX, "投げる番");
-            B.CreateBaseballPhoneStick(pitch, scale);
+            B.CreateBaseballPhoneStick(pitch, "曲げる", scale);
             CreatePhonePitchCards(pitch, scale);
             CreatePhoneSpecialToggle(pitch, "魔球", scale);
 
@@ -141,10 +142,9 @@ namespace PenmonScramble.Editor
         /// <summary>スマホの枠と画面・上のまん中の見出し・右上の ‖。中身を置く画面を返す</summary>
         private static Transform CreatePhone(Transform root, string name, float x, string caption)
         {
-            var rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>(B.RoundedSpritePath);
             var position = new Vector2(x, PhoneY);
-            B.CreateRoundedBox(root, $"{name}Body", position, PhoneScreenSize + Vector2.one * (B.PhoneBezel * 2f), B.PhoneBodyColor, rounded);
-            var screen = B.CreateRoundedBox(root, name, position, PhoneScreenSize, B.PhoneScreenColor, rounded).transform;
+            B.CreateRoundedBox(root, $"{name}Body", position, PhoneScreenSize + Vector2.one * (B.PhoneBezel * 2f), B.PhoneBodyColor);
+            var screen = B.CreateRoundedBox(root, name, position, PhoneScreenSize, B.PhoneScreenColor).transform;
             var title = B.CreateLabel(screen, "Caption", caption, PhoneCaptionFontSize, Vector2.zero, PhoneCaptionSize);
             title.fontStyle = FontStyle.Bold;
             Place(title.rectTransform, TopCenter, Vector2.down * PhoneCaptionMargin, PhoneCaptionSize);
@@ -155,11 +155,10 @@ namespace PenmonScramble.Editor
         /// <summary>投げる番の下の球種の札（試合の HUD と同じ所・同じ色）</summary>
         private static void CreatePhonePitchCards(Transform screen, float scale)
         {
-            var rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>(B.RoundedSpritePath);
             var size = CardSize * scale;
             for (var i = 0; i < PhoneCardLabels.Length; i++)
             {
-                var card = B.CreateRoundedBox(screen, $"Pitch{i}", Vector2.zero, size, CardColors[i], rounded);
+                var card = B.CreateRoundedBox(screen, $"Pitch{i}", Vector2.zero, size, CardColors[i]);
                 Place(card.rectTransform, BottomCenter, new Vector2(CardX[i], CardY) * scale, size);
                 B.CreateLabel(card.transform, "Text", PhoneCardLabels[i], PhoneCardFontSize, Vector2.zero, size);
             }
@@ -168,9 +167,8 @@ namespace PenmonScramble.Editor
         /// <summary>魔球・必殺打の札（球種の札の左。打つ番にも出る）</summary>
         private static void CreatePhoneSpecialToggle(Transform screen, string label, float scale)
         {
-            var rounded = AssetDatabase.GetBuiltinExtraResource<Sprite>(B.RoundedSpritePath);
             var size = SpecialToggleSize * scale;
-            var toggle = B.CreateRoundedBox(screen, "SpecialToggle", Vector2.zero, size, SpecialToggleColor, rounded);
+            var toggle = B.CreateRoundedBox(screen, "SpecialToggle", Vector2.zero, size, SpecialToggleColor);
             Place(toggle.rectTransform, BottomCenter, SpecialTogglePosition * scale, size);
             B.CreateLabel(toggle.transform, "Text", label, PhoneCardFontSize, Vector2.zero, size);
         }

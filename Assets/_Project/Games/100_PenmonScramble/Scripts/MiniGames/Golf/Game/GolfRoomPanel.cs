@@ -109,7 +109,7 @@ namespace PenmonScramble.Golf.Game
         /// <summary>全員がゴルフのシーンへ移る（部屋は試合ごと引き継ぐ。正しいコースはシーンに入ってからホストが送る）</summary>
         public bool StartMatch(int seat, int playerCount)
         {
-            MiniGameLaunch.StartOnline(Game, ShownCourseNo, _session, seat, playerCount);
+            MiniGameLaunch.StartOnline(Game, ShownCourseNo, _session);
             return true;
         }
 

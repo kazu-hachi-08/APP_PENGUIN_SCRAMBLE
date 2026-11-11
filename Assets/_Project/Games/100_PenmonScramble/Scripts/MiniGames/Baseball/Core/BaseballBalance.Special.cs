@@ -4,7 +4,7 @@ using PenmonScramble.Core;
 namespace PenmonScramble.Baseball.Core
 {
     /// <summary>
-    /// 魔球・必殺打の調整値（Docs/MINIGAME_BASEBALL_PLAN.md「魔球と必殺打」）。★（1〜3）で強さが変わる所は ★1・★2・★3 の順の表。
+    /// 魔球・必殺打の調整値。★（1〜3）で強さが変わる所は ★1・★2・★3 の順の表。
     /// 釣り合いは CPU の試合の確認（Tools/PenmonScramble/Baseball/CPUの試合の確認）で決めた
     /// </summary>
     public static partial class BaseballBalance

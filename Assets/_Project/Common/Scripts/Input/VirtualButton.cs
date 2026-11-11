@@ -10,10 +10,8 @@ namespace PenmonScramble.Common.Input
     {
         public bool IsDown { get; private set; }
         public bool IsHeld { get; private set; }
-        public bool IsUp { get; private set; }
 
         private bool _wasPressedThisFrame = false;
-        private bool _wasReleasedThisFrame = false;
 
         public void OnPointerDown(PointerEventData eventData)
         {
@@ -23,18 +21,15 @@ namespace PenmonScramble.Common.Input
 
         public void OnPointerUp(PointerEventData eventData)
         {
-            _wasReleasedThisFrame = true;
             IsHeld = false;
         }
 
         private void LateUpdate()
         {
-            // フレーム単位のDown / Upのフラグ更新
+            // フレーム単位のDownのフラグ更新
             IsDown = _wasPressedThisFrame;
-            IsUp = _wasReleasedThisFrame;
 
             _wasPressedThisFrame = false;
-            _wasReleasedThisFrame = false;
         }
 
         private void OnDisable()
@@ -46,9 +41,7 @@ namespace PenmonScramble.Common.Input
         {
             IsDown = false;
             IsHeld = false;
-            IsUp = false;
             _wasPressedThisFrame = false;
-            _wasReleasedThisFrame = false;
         }
     }
 }

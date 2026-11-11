@@ -68,11 +68,10 @@ namespace PenmonScramble.Core
         /// <summary>
         /// 突進: Range（距離）・DashSpeed・AreaRadius（体より広く当たる分）/ 雨: AreaRadius（円の半径）・Count（ばらばらに落とす数）/
         /// 飛び出し: AreaRadius / 波: 使うのは Power・Knockback だけ /
-        /// 竜巻: AreaRadius（吸い込む円の半径）・Count（竜巻の数）・Duration・Interval（当たる間隔）・Pull（吸い込む速さ）/
+        /// 竜巻: AreaRadius（吸い込む円の半径）・Count（竜巻の数）・Duration・Interval（当たる間隔）・Pull（吸い込む速さ）・ChaseSpeed があれば、一番近いプレイヤーの方へゆっくり動く /
         /// 稲妻: AreaRadius（帯の幅の半分）・Range（帯の長さ。0 なら柵まで）/
         /// 突風: Range（扇の半径）・HalfAngleDegrees・DashSpeed（押し流す速さ）・Duration（押す秒数）・Power と Knockback は柵に当たったとき /
         /// 背びれ: Range（1回に走る距離）・DashSpeed・AreaRadius（体の半径に足す分。背びれだけ当たるので負）・Count（向きを変えて走り直す回数）/
-        /// 竜巻: ChaseSpeed があれば、一番近いプレイヤーの方へゆっくり動く
         /// </summary>
         public SkillDef Skill { get; }
 

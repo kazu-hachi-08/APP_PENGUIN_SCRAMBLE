@@ -12,7 +12,7 @@ namespace PenmonScramble.Core
         private static readonly int[] Escorts = { 1, 2, 3, 6, 7, 11, 12, 13, 16, 17 };
 
         /// <summary>
-        /// 闘技場3連戦: 巨大ペンモン2体組（風と雷。新しい大技の形の2つ）→ 大ボス → 本気の大ボス。
+        /// 闘技場3連戦: 巨大ペンモン2体組（風と雷。大技の形の2つ）→ 大ボス → 本気の大ボス。
         /// 最初から闘技場に立って始まり、勝つたびに通り道が開いて次の闘技場へ進む
         /// </summary>
         public static readonly StageDef ArenaGauntlet = new StageDef(ArenaGauntletNo, "闘技場3連戦", 2,
@@ -21,7 +21,7 @@ namespace PenmonScramble.Core
             AreaDef.Arena(Bosses(2, new BossSpawn(BigBossTable.OrcaNo, BossRank.Serious)), new WaveDef(2, Escorts)));
 
         /// <summary>
-        /// 新しい大ボス: オオフルマカモメ → サメ → 本気のオオフルマカモメ → 本気のサメ。
+        /// 大ボス: オオフルマカモメ → サメ → 本気のオオフルマカモメ → 本気のサメ。
         /// 4戦続けて、ふだんの攻撃と、本気で吠えた後に増える攻撃（竜巻が増える・背びれが2本）をまとめて確かめる
         /// </summary>
         public static readonly StageDef NewBosses = new StageDef(NewBossesNo, "新しい大ボス", 3,

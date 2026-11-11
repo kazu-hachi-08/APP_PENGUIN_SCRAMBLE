@@ -19,7 +19,8 @@ namespace PenmonScramble.Baseball.Core
     /// <summary>
     /// バット。軸（打つ子の立つ所）を中心に、盤の上で水平に回る（おもちゃの盤のバットと同じ）。
     /// 角度は度で、0 がホームの上を横切る向き、正が投手の方へ回った向き。振ると一定の速さで構えから振り終わりまで回る。
-    /// 当たったときの角度で打球の向きが（早い＝引っ張り・遅い＝流し）、軸からの距離で強さが（芯が強い）決まる
+    /// 当たったときの角度で打球の向きが（早い＝引っ張り・遅い＝流し）、軸からの距離で強さが（芯が強い）決まる。
+    /// 軸は打つ子と一緒に打席の中を左右へ動ける（振るまで。内角・外角の球にも芯を合わせられるように）。球ごとに構えの所へ戻る
     /// </summary>
     public sealed class BaseballBat
     {
@@ -28,6 +29,12 @@ namespace PenmonScramble.Baseball.Core
         public BaseballBatState State { get; private set; }
 
         public float Degrees { get; private set; } = BaseballBalance.SwingStartDegrees;
+
+        /// <summary>軸の構えの所からの横のずれ（右が正。±BatterMoveRange）</summary>
+        public float Offset { get; private set; }
+
+        /// <summary>左右へ動ける状態か（構え・バントの構え。振り始めたら足は止まる）</summary>
+        public bool CanMove => State == BaseballBatState.Ready || State == BaseballBatState.Bunting;
 
         /// <summary>当たり得る状態か（振っている途中・バントの構え）</summary>
         public bool IsLive => State == BaseballBatState.Swinging || State == BaseballBatState.Bunting;
@@ -39,8 +46,24 @@ namespace PenmonScramble.Baseball.Core
         {
             State = BaseballBatState.Ready;
             Degrees = BaseballBalance.SwingStartDegrees;
+            Offset = 0f;
             _elapsed = 0f;
         }
+
+        /// <summary>左右へ動く（input は −1 で左・1 で右）。振っている間・振った後は動かない</summary>
+        public void Move(float input, float dt)
+        {
+            if (!CanMove)
+            {
+                return;
+            }
+
+            var step = Math.Clamp(input, -1f, 1f) * BaseballBalance.BatterMoveSpeed * dt;
+            Offset = Math.Clamp(Offset + step, -BaseballBalance.BatterMoveRange, BaseballBalance.BatterMoveRange);
+        }
+
+        /// <summary>今の軸の位置（盤の構えの軸に、横のずれを足した所）</summary>
+        public Vec2 Pivot(BaseballFieldDef field) => field.BatPivot + new Vec2(Offset, 0f);
 
         /// <summary>
         /// 振る（1球に1回。バントの構えからも振れる＝バスター）。振り始めたら true。

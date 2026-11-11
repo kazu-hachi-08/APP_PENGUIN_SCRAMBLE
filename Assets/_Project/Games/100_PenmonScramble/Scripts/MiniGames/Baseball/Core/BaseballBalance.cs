@@ -56,6 +56,17 @@ namespace PenmonScramble.Baseball.Core
         public const float BatInner = 0.35f;
         public const float BatLength = 1.9f;
 
+        /// <summary>
+        /// 打つ子が打席の中を左右へ動ける幅（構えの所から片側。案）。ゾーンの端の球に芯が届き、ゾーンの外へ大きく外した球には届かない幅
+        /// </summary>
+        public const float BatterMoveRange = 0.6f;
+
+        /// <summary>
+        /// 打つ子が左右へ動く速さ（毎秒。案）。曲げられる区間が終わってから球が来るまで（ストレートで約 0.2 秒）に半分ほどしか動けない速さにして、
+        /// 曲げる球を読んで先に動くこと・最後に曲げる魔球に意味を残す
+        /// </summary>
+        public const float BatterMoveSpeed = 2.4f;
+
         /// <summary>芯の位置（軸から）と、芯として強く打てる幅（片側）</summary>
         public const float SweetSpot = 1.15f;
         public const float SweetHalfWidth = 0.2f;
@@ -79,8 +90,11 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>当たった角度の何倍の向きへ飛ぶか（早すぎ・遅すぎがファウルになるように 1 より大きく）</summary>
         public const float DirectionScale = 1.3f;
 
-        /// <summary>転がる打球の速さ（強さ 1 のとき。案）</summary>
-        public const float MaxHitSpeed = 15f;
+        /// <summary>
+        /// 転がる打球の速さ（強さ 1 のとき。案）。打つ子が左右へ動いて内角・外角も芯で打てるようになった分、15 から下げて
+        /// CPU どうしの点の入り方と★ごとの勝ちやすさを動けなかったころに合わせた
+        /// </summary>
+        public const float MaxHitSpeed = 13f;
 
         /// <summary>強さがこれ以上（ジャスト＆芯）なら浮く</summary>
         public const float LoftMinPower = 0.9f;
@@ -144,8 +158,9 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>
         /// ★ごとのうまさ（振る時刻のぶれ秒・ゾーンの外を見送る割合・狙いのぶれマス・凍った魔球を待ち直せる割合）。
         /// ぶれが強さの一番の差（★1 はジャストに当たることが少なく、★5 はほとんど芯で捉える）。
-        /// 等間隔の段のままにしてある: フェーズ 7 の見直しで ★3（人のチームの代わり）が各球場の CPU に勝つ割合は
-        /// 海岸 70%・氷山 64%・深海 42%・嵐の崖 33%・火山の入り江 27%（200 試合）で、サッカーのように最後の球場が壁にならなかったため
+        /// 等間隔の段のままにしてある: ★3（人のチームの代わり）が各球場の CPU に勝つ割合は
+        /// 海岸 59%・氷山 49%・深海 36%・嵐の崖 35%・火山の入り江 28%（先攻・後攻 100 試合ずつ。残りは負けと引き分け。打つ子が動けるようにした後に測り直した）で、
+        /// サッカーのように最後の球場が壁にならなかったため
         /// （野球は1打で決まる点が多く、強さの差が勝ち負けに出にくい）。人が入ったときの勝ちやすさは試遊で見て、外れていたらここを直す
         /// </summary>
         private const float AiTiming1 = 0.10f;
@@ -188,6 +203,12 @@ namespace PenmonScramble.Baseball.Core
 
         /// <summary>打つ CPU の、球の通る所の見え方のぶれ（振る時刻のぶれ 1 秒あたりのマス。うまい CPU ほど見極めがよい）</summary>
         public const float AiReadError = 3f;
+
+        /// <summary>
+        /// 打つ CPU が芯を合わせに動く先のぶれ（マス。標準偏差。1球ごとに1つ決める）。★で変えない:
+        /// ★の差は振る時刻のぶれで十分に出ていて、動きまでうまくすると★5 の点が大きく増えすぎるため
+        /// </summary>
+        public const float AiMoveError = 0.3f;
 
         /// <summary>追い込まれるまで（2ストライク未満）の打つ CPU が、ゾーンの中の球を見送る割合</summary>
         public const float AiTakeStrikeChance = 0.3f;

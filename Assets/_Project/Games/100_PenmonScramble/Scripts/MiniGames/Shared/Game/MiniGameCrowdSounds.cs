@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using PenmonScramble.Common.Audio;
 using PenmonScramble.Game;
 using UnityEngine;
 
@@ -40,6 +42,25 @@ namespace PenmonScramble.MiniGames.Game
                 var envelope = Mathf.Min(1f, t / 0.12f) * (t < hold ? 1f : Mathf.Exp(-(t - hold) * 2.2f));
                 return (crowd * 1.4f + voice * 0.035f) * flutter * envelope;
             });
+        }
+
+        /// <summary>
+        /// ミニゲームの効果音を1回鳴らす共通処理。クリップは初回に作って clips に覚えておき、2回目からは作り直さない。
+        /// AudioManager が無いときは作るだけで鳴らさない（作ったクリップは残すので、後で鳴らせば同じ音になる）
+        /// </summary>
+        public static void PlayCached<T>(Dictionary<T, AudioClip> clips, System.Func<T, AudioClip> create, T sound, float volume, float pitch)
+        {
+            if (!clips.TryGetValue(sound, out var clip) || clip == null)
+            {
+                clip = create(sound);
+                clips[sound] = clip;
+            }
+
+            var audio = AudioManager.Instance;
+            if (audio != null)
+            {
+                audio.PlaySeClip(clip, volume, pitch);
+            }
         }
 
         /// <summary>観客のどよめき「おお〜」: 低い声の束が少し上がってから下がり、こもったざわめきと一緒に消える（歓声と聞き分けられるように低く短く）</summary>

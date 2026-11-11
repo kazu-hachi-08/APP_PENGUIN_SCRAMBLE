@@ -8,7 +8,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>ゴルフの特殊ショット・1コースのラウンド・報酬・コース1（Docs/MINIGAME_GOLF_PLAN.md フェーズ 4）</summary>
+    /// <summary>ゴルフの特殊ショット・1コースのラウンド・報酬・コース1</summary>
     public class GolfRoundTests
     {
         private const int MaxSteps = 20000;
@@ -335,6 +335,10 @@ namespace PenmonScramble.Tests
                 Assert.That(course.Holes.Select(h => h.Par), Is.All.InRange(2, 4), row.Name);
                 Assert.That(new GolfCourseGuide().IsReady(row.No), Is.True);
                 Assert.That(new GolfCourseGuide().Layout(row.No), Does.Contain($"合計 {course.TotalPar}"));
+                Assert.That(course.Gimmick, Is.Not.Empty, row.Name);
+                Assert.That(new GolfCourseGuide().Layout(row.No).Split('\n')[1], Is.EqualTo(course.Gimmick), row.Name);
+                // ホールの名前がコースの名前と同じだと、遊んでいる間に同じ名前が2つ並ぶ
+                Assert.That(course.Holes.Select(h => h.Name), Has.None.EqualTo(row.Name), row.Name);
             }
 
             Assert.That(GolfCourseTable.Get(99), Is.Null);

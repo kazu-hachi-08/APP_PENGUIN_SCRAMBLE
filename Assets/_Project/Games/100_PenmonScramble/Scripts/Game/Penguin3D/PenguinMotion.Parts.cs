@@ -85,7 +85,7 @@ namespace PenmonScramble.Game
 
         private static void Breathe(PenguinPose pose, ref PartPose p)
         {
-            var breath = Mathf.Sin(pose.Time * BreathRate * Mathf.PI * 2f) * BreathScale;
+            var breath = Wobble(pose.Time, BreathRate, BreathScale);
             p.Squash(-breath);
         }
 
@@ -157,7 +157,7 @@ namespace PenmonScramble.Game
             p.Squash(crouch * SpecialCrouch - air * SpecialStretch + land * SpecialLand);
             p.SwingFlippers(crouch * SpecialFlipperWindup);
             p.OpenFlippers(air * SpecialFlipperRaise);
-            p.Head.Euler += new Vector3(-air * SpecialHeadLift, 0f, 0f);
+            p.LiftHead(air * SpecialHeadLift);
         }
 
         /// <summary>のけぞって震え、ヒレが跳ね上がる。すぐ強く、ゆっくり戻る</summary>
@@ -183,7 +183,7 @@ namespace PenmonScramble.Game
             }
 
             var flying = Mathf.Sin(pose.Knock * Mathf.PI);
-            var flail = Mathf.Sin(pose.Time * KnockFlailRate * Mathf.PI * 2f) * KnockFlipperFlail;
+            var flail = Wobble(pose.Time, KnockFlailRate, KnockFlipperFlail);
             p.OpenFlippers((KnockFlipperOpen + flail) * flying);
         }
 
@@ -196,7 +196,7 @@ namespace PenmonScramble.Game
                 return;
             }
 
-            p.Head.Euler += new Vector3(-LieHeadLift * w, 0f, 0f);
+            p.LiftHead(LieHeadLift * w);
             p.OpenFlippers(-SlideFlipperHug * w);
             p.SwingFlippers(SlideFlipperBack * w);
             p.FootLeft.Euler += new Vector3(-LieFeetBack * w, 0f, 0f);

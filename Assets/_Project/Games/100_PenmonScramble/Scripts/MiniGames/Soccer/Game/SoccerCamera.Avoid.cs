@@ -26,7 +26,7 @@ namespace PenmonScramble.Soccer.Game
         [Tooltip("見る所をピッチの真ん中からずらしてよい幅（ピッチの半分の長さ・幅に対する割合）")]
         [SerializeField] private float _maxShift = 0.35f;
 
-        // ずらし方は前後左右それぞれこの段数ずつ試す（(2×6+1)² 通り。試合の始めに一度だけなので重くない）
+        // ずらし方は前後左右それぞれこの段数ずつ試す（(2×6+1)² 通り。画面の大きさが変わったときだけ動くので重くない）
         private const int ShiftSteps = 6;
         // ずらした所で収まらないときは、この割合ずつ引いて試す（最大で約 2 倍まで）
         private const float BackOffStep = 1.03f;

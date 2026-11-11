@@ -2,7 +2,7 @@ using PenmonScramble.Core;
 
 namespace PenmonScramble.Soccer.Core
 {
-    /// <summary>サッカーのオンラインの間隔（Docs/MINIGAME_SOCCER_PLAN.md「オンライン」）</summary>
+    /// <summary>サッカーのオンラインの間隔</summary>
     public static class SoccerNetRules
     {
         /// <summary>ホストがスナップショットを送る間隔（秒。毎秒15回）。ゲストはこの間をかけて届いた位置へ寄せて描く</summary>

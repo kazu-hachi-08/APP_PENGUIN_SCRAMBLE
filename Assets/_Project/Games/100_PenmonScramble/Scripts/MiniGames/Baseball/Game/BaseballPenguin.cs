@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PenmonScramble.Game;
 using UnityEngine;
 
@@ -19,17 +20,15 @@ namespace PenmonScramble.Baseball.Game
         private readonly float _scale;
         private float _pop = 1f;
 
-        private BaseballPenguin(Transform root, PenguinMotion motion, int species)
+        private BaseballPenguin(Transform root, PenguinMotion motion)
         {
             Root = root;
             Motion = motion;
-            Species = species;
             _scale = root.localScale.x;
         }
 
         public Transform Root { get; }
         public PenguinMotion Motion { get; }
-        public int Species { get; }
 
         public static BaseballPenguin Build(string name, int species, bool wild, ToonMaterials materials, Transform parent)
         {
@@ -42,7 +41,20 @@ namespace PenmonScramble.Baseball.Game
             model.SetRealShadows(false);
             model.SetTint(wild ? PenguinTint.Dark(UnitView.EnemyDarkness) : PenguinTint.None);
             var motion = model.gameObject.AddComponent<PenguinMotion>();
-            return new BaseballPenguin(root, motion, species);
+            return new BaseballPenguin(root, motion);
+        }
+
+        /// <summary>種類と CPU かどうかの組みごとの体を、一度作ったら取っておく（打者・投手で作り直さないため）。名前は label と種類の番号</summary>
+        public static BaseballPenguin GetOrBuild(IDictionary<(int, bool), BaseballPenguin> bodies, string label, int species, bool wild, ToonMaterials materials, Transform parent)
+        {
+            var key = (species, wild);
+            if (!bodies.TryGetValue(key, out var body))
+            {
+                body = Build($"{label}{species}", species, wild, materials, parent);
+                bodies.Add(key, body);
+            }
+
+            return body;
         }
 
         /// <summary>立つ所へ置く。前の所から離れていたら、ぽんと出す</summary>

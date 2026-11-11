@@ -50,7 +50,7 @@ namespace PenmonScramble.Baseball.Core
     }
 
     /// <summary>
-    /// 塁の上の走者と、打席の結果での進み方（Docs/MINIGAME_BASEBALL_PLAN.md「走者（自動）」）。
+    /// 塁の上の走者と、打席の結果での進み方。
     /// 安打は全員その塁の数だけ・四球は押し出される走者だけ・ゴロ（バントの犠打も）は全員1つ・フライは三塁の走者だけ還る（タッチアップ）。
     /// その打球で3アウトになったら点は入らず、走者も動かない。ゲッツーは一塁に走者がいて2アウト未満のときだけ一塁の走者もアウト
     /// </summary>
@@ -79,9 +79,6 @@ namespace PenmonScramble.Baseball.Core
                 return count;
             }
         }
-
-        /// <summary>二塁か三塁に走者がいる（ヒット1本で還れる所。CPU のチャンス・ピンチの見方）</summary>
-        public bool InScoringPosition => IsOccupied(2) || IsOccupied(3);
 
         public void Clear()
         {

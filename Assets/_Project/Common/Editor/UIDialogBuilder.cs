@@ -24,8 +24,7 @@ namespace PenmonScramble.Common.Editor
 
         public static CommonDialog CreateCommonDialog(Transform parent)
         {
-            var dialogObj = CreateUIObject("CommonDialog", parent);
-            SetStretchAll(dialogObj.GetComponent<RectTransform>());
+            var dialogObj = CreateStretchedUIObject("CommonDialog", parent);
 
             var bgImg = dialogObj.AddComponent<Image>();
             bgImg.color = new Color(0, 0, 0, 0.65f);
@@ -92,8 +91,7 @@ namespace PenmonScramble.Common.Editor
         /// </summary>
         public static PauseDialog CreatePauseDialog(Transform parent, string heading, bool withHelp)
         {
-            var dialogObj = CreateUIObject("PauseDialog", parent);
-            SetStretchAll(dialogObj.GetComponent<RectTransform>());
+            var dialogObj = CreateStretchedUIObject("PauseDialog", parent);
             // 後ろのボタン（仮想スティックなど）を押せないよう、画面全体をふさぐ
             dialogObj.AddComponent<Image>().color = new Color(0, 0, 0, 0.65f);
 
@@ -196,7 +194,7 @@ namespace PenmonScramble.Common.Editor
             rect.offsetMax = Vector2.zero;
         }
 
-        // ラベル系の太字・中央寄せ文字。設定順は text → fontSize → 太字 → 中央 → color
+        // ラベル系の太字・中央寄せ文字を作る
         private static Text AddBoldCenteredText(GameObject obj, string content, int fontSize, Color color)
         {
             return AddText(obj, content, fontSize, TextAnchor.MiddleCenter, color, FontStyle.Bold);
@@ -232,8 +230,7 @@ namespace PenmonScramble.Common.Editor
 
             btnObj.AddComponent<Button>();
 
-            var textObj = CreateUIObject("Text", btnObj.transform);
-            SetStretchAll(textObj.GetComponent<RectTransform>());
+            var textObj = CreateStretchedUIObject("Text", btnObj.transform);
             AddText(textObj, label, 22, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
 
             return btnObj;
@@ -244,6 +241,14 @@ namespace PenmonScramble.Common.Editor
             var obj = new GameObject(name);
             obj.transform.SetParent(parent, false);
             obj.AddComponent<RectTransform>();
+            return obj;
+        }
+
+        // 作ったあとに必ず画面いっぱいへ伸ばす組み合わせ（呼び出し側で伸ばし忘れないため）
+        public static GameObject CreateStretchedUIObject(string name, Transform parent)
+        {
+            var obj = CreateUIObject(name, parent);
+            SetStretchAll(obj.GetComponent<RectTransform>());
             return obj;
         }
 

@@ -146,7 +146,7 @@ namespace PenmonScramble.Game
                 return _lowColor;
             }
 
-            var blink = 0.5f + 0.5f * Mathf.Sin(_elapsed * _blinkPerSecond * Mathf.PI * 2f);
+            var blink = ToyEasing.Pulse01(_elapsed, _blinkPerSecond);
             return Color.Lerp(_lowColor, Color.white, blink * 0.5f);
         }
     }

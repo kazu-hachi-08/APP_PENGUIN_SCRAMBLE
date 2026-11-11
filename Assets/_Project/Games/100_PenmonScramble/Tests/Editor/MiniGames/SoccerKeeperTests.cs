@@ -7,7 +7,7 @@ using PenmonScramble.Soccer.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>おもちゃのキーパー（Docs/MINIGAME_SOCCER_PLAN.md フェーズ 2）</summary>
+    /// <summary>おもちゃのキーパー</summary>
     public class SoccerKeeperTests
     {
         private const float Dt = SoccerRules.StepSeconds;

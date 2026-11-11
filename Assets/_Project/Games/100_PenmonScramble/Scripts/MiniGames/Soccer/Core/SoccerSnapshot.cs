@@ -67,7 +67,7 @@ namespace PenmonScramble.Soccer.Core
     }
 
     /// <summary>
-    /// ホストが毎秒15回ゲストへ送る、試合のその時の全部（Docs/MINIGAME_SOCCER_PLAN.md「オンライン」）。
+    /// ホストが毎秒15回ゲストへ送る、試合のその時の全部。
     /// 位置・ボール・点・時間・ゲージ・PK戦に、前に送ってから起きたこと（音・知らせ・子の反応）を載せる。
     /// ゲストは計算せず、これを写しの試合（SoccerMatch.ApplySnapshot）に写して描く
     /// </summary>

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using PenmonScramble.Baseball.Core;
 using PenmonScramble.Core;
 using PenmonScramble.Game;
-using PenmonScramble.MiniGames.Core;
 using PenmonScramble.MiniGames.Game;
 using UnityEngine;
 
@@ -173,8 +172,7 @@ namespace PenmonScramble.Baseball.Game
         private void BuildWind(BaseballFieldDef field)
         {
             var at = BaseballSpace.ToWorld(BaseballFieldDef.At(0f, field.FenceRadius + FenceThickness + FlagPoleDiameter));
-            AddPart("FlagPole", ToyMeshes.Puck, _root, at + Vector3.up * (FlagPoleHeight * 0.5f), Quaternion.identity,
-                new Vector3(FlagPoleDiameter, FlagPoleHeight, FlagPoleDiameter), Materials.Get(FlagPoleColor, 0.5f));
+            AddPole("FlagPole", at, FlagPoleDiameter, FlagPoleHeight, Materials.Get(FlagPoleColor, 0.5f));
             _flag = new GameObject("Flag").transform;
             _flag.SetParent(_root, false);
             _flag.localPosition = at + Vector3.up * (FlagPoleHeight - FlagWidth * 0.5f);
@@ -285,16 +283,8 @@ namespace PenmonScramble.Baseball.Game
         private static List<Vec2> ArcBand(float inner, float outer, float halfDegrees)
         {
             var points = new List<Vec2>();
-            for (var i = 0; i <= ArcSegments; i++)
-            {
-                points.Add(BaseballFieldDef.At(Mathf.Lerp(halfDegrees, -halfDegrees, i / (float)ArcSegments), outer));
-            }
-
-            for (var i = 0; i <= ArcSegments; i++)
-            {
-                points.Add(BaseballFieldDef.At(Mathf.Lerp(-halfDegrees, halfDegrees, i / (float)ArcSegments), inner));
-            }
-
+            AddArc(points, halfDegrees, -halfDegrees, outer);
+            AddArc(points, -halfDegrees, halfDegrees, inner);
             return points;
         }
 

@@ -6,7 +6,7 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// ペンモン画面の技の実演の小窓。本番と同じ計算の練習場（SkillPractice）を進め、
-    /// 実演用の StageView（_preview）で描いたものを専用のカメラで撮って、RawImage に映す。音は出さない・揺らさない。
+    /// 実演用の StageView（_view）で描いたものを専用のカメラで撮って、RawImage に映す。音は出さない・揺らさない。
     /// 必殺技のカットインは、小窓の中に小さな帯で出す（本番の画面いっぱいの帯は StageView が出すが、実演用では出さない）。
     /// 練習場は3Dの空間の離れた所にあるので、タイトルのジオラマとは映り合わない
     /// </summary>

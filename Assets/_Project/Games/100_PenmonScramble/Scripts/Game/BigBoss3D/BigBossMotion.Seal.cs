@@ -46,7 +46,7 @@ namespace PenmonScramble.Game
             var ambush = TelegraphOf(pose, BossAttackKind.Ambush);
             var dash = pose.Dash;
             var emerge = Bell(pose.Emerge, 0f, 0.3f, 0.85f);
-            var bite = StrikeBell(pose, BossAttackKind.Charge, 0f, 0.1f, 0.35f);
+            var bite = BiteBell(pose);
 
             var wiggle = Mathf.Lerp(SealWiggleRest, SealWiggleMove, pose.Move) + SealWiggleDash * dash;
             Joint(BigBossPart.Body).Euler.y += wiggle * 0.5f * Mathf.Sin(cycle);

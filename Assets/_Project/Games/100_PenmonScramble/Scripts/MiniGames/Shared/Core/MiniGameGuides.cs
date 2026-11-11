@@ -11,7 +11,7 @@ namespace PenmonScramble.MiniGames.Core
         /// <summary>もう遊べるコースか（作っている途中のコースは false。コース選びで「準備中」になる）</summary>
         bool IsReady(int courseNo);
 
-        /// <summary>コースの中身の一言（「3ホール  パー 2・3・4（合計 9）」など）</summary>
+        /// <summary>コースの中身（1行目「3ホール  パー 2・3・4（合計 9）」・2行目に仕掛けの一言。MiniGameGuides.TwoLines で作る）</summary>
         string Layout(int courseNo);
 
         /// <summary>ベストの見せ方（「8打（−1）」など）</summary>
@@ -33,5 +33,11 @@ namespace PenmonScramble.MiniGames.Core
 
         /// <summary>登録が無ければ null</summary>
         public static IMiniGameCourseGuide Get(string gameId) => Guides.TryGetValue(gameId, out var guide) ? guide : null;
+
+        /// <summary>
+        /// コースの中身の2行（1行目＝強さ・ホールとパー、2行目＝仕掛けの一言）。
+        /// 1行に並べると枠の幅を越えて折り返し、上下の行に重なったので、はじめから2行に分けて2行ぶんの枠に入れる
+        /// </summary>
+        public static string TwoLines(string head, string gimmick) => string.IsNullOrEmpty(gimmick) ? head : $"{head}\n{gimmick}";
     }
 }

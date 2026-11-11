@@ -43,7 +43,7 @@ namespace PenmonScramble.Game
             var dash = pose.Dash;
             var under = Mathf.Max(pose.Submerge, TelegraphOf(pose, BossAttackKind.Fin));
             var emerge = Bell(pose.Emerge, 0f, 0.3f, 0.85f);
-            var bite = StrikeBell(pose, BossAttackKind.Charge, 0f, 0.1f, 0.35f);
+            var bite = BiteBell(pose);
 
             var swing = Mathf.Lerp(0.6f, 1f, pose.Move) + 0.4f * dash + 0.5f * charge + (SharkUnderSwing - 1f) * under;
             Joint(BigBossPart.Hips).Euler.y += SharkHipsSwing * swing * Mathf.Sin(cycle);

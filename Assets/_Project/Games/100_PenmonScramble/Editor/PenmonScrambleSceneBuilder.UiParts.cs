@@ -48,8 +48,7 @@ namespace PenmonScramble.Editor
         /// </summary>
         internal static Button CreateTitleButton(Transform parent, string name, string label, Vector2 position, Vector2 size, Color color, int fontSize)
         {
-            var obj = UIDialogBuilder.CreateUIObject(name, parent);
-            PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
+            var obj = CreateCenteredObject(parent, name, position, size);
             var cornerScale = CornerScale(Mathf.Min(ButtonCornerRadius, Mathf.Min(size.x, size.y) * 0.5f));
             var body = AddSliced(obj, ButtonBodyPath, color, cornerScale);
             var drop = obj.AddComponent<Shadow>();
@@ -126,8 +125,7 @@ namespace PenmonScramble.Editor
         /// <summary>濃い紺の半透明の板（うすい白の縁と下の影）。ステージのカード・コインの札・窓の中身に使う</summary>
         internal static GameObject CreatePanel(Transform parent, string name, Vector2 position, Vector2 size)
         {
-            var obj = UIDialogBuilder.CreateUIObject(name, parent);
-            PlaceCenter(obj.GetComponent<RectTransform>(), position, size);
+            var obj = CreateCenteredObject(parent, name, position, size);
             var cornerScale = CornerScale(Mathf.Min(PanelCornerRadius, Mathf.Min(size.x, size.y) * 0.5f));
             AddSliced(obj, RoundRectPath, MenuPanelColor, cornerScale).raycastTarget = false;
             var drop = obj.AddComponent<Shadow>();
@@ -190,12 +188,20 @@ namespace PenmonScramble.Editor
         private static void AddButtonIcon(Transform button, Sprite icon, Vector2 position, float size)
         {
             if (icon == null) return;
-            var iconObj = UIDialogBuilder.CreateUIObject("Icon", button);
-            PlaceCenter(iconObj.GetComponent<RectTransform>(), position, Vector2.one * size);
-            var image = iconObj.AddComponent<Image>();
-            image.sprite = icon;
+            AddIconImage(button, "Icon", icon, position, size);
+        }
+
+        /// <summary>
+        /// 正方形のアイコンの絵（縦横比は保つ）。ボタンの上に重ねても押せるように raycast は切る。絵が無いときは空の Image を返す（実行時に入れる）
+        /// </summary>
+        internal static Image AddIconImage(Transform parent, string name, Sprite sprite, Vector2 position, float size)
+        {
+            var obj = CreateCenteredObject(parent, name, position, Vector2.one * size);
+            var image = obj.AddComponent<Image>();
+            image.sprite = sprite;
             image.preserveAspect = true;
             image.raycastTarget = false;
+            return image;
         }
 
         /// <summary>画面の上か下の端に、端が濃く内側へ消える暗い帯を敷く（ジオラマの上でも文字やボタンを読めるように）</summary>

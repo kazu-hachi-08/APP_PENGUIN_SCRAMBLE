@@ -1,4 +1,3 @@
-using PenmonScramble.Common.Editor;
 using PenmonScramble.Game;
 using UnityEditor;
 using UnityEngine;
@@ -111,8 +110,7 @@ namespace PenmonScramble.Editor
             var pull = CreateTitleButton(root.transform, "Pull", string.Empty, GachaPullPosition, GachaPullSize, GachaColor, CardFontSize);
             var info = CreateLabel(root.transform, "Info", string.Empty, SmallFontSize, GachaInfoPosition, GachaInfoSize);
             var skipHint = CreateLabel(root.transform, "SkipHint", SkipHint, SmallFontSize, GachaInfoPosition, GachaInfoSize).gameObject;
-            skipHint.AddComponent<CanvasGroup>();
-            skipHint.AddComponent<UiPulse>();
+            AddPulse(skipHint);
             var skip = CreateSkipButton(root.transform);
             var ratesDialog = CreateRatesDialog(root.transform, out var ratesText, out var ratesClose);
 
@@ -240,8 +238,7 @@ namespace PenmonScramble.Editor
             tag.rectTransform.localRotation = Quaternion.Euler(0f, 0f, NewTagTilt);
             var text = CreatePlainText(tag.transform, "Text", "NEW!", NewTagFontSize, Vector2.zero, NewTagSize, TextAnchor.MiddleCenter, DarkTextColor);
             text.fontStyle = FontStyle.Bold;
-            tag.gameObject.AddComponent<CanvasGroup>();
-            tag.gameObject.AddComponent<UiPulse>();
+            AddPulse(tag.gameObject);
             return tag.gameObject;
         }
 

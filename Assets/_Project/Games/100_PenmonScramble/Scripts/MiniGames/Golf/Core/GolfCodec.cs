@@ -101,7 +101,7 @@ namespace PenmonScramble.Golf.Core
                 snapshot.TurnOrder[i] = reader.ReadByte();
             }
 
-            if (!IsPermutation(snapshot.TurnOrder))
+            if (!GolfTurnOrder.IsPermutation(snapshot.TurnOrder))
             {
                 return null;
             }
@@ -319,22 +319,6 @@ namespace PenmonScramble.Golf.Core
 
         /// <summary>壊れた値（NaN・無限）で向きや球が消えないようにする</summary>
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;
-
-        private static bool IsPermutation(int[] order)
-        {
-            var seen = new bool[order.Length];
-            foreach (var seat in order)
-            {
-                if (seat < 0 || seat >= order.Length || seen[seat])
-                {
-                    return false;
-                }
-
-                seen[seat] = true;
-            }
-
-            return true;
-        }
 
         private static byte[] Encode(Action<BinaryWriter> write)
         {

@@ -140,7 +140,7 @@ namespace PenmonScramble.Core
         public void Tick()
         {
             TickCount++;
-            // 必殺技のカットインの間は全体を止める（ヒットストップ）。全員の画面で同じだけ止まるよう、計算の側で止める
+            // 必殺技のカットイン・合体技・大ボスの吠えの間は全体を止める（ヒットストップ）。全員の画面で同じだけ止まるよう、計算の側で止める
             if (_hitStopTicks > 0)
             {
                 _hitStopTicks--;
@@ -174,19 +174,22 @@ namespace PenmonScramble.Core
                 {
                     for (var i = 0; i < member.Cooldowns.Length; i++)
                     {
-                        member.Cooldowns[i] = MathF.Max(0f, member.Cooldowns[i] - dt);
+                        member.Cooldowns[i] = Decay(member.Cooldowns[i], dt);
                     }
                 }
 
-                unit.SwitchCooldown = MathF.Max(0f, unit.SwitchCooldown - dt);
-                unit.FrozenSeconds = MathF.Max(0f, unit.FrozenSeconds - dt);
-                unit.InvincibleSeconds = MathF.Max(0f, unit.InvincibleSeconds - dt);
-                unit.HitInvincibleSeconds = MathF.Max(0f, unit.HitInvincibleSeconds - dt);
-                unit.SlowSeconds = MathF.Max(0f, unit.SlowSeconds - dt);
-                unit.ComboWindowSeconds = MathF.Max(0f, unit.ComboWindowSeconds - dt);
-                unit.ComboCooldownSeconds = MathF.Max(0f, unit.ComboCooldownSeconds - dt);
+                unit.SwitchCooldown = Decay(unit.SwitchCooldown, dt);
+                unit.FrozenSeconds = Decay(unit.FrozenSeconds, dt);
+                unit.InvincibleSeconds = Decay(unit.InvincibleSeconds, dt);
+                unit.HitInvincibleSeconds = Decay(unit.HitInvincibleSeconds, dt);
+                unit.SlowSeconds = Decay(unit.SlowSeconds, dt);
+                unit.ComboWindowSeconds = Decay(unit.ComboWindowSeconds, dt);
+                unit.ComboCooldownSeconds = Decay(unit.ComboCooldownSeconds, dt);
             }
         }
+
+        /// <summary>残りの時間を dt だけ減らす。0 で止めるので、「0 以下＝切れた」として判定する側がそのまま使える</summary>
+        private static float Decay(float seconds, float dt) => MathF.Max(0f, seconds - dt);
 
         private void UpdateActions(float dt)
         {

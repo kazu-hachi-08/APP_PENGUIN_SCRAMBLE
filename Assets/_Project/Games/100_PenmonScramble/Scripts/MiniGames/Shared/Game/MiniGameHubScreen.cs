@@ -170,8 +170,7 @@ namespace PenmonScramble.MiniGames.Game
                 }
 
                 // 開いていて遊べる（準備中でない）中で一番先
-                var guide = MiniGameGuides.Get(game.Id);
-                if (MiniGameUnlock.IsUnlocked(game.Courses[i], Record) && (guide == null || guide.IsReady(game.Courses[i].No)))
+                if (MiniGameUnlock.IsUnlocked(game.Courses[i], Record) && IsReadyCourse(game, game.Courses[i].No))
                 {
                     latest = i;
                 }
@@ -192,7 +191,7 @@ namespace PenmonScramble.MiniGames.Game
             var course = _game.Courses[_courseIndex];
             var guide = MiniGameGuides.Get(_game.Id);
             var unlocked = MiniGameUnlock.IsUnlocked(course, Record);
-            var ready = guide == null || guide.IsReady(course.No);
+            var ready = IsReadyCourse(_game, course.No);
             _courseNoText.text = $"{_game.CourseWord} {course.No}";
             _courseNameText.text = course.Name;
             _courseInfoText.text = !unlocked ? $"ワールド {course.World} に入ると解放" : !ready ? $"この{_game.CourseWord}は準備中" : BestLabel(course, guide);
@@ -220,8 +219,14 @@ namespace PenmonScramble.MiniGames.Game
 
         private bool CanPlay(MiniGameCourseDef course)
         {
-            var guide = MiniGameGuides.Get(_game.Id);
-            return MiniGameUnlock.IsUnlocked(course, Record) && (guide == null || guide.IsReady(course.No));
+            return MiniGameUnlock.IsUnlocked(course, Record) && IsReadyCourse(_game, course.No);
+        }
+
+        /// <summary>準備中のコースは遊べない。ガイドを持たないミニゲームは準備中の区別が無いので、常に準備完了</summary>
+        private static bool IsReadyCourse(MiniGameDef game, int courseNo)
+        {
+            var guide = MiniGameGuides.Get(game.Id);
+            return guide == null || guide.IsReady(courseNo);
         }
 
         private void PlaySolo()

@@ -1,7 +1,7 @@
 namespace PenmonScramble.Golf.Core
 {
     /// <summary>
-    /// ゴルフのルールの数値（打順・時間・上限）。球の動きの数値は GolfBalance（Docs/MINIGAME_GOLF_PLAN.md）
+    /// ゴルフのルールの数値（打順・時間・上限）。球の動きの数値は GolfBalance
     /// </summary>
     public static class GolfRules
     {

@@ -2,7 +2,7 @@ namespace PenmonScramble.Soccer.Core
 {
     /// <summary>
     /// ボールとペンモンの動きの調整値（長さはマス＝m・時間は秒）。ホストが計算して全員に配るので、Unity の物理は使わず、ここの数で決める。
-    /// 「（案）」の値はフェーズ 2〜4 の試遊で決め直す
+    /// 「（案）」の値は試遊で決め直す
     /// </summary>
     public static partial class SoccerBalance
     {

@@ -8,7 +8,7 @@ using PenmonScramble.MiniGames.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>野球の盤の上の計算（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 1）</summary>
+    /// <summary>野球の盤の上の計算</summary>
     public class BaseballTests
     {
         private const float Dt = BaseballRules.StepSeconds;
@@ -113,6 +113,12 @@ namespace PenmonScramble.Tests
 
             Assert.That(guide.Layout(1), Does.Contain("★☆☆☆☆"));
             Assert.That(guide.Layout(5), Does.Contain("★★★★★"));
+            // 強さと盤の一言は2行に分ける（1行に並べると枠の幅を越えて折り返し、上下の行に重なる）
+            foreach (var stadium in BaseballStadiumTable.Stadiums)
+            {
+                Assert.That(guide.Layout(stadium.No).Split('\n'), Is.EqualTo(new[] { $"CPUの強さ {BaseballCourseGuide.Stars(stadium.CpuStars)}", stadium.Gimmick }));
+                Assert.That(guide.OnlineLayout(stadium.No, MiniGameOnlineMode.Versus, 4).Split('\n'), Has.Length.EqualTo(2));
+            }
             Assert.That(guide.Reward(1, true), Does.Contain("ボーナス"));
 
             Assert.That(guide.FormatBest(1, 3), Is.EqualTo("+3"));

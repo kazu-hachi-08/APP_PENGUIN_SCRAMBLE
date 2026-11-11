@@ -67,7 +67,7 @@ namespace PenmonScramble.Game
             }
 
             _readyTime += Time.unscaledDeltaTime;
-            var wave = 0.5f + 0.5f * Mathf.Sin(_readyTime * _pulsePerSecond * Mathf.PI * 2f);
+            var wave = ToyEasing.Pulse01(_readyTime, _pulsePerSecond);
             _halo.color = new Color(_readyColor.r, _readyColor.g, _readyColor.b, Mathf.Lerp(HaloMinAlpha, HaloMaxAlpha, wave));
             _halo.rectTransform.localScale = Vector3.one * (1f + _haloGrow * wave);
             _spin.localRotation = Quaternion.Euler(0f, 0f, -_readyTime * _spinDegreesPerSecond);

@@ -118,7 +118,7 @@ namespace PenmonScramble.Game
             /// <summary>足元の丸い影の大きさ（横・前後）</summary>
             public Vector2 ShadowSize;
 
-            /// <summary>もぐったときに沈める深さ。0 なら体が全部隠れる深さ（BigBossModel.DiveDepth）</summary>
+            /// <summary>もぐったときに沈める深さ。0 以下なら決めていない（BigBossModel.DiveDepth と同じ。0 以下のときは BigBossMotion がてっぺんの高さから決める）</summary>
             public float DiveDepth;
 
             public Kit(BigBossModel model, ToyParts parts, Transform figure)

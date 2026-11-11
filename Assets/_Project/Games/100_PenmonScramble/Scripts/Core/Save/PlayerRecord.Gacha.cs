@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace PenmonScramble.Core
 {
@@ -54,15 +53,7 @@ namespace PenmonScramble.Core
         private static SpeciesDef RollSpecies(Random random)
         {
             var stars = Balance.StarsFromRoll(random.Next(100));
-            var pool = new List<SpeciesDef>();
-            foreach (var species in SpeciesTable.Species)
-            {
-                if (species.Stars == stars)
-                {
-                    pool.Add(species);
-                }
-            }
-
+            var pool = SpeciesTable.OfStars(stars);
             return pool[random.Next(pool.Count)];
         }
 

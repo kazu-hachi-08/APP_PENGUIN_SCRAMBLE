@@ -157,7 +157,7 @@ namespace PenmonScramble.Game
             }
 
             CreatureArt.ShowFace(_face, species.No);
-            _titleText.text = $"{PenguinLabels.ColoredStars(species.Stars)} {species.Name}";
+            _titleText.text = PenmonDetailPanel.TitleOf(species);
             var hasPlan = _selected.Count > 0;
             ShowNumbers(plan, hasPlan ? plan.PowerAfter : target.Power, hasPlan);
             ShowPips(hasPlan ? plan.LimitBreakAfter : target.limitBreak, target.limitBreak);
@@ -220,7 +220,7 @@ namespace PenmonScramble.Game
 
         private void ShowCandidate(PenguinCard card, OwnedPenguin target, OwnedPenguin penguin)
         {
-            var partyIndex = IndexOf(Record.Party, penguin.id);
+            var partyIndex = PenguinLabels.IndexOf(Record.Party, penguin.id);
             card.Show(penguin, partyIndex, _selected.Contains(penguin.id));
             var usable = Record.CanBeMaterial(_targetId, penguin);
             card.SetMaterialState(!usable, PlayerRecord.IsSameSpecies(target, penguin));
@@ -264,18 +264,5 @@ namespace PenmonScramble.Game
         }
 
         private static float Ratio(int value, int cap) => cap > 0 ? Mathf.Clamp01((float)value / cap) : 0f;
-
-        private static int IndexOf(IReadOnlyList<int> list, int value)
-        {
-            for (var i = 0; i < list.Count; i++)
-            {
-                if (list[i] == value)
-                {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
     }
 }

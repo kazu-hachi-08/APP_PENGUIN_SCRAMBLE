@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using PenmonScramble.Baseball.Core;
 using PenmonScramble.Core;
 using PenmonScramble.Game;
@@ -29,7 +28,7 @@ namespace PenmonScramble.Baseball.Game
         {
             var inner = field.FenceRadius;
             var outer = inner + FenceThickness;
-            var band = Band(field, inner, outer);
+            var band = ArcBand(inner, outer, field.FoulDegrees);
             AddOwnedMesh("Fence", MiniGameMeshes.Prism("BaseballFence", band, _ => field.FenceHeight, 0f, Uv),
                 Materials.Get(theme.FenceRail, FenceGloss), Materials.Get(theme.FenceRail, FenceGloss));
             // 上の縁は柱の色の帯（板の高さが一目で分かるように）
@@ -47,7 +46,7 @@ namespace PenmonScramble.Baseball.Game
             {
                 var degrees = Mathf.Lerp(-field.FoulDegrees, field.FoulDegrees, i / (float)FencePosts);
                 var at = BaseballSpace.ToWorld(BaseballFieldDef.At(degrees, radius));
-                AddPart("Post", ToyMeshes.Puck, _root, at + Vector3.up * (height * 0.5f), Quaternion.identity, new Vector3(PostDiameter, height, PostDiameter), post);
+                AddPole("Post", at, PostDiameter, height, post);
                 var cap = Materials.Get(i % 2 == 0 ? theme.FenceCap : theme.FenceAltCap, FenceGloss);
                 AddPart("PostCap", ToyMeshes.Sphere, _root, at + Vector3.up * height, Quaternion.identity, Vector3.one * CapDiameter, cap);
             }
@@ -60,26 +59,16 @@ namespace PenmonScramble.Baseball.Game
             foreach (var side in new[] { -1f, 1f })
             {
                 var at = BaseballSpace.ToWorld(BaseballFieldDef.At(side * field.FoulDegrees, radius));
-                AddPart("FoulPole", ToyMeshes.Puck, _root, at + Vector3.up * (PoleHeight * 0.5f), Quaternion.identity, new Vector3(PoleDiameter, PoleHeight, PoleDiameter), material);
+                AddPole("FoulPole", at, PoleDiameter, PoleHeight, material);
                 AddPart("FoulPoleCap", ToyMeshes.Sphere, _root, at + Vector3.up * PoleHeight, Quaternion.identity, Vector3.one * (PoleDiameter * 1.6f), material);
             }
         }
 
-        /// <summary>ファウルラインの間の、半径 inner から outer までの円弧の帯（左回り）</summary>
-        private static List<Vec2> Band(BaseballFieldDef field, float inner, float outer)
+        /// <summary>底を基準に高さの半分持ち上げた柱。上に乗せる玉などは呼び出し側で置く</summary>
+        private Transform AddPole(string objectName, Vector3 at, float diameter, float height, Material material)
         {
-            var points = new List<Vec2>();
-            for (var i = 0; i <= ArcSegments; i++)
-            {
-                points.Add(BaseballFieldDef.At(Mathf.Lerp(field.FoulDegrees, -field.FoulDegrees, i / (float)ArcSegments), outer));
-            }
-
-            for (var i = 0; i <= ArcSegments; i++)
-            {
-                points.Add(BaseballFieldDef.At(Mathf.Lerp(-field.FoulDegrees, field.FoulDegrees, i / (float)ArcSegments), inner));
-            }
-
-            return points;
+            return AddPart(objectName, ToyMeshes.Puck, _root, at + Vector3.up * (height * 0.5f), Quaternion.identity,
+                new Vector3(diameter, height, diameter), material);
         }
     }
 }

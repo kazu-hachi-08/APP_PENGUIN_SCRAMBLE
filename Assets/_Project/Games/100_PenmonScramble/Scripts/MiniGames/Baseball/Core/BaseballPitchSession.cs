@@ -250,7 +250,8 @@ namespace PenmonScramble.Baseball.Core
         }
 
         /// <summary>
-        /// その歩の入力: 投げた球が来ている間は、曲げるのは投げる人（CPU は組み立てから）、振る・バントは打つ人（CPU の振るもホストが記録する）。
+        /// その歩の入力: 投げた球が来ている間は、曲げるのは投げる人（CPU は組み立てから）、左右・振る・バントは打つ人
+        /// （打つ人の左右は、記録の曲げる入力の欄を使う。CPU の分もホストが記録する）。
         /// 打球が出たら、曲げるのは打つ人（追い風ヒット。CPU の打った球は盤から計算する）
         /// </summary>
         private BaseballInput InputAt(int step, out Used used)
@@ -274,9 +275,10 @@ namespace PenmonScramble.Baseball.Core
                 var swing = BatterLog.SwingAt(step);
                 var bunt = BatterLog.BuntAt(step);
                 var time = BatterLog.SwingTimeAt(step);
+                var move = BatterLog.BendAt(step);
                 BatterNeeded = Math.Max(BatterNeeded, step + 1);
-                used = new Used(source, bend, true, swing, bunt, time);
-                return new BaseballInput(bend, swing, bunt, time);
+                used = new Used(source, bend, true, swing, bunt, time, move);
+                return new BaseballInput(bend, swing, bunt, time, move);
             }
 
             if (board.Phase == BaseballBoardPhase.BallInPlay && board.Ball.CanSteer)
@@ -300,7 +302,7 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>打球を曲げるのが人か（CPU の打った追い風ヒットは盤から計算する）。投げる前に決める</summary>
         public bool SteerFromLog { get; set; } = true;
 
-        /// <summary>届いた記録が、計算に使った値と違う歩があるか（投げる人の曲げ・打つ人の振る / バント / 曲げ）</summary>
+        /// <summary>届いた記録が、計算に使った値と違う歩があるか（投げる人の曲げ・打つ人の左右 / 振る / バント / 曲げ）</summary>
         private void CheckDiverged()
         {
             for (var step = 0; step < _used.Count; step++)
@@ -308,7 +310,8 @@ namespace PenmonScramble.Baseball.Core
                 var used = _used[step];
                 var changed = used.Source == UsedBend.Pitcher && PitcherLog.BendAt(step) != used.Bend
                     || used.Source == UsedBend.Batter && BatterLog.BendAt(step) != used.Bend
-                    || used.UsedBat && (BatterLog.SwingAt(step) != used.Swing || BatterLog.BuntAt(step) != used.Bunt || BatterLog.SwingTimeAt(step) != used.SwingTime);
+                    || used.UsedBat && (BatterLog.SwingAt(step) != used.Swing || BatterLog.BuntAt(step) != used.Bunt || BatterLog.SwingTimeAt(step) != used.SwingTime
+                        || BatterLog.BendAt(step) != used.Move);
                 if (changed)
                 {
                     _dirty = true;
@@ -332,7 +335,7 @@ namespace PenmonScramble.Baseball.Core
         /// <summary>その歩の計算に使った、記録から読んだ値（届いた記録と比べて、計算し直すかを決める）</summary>
         private readonly struct Used
         {
-            public Used(UsedBend source, float bend, bool usedBat, bool swing = false, bool bunt = false, float swingTime = 0f)
+            public Used(UsedBend source, float bend, bool usedBat, bool swing = false, bool bunt = false, float swingTime = 0f, float move = 0f)
             {
                 Source = source;
                 Bend = bend;
@@ -340,17 +343,21 @@ namespace PenmonScramble.Baseball.Core
                 Swing = swing;
                 Bunt = bunt;
                 SwingTime = swingTime;
+                Move = move;
             }
 
             public UsedBend Source { get; }
             public float Bend { get; }
 
-            /// <summary>打つ人の振る・バントを読んだ（投げた球が来ている間）</summary>
+            /// <summary>打つ人の左右・振る・バントを読んだ（投げた球が来ている間）</summary>
             public bool UsedBat { get; }
 
             public bool Swing { get; }
             public bool Bunt { get; }
             public float SwingTime { get; }
+
+            /// <summary>打つ人の左右（記録の曲げる入力の欄）</summary>
+            public float Move { get; }
         }
     }
 }

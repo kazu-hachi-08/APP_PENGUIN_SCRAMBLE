@@ -29,7 +29,8 @@ namespace PenmonScramble.Editor
         private static readonly Vector2 VersionMargin = new Vector2(-24f, 16f);
         private static readonly Vector2 VersionSize = new Vector2(400f, 60f);
 
-        private const string ShaderFolder = "Assets/_Project/Games/100_PenmonScramble/Shaders/";
+        // ミニゲームの SceneBuilder も同じシェーダーを使うので internal（値は4か所で同じ）
+        internal const string ShaderFolder = "Assets/_Project/Games/100_PenmonScramble/Shaders/";
         // カメラは斜め上から20マスほど離れて見下ろす。揺れても奥のエリアの外まで写るよう余裕を持たせる
         private const float CameraFarClip = 200f;
         // 左上の奥から照らす（試作の場 Penguin3DPreviewBuilder と同じ）。顔（手前）が明るく見える
@@ -85,7 +86,7 @@ namespace PenmonScramble.Editor
             CreateStage(hud, session, title, titleMenu, stageMenu, shake, stageCamera, cutIn, touch.View);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            AddToBuildSettings();
+            AddSceneToBuildSettings(ScenePath, atStart: true);
             Debug.Log($"[PenmonScrambleSceneBuilder] {ScenePath} を生成しました");
 
             // ミニゲームは別のシーン。本編の絵（ボタンなど）を使うので本編の後に作り、最後に本編のシーンを開き直す
@@ -242,9 +243,19 @@ namespace PenmonScramble.Editor
         /// <summary>キャラ・足元の丸い影・エフェクトの三つのシェーダーを描く部品につなぐ。どの画面も同じ絵にそろえるため、指定はここ一か所</summary>
         private static void BindStageShaders(SerializedObject so)
         {
+            BindToonAndBlobShaders(so);
+            so.FindProperty("_fxShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Fx.shader");
+        }
+
+        /// <summary>
+        /// キャラと足元の丸い影のシェーダーをつなぎ、すぐ Apply する。ミニゲームの試合も同じ絵にそろえるため、ここを通す。
+        /// Fx は本編だけが使うので、BindStageShaders で足す
+        /// </summary>
+        internal static void BindToonAndBlobShaders(SerializedObject so)
+        {
             so.FindProperty("_toonShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Toon.shader");
             so.FindProperty("_blobShadowShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "BlobShadow.shader");
-            so.FindProperty("_fxShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>(ShaderFolder + "Fx.shader");
+            so.ApplyModifiedProperties();
         }
 
         private static Text AddText(GameObject obj, string value, int fontSize)
@@ -256,6 +267,15 @@ namespace PenmonScramble.Editor
             text.fontSize = fontSize;
             text.color = TextColor;
             return text;
+        }
+
+        /// <summary>
+        /// 点滅させる文字（UiPulse）。UiPulse は CanvasGroup を必要とするので、付ける順番は CanvasGroup から（生成の順番を変えないため）
+        /// </summary>
+        private static void AddPulse(GameObject obj)
+        {
+            obj.AddComponent<CanvasGroup>();
+            obj.AddComponent<UiPulse>();
         }
 
         // 日本語フォント（M PLUS Rounded）の1行の高さは、字の大きさのおよそ 1.4 倍（UiLayoutCheck で測った値に少し余裕を足す）
@@ -274,15 +294,58 @@ namespace PenmonScramble.Editor
             rect.offsetMax += new Vector2(0f, extra * 0.5f);
         }
 
-        private static void AddToBuildSettings()
+        // 準備中の板（ゴルフのコース・サッカーのスタジアム・野球の球場）の、位置と字の大きさ。3つとも同じ見た目
+        private static readonly Vector2 PlaceholderHeadingPosition = new Vector2(0f, 160f);
+        private static readonly Vector2 PlaceholderHeadingSize = new Vector2(1200f, 140f);
+        private const int PlaceholderHeadingFontSize = 96;
+        private static readonly Vector2 PlaceholderCoursePosition = new Vector2(0f, 30f);
+        private static readonly Vector2 PlaceholderCourseSize = new Vector2(1200f, 80f);
+        private const int PlaceholderCourseFontSize = 52;
+        private static readonly Vector2 PlaceholderComingSoonPosition = new Vector2(0f, -60f);
+        private static readonly Vector2 PlaceholderComingSoonSize = new Vector2(1200f, 70f);
+        private const int PlaceholderComingSoonFontSize = 40;
+        private static readonly Vector2 PlaceholderBackPosition = new Vector2(0f, -260f);
+        private static readonly Vector2 PlaceholderBackSize = new Vector2(360f, 130f);
+        private const int PlaceholderBackFontSize = 52;
+        private const string PlaceholderBackLabel = "もどる";
+
+        /// <summary>
+        /// まだ作っていない会場の「準備中」の板（会場の名前・準備中・もどる）。見出しと準備中の文だけ会場ごとに変え、
+        /// 置く位置や字の大きさは3つの会場でそろえる。試合を始めたら呼んだ側が隠す
+        /// </summary>
+        internal static GameObject CreateComingSoonPlaceholder(Transform canvas, string heading, string comingSoon, out Text course, out Button back)
+        {
+            var group = UIDialogBuilder.CreateStretchedUIObject("Placeholder", canvas);
+            var parent = group.transform;
+            CreateLabel(parent, "Heading", heading, PlaceholderHeadingFontSize, PlaceholderHeadingPosition, PlaceholderHeadingSize).fontStyle = FontStyle.Bold;
+            course = CreateLabel(parent, "Course", string.Empty, PlaceholderCourseFontSize, PlaceholderCoursePosition, PlaceholderCourseSize);
+            CreateLabel(parent, "ComingSoon", comingSoon, PlaceholderComingSoonFontSize, PlaceholderComingSoonPosition, PlaceholderComingSoonSize);
+            back = CreateTitleButton(parent, "Back", PlaceholderBackLabel, PlaceholderBackPosition, PlaceholderBackSize, CancelColor, PlaceholderBackFontSize);
+            return group;
+        }
+
+        /// <summary>
+        /// 会場ごとのシーンを本編の Build Settings に入れる。既に入っていれば何もしない。
+        /// 本編は起動したときのシーンなので先頭（atStart）に、ミニゲームは後ろに足す
+        /// </summary>
+        internal static void AddSceneToBuildSettings(string scenePath, bool atStart)
         {
             var scenes = EditorBuildSettings.scenes.ToList();
-            if (scenes.Any(s => s.path == ScenePath))
+            if (scenes.Any(s => s.path == scenePath))
             {
                 return;
             }
 
-            scenes.Insert(0, new EditorBuildSettingsScene(ScenePath, true));
+            var entry = new EditorBuildSettingsScene(scenePath, true);
+            if (atStart)
+            {
+                scenes.Insert(0, entry);
+            }
+            else
+            {
+                scenes.Add(entry);
+            }
+
             EditorBuildSettings.scenes = scenes.ToArray();
         }
     }

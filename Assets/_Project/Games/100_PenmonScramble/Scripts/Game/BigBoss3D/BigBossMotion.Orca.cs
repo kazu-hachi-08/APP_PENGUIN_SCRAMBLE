@@ -83,7 +83,7 @@ namespace PenmonScramble.Game
                 flipper.Euler.y += side * OrcaDashSweep * dash;
             }
 
-            var bite = StrikeBell(pose, BossAttackKind.Charge, 0f, 0.1f, 0.35f);
+            var bite = BiteBell(pose);
             Joint(BigBossPart.Jaw).Euler.x += OrcaJawRest + Mathf.Max(OrcaWaveJaw * wave + OrcaChargeJaw * charge, OrcaDashJaw * dash) + OrcaBite * bite;
         }
 

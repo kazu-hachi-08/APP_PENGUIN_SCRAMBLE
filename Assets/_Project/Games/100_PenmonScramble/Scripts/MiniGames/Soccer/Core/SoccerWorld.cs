@@ -10,14 +10,15 @@ namespace PenmonScramble.Soccer.Core
     /// SoccerRules.StepSeconds ずつ進める（同じ入力なら同じ結果）。表示と音へは起きたこと（SoccerEvent）で渡す。
     /// 試合の流れ（時間・ゴールの演出・PK戦）はここに持たない（SoccerMatch）。
     /// 点が入ったら Kickoff を呼ぶまでボールは誰も持てない（網の中で転がるだけ）。
-    /// ボタンで出す技（パス・スライディング・ダッシュ）は SoccerWorld.Actions.cs、キーパーの動きと止める判定は SoccerWorld.Keeper.cs、
-    /// 必殺シュートとチームのゲージは SoccerWorld.Special.cs、スタジアムの仕掛け（氷の床・押し流す帯・間欠泉・バンパー）は SoccerWorld.Gimmicks.cs
+    /// ボタンの技（パス・スライディング・ダッシュ）は SoccerWorld.Actions.cs、持つ・蹴る・奪うは SoccerWorld.Possession.cs、
+    /// ボールの転がり・壁・ゴールは SoccerWorld.Ball.cs、キーパーは SoccerWorld.Keeper.cs、必殺シュートとチームのゲージは SoccerWorld.Special.cs、
+    /// スタジアムの仕掛け（押し流す帯・間欠泉・バンパー。氷の床は転がり・歩きの中で効く）は SoccerWorld.Gimmicks.cs、オンラインの写しは SoccerWorld.Mirror.cs
     /// </summary>
     public sealed partial class SoccerWorld
     {
         private const float Dt = SoccerRules.StepSeconds;
 
-        // 壁の線の真上にいるとき（押し出す向きが決められない）の扱いの境目
+        // 数の誤差を0とみなす境目（壁の線の真上の向き決め・重なった子の向き・着いたかの判定・同じ位置の比べ方に使う）
         private const float Epsilon = 1e-6f;
 
         private readonly SoccerPlayer[] _players;

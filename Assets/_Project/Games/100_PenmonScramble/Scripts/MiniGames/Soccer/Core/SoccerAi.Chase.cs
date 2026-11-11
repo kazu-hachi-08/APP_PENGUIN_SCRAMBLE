@@ -1,4 +1,3 @@
-using System;
 using PenmonScramble.Core;
 
 namespace PenmonScramble.Soccer.Core

@@ -43,20 +43,21 @@ namespace PenmonScramble.Editor
         private const float CourseArrowX = 410f;
         private static readonly Vector2 CourseArrowSize = new Vector2(110f, 220f);
         // 枠の高さは字の行の高さ（字の大きさの 1.45 倍）が収まるように
-        private static readonly Vector2 CourseNoPosition = new Vector2(0f, 180f);
+        private static readonly Vector2 CourseNoPosition = new Vector2(0f, 190f);
         private static readonly Vector2 CourseNoSize = new Vector2(680f, 70f);
-        private static readonly Vector2 CourseNamePosition = new Vector2(0f, 85f);
+        private static readonly Vector2 CourseNamePosition = new Vector2(0f, 100f);
         private static readonly Vector2 CourseNameSize = new Vector2(680f, 120f);
-        private static readonly Vector2 CourseInfoPosition = new Vector2(0f, -20f);
+        private static readonly Vector2 CourseInfoPosition = new Vector2(0f, 5f);
         private static readonly Vector2 CourseInfoSize = new Vector2(680f, 70f);
-        private static readonly Vector2 CourseLayoutPosition = new Vector2(0f, -95f);
-        private static readonly Vector2 CourseLayoutSize = new Vector2(700f, 56f);
-        private static readonly Vector2 CourseRewardPosition = new Vector2(0f, -170f);
+        // コースの中身は2行（強さ・ホールとパー / 仕掛けの一言。MiniGameGuides.TwoLines）。幅は ◀ ▶ の内側いっぱい
+        private static readonly Vector2 CourseLayoutPosition = new Vector2(0f, -88f);
+        private static readonly Vector2 CourseLayoutSize = new Vector2(700f, 96f);
+        private static readonly Vector2 CourseRewardPosition = new Vector2(0f, -195f);
         private static readonly Vector2 CourseRewardSize = new Vector2(760f, 84f);
         private const int CourseNoFontSize = 40;
         private const int CourseNameFontSize = 80;
         private const int CourseInfoFontSize = 42;
-        private const int CourseLayoutFontSize = 36;
+        private const int CourseLayoutFontSize = 32;
         private const int CourseRewardFontSize = 28;
         private static readonly Color CourseRewardColor = new Color(1f, 1f, 1f, 0.8f);
         private static readonly Vector2 HubSoloPosition = new Vector2(-240f, -340f);

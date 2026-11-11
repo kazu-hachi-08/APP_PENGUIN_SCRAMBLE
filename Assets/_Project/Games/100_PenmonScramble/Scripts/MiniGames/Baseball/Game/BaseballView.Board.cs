@@ -184,10 +184,7 @@ namespace PenmonScramble.Baseball.Game
         {
             var points = new List<Vec2>();
             var spread = field.FoulDegrees + BoardExtraDegrees;
-            for (var i = 0; i <= ArcSegments; i++)
-            {
-                points.Add(BaseballFieldDef.At(Mathf.Lerp(-spread, spread, i / (float)ArcSegments), field.FenceRadius + margin));
-            }
+            AddArc(points, -spread, spread, field.FenceRadius + margin);
 
             var width = (field.FenceRadius + margin) * Mathf.Sin(spread * Mathf.Deg2Rad) * 0.55f;
             points.Add(new Vec2(-width, -back));
@@ -199,12 +196,18 @@ namespace PenmonScramble.Baseball.Game
         private static List<Vec2> Fan(BaseballFieldDef field, float radius)
         {
             var points = new List<Vec2> { Vec2.Zero };
-            for (var i = 0; i <= ArcSegments; i++)
-            {
-                points.Add(BaseballFieldDef.At(Mathf.Lerp(field.FoulDegrees, -field.FoulDegrees, i / (float)ArcSegments), radius));
-            }
+            AddArc(points, field.FoulDegrees, -field.FoulDegrees, radius);
 
             return points;
+        }
+
+        /// <summary>半径 radius の円弧の点を、fromDegrees から toDegrees へ ArcSegments 等分で足す（左回り・右回りは from と to の向きで決まる）</summary>
+        private static void AddArc(List<Vec2> points, float fromDegrees, float toDegrees, float radius)
+        {
+            for (var i = 0; i <= ArcSegments; i++)
+            {
+                points.Add(BaseballFieldDef.At(Mathf.Lerp(fromDegrees, toDegrees, i / (float)ArcSegments), radius));
+            }
         }
 
         /// <summary>真ん中から角まで half の、45°傾けた正方形（左回り）</summary>

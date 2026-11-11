@@ -66,7 +66,7 @@ namespace PenmonScramble.Game
             p.Body.Euler += new Vector3(-WindLean * c, WindTwist * c, 0f);
         }
 
-        /// <summary>引いていた所から前へ速く振り下ろし、体を前へ倒してひねりを戻す（振り始めは振りかぶりの姿から途切れずにつなぐ）</summary>
+        /// <summary>引いていた所から前へ速く振り下ろし、体を前へ倒してひねりを戻す</summary>
         private static void ReleaseParts(PenguinPose pose, float standing, ref PartPose p)
         {
             if (pose.Throw >= 1f || standing <= 0f)

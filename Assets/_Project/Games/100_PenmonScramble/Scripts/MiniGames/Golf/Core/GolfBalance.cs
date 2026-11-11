@@ -57,7 +57,7 @@ namespace PenmonScramble.Golf.Core
         /// <summary>1打で転がる時間の上限。坂の作りの誤りなどで止まらなくても、打順が進むように</summary>
         public const float MaxRollSeconds = 25f;
 
-        // ---- ギミック（フェーズ 6） ----
+        // ---- ギミック ----
 
         /// <summary>氷の床の摩擦は何倍か（よく滑る）</summary>
         public const float IceFloorDecelScale = 0.35f;

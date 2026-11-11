@@ -5,7 +5,7 @@ using PenmonScramble.Baseball.Core;
 
 namespace PenmonScramble.Tests
 {
-    /// <summary>野球の走者・試合の流れ・CPU のバント・試合の確認（Docs/MINIGAME_BASEBALL_PLAN.md フェーズ 3）</summary>
+    /// <summary>野球の走者・試合の流れ・CPU のバント・試合の確認</summary>
     public class BaseballGameTests
     {
         private const int Batter = 0;
@@ -332,7 +332,7 @@ namespace PenmonScramble.Tests
                 for (var step = 0; step < MaxSteps && board.Phase != BaseballBoardPhase.Done; step++)
                 {
                     var bat = ai.BatInput(board);
-                    board.Step(new BaseballInput(0f, bat.Swing, bat.Bunt, bat.SwingTime), events);
+                    board.Step(new BaseballInput(0f, bat.Swing, bat.Bunt, bat.SwingTime, bat.Move), events);
                 }
 
                 bunted = board.LastHit is { Bunt: true };
