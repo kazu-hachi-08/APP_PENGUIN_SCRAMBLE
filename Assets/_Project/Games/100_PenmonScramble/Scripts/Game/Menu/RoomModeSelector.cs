@@ -7,26 +7,25 @@ using UnityEngine.UI;
 namespace PenmonScramble.Game
 {
     /// <summary>
-    /// 「みんなで遊ぶ」の部屋の待ちの窓の右上に並べる「遊ぶもの」の札（ボスラッシュ / ゴルフ / …）。
-    /// ホストが札で切り替えると、ゲストへ届く（scramble.room.choice。ゲストは見るだけ）。選ばれた遊びの板（IRoomMode）だけを出す。
-    /// 試合が始まったら、選ばれた遊びに始め方を聞く（ミニゲームは自分のシーンへ移る。ボスラッシュは StageRunner が始める）。
+    /// 「みんなで遊ぶ」の部屋で遊ぶもの（ボスラッシュ / ゴルフ / …）を1つ決めて持つ。遊びは部屋を作った入口で決まり、待ちの窓では選び直さない
+    /// （タイトルの「みんなで遊ぶ」はボスラッシュ、ミニゲーム画面の「みんなで」はそのミニゲーム）。
+    /// ホストの遊びはゲストへ届き（scramble.room.choice）、ゲストはどの入口からコードを入れても、ホストの遊びの待ちの窓になる。
+    /// 決まった遊びの板（IRoomMode）だけを出し、待ちの窓の上の見出しと「みんなで遊ぶ」の窓の見出しに遊びの名前を出す。
+    /// 試合が始まったら、その遊びに始め方を聞く（ミニゲームは自分のシーンへ移る。ボスラッシュは StageRunner が始める）。
     /// 部屋に入っている間は、接続の状態（参加コード・人数）の文字を左の列へ寄せる
     /// </summary>
     public class RoomModeSelector : MonoBehaviour
     {
-        private const float UnselectedAlpha = 0.55f;
-        private const float SelectedScale = 1.08f;
+        private const string OnlineHeadingFormat = "みんなで遊ぶ ― {0}";
+        private const string RoomHeadingFormat = "{0}の部屋";
 
         [SerializeField] private ModeSelectPanel _modeSelect;
-        [Tooltip("IRoomMode を持つ部品。並びが札の並び（先頭が最初に選ばれている遊び）")]
+        [Tooltip("IRoomMode を持つ部品。先頭が、入口を通らずに部屋を開いたときの遊び")]
         [SerializeField] private MonoBehaviour[] _modes;
-        [Tooltip("添字は _modes と同じ")]
-        [SerializeField] private Button[] _tabs;
-        [Tooltip("札の入れ物（選んでいる札を大きく濃く、ほかを薄くする。ボタン自身の動きとぶつからないよう外側で）")]
-        [SerializeField] private CanvasGroup[] _tabSlots;
-        [Tooltip("選んでいる札の後ろに光る白い縁")]
-        [SerializeField] private GameObject[] _tabMarks;
-        [SerializeField] private GameObject _tabRow;
+        [Tooltip("待ちの窓の上の見出し（遊びの名前）")]
+        [SerializeField] private Text _roomHeading;
+        [Tooltip("「みんなで遊ぶ」の窓の見出し（どの遊びの部屋を作るか）。窓はロビーを作るときにできるので後からつなぐ")]
+        [SerializeField] private Text _onlineHeading;
 
         [Header("接続の状態の文字")]
         [Tooltip("ModeSelectPanel が文面を入れる。部屋に入っている間は左の列へ寄せる")]
@@ -36,7 +35,7 @@ namespace PenmonScramble.Game
         [SerializeField] private Vector2 _statusBesidePosition;
         [SerializeField] private Vector2 _statusBesideSize;
 
-        // ホストの選んだ遊びは、シーンを読み直しても（遊んで待ちの窓へ戻っても）覚えておく。続けて同じ遊びをしやすいように
+        // ホストの遊びは、シーンを読み直しても（遊んで待ちの窓へ戻っても）覚えておく。同じ顔ぶれで続けて遊べるように
         private static string _hostModeId;
 
         // メッセージの名前は配った版どうしで合わせるので変えない
@@ -52,7 +51,7 @@ namespace PenmonScramble.Game
             _hostModeId = null;
         }
 
-        /// <summary>ホストが選んでいる遊び。覚えていた遊びが並んでいなければ先頭</summary>
+        /// <summary>ホストの遊び。覚えていた遊びが並んでいなければ先頭</summary>
         private string HostModeId => Find(_hostModeId) != null ? _hostModeId : _list.Count > 0 ? _list[0].Id : null;
 
         /// <summary>この端末が見ている遊び。ゲストはホストから届いたもの（まだ届いていなければ null）</summary>
@@ -65,17 +64,6 @@ namespace PenmonScramble.Game
                 if (behaviour is IRoomMode mode)
                 {
                     _list.Add(mode);
-                }
-            }
-
-            for (var i = 0; i < _tabs.Length && i < _list.Count; i++)
-            {
-                var index = i;
-                _tabs[i].onClick.AddListener(() => Select(index));
-                var label = _tabs[i].GetComponentInChildren<Text>();
-                if (label != null)
-                {
-                    label.text = _list[i].Label;
                 }
             }
 
@@ -101,11 +89,14 @@ namespace PenmonScramble.Game
         /// <summary>その遊びが並んでいるか（ミニゲーム画面が「みんなで」を出すか決める）</summary>
         public bool Has(string modeId) => Find(modeId) != null;
 
-        /// <summary>ミニゲーム画面の「みんなで」から: この遊びを選んでおく（部屋を作ったら、これを遊ぶ）</summary>
-        public void Preselect(string modeId, int option)
+        /// <summary>
+        /// 入口から: この遊びの部屋を作ることにする（option はゴルフならコースの番号。待ちの窓の板で最初に選ばれている）。
+        /// 部屋に入っている間は変えない（入口は部屋の外にしか無いが、遊びが途中で変わらないことをここで守る）
+        /// </summary>
+        public void Choose(string modeId, int option = 0)
         {
             var mode = Find(modeId);
-            if (mode == null)
+            if (mode == null || _inRoom)
             {
                 return;
             }
@@ -115,7 +106,7 @@ namespace PenmonScramble.Game
             Refresh();
         }
 
-        /// <summary>試合が始まった。選ばれた遊びが別のシーンで遊ぶなら、そちらへ移り始めて true</summary>
+        /// <summary>試合が始まった。部屋の遊びが別のシーンで遊ぶなら、そちらへ移り始めて true</summary>
         public bool StartElsewhere(int seat, int playerCount)
         {
             var mode = Find(CurrentId);
@@ -144,18 +135,6 @@ namespace PenmonScramble.Game
             Refresh();
         }
 
-        private void Select(int index)
-        {
-            if (!_isHost || !_inRoom || index < 0 || index >= _list.Count)
-            {
-                return;
-            }
-
-            _hostModeId = _list[index].Id;
-            SendMode();
-            Refresh();
-        }
-
         private void SendMode()
         {
             var id = HostModeId;
@@ -165,7 +144,7 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>知らない遊び（相手が新しい版）は選ばない（板を出さずに待つ）</summary>
+        /// <summary>ゲストはホストの遊びに合わせる。知らない遊び（相手が新しい版）は選ばない（板を出さずに待つ）</summary>
         private void OnModeReceived(byte[] data)
         {
             if (data == null)
@@ -181,24 +160,28 @@ namespace PenmonScramble.Game
         private void Refresh()
         {
             var current = _inRoom ? CurrentId : null;
-            for (var i = 0; i < _list.Count; i++)
+            foreach (var mode in _list)
             {
-                _list[i].SetSelected(_list[i].Id == current);
+                mode.SetSelected(mode.Id == current);
             }
 
-            var shown = current != null;
-            _tabRow.SetActive(shown);
-            for (var i = 0; i < _tabs.Length && i < _list.Count; i++)
-            {
-                var selected = _list[i].Id == current;
-                _tabs[i].interactable = _isHost;
-                _tabSlots[i].alpha = selected ? 1f : UnselectedAlpha;
-                _tabSlots[i].transform.localScale = Vector3.one * (selected ? SelectedScale : 1f);
-                _tabMarks[i].SetActive(selected);
-            }
+            var shownMode = Find(current);
+            _roomHeading.gameObject.SetActive(shownMode != null);
+            _roomHeading.text = shownMode != null ? string.Format(RoomHeadingFormat, shownMode.Label) : string.Empty;
+            RefreshOnlineHeading();
 
+            var shown = shownMode != null;
             _status.anchoredPosition = shown ? _statusBesidePosition : _statusAlonePosition;
             _status.sizeDelta = shown ? _statusBesideSize : _statusAloneSize;
+        }
+
+        private void RefreshOnlineHeading()
+        {
+            var host = Find(HostModeId);
+            if (_onlineHeading != null && host != null)
+            {
+                _onlineHeading.text = string.Format(OnlineHeadingFormat, host.Label);
+            }
         }
 
         private IRoomMode Find(string id)

@@ -18,7 +18,7 @@ namespace PenmonScramble.Editor
     public static partial class PenmonScrambleSceneBuilder
     {
         private const string SoloLabel = "ひとりで遊ぶ";
-        private const string OnlineLabel = "みんなで遊ぶ\n<size=28>ボスラッシュ・ゴルフ</size>";
+        private const string OnlineLabel = "みんなで遊ぶ\n<size=28>ボスラッシュ</size>";
         private const string NameHintLabel = "タップで変更";
 
         // 上の札
@@ -105,7 +105,7 @@ namespace PenmonScramble.Editor
             var card = CreateStageCard(play);
             var onlineButton = CreateTitleButton(play, "Online", OnlineLabel, OnlineButtonPosition, OnlineButtonSize, OnlineColor, OnlineButtonFontSize);
             var soloButton = CreateTitleButton(play, "Solo", SoloLabel, SoloButtonPosition, SoloButtonSize, SoloColor, SoloButtonFontSize);
-            var online = CreateOnlinePopup(lobby, out var host, out var join, out var codeInput, out var onlineClose);
+            var online = CreateOnlinePopup(lobby, out var host, out var join, out var codeInput, out var onlineClose, out var onlineHeading);
 
             // 窓は接続待ちより手前に出す。名前の入力は設定の「変更」からも開くので、設定より手前
             var nameEntry = CreateNameEntryDialog(root);
@@ -114,6 +114,8 @@ namespace PenmonScramble.Editor
             AddUpdateNotice(title.gameObject);
 
             WireModeSelectMenu(title, soloButton, host, join, codeInput);
+            var roomModes = title.GetComponent<RoomModeSelector>();
+            WireOnlineHeading(roomModes, onlineHeading);
             // ミニゲーム画面は本編（TitleMenu）が知らなくて済むよう、開くボタンを画面の側に持たせる
             WireMiniGameHub(miniGames, miniGamesButton);
             var menu = title.gameObject.AddComponent<TitleMenu>();
@@ -134,14 +136,15 @@ namespace PenmonScramble.Editor
             so.FindProperty("_onlineButton").objectReferenceValue = onlineButton;
             so.FindProperty("_onlinePanel").objectReferenceValue = online;
             so.FindProperty("_onlineCloseButton").objectReferenceValue = onlineClose;
+            so.FindProperty("_roomModes").objectReferenceValue = roomModes;
             so.FindProperty("_gacha").objectReferenceValue = gacha;
             so.FindProperty("_penguins").objectReferenceValue = penguins;
             so.FindProperty("_howToPlay").objectReferenceValue = howToPlay;
             so.FindProperty("_settings").objectReferenceValue = settings;
             so.FindProperty("_nameEntry").objectReferenceValue = nameEntry;
             so.ApplyModifiedProperties();
-            // ミニゲーム画面の「みんなで」は、待ちの窓で遊ぶものを選んでおいてから「みんなで遊ぶ」の窓を開く
-            WireMiniGameHubTogether(miniGames, menu, title.GetComponent<RoomModeSelector>());
+            // ミニゲーム画面の「みんなで」は、そのミニゲームの部屋にしてから「みんなで遊ぶ」の窓を開く
+            WireMiniGameHubTogether(miniGames, menu, roomModes);
 
             AddTitleFlow(title, lobby.gameObject, menu, nameEntry, gacha, notice);
             return menu;

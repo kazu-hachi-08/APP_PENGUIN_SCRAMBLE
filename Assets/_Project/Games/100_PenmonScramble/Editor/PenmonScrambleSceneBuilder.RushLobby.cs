@@ -10,7 +10,7 @@ namespace PenmonScramble.Editor
 {
     /// <summary>
     /// 「みんなで遊ぶ」の待ちの窓の右に置く、ボスラッシュの選択（RushLobby）: ステージのカード（◀ ▶・3戦の顔・鍵）、
-    /// 難易度の3つの札、報酬のコイン。見出しは遊ぶものの札（RoomModes.cs）が受け持つ
+    /// 難易度の3つの札、報酬のコイン。見出しは部屋の遊びの見出し（RoomModes.cs）が受け持つ
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {

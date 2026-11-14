@@ -10,24 +10,22 @@ using UnityEngine.UI;
 namespace PenmonScramble.Editor
 {
     /// <summary>
-    /// 「みんなで遊ぶ」の待ちの窓の右側: 上に遊ぶものの札（ボスラッシュ / ゴルフ / サッカー / 野球。RoomModeSelector）、その下に選んだ遊びの板
-    /// （ボスラッシュは RushLobby.cs、ゴルフは MiniGames/Golf の GolfRoom.cs、サッカー・野球は MiniGames の TeamRoom.cs）。部屋に入っている間は、左に接続の状態（参加コード・人数）が寄る
+    /// 「みんなで遊ぶ」の待ちの窓の右側: 上に部屋の遊びの見出し（「ゴルフの部屋」。RoomModeSelector が入れる）、その下にその遊びの板
+    /// （ボスラッシュは RushLobby.cs、ゴルフは MiniGames/Golf の GolfRoom.cs、サッカー・野球は MiniGames の TeamRoom.cs）。部屋に入っている間は、左に接続の状態（参加コード・人数）が寄る。
+    /// 遊びは部屋を作った入口で決まるので、待ちの窓では選ばない
     /// </summary>
     public static partial class PenmonScrambleSceneBuilder
     {
-        // 札の並び（窓のまん中から測る）。遊びの板の上の端に置く（板の見出しの代わり）
-        private static readonly Vector2 RoomTabsPosition = new Vector2(270f, 312f);
-        // 4枚（ボスラッシュ・ゴルフ・サッカー・野球）が左の接続の状態と重ならない幅
-        private const float RoomTabSpacing = 262f;
-        private static readonly Vector2 RoomTabSize = new Vector2(240f, 80f);
-        private static readonly Vector2 RoomTabMarkPadding = new Vector2(14f, 14f);
-        private const int RoomTabFontSize = 34;
-        private static readonly Color RoomTabColor = new Color(0.95f, 0.62f, 0.20f);
+        // 見出しは遊びの板の上の端に置く（窓のまん中から測る。板のまん中の x にそろえる）
+        private static readonly Vector2 RoomHeadingPosition = new Vector2(270f, 312f);
+        private static readonly Vector2 RoomHeadingSize = new Vector2(1000f, 80f);
+        private const int RoomHeadingFontSize = 48;
+        private static readonly Color RoomHeadingColor = new Color(1f, 0.85f, 0.45f);
 
         private static readonly Vector2 WaitingStatusBesidePosition = new Vector2(-520f, 60f);
         private static readonly Vector2 WaitingStatusBesideSize = new Vector2(500f, 460f);
 
-        /// <summary>遊びの板を作って、札でつなぐ。札の並びはボスラッシュ・ゴルフ・サッカー・野球（先頭が最初に選ばれている）</summary>
+        /// <summary>遊びの板を作って RoomModeSelector に並べる。先頭（ボスラッシュ）が、入口を通らずに部屋を開いたときの遊び</summary>
         private static RoomModeSelector CreateRoomModes(ModeSelectPanel title, OnlineSession session, Transform waitingPanel, Text status)
         {
             var rush = CreateRushLobby(title, waitingPanel);
@@ -40,7 +38,7 @@ namespace PenmonScramble.Editor
             var so = new SerializedObject(selector);
             so.FindProperty("_modeSelect").objectReferenceValue = title;
             SetObjectArray(so.FindProperty("_modes"), modes);
-            CreateRoomTabs(waitingPanel, modes.Length, so);
+            so.FindProperty("_roomHeading").objectReferenceValue = CreateRoomHeading(waitingPanel);
             var statusRect = status.rectTransform;
             so.FindProperty("_status").objectReferenceValue = statusRect;
             so.FindProperty("_statusAlonePosition").vector2Value = statusRect.anchoredPosition;
@@ -56,36 +54,25 @@ namespace PenmonScramble.Editor
             return selector;
         }
 
-        /// <summary>
-        /// 札の列。選んでいる札は後ろに白い縁を光らせ、入れ物ごと大きく濃くする（ボスラッシュの難易度の札と同じ見た目）。
-        /// 札の字は RoomModeSelector が遊びの名前を入れる。ゲストは押せないが、選ばれた札は濃く見せたいので、ボタンの「押せないときは薄く」は切る
-        /// </summary>
-        private static void CreateRoomTabs(Transform waitingPanel, int count, SerializedObject so)
+        /// <summary>部屋の遊びの見出し。部屋に入るまでは隠しておく（RoomModeSelector が出す）</summary>
+        private static Text CreateRoomHeading(Transform waitingPanel)
         {
-            var row = UIDialogBuilder.CreateUIObject("RoomTabs", waitingPanel);
-            PlaceCenter(row.GetComponent<RectTransform>(), RoomTabsPosition, new Vector2(RoomTabSpacing * count, RoomTabSize.y));
-            var slots = new Object[count];
-            var marks = new Object[count];
-            var tabs = new Object[count];
-            for (var i = 0; i < count; i++)
-            {
-                var slot = CreateHudRect(row.transform, $"Tab{i}", Middle, new Vector2((i - (count - 1) * 0.5f) * RoomTabSpacing, 0f), RoomTabSize);
-                slots[i] = slot.gameObject.AddComponent<CanvasGroup>();
-                marks[i] = CreateSelectedMark(slot, RoomTabSize, RoomTabMarkPadding);
-
-                var button = CreateTitleButton(slot, "Button", string.Empty, Vector2.zero, RoomTabSize, RoomTabColor, RoomTabFontSize);
-                KeepOpaqueWhenDisabled(button);
-                tabs[i] = button;
-            }
-
-            row.SetActive(false);
-            so.FindProperty("_tabRow").objectReferenceValue = row;
-            SetObjectArray(so.FindProperty("_tabSlots"), slots);
-            SetObjectArray(so.FindProperty("_tabMarks"), marks);
-            SetObjectArray(so.FindProperty("_tabs"), tabs);
+            var heading = CreateLabel(waitingPanel, "RoomHeading", string.Empty, RoomHeadingFontSize, RoomHeadingPosition, RoomHeadingSize);
+            heading.fontStyle = FontStyle.Bold;
+            heading.color = RoomHeadingColor;
+            heading.gameObject.SetActive(false);
+            return heading;
         }
 
-        /// <summary>札の後ろに置く白い縁（選んでいる札だけ見せる）。札より少し大きく、角の丸みも縁の分だけ広げる</summary>
+        /// <summary>「みんなで遊ぶ」の窓の見出し（どの遊びの部屋を作るか）をつなぐ。窓はロビーを作るときにできるので、遊びの板より後で</summary>
+        private static void WireOnlineHeading(RoomModeSelector roomModes, Text heading)
+        {
+            var so = new SerializedObject(roomModes);
+            so.FindProperty("_onlineHeading").objectReferenceValue = heading;
+            so.ApplyModifiedProperties();
+        }
+
+        /// <summary>札の後ろに置く白い縁（選んでいる札だけ見せる。ボスラッシュの難易度・ミニゲームの対戦 / 協力の札で使う）。札より少し大きく、角の丸みも縁の分だけ広げる</summary>
         private static GameObject CreateSelectedMark(Transform slot, Vector2 size, Vector2 markPadding)
         {
             var mark = UIDialogBuilder.CreateUIObject("Selected", slot);
