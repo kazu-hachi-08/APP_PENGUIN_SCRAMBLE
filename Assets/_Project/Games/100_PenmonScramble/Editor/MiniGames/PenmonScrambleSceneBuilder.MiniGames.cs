@@ -138,7 +138,7 @@ namespace PenmonScramble.Editor
             so.ApplyModifiedProperties();
         }
 
-        /// <summary>「みんなで」: 待ちの窓で遊ぶものを選んでおいて、ロビーの「みんなで遊ぶ」の窓を開く（TitleMenu ができてからつなぐ）</summary>
+        /// <summary>「みんなで」: そのミニゲームの部屋にして、ロビーの「みんなで遊ぶ」の窓を開く（TitleMenu ができてからつなぐ）</summary>
         private static void WireMiniGameHubTogether(MiniGameHubScreen hub, TitleMenu titleMenu, RoomModeSelector roomModes)
         {
             var so = new SerializedObject(hub);

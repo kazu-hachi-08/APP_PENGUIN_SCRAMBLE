@@ -64,7 +64,7 @@ namespace PenmonScramble.Editor
         private const float CloseButtonInset = 20f;
 
         // 接続待ちの窓: 上に状態と参加コード（文面は ModeSelectPanel が入れる）、下に「コピー」「開始」「キャンセル」。
-        // 部屋に入ったら、右に遊ぶものの札（ボスラッシュ / ゴルフ）と選んだ遊びの板が出て、状態の文字は左へ寄る（RoomModes.cs）。
+        // 部屋に入ったら、右に部屋の遊びの見出しとその遊びの板が出て、状態の文字は左へ寄る（RoomModes.cs）。
         // 窓の上の端はロゴの下にそろえる
         private static readonly Vector2 WaitingPanelSize = new Vector2(1600f, 760f);
         private static readonly Vector2 WaitingPanelPosition = new Vector2(0f, -90f);
@@ -161,10 +161,10 @@ namespace PenmonScramble.Editor
             return waiting;
         }
 
-        /// <summary>「みんなで遊ぶ」の窓。ModeSelectPanel の Menu の中に置くので、接続待ちになると一緒に隠れる</summary>
-        private static GameObject CreateOnlinePopup(Transform parent, out Button host, out Button join, out InputField codeInput, out Button close)
+        /// <summary>「みんなで遊ぶ」の窓。ModeSelectPanel の Menu の中に置くので、接続待ちになると一緒に隠れる。見出しの遊びの名前は RoomModeSelector が入れる</summary>
+        private static GameObject CreateOnlinePopup(Transform parent, out Button host, out Button join, out InputField codeInput, out Button close, out Text heading)
         {
-            var popup = CreateModal(parent, "Online", OnlinePanelSize, OnlineHeading, out var panel, out _);
+            var popup = CreateModal(parent, "Online", OnlinePanelSize, OnlineHeading, out var panel, out heading);
             host = CreateTitleButton(panel, "Host", HostLabel, HostPosition, HostSize, OnlineColor, HostFontSize);
             CreateLabel(panel, "JoinCaption", JoinCaption, JoinCaptionFontSize, JoinCaptionPosition, JoinCaptionSize).fontStyle = FontStyle.Bold;
             codeInput = CreateInputField(panel, "CodeInput", CodePlaceholder, CodeInputPosition, CodeInputSize);

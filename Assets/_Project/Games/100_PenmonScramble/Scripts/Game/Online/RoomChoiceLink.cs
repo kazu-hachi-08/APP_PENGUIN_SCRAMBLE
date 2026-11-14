@@ -9,7 +9,7 @@ namespace PenmonScramble.Game
     /// 部屋の待ちの窓での「ホストが選んだもの」を、ゲストへ届ける通信路（中身はバイト列。読み書きは使う側）。
     /// ゲストは受け取る準備ができてから「いまの選択を教えて」と頼み、ホストは頼まれたときと選び直したときに全員へ送る
     /// （ホストから先に送ると、ゲストの受け取る準備より先に届いて捨てられることがあるため。OnlineSession の名前交換と同じ考え）。
-    /// 遊ぶもの（RoomModeSelector）・ボスラッシュのステージ（RushLobbyLink）・ゴルフのコースが、名前を変えて1つずつ使う
+    /// 部屋の遊び（RoomModeSelector）・ボスラッシュのステージ（RushLobbyLink）・ゴルフのコースが、名前を変えて1つずつ使う
     /// </summary>
     public sealed class RoomChoiceLink
     {

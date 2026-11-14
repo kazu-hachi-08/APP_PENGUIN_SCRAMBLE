@@ -8,7 +8,8 @@ namespace PenmonScramble.Game
 {
     /// <summary>
     /// タイトルのロビー。接続の流れ（ModeSelectPanel）以外の所: 上の名前の札・コイン・設定、左の列（ガチャ・ペンモン・遊び方。「ミニゲーム」は MiniGameHubScreen が自分でつなぐ）、
-    /// 右下のステージのカードと「ひとりで遊ぶ」「みんなで遊ぶ」。「みんなで遊ぶ」は部屋を作る / コードで参加の窓を開く。
+    /// 右下のステージのカードと「ひとりで遊ぶ」「みんなで遊ぶ」。「みんなで遊ぶ」はボスラッシュの部屋を作る / コードで参加の窓を開く
+    /// （ミニゲームの部屋は、ミニゲーム画面の「みんなで」から同じ窓を開く）。
     /// ステージはソロとホストが使う（ゲストはホストの選んだステージを遊ぶ）
     /// </summary>
     public class TitleMenu : MonoBehaviour
@@ -41,6 +42,8 @@ namespace PenmonScramble.Game
         [SerializeField] private Button _onlineButton;
         [SerializeField] private GameObject _onlinePanel;
         [SerializeField] private Button _onlineCloseButton;
+        [Tooltip("タイトルから開いた部屋はボスラッシュにする")]
+        [SerializeField] private RoomModeSelector _roomModes;
 
         [Header("ほかの画面")]
         [SerializeField] private GachaScreen _gacha;
@@ -63,7 +66,7 @@ namespace PenmonScramble.Game
             _howToPlayButton.onClick.AddListener(_howToPlay.Open);
             _settingsButton.onClick.AddListener(_settings.Open);
             _nameButton.onClick.AddListener(() => _nameEntry.Show(Refresh, Refresh));
-            _onlineButton.onClick.AddListener(OpenOnline);
+            _onlineButton.onClick.AddListener(OpenRushRoom);
             _onlineCloseButton.onClick.AddListener(() => _onlinePanel.SetActive(false));
             _gacha.Closed += Refresh;
             _penguins.Closed += Refresh;
@@ -108,8 +111,15 @@ namespace PenmonScramble.Game
             }
         }
 
-        /// <summary>「みんなで遊ぶ」の窓（部屋を作る / コードで参加）を開く。ミニゲーム画面の「みんなで」からも開く</summary>
+        /// <summary>「みんなで遊ぶ」の窓（部屋を作る / コードで参加）を開く。ミニゲーム画面の「みんなで」は、自分の部屋に決めてからこれを呼ぶ</summary>
         public void OpenOnline() => _onlinePanel.SetActive(true);
+
+        /// <summary>タイトルの「みんなで遊ぶ」: ボスラッシュの部屋にして窓を開く（前にミニゲームの「みんなで」で開いていても戻す）</summary>
+        private void OpenRushRoom()
+        {
+            _roomModes.Choose(RushLobby.ModeId);
+            OpenOnline();
+        }
 
         /// <summary>初期化したら、初回と同じく無料ガチャを3回引くまで閉じられない（名前は残っているので聞かない）</summary>
         private void OnRecordReset()

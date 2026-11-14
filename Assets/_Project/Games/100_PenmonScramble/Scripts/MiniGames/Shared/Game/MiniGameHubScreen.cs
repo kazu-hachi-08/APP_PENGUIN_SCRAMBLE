@@ -11,7 +11,7 @@ namespace PenmonScramble.MiniGames.Game
     /// <summary>
     /// ミニゲームを選ぶ画面。ロビーの左の列の「ミニゲーム」から開く。
     /// 1段目: MiniGameTable のカードが並ぶ → 押すと 2段目: そのミニゲームのコース選び（◀ ▶・鍵・ベスト・中身・報酬）→「ひとりで」/「みんなで」。
-    /// 「みんなで」は、そのミニゲームとコースを待ちの窓で選んでおいて、ロビーの「みんなで遊ぶ」の窓（部屋を作る / コードで参加）を開く。
+    /// 「みんなで」は、そのミニゲームの部屋（コースも選んでおく）にして、ロビーの「みんなで遊ぶ」の窓（部屋を作る / コードで参加）を開く。
     /// コースの中身と報酬は、各ミニゲームが登録した IMiniGameCourseGuide から出す（共通側はミニゲームの中身を知らない）。
     /// 「もどる」/ Esc は1段ずつ戻る。ミニゲームのシーンから戻ったとき（LobbyReturn）は、遊んだコースを選んだ状態で開く。
     /// 本編（TitleMenu）はミニゲームを知らないので、開くボタンのつなぎはこちらで持つ
@@ -238,7 +238,7 @@ namespace PenmonScramble.MiniGames.Game
             }
         }
 
-        /// <summary>待ちの窓でこのミニゲームとコースを選んでおき、ロビーの「みんなで遊ぶ」の窓を開く（ゲストはホストの選んだものを遊ぶ）</summary>
+        /// <summary>このミニゲームの部屋にして（コースも選んでおく）、ロビーの「みんなで遊ぶ」の窓を開く（ゲストはどこから参加してもホストの遊びを遊ぶ）</summary>
         private void PlayTogether()
         {
             var course = _game.Courses[_courseIndex];
@@ -247,7 +247,7 @@ namespace PenmonScramble.MiniGames.Game
                 return;
             }
 
-            _roomModes.Preselect(_game.Id, course.No);
+            _roomModes.Choose(_game.Id, course.No);
             _screen.SetActive(false);
             _titleMenu.OpenOnline();
         }
